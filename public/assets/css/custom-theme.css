@@ -1,0 +1,312 @@
+/* Custom Theme Color Scheme Override for Dua Travels - #0f535e */
+
+:root {
+    --primary-teal: #0f535e;
+    --primary-teal-hover: #0a3d46;
+    --primary-teal-light: #166f7d;
+    --primary-teal-subtle: rgba(15, 83, 94, 0.1);
+    --primary-teal-shadow: rgba(15, 83, 94, 0.25);
+}
+
+/* ── Sidebar Menu Styles ── */
+#sidebar-menu > ul > li > a {
+    transition: all 0.2s ease;
+}
+
+#sidebar-menu > ul > li > a:hover,
+#sidebar-menu > ul > li > a:focus {
+    color: var(--primary-teal) !important;
+    background-color: rgba(15, 83, 94, 0.08) !important;
+    border-radius: 8px;
+}
+
+#sidebar-menu > ul > li > a:hover i,
+#sidebar-menu > ul > li > a:hover svg,
+#sidebar-menu > ul > li > a:focus i,
+#sidebar-menu > ul > li > a:focus svg {
+    color: var(--primary-teal) !important;
+    stroke: var(--primary-teal) !important;
+}
+
+/* Active Sidebar Item */
+#sidebar-menu .menuitem-active > a,
+#sidebar-menu a.active {
+    color: var(--primary-teal) !important;
+    background-color: rgba(15, 83, 94, 0.12) !important;
+    font-weight: 600;
+    border-radius: 8px;
+}
+
+#sidebar-menu .menuitem-active > a i,
+#sidebar-menu .menuitem-active > a svg,
+#sidebar-menu a.active i,
+#sidebar-menu a.active svg {
+    color: var(--primary-teal) !important;
+    stroke: var(--primary-teal) !important;
+}
+
+/* Submenu Links */
+.nav-second-level li a:hover,
+.nav-second-level li a:focus {
+    color: var(--primary-teal) !important;
+    background-color: rgba(15, 83, 94, 0.08) !important;
+    border-radius: 6px;
+    padding-left: 24px;
+}
+
+.nav-second-level li.active > a,
+.nav-second-level li a.active,
+.nav-second-level li.menuitem-active > a {
+    color: var(--primary-teal) !important;
+    background-color: rgba(15, 83, 94, 0.12) !important;
+    font-weight: 600;
+    border-radius: 6px;
+}
+
+.nav-second-level li a {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    transition: all 0.2s ease !important;
+}
+
+.nav-second-level li a i,
+.nav-second-level li a svg {
+    width: 16px !important;
+    height: 16px !important;
+    margin-right: 0 !important;
+    flex-shrink: 0 !important;
+}
+
+/* ── Tabs (Click & Active States) ── */
+.nav-tabs .nav-link.active,
+.nav-pills .nav-link.active {
+    background-color: var(--primary-teal) !important;
+    border-color: var(--primary-teal) !important;
+    color: #ffffff !important;
+}
+
+.nav-tabs .nav-link:hover,
+.nav-pills .nav-link:hover {
+    color: var(--primary-teal) !important;
+}
+
+.nav-tabs {
+    border-bottom-color: rgba(15, 83, 94, 0.2);
+}
+
+/* ── Primary Buttons & Badges ── */
+.btn-primary {
+    background-color: var(--primary-teal) !important;
+    border-color: var(--primary-teal) !important;
+    color: #ffffff !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active,
+.btn-primary.active {
+    background-color: var(--primary-teal-hover) !important;
+    border-color: var(--primary-teal-hover) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px var(--primary-teal-shadow) !important;
+}
+
+.btn-outline-primary {
+    color: var(--primary-teal) !important;
+    border-color: var(--primary-teal) !important;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active {
+    background-color: var(--primary-teal) !important;
+    border-color: var(--primary-teal) !important;
+    color: #ffffff !important;
+}
+
+.bg-primary {
+    background-color: var(--primary-teal) !important;
+}
+
+.text-primary {
+    color: var(--primary-teal) !important;
+}
+
+.badge.bg-primary {
+    background-color: var(--primary-teal) !important;
+}
+
+/* ── Pagination ── */
+.page-item.active .page-link {
+    background-color: var(--primary-teal) !important;
+    border-color: var(--primary-teal) !important;
+    color: #ffffff !important;
+}
+
+.page-link {
+    color: var(--primary-teal);
+}
+
+.page-link:hover {
+    color: var(--primary-teal-hover);
+}
+
+/* ── Form Inputs Focus & Checks ── */
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-teal) !important;
+    box-shadow: 0 0 0 0.2rem var(--primary-teal-shadow) !important;
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-teal) !important;
+    border-color: var(--primary-teal) !important;
+}
+
+/* ── Dropdown Items ── */
+.dropdown-item:active,
+.dropdown-item.active {
+    background-color: var(--primary-teal) !important;
+    color: #ffffff !important;
+}
+
+.dropdown-item:hover {
+    background-color: rgba(15, 83, 94, 0.08) !important;
+    color: var(--primary-teal) !important;
+}
+
+/* ── Card Top Border Accents (#0f535e & #D84816) ── */
+.card {
+    border-top: 3px solid #0f535e !important;
+}
+
+.card:nth-child(even) {
+    border-top-color: #D84816 !important;
+}
+
+/* ==========================================================================
+   Sidebar & Fixed Logo Header Architecture
+   Fixes tabs/menu items scrolling over or behind the logo.
+   ========================================================================== */
+
+/* Main sidebar container: Fixed column layout */
+.app-sidebar-menu {
+    width: 260px !important;
+    background: #ffffff !important;
+    position: fixed !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    z-index: 1001 !important;
+    padding-top: 0 !important; /* Reset 70px padding because logo-box is now top child */
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.05) !important;
+    transition: all 0.15s ease-out !important;
+}
+
+/* Dedicated Logo Header: Completely outside scroll area, solid #fff background */
+.app-sidebar-menu .logo-box,
+.app-sidebar-menu .sidebar-logo-box {
+    position: relative !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 260px !important;
+    height: 78px !important;
+    min-height: 78px !important;
+    max-height: 78px !important;
+    background: #ffffff !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 12px !important;
+    margin: 0 !important;
+    border-bottom: 1px solid rgba(15, 83, 94, 0.12) !important;
+    box-sizing: border-box !important;
+    flex-shrink: 0 !important;
+    z-index: 1050 !important;
+    overflow: hidden !important;
+}
+
+.app-sidebar-menu .logo-box .logo,
+.app-sidebar-menu .sidebar-logo-box .logo {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 100% !important;
+    width: 100% !important;
+    line-height: normal !important;
+}
+
+.app-sidebar-menu .logo-box .logo span.logo-lg,
+.app-sidebar-menu .sidebar-logo-box .logo span.logo-lg {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 100% !important;
+    width: 100% !important;
+}
+
+/* Logos: Sized bigger and bolder to account for transparent whitespace in image files */
+.app-sidebar-menu .kgm-logo-img {
+    max-height: 68px !important;
+    max-width: 165px !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+    margin: 0 auto !important;
+    display: block !important;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.04));
+}
+
+.app-sidebar-menu .dua-logo-img {
+    max-height: 70px !important;
+    max-width: 215px !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+    margin: 0 auto !important;
+    display: block !important;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.04));
+}
+
+/* Scrollable Menu Area strictly below the 78px Logo */
+.app-sidebar-menu .sidebar-menu-scroll {
+    flex: 1 1 auto !important;
+    height: calc(100vh - 78px) !important;
+    max-height: calc(100vh - 78px) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    position: relative !important;
+}
+
+/* Simplebar Container adjustments inside sidebar */
+.app-sidebar-menu [data-simplebar] {
+    height: calc(100vh - 78px) !important;
+    max-height: calc(100vh - 78px) !important;
+}
+
+#sidebar-menu {
+    padding: 10px 9px 40px 9px !important;
+}
+
+#sidebar-menu > ul#side-menu {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+/* Mobile responsive drawer fix */
+@media (max-width: 991.98px) {
+    .sidebar-enable .app-sidebar-menu {
+        display: flex !important;
+        flex-direction: column !important;
+        z-index: 1050 !important;
+    }
+    .sidebar-enable .app-sidebar-menu .logo-box,
+    .sidebar-enable .app-sidebar-menu .sidebar-logo-box {
+        display: flex !important;
+    }
+}
+

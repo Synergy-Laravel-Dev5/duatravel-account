@@ -1,0 +1,16 @@
+[31-Aug-2026 14:37:16 UTC] PHP Warning:  require(/home/kgmlcomp/system.duatravel.com.pk/vendor/composer/../../app/Helpers/helpers.php): Failed to open stream: No such file or directory in /home/kgmlcomp/system.duatravel.com.pk/vendor/composer/autoload_real.php on line 41
+[31-Aug-2026 14:37:16 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/kgmlcomp/system.duatravel.com.pk/vendor/composer/../../app/Helpers/helpers.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home/kgmlcomp/system.duatravel.com.pk/vendor/composer/autoload_real.php:41
+Stack trace:
+#0 /home/kgmlcomp/system.duatravel.com.pk/vendor/composer/autoload_real.php(45): {closure}('d21d43db5f6e840...', '/home/kgmlcomp/...')
+#1 /home/kgmlcomp/system.duatravel.com.pk/vendor/autoload.php(22): ComposerAutoloaderInit53b5d56b3b7e3cbac1713e68c8850f6c::getLoader()
+#2 /home/kgmlcomp/system.duatravel.com.pk/public/index.php(14): require('/home/kgmlcomp/...')
+#3 {main}
+  thrown in /home/kgmlcomp/system.duatravel.com.pk/vendor/composer/autoload_real.php on line 41
+[31-Aug-2026 14:37:20 UTC] PHP Warning:  require(/home/kgmlcomp/system.duatravel.com.pk/vendor/composer/../../app/Helpers/helpers.php): Failed to open stream: No such file or directory in /home/kgmlcomp/system.duatravel.com.pk/vendor/composer/autoload_real.php on line 41
+[31-Aug-2026 14:37:20 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/kgmlcomp/system.duatravel.com.pk/vendor/composer/../../app/Helpers/helpers.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home/kgmlcomp/system.duatravel.com.pk/vendor/composer/autoload_real.php:41
+Stack trace:
+#0 /home/kgmlcomp/system.duatravel.com.pk/vendor/composer/autoload_real.php(45): {closure}('d21d43db5f6e840...', '/home/kgmlcomp/...')
+#1 /home/kgmlcomp/system.duatravel.com.pk/vendor/autoload.php(22): ComposerAutoloaderInit53b5d56b3b7e3cbac1713e68c8850f6c::getLoader()
+#2 /home/kgmlcomp/system.duatravel.com.pk/public/index.php(14): require('/home/kgmlcomp/...')
+#3 {main}
+  thrown in /home/kgmlcomp/system.duatravel.com.pk/vendor/composer/autoload_real.php on line 41
