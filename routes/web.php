@@ -14,6 +14,7 @@ use App\Http\Controllers\UserActivityController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\FollowUpController;
 use App\Http\Controllers\LeadController;
+use App\Http\Controllers\BankController;
 use App\Http\Controllers\PackageController;
 use App\Http\Controllers\TrainingSessionController;
 use App\Http\Controllers\HotelController;
@@ -206,6 +207,58 @@ Route::middleware(['auth:web,company'])->group(function () {
             Route::post('convert-to-client/{id}', 'convertToClient')->name('lead.convert-to-client');
             Route::get('trash', 'trash')->name('lead.trash');
             Route::get('restore/{id}', 'restore')->name('lead.restore');
+        });
+
+        Route::controller(BankController::class)->prefix('bank')->group(function () {
+            Route::get('/', 'index')->name('bank.index');
+            Route::get('create', 'create')->name('bank.create');
+            Route::post('store', 'store')->name('bank.store');
+            Route::get('edit/{bank}', 'edit')->name('bank.edit');
+            Route::put('update/{bank}', 'update')->name('bank.update');
+            Route::delete('delete/{bank}', 'destroy')->name('bank.destroy');
+        });
+
+        Route::controller(App\Http\Controllers\AccountController::class)->prefix('account')->group(function () {
+            Route::get('/', 'index')->name('account.index');
+            Route::get('create', 'create')->name('account.create');
+            Route::post('store', 'store')->name('account.store');
+            Route::get('edit/{account}', 'edit')->name('account.edit');
+            Route::put('update/{account}', 'update')->name('account.update');
+            Route::delete('delete/{account}', 'destroy')->name('account.destroy');
+        });
+
+        Route::controller(App\Http\Controllers\BankTransferController::class)->prefix('bank-transfer')->group(function () {
+            Route::get('/', 'index')->name('bank-transfer.index');
+            Route::get('create', 'create')->name('bank-transfer.create');
+            Route::post('store', 'store')->name('bank-transfer.store');
+            Route::delete('delete/{bankTransfer}', 'destroy')->name('bank-transfer.destroy');
+        });
+
+        Route::controller(App\Http\Controllers\DepartmentController::class)->prefix('department')->group(function () {
+            Route::get('/', 'index')->name('department.index');
+            Route::get('create', 'create')->name('department.create');
+            Route::post('store', 'store')->name('department.store');
+            Route::get('edit/{department}', 'edit')->name('department.edit');
+            Route::put('update/{department}', 'update')->name('department.update');
+            Route::delete('delete/{department}', 'destroy')->name('department.destroy');
+        });
+
+        Route::controller(App\Http\Controllers\DesignationController::class)->prefix('designation')->group(function () {
+            Route::get('/', 'index')->name('designation.index');
+            Route::get('create', 'create')->name('designation.create');
+            Route::post('store', 'store')->name('designation.store');
+            Route::get('edit/{designation}', 'edit')->name('designation.edit');
+            Route::put('update/{designation}', 'update')->name('designation.update');
+            Route::delete('delete/{designation}', 'destroy')->name('designation.destroy');
+        });
+
+        Route::controller(App\Http\Controllers\StaffController::class)->prefix('staff')->group(function () {
+            Route::get('/', 'index')->name('staff.index');
+            Route::get('create', 'create')->name('staff.create');
+            Route::post('store', 'store')->name('staff.store');
+            Route::get('edit/{staff}', 'edit')->name('staff.edit');
+            Route::put('update/{staff}', 'update')->name('staff.update');
+            Route::delete('delete/{staff}', 'destroy')->name('staff.destroy');
         });
 
         Route::controller(QuotationController::class)->prefix('quotation')->group(function () {

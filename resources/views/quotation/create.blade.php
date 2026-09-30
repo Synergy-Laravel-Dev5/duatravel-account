@@ -457,7 +457,7 @@
                                                 <div class="col-md-2">
                                                     <label class="form-label fs-12 fw-semibold text-success mb-1">Selling Amount (Foreign)</label>
                                                     <input type="number" step="any" name="accommodations[0][selling_amount]"
-                                                        class="form-control form-control-sm acc-selling bg-light" value="0" readonly>
+                                                        class="form-control form-control-sm acc-selling" value="0">
                                                 </div>
                                                 <div class="col-md-2">
                                                     <label class="form-label fs-12 fw-semibold text-success mb-1">Selling PKR</label>
@@ -1334,13 +1334,35 @@
                     if (checkin && !checkin._flatpickr) {
                         flatpickr(checkin, {
                             dateFormat: "m/d/Y",
-                            onChange: function() { calculateNights(item); }
+                            minDate: "today",
+                            onChange: function(selectedDates, dateStr, instance) { 
+                                if (selectedDates[0]) {
+                                    const today = new Date();
+                                    today.setHours(0,0,0,0);
+                                    if (selectedDates[0] < today) {
+                                        alert("You cannot select a past date.");
+                                        instance.clear();
+                                    }
+                                }
+                                calculateNights(item); 
+                            }
                         });
                     }
                     if (checkout && !checkout._flatpickr) {
                         flatpickr(checkout, {
                             dateFormat: "m/d/Y",
-                            onChange: function() { calculateNights(item); }
+                            minDate: "today",
+                            onChange: function(selectedDates, dateStr, instance) { 
+                                if (selectedDates[0]) {
+                                    const today = new Date();
+                                    today.setHours(0,0,0,0);
+                                    if (selectedDates[0] < today) {
+                                        alert("You cannot select a past date.");
+                                        instance.clear();
+                                    }
+                                }
+                                calculateNights(item); 
+                            }
                         });
                     }
                 });
@@ -1907,12 +1929,11 @@
                         addServiceAmt = parseFloat(document.getElementById("additional_services_amount")?.value) || 0;
                     }
                     
-                    const saleAmt = costAmt + addServiceAmt;
-                    const sellingInput = acc.querySelector(".acc-selling");
-                    if (sellingInput) sellingInput.value = saleAmt;
+                    const saleAmt = parseFloat(acc.querySelector(".acc-selling")?.value) || 0;
 
                     const accCostPkr = costAmt * costRoe;
-                    const accSalePkr = saleAmt * saleRoe;
+                    const baseSalePkr = saleAmt * saleRoe;
+                    const accSalePkr = (saleAmt + addServiceAmt) * saleRoe;
                     const accProfitPkr = accSalePkr - accCostPkr;
 
                     totalAccCostPkr += accCostPkr;
@@ -1921,7 +1942,7 @@
                     const costBadge = acc.querySelector(".acc-cost-pkr-badge");
                     if (costBadge) costBadge.innerText = "PKR " + formatNum(accCostPkr);
                     const saleBadge = acc.querySelector(".acc-sale-pkr-badge");
-                    if (saleBadge) saleBadge.innerText = "PKR " + formatNum(accSalePkr);
+                    if (saleBadge) saleBadge.innerText = "PKR " + formatNum(baseSalePkr);
                     const totalBadge = acc.querySelector(".acc-total-pkr-badge");
                     if (totalBadge) totalBadge.innerText = "PKR " + formatNum(accSalePkr);
                     const profitBadge = acc.querySelector(".acc-profit-pkr-badge");

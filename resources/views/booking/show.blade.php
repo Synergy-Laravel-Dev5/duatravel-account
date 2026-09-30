@@ -1079,6 +1079,7 @@
         </div>
     </div>
 
+    <div id="wrapper-for-pdf">
     <div class="hero" id="page-top">
         <div class="hero-tex"></div>
         <div class="hero-glow"></div>
@@ -2035,6 +2036,20 @@
                     <td></td>
                     <td>PKR {{ number_format($booking->other_charges, 0) }}</td>
                 </tr>
+                @if($booking->additional_services_amount > 0)
+                <tr>
+                    <td>Additional Services</td>
+                    <td>{!! strip_tags($booking->additional_services_detail) !!}</td>
+                    <td>PKR {{ number_format($booking->additional_services_amount, 0) }}</td>
+                </tr>
+                @endif
+                @if($booking->discount > 0)
+                <tr>
+                    <td>Discount</td>
+                    <td></td>
+                    <td style="color:var(--red)">- PKR {{ number_format($booking->discount, 0) }}</td>
+                </tr>
+                @endif
                 <tr class="cost-total">
                     <td style="color:var(--gold-dk)"><strong>Total Amount</strong></td>
                     <td></td>
@@ -2063,6 +2078,8 @@
                 Costing is hidden — will not appear in PDF
             </div>
         </div>
+
+    </div>
 
     </div>
 
@@ -2183,7 +2200,7 @@
                 b.style.display = 'none';
             });
 
-            var element = document.getElementById('page-top').parentElement;
+            var element = document.getElementById('wrapper-for-pdf');
             var opt = buildPdfOptions();
 
             html2pdf().set(opt).from(element).toPdf().output('bloburl').then(function(blobUrl) {
@@ -2232,7 +2249,7 @@
                 b.style.display = 'none';
             });
 
-            var element = document.getElementById('page-top').parentElement;
+            var element = document.getElementById('wrapper-for-pdf');
             var opt = buildPdfOptions();
 
             html2pdf().set(opt).from(element).save().then(function() {

@@ -96,7 +96,7 @@
                                     <select name="status" class="form-select" readonly>
                                         <option value="pending" selected>Pending</option>
                                     </select>
-                                    <input type="hidden" name="package_type" id="package_type" value="umrah">
+                                    <input type="hidden" name="package_type" id="package_type" value="{{ session('dashboard_package', 'umrah') }}">
                                 </div>
                             </div>
                             <div class="d-flex justify-content-end mt-4">
@@ -566,7 +566,9 @@
             margin-bottom: 10px;
         }
     </style>
+@endsection
 
+@section('scripts')
     <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.js"></script>
     <script>
         const packagesData = @json($packages);
@@ -614,16 +616,7 @@
             if (document.getElementById('package_year') && pkg.year) {
                 document.getElementById('package_year').value = pkg.year;
             }
-            if (document.getElementById('package_type') && pkg.category) {
-                const cat = pkg.category.toLowerCase();
-                if (cat.includes('hajj')) {
-                    document.getElementById('package_type').value = 'hajj';
-                } else if (cat.includes('umrah')) {
-                    document.getElementById('package_type').value = 'umrah';
-                } else {
-                    document.getElementById('package_type').value = 'other';
-                }
-            }
+
 
             const pkgCost = parseFloat(pkg.package_amount || pkg.adult_pkr || pkg.adult_sar || 0);
             if (document.getElementById('package_cost')) {
@@ -1244,35 +1237,35 @@
         });
 
         function calcTotal() {
-            const pax = parseInt(document.getElementById('no_of_pax').value) || 1;
-            const pkg = parseFloat(document.getElementById('package_cost').value) || 0;
-            const visa = parseFloat(document.getElementById('visa_charges').value) || 0;
-            const flight = parseFloat(document.getElementById('flight_charges').value) || 0;
-            const other = parseFloat(document.getElementById('other_charges').value) || 0;
+            const pax = parseInt(document.getElementById('no_of_pax') ? document.getElementById('no_of_pax').value : 1) || 1;
+            const pkg = parseFloat(document.getElementById('package_cost') ? document.getElementById('package_cost').value : 0) || 0;
+            const visa = parseFloat(document.getElementById('visa_charges') ? document.getElementById('visa_charges').value : 0) || 0;
+            const flight = parseFloat(document.getElementById('flight_charges') ? document.getElementById('flight_charges').value : 0) || 0;
+            const other = parseFloat(document.getElementById('other_charges') ? document.getElementById('other_charges').value : 0) || 0;
             const discount = parseFloat(document.getElementById('discount') ? document.getElementById('discount').value : 0) || 0;
             const additional = parseFloat(document.getElementById('additional_services_amount') ? document.getElementById('additional_services_amount').value : 0) || 0;
-            const received = parseFloat(document.getElementById('total_received').value) || 0;
+            const received = parseFloat(document.getElementById('total_received') ? document.getElementById('total_received').value : 0) || 0;
 
             const pkgTotal = pkg * pax;
             const total = pkgTotal + visa + flight + other + additional - discount;
             const balance = total - received;
 
-            document.getElementById('total_amount').value = total.toFixed(2);
-            document.getElementById('balance').value = balance.toFixed(2);
+            if (document.getElementById('total_amount')) document.getElementById('total_amount').value = total.toFixed(2);
+            if (document.getElementById('balance')) document.getElementById('balance').value = balance.toFixed(2);
 
-            document.getElementById('bar_pax').textContent = pax;
-            document.getElementById('bar_adult').textContent = pkgTotal.toFixed(2);
-            document.getElementById('bar_visa').textContent = visa.toFixed(2);
-            document.getElementById('bar_flight').textContent = flight.toFixed(2);
-            document.getElementById('bar_total').textContent = total.toFixed(2);
-            document.getElementById('bar_balance').textContent = balance.toFixed(2);
+            if (document.getElementById('bar_pax')) document.getElementById('bar_pax').textContent = pax;
+            if (document.getElementById('bar_adult')) document.getElementById('bar_adult').textContent = pkgTotal.toFixed(2);
+            if (document.getElementById('bar_visa')) document.getElementById('bar_visa').textContent = visa.toFixed(2);
+            if (document.getElementById('bar_flight')) document.getElementById('bar_flight').textContent = flight.toFixed(2);
+            if (document.getElementById('bar_total')) document.getElementById('bar_total').textContent = total.toFixed(2);
+            if (document.getElementById('bar_balance')) document.getElementById('bar_balance').textContent = balance.toFixed(2);
 
-            document.getElementById('sum_pax').textContent = pax;
-            document.getElementById('sum_pkg').textContent = pkgTotal.toFixed(2);
-            document.getElementById('sum_visa').textContent = visa.toFixed(2);
-            document.getElementById('sum_flight').textContent = flight.toFixed(2);
-            document.getElementById('sum_other').textContent = (other + additional - discount).toFixed(2);
-            document.getElementById('sum_total').textContent = total.toFixed(2);
+            if (document.getElementById('sum_pax')) document.getElementById('sum_pax').textContent = pax;
+            if (document.getElementById('sum_pkg')) document.getElementById('sum_pkg').textContent = pkgTotal.toFixed(2);
+            if (document.getElementById('sum_visa')) document.getElementById('sum_visa').textContent = visa.toFixed(2);
+            if (document.getElementById('sum_flight')) document.getElementById('sum_flight').textContent = flight.toFixed(2);
+            if (document.getElementById('sum_other')) document.getElementById('sum_other').textContent = (other + additional - discount).toFixed(2);
+            if (document.getElementById('sum_total')) document.getElementById('sum_total').textContent = total.toFixed(2);
         }
 
         document.querySelectorAll('.calc').forEach(el => el.addEventListener('input', calcTotal));
@@ -1298,6 +1291,15 @@
                 const isNights   = target === nightsEl;
 
                 if (!isCheckIn && !isCheckOut && !isNights) return;
+
+                if (isCheckIn || isCheckOut) {
+                    const todayStr = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+                    if (target.value && target.value < todayStr) {
+                        alert("You cannot select a past date.");
+                        target.value = '';
+                        return;
+                    }
+                }
 
                 const inVal  = checkInEl.value;
                 const outVal = checkOutEl.value;
@@ -1337,31 +1339,39 @@
 
       $(document).ready(function() {
     if (typeof $ !== 'undefined' && $.fn.summernote) {
-        // Initialize Summernote
-        $('#additional_services_detail').summernote({
-            height: 200,
-            placeholder: 'Enter additional service details here...',
-            toolbar: [
-                ['style', ['style']],
-                ['font', ['bold', 'italic', 'underline', 'clear']],
-                ['fontname', ['fontname']],
-                ['color', ['color']],
-                ['para', ['ul', 'ol', 'paragraph']],
-                ['height', ['height']],
-                ['insert', ['link', 'picture', 'hr']],
-                ['view', ['fullscreen', 'codeview']],
-                ['help', ['help']]
-            ]
-        });
-
-        // Fix: When the Additional Services tab is shown, refresh Summernote
+        // Initialize Summernote only when the tab is shown
         $('a[href="#tab-additional-services"]').on('shown.bs.tab', function() {
-            $('#additional_services_detail').summernote('reset');
-            // Re-focus to ensure it renders properly
-            setTimeout(function() {
-                $('#additional_services_detail').summernote('focus');
-            }, 100);
+            if (!$('#additional_services_detail').next().hasClass('note-editor')) {
+                $('#additional_services_detail').summernote({
+                    height: 200,
+                    placeholder: 'Enter additional service details here...',
+                    toolbar: [
+                        ['style', ['style']],
+                        ['font', ['bold', 'italic', 'underline', 'clear']],
+                        ['fontname', ['fontname']],
+                        ['color', ['color']],
+                        ['para', ['ul', 'ol', 'paragraph']],
+                        ['height', ['height']],
+                        ['insert', ['link', 'picture', 'hr']],
+                        ['view', ['fullscreen', 'codeview']],
+                        ['help', ['help']]
+                    ]
+                });
+            }
         });
+        
+        // If tab is active by default
+        if ($('#tab-additional-services').hasClass('active')) {
+            $('#additional_services_detail').summernote({
+                height: 200,
+                placeholder: 'Enter additional service details here...',
+                toolbar: [
+                    ['style', ['style']],
+                    ['font', ['bold', 'italic', 'underline', 'clear']],
+                    ['para', ['ul', 'ol', 'paragraph']],
+                ]
+            });
+        }
     }
 });
     </script>

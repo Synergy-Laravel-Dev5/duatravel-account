@@ -317,7 +317,30 @@
                             </div>
                         @endif
 
-                        <!-- 8. Complete Summary & Grand Totals -->
+                        <!-- 8. Additional Services -->
+                        @if ($quotation->additional_services_amount > 0 || $quotation->additional_services_detail)
+                            <h5 class="fs-15 fw-bold text-primary mb-2">
+                                <i class="mdi mdi-text-box-outline me-1"></i> 8. Additional Services
+                            </h5>
+                            <div class="table-responsive mb-4">
+                                <table class="table table-bordered align-middle fs-13">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Description</th>
+                                            <th class="text-end">Selling Price (PKR)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>{!! $quotation->additional_services_detail ?: 'Additional Services' !!}</td>
+                                            <td class="text-end fw-bold text-success">PKR {{ number_format($quotation->additional_services_amount) }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
+
+                        <!-- 9. Complete Summary & Grand Totals -->
                         <div class="row g-3 mt-2">
                             <div class="col-md-6">
                                 <div class="card border border-secondary shadow-none h-100">

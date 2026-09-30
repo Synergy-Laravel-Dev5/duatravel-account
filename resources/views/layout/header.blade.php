@@ -188,6 +188,67 @@
                         </ul>
                     </div>
                 </li>
+
+                <li>
+                    <a href="#sidebarBankingManagement" data-bs-toggle="collapse">
+                        <i data-feather="dollar-sign"></i>
+                        <span>Accounts & Banking</span>
+                        <span class="menu-arrow"></span>
+                    </a>
+                    <div class="collapse" id="sidebarBankingManagement">
+                        <ul class="nav-second-level">
+                            <li>
+                                <a class="tp-link" href="{{ route('account.index') }}">
+                                    <i data-feather="credit-card"></i>
+                                    <span>Accounts</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="tp-link" href="{{ route('bank.index') }}">
+                                    <i data-feather="briefcase"></i>
+                                    <span>Banks</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="tp-link" href="{{ route('bank-transfer.index') }}">
+                                    <i data-feather="repeat"></i>
+                                    <span>Bank Transfers</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li>
+                    <a href="#sidebarHRManagement" data-bs-toggle="collapse">
+                        <i data-feather="users"></i>
+                        <span>HR Management</span>
+                        <span class="menu-arrow"></span>
+                    </a>
+                    <div class="collapse" id="sidebarHRManagement">
+                        <ul class="nav-second-level">
+                            <li>
+                                <a class="tp-link" href="{{ route('department.index') }}">
+                                    <i data-feather="grid"></i>
+                                    <span>Departments</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="tp-link" href="{{ route('designation.index') }}">
+                                    <i data-feather="award"></i>
+                                    <span>Designations</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="tp-link" href="{{ route('staff.index') }}">
+                                    <i data-feather="user"></i>
+                                    <span>Staff</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
                 <li>
                     <a href="{{ route('company.index') }}">
                         <i data-feather="briefcase"></i>

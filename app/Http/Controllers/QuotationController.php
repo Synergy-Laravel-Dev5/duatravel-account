@@ -62,6 +62,13 @@ class QuotationController extends Controller
 
     public function store(Request $request)
     {
+        if (!\Schema::hasColumn('quotations', 'additional_services_amount')) {
+            \Schema::table('quotations', function (\Illuminate\Database\Schema\Blueprint $table) {
+                $table->decimal('additional_services_amount', 15, 2)->nullable()->default(0);
+                $table->text('additional_services_detail')->nullable();
+            });
+        }
+        
         DB::beginTransaction();
         try {
             // Generate unique quotation number
@@ -173,6 +180,8 @@ class QuotationController extends Controller
                 'remarks'             => $request->remarks ?: null,
                 'status'              => $request->status ?? 'draft',
                 'valid_until'         => !empty($request->valid_until) ? date('Y-m-d', strtotime($request->valid_until)) : null,
+                'additional_services_amount' => $request->filled('additional_services_amount') ? floatval($request->additional_services_amount) : 0,
+                'additional_services_detail' => $request->additional_services_detail ?: null,
             ]);
 
             $totalCostPkr = 0;
@@ -513,6 +522,8 @@ class QuotationController extends Controller
             $totalSalePkr += $psfSalePkr;
             $totalSupplierAmount += $psfSupplierAmt;
 
+            $totalSalePkr += floatval($quotation->additional_services_amount);
+
             // Calculate profit and margin
             $profitPkr = $totalSalePkr - $totalCostPkr;
             $margin = $totalSalePkr > 0 ? round(($profitPkr / $totalSalePkr) * 100, 2) : 0;
@@ -687,6 +698,8 @@ class QuotationController extends Controller
                 'exclusions'          => $request->exclusions ?: null,
                 'terms_and_conditions'=> $request->terms ?: ($request->terms_and_conditions ?: null),
                 'remarks'             => $request->remarks ?: null,
+                'additional_services_amount' => $request->filled('additional_services_amount') ? floatval($request->additional_services_amount) : 0,
+                'additional_services_detail' => $request->additional_services_detail ?: null,
             ]);
 
             $totalCostPkr = 0;
@@ -992,6 +1005,8 @@ class QuotationController extends Controller
             $totalCostPkr += $psfCostPkr;
             $totalSalePkr += $psfSalePkr;
             $totalSupplierAmount += $psfSupplierAmt;
+
+            $totalSalePkr += floatval($quotation->additional_services_amount);
 
             // Calculate profit, margin, and per pax sale
             $profitPkr = $totalSalePkr - $totalCostPkr;

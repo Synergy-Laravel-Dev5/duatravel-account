@@ -210,7 +210,7 @@
                                 <li class="nav-item" role="presentation">
                                     <button class="nav-link" id="additional-services-tab-btn" data-bs-toggle="tab"
                                         data-bs-target="#additional-services-tab" type="button" role="tab">
-                                        <i class="mdi mdi-plus-circle me-1"></i> 7. Services
+                                        <i class="mdi mdi-plus-circle me-1"></i> 7. Additional Services
                                     </button>
                                 </li>
                                 <li class="nav-item" role="presentation">
@@ -813,7 +813,7 @@
                                 <div class="tab-pane fade" id="summary-pane" role="tabpanel">
                                     <div class="d-flex justify-content-between align-items-center mb-3">
                                         <div>
-                                            <h5 class="fs-16 fw-semibold text-primary mb-0">7. Full Quotation Summary & Profit/Loss Analysis</h5>
+                                            <h5 class="fs-16 fw-semibold text-primary mb-0">8. Full Quotation Summary & Profit/Loss Analysis</h5>
                                             <small class="text-muted">Comprehensive cost and selling calculation across all facilities with net profit/margin.</small>
                                         </div>
                                     </div>
@@ -1051,13 +1051,33 @@
                 if (checkin && !checkin._flatpickr) {
                     flatpickr(checkin, {
                         dateFormat: "m/d/Y",
-                        onChange: function() { calculateNights(item); }
+                        onChange: function(selectedDates, dateStr, instance) { 
+                            if (selectedDates[0]) {
+                                const today = new Date();
+                                today.setHours(0,0,0,0);
+                                if (selectedDates[0] < today) {
+                                    alert("You cannot select a past date.");
+                                    instance.clear();
+                                }
+                            }
+                            calculateNights(item); 
+                        }
                     });
                 }
                 if (checkout && !checkout._flatpickr) {
                     flatpickr(checkout, {
                         dateFormat: "m/d/Y",
-                        onChange: function() { calculateNights(item); }
+                        onChange: function(selectedDates, dateStr, instance) { 
+                            if (selectedDates[0]) {
+                                const today = new Date();
+                                today.setHours(0,0,0,0);
+                                if (selectedDates[0] < today) {
+                                    alert("You cannot select a past date.");
+                                    instance.clear();
+                                }
+                            }
+                            calculateNights(item); 
+                        }
                     });
                 }
             });
@@ -1598,12 +1618,11 @@
                         addServiceAmt = parseFloat(document.getElementById("additional_services_amount")?.value) || 0;
                     }
                     
-                    const saleAmt = costAmt + addServiceAmt;
-                    const sellingInput = acc.querySelector(".acc-selling");
-                    if (sellingInput) sellingInput.value = saleAmt;
+                    const saleAmt = parseFloat(acc.querySelector(".acc-selling")?.value) || 0;
 
                     const accCostPkr = costAmt * costRoe;
-                    const accSalePkr = saleAmt * saleRoe;
+                    const baseSalePkr = saleAmt * saleRoe;
+                    const accSalePkr = (saleAmt + addServiceAmt) * saleRoe;
 
                     const accTotalPkrBadge = acc.querySelector(".acc-total-pkr-badge");
                     if (accTotalPkrBadge) accTotalPkrBadge.innerText = "PKR " + formatNum(accSalePkr);
@@ -1615,7 +1634,7 @@
                     const costBadge = acc.querySelector(".acc-cost-pkr-badge");
                     if (costBadge) costBadge.innerText = "PKR " + formatNum(accCostPkr);
                     const saleBadge = acc.querySelector(".acc-sale-pkr-badge");
-                    if (saleBadge) saleBadge.innerText = "PKR " + formatNum(accSalePkr);
+                    if (saleBadge) saleBadge.innerText = "PKR " + formatNum(baseSalePkr);
                     const profitBadge = acc.querySelector(".acc-profit-pkr-badge");
                     if (profitBadge) {
                         profitBadge.innerText = "PKR " + formatNum(accProfitPkr);

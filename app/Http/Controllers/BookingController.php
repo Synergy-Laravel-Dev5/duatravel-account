@@ -16,7 +16,15 @@ class BookingController extends Controller
     public function index()
     {
         $package = session('dashboard_package', 'hajj');
-        $year    = (int) session('dashboard_year', Carbon::now()->year);
+       $year = (int) session('dashboard_year', 2027);
+
+        if (!Booking::where('package_type', $package)->where('package_year', $year)->exists()) {
+            $maxYear = Booking::where('package_type', $package)->max('package_year');
+            if ($maxYear) {
+                $year = $maxYear;
+                session(['dashboard_year' => $year]);
+            }
+        }
 
         $bookings = Booking::with(['client', 'company'])
             ->where('package_type', $package)
@@ -117,13 +125,27 @@ class BookingController extends Controller
         $clients   = Client::where('status', 'active')->get();
         $companies = Company::all();
         $packages  = Package::with(['accommodations.hotel', 'transports', 'transportFlights'])->latest()->get();
+        $hotels    = \App\Models\Hotel::all();
         $years     = [date('Y'), date('Y') + 1, date('Y') + 2];
 
-        return view('booking.create', compact('clients', 'companies', 'packages', 'years'));
+        return view('booking.create', compact('clients', 'companies', 'packages', 'hotels', 'years'));
     }
 
     public function store(Request $request)
     {
+        if (!\Schema::hasColumn('bookings', 'additional_services_amount')) {
+            \Schema::table('bookings', function ($table) {
+                $table->decimal('additional_services_amount', 15, 2)->default(0);
+                $table->text('additional_services_detail')->nullable();
+            });
+        }
+
+            $additionalServicesDetail = $request->additional_services_detail;
+
+            if (trim(strip_tags($additionalServicesDetail ?? '')) === '') {
+            $additionalServicesDetail = null;
+            }
+
         \Log::info('Store Request: ', $request->all());
         $request->validate([
             'booking_for'  => 'nullable|in:client,company',
@@ -140,7 +162,9 @@ class BookingController extends Controller
         $total = (($request->package_cost ?? 0) * ($request->no_of_pax ?? 1))
             + ($request->visa_charges ?? 0)
             + ($request->flight_charges ?? 0)
-            + ($request->other_charges ?? 0);
+            + ($request->other_charges ?? 0)
+            + ($request->additional_services_amount ?? 0)
+            - ($request->discount ?? 0);
 
         $bookingData = array_merge(
             $request->except(['persons', 'hotels', 'transports', 'visas', 'flight_persons', '_token', 'cnic_front', 'cnic_back', 'passport_photo', 'photo', 'medical_certificate', 'flight_attachment']),
@@ -152,6 +176,8 @@ class BookingController extends Controller
                 'visa_charges'   => $request->visa_charges ?? 0,
                 'flight_charges' => $request->flight_charges ?? 0,
                 'other_charges'  => $request->other_charges ?? 0,
+                'discount'       => $request->discount ?? 0,
+                'additional_services_detail' => $additionalServicesDetail,           
                 'total_received' => $request->total_received ?? 0,
                 'total_amount'   => $total,
                 'balance'        => $total - ($request->total_received ?? 0),
@@ -272,17 +298,25 @@ class BookingController extends Controller
         $clients   = Client::where('status', 'active')->get();
         $companies = Company::all();
         $packages  = Package::with(['accommodations.hotel', 'transports', 'transportFlights'])->latest()->get();
+        $hotels    = \App\Models\Hotel::all();
         $years     = [date('Y'), date('Y') + 1, date('Y') + 2];
 
         $transactionsPaid = Transaction::where('client_id', $booking->client_id)
             ->where('status', 'confirmed')
             ->sum('amount');
 
-        return view('booking.edit', compact('booking', 'clients', 'companies', 'packages', 'years', 'transactionsPaid'));
+        return view('booking.edit', compact('booking', 'clients', 'companies', 'packages', 'hotels', 'years', 'transactionsPaid'));
     }
 
     public function update(Request $request, $id)
     {
+        if (!\Schema::hasColumn('bookings', 'additional_services_amount')) {
+            \Schema::table('bookings', function ($table) {
+                $table->decimal('additional_services_amount', 15, 2)->default(0)->after('other_charges');
+                $table->text('additional_services_detail')->nullable()->after('additional_services_amount');
+            });
+        }
+
         \Log::info('Update Request ID ' . $id . ': ', $request->all());
         $booking = Booking::findOrFail($id);
 
@@ -301,7 +335,9 @@ class BookingController extends Controller
         $total = (($request->package_cost ?? 0) * ($request->no_of_pax ?? 1))
             + ($request->visa_charges ?? 0)
             + ($request->flight_charges ?? 0)
-            + ($request->other_charges ?? 0);
+            + ($request->other_charges ?? 0)
+            + ($request->additional_services_amount ?? 0)
+            - ($request->discount ?? 0);
 
         $bookingData = array_merge(
             $request->except(['persons', 'hotels', 'transports', 'visas', 'flight_persons', '_token', '_method', 'cnic_front', 'cnic_back', 'passport_photo', 'photo', 'medical_certificate', 'flight_attachment']),
@@ -313,6 +349,8 @@ class BookingController extends Controller
                 'visa_charges'   => $request->visa_charges ?? 0,
                 'flight_charges' => $request->flight_charges ?? 0,
                 'other_charges'  => $request->other_charges ?? 0,
+                'discount'       => $request->discount ?? 0,
+                'additional_services_amount' => $request->additional_services_amount ?? 0,
                 'total_received' => $request->total_received ?? 0,
                 'total_amount'   => $total,
                 'balance'        => $total - ($request->total_received ?? 0),

@@ -58,6 +58,12 @@ class DashboardController extends Controller
             ->values()
             ->toArray();
 
+        if (!in_array($year, $availableYears) && count($availableYears) > 0) {
+            $year = $availableYears[0];
+            session(['dashboard_year' => $year]);
+            session(['dashboard_company_year' => $year]);
+        }
+
         if (!in_array(Carbon::now()->year, $availableYears)) {
             array_unshift($availableYears, Carbon::now()->year);
         }
