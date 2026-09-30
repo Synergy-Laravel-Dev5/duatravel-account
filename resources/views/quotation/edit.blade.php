@@ -208,9 +208,15 @@
                                     </button>
                                 </li>
                                 <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="additional-services-tab-btn" data-bs-toggle="tab"
+                                        data-bs-target="#additional-services-tab" type="button" role="tab">
+                                        <i class="mdi mdi-plus-circle me-1"></i> 7. Services
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
                                     <button class="nav-link" id="summary-tab" data-bs-toggle="tab"
                                         data-bs-target="#summary-pane" type="button" role="tab">
-                                        <i class="mdi mdi-chart-box-outline me-1"></i> 7. Full Summary
+                                        <i class="mdi mdi-chart-box-outline me-1"></i> 8. Full Summary
                                     </button>
                                 </li>
                             </ul>
@@ -438,16 +444,20 @@
                                                             class="form-control form-control-sm border-success acc-selling-roe {{ ($acc->selling_currency ?? ($acc->currency ?? 'PKR')) == 'PKR' ? 'bg-light' : '' }}" placeholder="1.00"
                                                             value="{{ ($acc->selling_currency ?? ($acc->currency ?? 'PKR')) == 'PKR' ? 1 : ($acc->selling_exchange_rate ?? ($acc->exchange_rate ?? 1)) }}" {{ ($acc->selling_currency ?? ($acc->currency ?? 'PKR')) == 'PKR' ? 'readonly' : '' }}>
                                                     </div>
-                                                    <div class="col-md-3">
+                                                    <div class="col-md-2">
                                                         <label class="form-label fs-12 fw-semibold text-success mb-1">Selling Amount (Foreign)</label>
                                                         <input type="number" step="any" name="accommodations[{{ $index }}][selling_amount]"
-                                                            class="form-control form-control-sm acc-selling" value="{{ $acc->selling_amount ?? 0 }}">
+                                                            class="form-control form-control-sm acc-selling bg-light" value="{{ $acc->selling_amount ?? 0 }}" readonly>
                                                     </div>
                                                     <div class="col-md-2">
                                                         <label class="form-label fs-12 fw-semibold text-success mb-1">Selling PKR</label>
-                                                        <div class="fs-13 fw-bold text-success pt-1 acc-sale-pkr-badge">PKR {{ number_format($acc->selling_amount_pkr ?? 0) }}</div>
+                                                        <div class="fs-13 fw-bold text-success pt-1 acc-sale-pkr-badge">PKR {{ number_format(($acc->selling_amount ?? 0) * ($acc->selling_exchange_rate ?? 1)) }}</div>
                                                     </div>
-                                                    <div class="col-md-3">
+                                                    <div class="col-md-2">
+                                                        <label class="form-label fs-12 fw-semibold text-success mb-1">Total Amount</label>
+                                                        <div class="fs-13 fw-bold text-success pt-1 acc-total-pkr-badge">PKR {{ number_format(($acc->selling_amount ?? 0) * ($acc->selling_exchange_rate ?? 1)) }}</div>
+                                                    </div>
+                                                    <div class="col-md-12">
                                                         <label class="form-label fs-12 fw-semibold text-primary mb-1">Estimated Stay Profit</label>
                                                         <div class="fs-13 fw-bold text-primary pt-1 acc-profit-pkr-badge">PKR {{ number_format(($acc->selling_amount_pkr ?? 0) - ($acc->cost_amount_pkr ?? 0)) }}</div>
                                                     </div>
@@ -769,7 +779,36 @@
                                 </div>
 
                                 <!-- ========================================================================= -->
-                                <!-- TAB 7: FULL SUMMARY & INCLUSIONS / TERMS -->
+                                <!-- TAB 7: ADDITIONAL SERVICES -->
+                                <!-- ========================================================================= -->
+                                <div class="tab-pane fade" id="additional-services-tab" role="tabpanel">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h5 class="fs-16 fw-semibold text-primary mb-0">7. Additional Services</h5>
+                                    </div>
+                                    <div class="row g-3">
+                                        <div class="col-md-12">
+                                            <label class="form-label fs-14 fw-semibold text-primary">
+                                                <i class="mdi mdi-text-box-outline me-1"></i> Additional Service Details
+                                            </label>
+                                            <textarea name="additional_services_detail" id="additional_services_detail" class="form-control summernote" rows="5">{{ $quotation->additional_services_detail ?? '' }}</textarea>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fs-13 fw-semibold text-success">Additional Service Amount (PKR)</label>
+                                            <input type="number" name="additional_services_amount" id="additional_services_amount" class="form-control calc" placeholder="Enter amount" step="any" value="{{ $quotation->additional_services_amount ?? 0 }}">
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between mt-3">
+                                        <button type="button" class="btn btn-secondary prev-tab-btn" data-target="#psf-tab">
+                                            <i class="mdi mdi-arrow-left me-1"></i> Back: 6. PSF
+                                        </button>
+                                        <button type="button" class="btn btn-primary next-tab-btn" data-target="#summary-tab">
+                                            Next: 8. Full Summary <i class="mdi mdi-arrow-right ms-1"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- ========================================================================= -->
+                                <!-- TAB 8: FULL SUMMARY & INCLUSIONS / TERMS -->
                                 <!-- ========================================================================= -->
                                 <div class="tab-pane fade" id="summary-pane" role="tabpanel">
                                     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -977,16 +1016,30 @@
             }
 
             function calculateNights(item) {
-                const cin = item.querySelector(".flatpickr-checkin")?.value;
-                const cout = item.querySelector(".flatpickr-checkout")?.value;
+                const cinInput = item.querySelector(".flatpickr-checkin");
+                const coutInput = item.querySelector(".flatpickr-checkout");
                 const nightsInput = item.querySelector(".acc-nights");
+                
+                const cin = cinInput?.value;
+                const cout = coutInput?.value;
 
                 if (cin && cout && nightsInput) {
                     const d1 = new Date(cin);
                     const d2 = new Date(cout);
-                    const diffDays = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
-                    if (diffDays > 0) {
-                        nightsInput.value = diffDays;
+                    
+                    if (d2 < d1) {
+                        alert('Check-out date cannot be earlier than Check-in date');
+                        if (coutInput._flatpickr) {
+                            coutInput._flatpickr.clear();
+                        } else {
+                            coutInput.value = '';
+                        }
+                        nightsInput.value = '';
+                    } else {
+                        const diffDays = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
+                        if (diffDays > 0) {
+                            nightsInput.value = diffDays;
+                        }
                     }
                 }
                 calculateAccommodationCost(item);
@@ -1536,14 +1589,24 @@
                     const rawCostEx = acc.querySelector(".acc-cost-roe")?.value;
                     const costRoe = (costCurr === 'PKR') ? 1 : (rawCostEx !== '' && !isNaN(parseFloat(rawCostEx)) ? parseFloat(rawCostEx) : 0);
                     const costAmt = parseFloat(acc.querySelector(".acc-cost")?.value) || 0;
-
                     const saleCurr = acc.querySelector(".acc-selling-currency")?.value || 'PKR';
                     const rawSaleEx = acc.querySelector(".acc-selling-roe")?.value;
                     const saleRoe = (saleCurr === 'PKR') ? 1 : (rawSaleEx !== '' && !isNaN(parseFloat(rawSaleEx)) ? parseFloat(rawSaleEx) : 0);
-                    const saleAmt = parseFloat(acc.querySelector(".acc-selling")?.value) || 0;
+                    
+                    let addServiceAmt = 0;
+                    if (acc === document.querySelector(".accommodation-item")) {
+                        addServiceAmt = parseFloat(document.getElementById("additional_services_amount")?.value) || 0;
+                    }
+                    
+                    const saleAmt = costAmt + addServiceAmt;
+                    const sellingInput = acc.querySelector(".acc-selling");
+                    if (sellingInput) sellingInput.value = saleAmt;
 
                     const accCostPkr = costAmt * costRoe;
                     const accSalePkr = saleAmt * saleRoe;
+
+                    const accTotalPkrBadge = acc.querySelector(".acc-total-pkr-badge");
+                    if (accTotalPkrBadge) accTotalPkrBadge.innerText = "PKR " + formatNum(accSalePkr);
                     const accProfitPkr = accSalePkr - accCostPkr;
 
                     totalAccCostPkr += accCostPkr;
@@ -1675,9 +1738,12 @@
                 document.getElementById("tblVisaSale").innerText = "PKR " + formatNum(totalVisaSalePkr);
                 document.getElementById("tblVisaProfit").innerText = "PKR " + formatNum(totalVisaSalePkr - totalVisaCostPkr);
 
+                // 7. Additional Services
+                const additionalServicesAmt = parseFloat(document.getElementById("additional_services_amount")?.value) || 0;
+
                 // Grand Totals
                 const grandCost = totalAccCostPkr + totalMealCostPkr + totalTransCostPkr + totalTourCostPkr + totalTrainCostPkr + totalVisaCostPkr + psfCostPkr;
-                const grandSale = totalAccSalePkr + totalMealSalePkr + totalTransSalePkr + totalTourSalePkr + totalTrainSalePkr + totalVisaSalePkr + psfSalePkr;
+                const grandSale = totalAccSalePkr + totalMealSalePkr + totalTransSalePkr + totalTourSalePkr + totalTrainSalePkr + totalVisaSalePkr + psfSalePkr + additionalServicesAmt;
                 const grandProfit = grandSale - grandCost;
                 const profitMargin = grandSale > 0 ? ((grandProfit / grandSale) * 100).toFixed(1) : 0;
                 const perPaxSale = masterPax > 0 ? (grandSale / masterPax) : grandSale;
@@ -1713,7 +1779,7 @@
                         calculateAccommodationCost(accItem);
                     }
                 }
-                if (e.target.matches(".acc-cost, .acc-selling, .acc-cost-roe, .acc-selling-roe, .acc-supplier, .acc-nights, .acc-rooms, .acc-per-night, .acc-male-beds, .acc-female-beds, .meal-cost, .meal-sale, .meal-pax, .meal-days, .meal-exrate, .trans-qty, .trans-exrate, .trans-cost, .trans-sale, .tour-qty, .tour-exrate, .tour-cost, .tour-sale, .train-pax, .train-exrate, .train-cost, .train-sale, .visa-exrate, .visa-cost, .visa-sale, #psfQty, #psfCostAmt, #psfCostRoe, #psfSellingAmt, #psfSellingRoe, #psfSupplierAmt, #master_total_pax")) {
+                if (e.target.matches(".acc-cost, .acc-selling, .acc-cost-roe, .acc-selling-roe, .acc-supplier, .acc-nights, .acc-rooms, .acc-per-night, .acc-male-beds, .acc-female-beds, .meal-cost, .meal-sale, .meal-pax, .meal-days, .meal-exrate, .trans-qty, .trans-exrate, .trans-cost, .trans-sale, .tour-qty, .tour-exrate, .tour-cost, .tour-sale, .train-pax, .train-exrate, .train-cost, .train-sale, .visa-exrate, .visa-cost, .visa-sale, #psfQty, #psfCostAmt, #psfCostRoe, #psfSellingAmt, #psfSellingRoe, #psfSupplierAmt, #master_total_pax, #additional_services_amount")) {
                     recalculateAll();
                 }
             });
@@ -1885,15 +1951,15 @@
                             <label class="form-label fs-12 fw-semibold text-success mb-1"><i class="mdi mdi-swap-horizontal me-1"></i> Selling ROE</label>
                             <input type="number" step="0.0001" name="accommodations[${accCounter-1}][selling_exchange_rate]" class="form-control form-control-sm border-success acc-selling-roe bg-light" readonly placeholder="1.00" value="1">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label class="form-label fs-12 fw-semibold text-success mb-1">Selling Amount (Foreign)</label>
-                            <input type="number" step="any" name="accommodations[${accCounter-1}][selling_amount]" class="form-control form-control-sm acc-selling" value="0">
+                            <input type="number" step="any" name="accommodations[${accCounter-1}][selling_amount]" class="form-control form-control-sm acc-selling bg-light" value="0" readonly>
                         </div>
                         <div class="col-md-2">
                             <label class="form-label fs-12 fw-semibold text-success mb-1">Selling PKR</label>
                             <div class="fs-13 fw-bold text-success pt-1 acc-sale-pkr-badge">PKR 0</div>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-12">
                             <label class="form-label fs-12 fw-semibold text-primary mb-1">Estimated Stay Profit</label>
                             <div class="fs-13 fw-bold text-primary pt-1 acc-profit-pkr-badge">PKR 0</div>
                         </div>
@@ -1969,6 +2035,33 @@
                     }
                 }
             });
+
+            if (typeof $ !== 'undefined' && $.fn.summernote) {
+                // Initialize Summernote
+                $('#additional_services_detail').summernote({
+                    height: 200,
+                    placeholder: 'Enter additional service details here...',
+                    toolbar: [
+                        ['style', ['style']],
+                        ['font', ['bold', 'italic', 'underline', 'clear']],
+                        ['fontname', ['fontname']],
+                        ['color', ['color']],
+                        ['para', ['ul', 'ol', 'paragraph']],
+                        ['height', ['height']],
+                        ['insert', ['link', 'picture', 'hr']],
+                        ['view', ['fullscreen', 'codeview']],
+                        ['help', ['help']]
+                    ]
+                });
+
+                // Fix: When the Additional Services tab is shown, refresh Summernote
+                $('button[data-bs-target="#additional-services-tab"]').on('shown.bs.tab', function() {
+                    // Re-focus to ensure it renders properly
+                    setTimeout(function() {
+                        $('#additional_services_detail').summernote('focus');
+                    }, 100);
+                });
+            }
 
             // Initial calculation on load
             recalculateAll();

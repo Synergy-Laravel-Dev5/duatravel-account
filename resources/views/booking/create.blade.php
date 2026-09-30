@@ -2,6 +2,7 @@
 @section('title', 'New Booking')
 
 @section('content')
+    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css" rel="stylesheet">
     <div class="content-page">
         <div class="content">
             <div class="container-fluid">
@@ -59,6 +60,8 @@
                                     class="mdi mdi-passport me-1"></i>Visa</a></li>
                         <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-costing"><i
                                     class="mdi mdi-cash me-1"></i>Costing</a></li>
+                        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-additional-services"><i
+                                    class="mdi mdi-plus-circle me-1"></i>Additional Services</a></li>
                     </ul>
 
                     <div class="tab-content border border-top-0 rounded-bottom p-4 bg-white" id="bookingTabsContent">
@@ -93,6 +96,7 @@
                                     <select name="status" class="form-select" readonly>
                                         <option value="pending" selected>Pending</option>
                                     </select>
+                                    <input type="hidden" name="package_type" id="package_type" value="umrah">
                                 </div>
                             </div>
                             <div class="d-flex justify-content-end mt-4">
@@ -292,8 +296,12 @@
                                         <div class="row g-3">
                                             <div class="col-md-4">
                                                 <label class="form-label">Hotel Name</label>
-                                                <input type="text" name="hotels[{{ $loop->index }}][hotel_name]"
-                                                    class="form-control" placeholder="Hotel name">
+                                                <select name="hotels[{{ $loop->index }}][hotel_name]" class="form-select">
+                                                    <option value="">Select Hotel</option>
+                                                    @foreach($hotels as $h)
+                                                        <option value="{{ $h->name }}">{{ $h->name }} ({{ $h->city }})</option>
+                                                    @endforeach
+                                                </select>
                                             </div>
                                             <div class="col-md-2">
                                                 <label class="form-label">Nights</label>
@@ -430,6 +438,11 @@
                                     <input type="number" name="other_charges" id="other_charges"
                                         class="form-control calc" placeholder="Enter other charges" step="0.01">
                                 </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Discount</label>
+                                    <input type="number" name="discount" id="discount"
+                                        class="form-control calc" placeholder="Enter discount" step="0.01">
+                                </div>
 
                                 <div class="col-12">
                                     <div class="table-responsive">
@@ -475,6 +488,31 @@
                                 </div>
                             </div>
 
+                            <div class="d-flex justify-content-between mt-4">
+                                <button type="button" class="btn btn-outline-secondary btn-prev">
+                                    <i class="mdi mdi-arrow-left me-1"></i> Prev
+                                </button>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-primary btn-next">Next <i class="mdi mdi-arrow-right ms-1"></i></button>
+                                    <button type="submit" class="btn btn-success px-5">
+                                        <i class="mdi mdi-content-save me-1"></i> Save Booking
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- TAB 9: Additional Services --}}
+                        <div class="tab-pane fade" id="tab-additional-services">
+                            <div class="row g-3">
+                                <div class="col-md-12">
+                                    <label class="form-label">Service Details</label>
+                                    <textarea name="additional_services_detail" id="additional_services_detail" class="form-control summernote"></textarea>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Service Amount</label>
+                                    <input type="number" name="additional_services_amount" id="additional_services_amount" class="form-control calc" placeholder="Enter amount" step="0.01" value="0">
+                                </div>
+                            </div>
                             <div class="d-flex justify-content-between mt-4">
                                 <button type="button" class="btn btn-outline-secondary btn-prev">
                                     <i class="mdi mdi-arrow-left me-1"></i> Prev
@@ -529,9 +567,11 @@
         }
     </style>
 
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.js"></script>
     <script>
         const packagesData = @json($packages);
         const clientsData  = @json($clients);
+        const hotelsData   = @json($hotels);
 
         const tabLinks = Array.from(document.querySelectorAll('#bookingTabs .nav-link'));
 
@@ -585,7 +625,7 @@
                 }
             }
 
-            const pkgCost = parseFloat(pkg.adult_pkr || pkg.adult_sar || 0);
+            const pkgCost = parseFloat(pkg.package_amount || pkg.adult_pkr || pkg.adult_sar || 0);
             if (document.getElementById('package_cost')) {
                 document.getElementById('package_cost').value = pkgCost ? pkgCost.toFixed(2) : '0.00';
             }
@@ -625,88 +665,196 @@
                 }
             }
 
+            // if (pkg.accommodations && pkg.accommodations.length > 0) {
+            //     const hotelsList = document.getElementById('hotelsList');
+            //     if (hotelsList) {
+            //         hotelsList.innerHTML = '';
+            //         pkg.accommodations.forEach((acc, idx) => {
+            //             const loc = acc.place ? acc.place.toLowerCase() : (idx === 0 ? 'makkah' : 'madinah');
+            //             const hotelName = acc.hotel ? acc.hotel.name : (acc.accommodation_type || '');
+            //             const roomType = acc.sharing_type || 'double';
+            //             let checkIn = acc.check_in ? acc.check_in.substring(0, 10) : '';
+            //             let checkOut = acc.check_out ? acc.check_out.substring(0, 10) : '';
+            //             let nights = acc.nights || acc.days || '';
+
+            //             if (checkIn && checkOut) {
+            //                 const dIn = new Date(checkIn);
+            //                 const dOut = new Date(checkOut);
+            //                 const diff = Math.round((dOut.getTime() - dIn.getTime()) / (1000 * 3600 * 24));
+            //                 if (!isNaN(diff) && diff >= 0) nights = diff;
+            //             } else if (checkIn && nights && !checkOut) {
+            //                 const dIn = new Date(checkIn);
+            //                 dIn.setDate(dIn.getDate() + parseInt(nights));
+            //                 const year = dIn.getFullYear();
+            //                 const month = String(dIn.getMonth() + 1).padStart(2, '0');
+            //                 const day = String(dIn.getDate()).padStart(2, '0');
+            //                 checkOut = `${year}-${month}-${day}`;
+            //             } else if (checkOut && nights && !checkIn) {
+            //                 const dOut = new Date(checkOut);
+            //                 dOut.setDate(dOut.getDate() - parseInt(nights));
+            //                 const year = dOut.getFullYear();
+            //                 const month = String(dOut.getMonth() + 1).padStart(2, '0');
+            //                 const day = String(dOut.getDate()).padStart(2, '0');
+            //                 checkIn = `${year}-${month}-${day}`;
+            //             }
+            //             if (!nights) nights = 1;
+
+            //             const hotelId = acc.hotel ? acc.hotel.id : '';
+            //             let hotelOptions = '<option value="">Select Hotel</option>';
+            //             if (typeof hotelsData !== 'undefined' && hotelsData.length > 0) {
+            //                 hotelsData.forEach(h => {
+            //                     const selected = h.id === hotelId ? 'selected' : '';
+            //                     hotelOptions += `<option value="${h.name}" ${selected}>${h.name} (${h.city})</option>`;
+            //                 });
+            //             }
+
+            //             hotelsList.insertAdjacentHTML('beforeend', `
+            //                 <div class="hotel-block border rounded p-3 mb-3">
+            //                     <div class="d-flex justify-content-between mb-2">
+            //                         <h6 class="text-primary mb-0">${acc.place || 'Hotel Option ' + (idx + 1)}</h6>
+            //                         ${idx >= 2 ? '<button type="button" class="btn btn-outline-danger btn-sm remove-hotel">× Remove</button>' : ''}
+            //                     </div>
+            //                     <input type="hidden" name="hotels[${idx}][location]" value="${loc}">
+            //                     <div class="row g-3">
+            //                         <div class="col-md-4">
+            //                             <label class="form-label">Hotel Name</label>
+            //                             <select name="hotels[${idx}][hotel_name]" class="form-select">
+            //                                 ${hotelOptions}
+            //                             </select>
+            //                         </div>
+            //                         <div class="col-md-2">
+            //                             <label class="form-label">Nights</label>
+            //                             <input type="number" name="hotels[${idx}][no_of_nights]" class="form-control" value="${nights}" min="1">
+            //                         </div>
+            //                         <div class="col-md-3">
+            //                             <label class="form-label">Room Type</label>
+            //                             <select name="hotels[${idx}][room_type]" class="form-select">
+            //                                 <option value="single" ${roomType === 'single' ? 'selected' : ''}>Single</option>
+            //                                 <option value="double" ${roomType === 'double' ? 'selected' : ''}>Double</option>
+            //                                 <option value="triple" ${roomType === 'triple' ? 'selected' : ''}>Triple</option>
+            //                                 <option value="quad" ${roomType === 'quad' ? 'selected' : ''}>Quad</option>
+            //                                 <option value="suite" ${roomType === 'suite' ? 'selected' : ''}>Suite</option>
+            //                             </select>
+            //                         </div>
+            //                         <div class="col-md-3">
+            //                             <label class="form-label">No. of Rooms</label>
+            //                             <input type="number" name="hotels[${idx}][no_of_rooms]" class="form-control" value="1" min="1">
+            //                         </div>
+            //                         <div class="col-md-3">
+            //                             <label class="form-label">Check In</label>
+            //                             <input type="date" name="hotels[${idx}][check_in]" class="form-control" value="${checkIn}">
+            //                         </div>
+            //                         <div class="col-md-3">
+            //                             <label class="form-label">Check Out</label>
+            //                             <input type="date" name="hotels[${idx}][check_out]" class="form-control" value="${checkOut}">
+            //                         </div>
+            //                         <div class="col-md-6">
+            //                             <label class="form-label">Hotel Voucher / Booking Confirmation</label>
+            //                             <input type="file" name="hotels[${idx}][hotel_voucher]" class="form-control" accept="image/*,.pdf">
+            //                         </div>
+            //                     </div>
+            //                 </div>
+            //             `);
+            //         });
+            //     }
+            // }
+
             if (pkg.accommodations && pkg.accommodations.length > 0) {
-                const hotelsList = document.getElementById('hotelsList');
-                if (hotelsList) {
-                    hotelsList.innerHTML = '';
-                    pkg.accommodations.forEach((acc, idx) => {
-                        const loc = acc.place ? acc.place.toLowerCase() : (idx === 0 ? 'makkah' : 'madinah');
-                        const hotelName = acc.hotel ? acc.hotel.name : (acc.accommodation_type || '');
-                        const roomType = acc.sharing_type || 'double';
-                        let checkIn = acc.check_in ? acc.check_in.substring(0, 10) : '';
-                        let checkOut = acc.check_out ? acc.check_out.substring(0, 10) : '';
-                        let nights = acc.nights || acc.days || '';
+    const hotelsList = document.getElementById('hotelsList');
+    if (hotelsList) {
+        hotelsList.innerHTML = '';
+        pkg.accommodations.forEach((acc, idx) => {
+            const loc = acc.place ? acc.place.toLowerCase() : (idx === 0 ? 'makkah' : 'madinah');
+            const hotelName = acc.hotel ? acc.hotel.name : (acc.accommodation_type || '');
+            const roomType = acc.sharing_type || 'double';
+            let checkIn = acc.check_in ? acc.check_in.substring(0, 10) : '';
+            let checkOut = acc.check_out ? acc.check_out.substring(0, 10) : '';
+            let nights = acc.nights || acc.days || '';
 
-                        if (checkIn && checkOut) {
-                            const dIn = new Date(checkIn);
-                            const dOut = new Date(checkOut);
-                            const diff = Math.round((dOut.getTime() - dIn.getTime()) / (1000 * 3600 * 24));
-                            if (!isNaN(diff) && diff >= 0) nights = diff;
-                        } else if (checkIn && nights && !checkOut) {
-                            const dIn = new Date(checkIn);
-                            dIn.setDate(dIn.getDate() + parseInt(nights));
-                            const year = dIn.getFullYear();
-                            const month = String(dIn.getMonth() + 1).padStart(2, '0');
-                            const day = String(dIn.getDate()).padStart(2, '0');
-                            checkOut = `${year}-${month}-${day}`;
-                        } else if (checkOut && nights && !checkIn) {
-                            const dOut = new Date(checkOut);
-                            dOut.setDate(dOut.getDate() - parseInt(nights));
-                            const year = dOut.getFullYear();
-                            const month = String(dOut.getMonth() + 1).padStart(2, '0');
-                            const day = String(dOut.getDate()).padStart(2, '0');
-                            checkIn = `${year}-${month}-${day}`;
-                        }
-                        if (!nights) nights = 1;
-
-                        hotelsList.insertAdjacentHTML('beforeend', `
-                            <div class="hotel-block border rounded p-3 mb-3">
-                                <div class="d-flex justify-content-between mb-2">
-                                    <h6 class="text-primary mb-0">${acc.place || 'Hotel Option ' + (idx + 1)}</h6>
-                                    ${idx >= 2 ? '<button type="button" class="btn btn-outline-danger btn-sm remove-hotel">× Remove</button>' : ''}
-                                </div>
-                                <input type="hidden" name="hotels[${idx}][location]" value="${loc}">
-                                <div class="row g-3">
-                                    <div class="col-md-4">
-                                        <label class="form-label">Hotel Name</label>
-                                        <input type="text" name="hotels[${idx}][hotel_name]" class="form-control" value="${hotelName}" placeholder="Hotel name">
-                                    </div>
-                                    <div class="col-md-2">
-                                        <label class="form-label">Nights</label>
-                                        <input type="number" name="hotels[${idx}][no_of_nights]" class="form-control" value="${nights}" min="1">
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label class="form-label">Room Type</label>
-                                        <select name="hotels[${idx}][room_type]" class="form-select">
-                                            <option value="single" ${roomType === 'single' ? 'selected' : ''}>Single</option>
-                                            <option value="double" ${roomType === 'double' ? 'selected' : ''}>Double</option>
-                                            <option value="triple" ${roomType === 'triple' ? 'selected' : ''}>Triple</option>
-                                            <option value="quad" ${roomType === 'quad' ? 'selected' : ''}>Quad</option>
-                                            <option value="suite" ${roomType === 'suite' ? 'selected' : ''}>Suite</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label class="form-label">No. of Rooms</label>
-                                        <input type="number" name="hotels[${idx}][no_of_rooms]" class="form-control" value="1" min="1">
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label class="form-label">Check In</label>
-                                        <input type="date" name="hotels[${idx}][check_in]" class="form-control" value="${checkIn}">
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label class="form-label">Check Out</label>
-                                        <input type="date" name="hotels[${idx}][check_out]" class="form-control" value="${checkOut}">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Hotel Voucher / Booking Confirmation</label>
-                                        <input type="file" name="hotels[${idx}][hotel_voucher]" class="form-control" accept="image/*,.pdf">
-                                    </div>
-                                </div>
-                            </div>
-                        `);
-                    });
-                }
+            if (checkIn && checkOut) {
+                const dIn = new Date(checkIn);
+                const dOut = new Date(checkOut);
+                const diff = Math.round((dOut.getTime() - dIn.getTime()) / (1000 * 3600 * 24));
+                if (!isNaN(diff) && diff >= 0) nights = diff;
+            } else if (checkIn && nights && !checkOut) {
+                const dIn = new Date(checkIn);
+                dIn.setDate(dIn.getDate() + parseInt(nights));
+                const year = dIn.getFullYear();
+                const month = String(dIn.getMonth() + 1).padStart(2, '0');
+                const day = String(dIn.getDate()).padStart(2, '0');
+                checkOut = `${year}-${month}-${day}`;
+            } else if (checkOut && nights && !checkIn) {
+                const dOut = new Date(checkOut);
+                dOut.setDate(dOut.getDate() - parseInt(nights));
+                const year = dOut.getFullYear();
+                const month = String(dOut.getMonth() + 1).padStart(2, '0');
+                const day = String(dOut.getDate()).padStart(2, '0');
+                checkIn = `${year}-${month}-${day}`;
             }
+            if (!nights) nights = 1;
+
+            // FIX: Use the hotel NAME to match, since the select option value is the hotel name
+            const selectedHotelName = acc.hotel ? acc.hotel.name : (acc.accommodation_type || '');
+
+            let hotelOptions = '<option value="">Select Hotel</option>';
+            if (typeof hotelsData !== 'undefined' && hotelsData.length > 0) {
+                hotelsData.forEach(h => {
+                    // FIX: Compare by name (since option value is the hotel name)
+                    const isSelected = (h.name === selectedHotelName) ? 'selected' : '';
+                    hotelOptions += `<option value="${h.name}" ${isSelected}>${h.name} (${h.place || ''})</option>`;
+                });
+            }
+
+            hotelsList.insertAdjacentHTML('beforeend', `
+                <div class="hotel-block border rounded p-3 mb-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <h6 class="text-primary mb-0">${acc.place || 'Hotel Option ' + (idx + 1)}</h6>
+                        ${idx >= 2 ? '<button type="button" class="btn btn-outline-danger btn-sm remove-hotel">× Remove</button>' : ''}
+                    </div>
+                    <input type="hidden" name="hotels[${idx}][location]" value="${loc}">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Hotel Name</label>
+                            <select name="hotels[${idx}][hotel_name]" class="form-select">
+                                ${hotelOptions}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Nights</label>
+                            <input type="number" name="hotels[${idx}][no_of_nights]" class="form-control" value="${nights}" min="1">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Room Type</label>
+                            <select name="hotels[${idx}][room_type]" class="form-select">
+                                <option value="single" ${roomType === 'single' ? 'selected' : ''}>Single</option>
+                                <option value="double" ${roomType === 'double' ? 'selected' : ''}>Double</option>
+                                <option value="triple" ${roomType === 'triple' ? 'selected' : ''}>Triple</option>
+                                <option value="quad" ${roomType === 'quad' ? 'selected' : ''}>Quad</option>
+                                <option value="suite" ${roomType === 'suite' ? 'selected' : ''}>Suite</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">No. of Rooms</label>
+                            <input type="number" name="hotels[${idx}][no_of_rooms]" class="form-control" value="1" min="1">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Check In</label>
+                            <input type="date" name="hotels[${idx}][check_in]" class="form-control" value="${checkIn}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Check Out</label>
+                            <input type="date" name="hotels[${idx}][check_out]" class="form-control" value="${checkOut}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Hotel Voucher / Booking Confirmation</label>
+                            <input type="file" name="hotels[${idx}][hotel_voucher]" class="form-control" accept="image/*,.pdf">
+                        </div>
+                    </div>
+                </div>
+            `);
+        });
+    }
+}
 
             if (pkg.transports && pkg.transports.length > 0) {
                 const routesList = document.getElementById('routesList');
@@ -1014,7 +1162,10 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Hotel Name</label>
-                        <input type="text" name="hotels[${hotelIdx}][hotel_name]" class="form-control" placeholder="Hotel name">
+                        <select name="hotels[${hotelIdx}][hotel_name]" class="form-select">
+                            <option value="">Select Hotel</option>
+                            ${hotelsData ? hotelsData.map(h => `<option value="${h.name}">${h.name} (${h.place || ''})</option>`).join('') : ''}
+                        </select>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Nights</label>
@@ -1098,10 +1249,12 @@
             const visa = parseFloat(document.getElementById('visa_charges').value) || 0;
             const flight = parseFloat(document.getElementById('flight_charges').value) || 0;
             const other = parseFloat(document.getElementById('other_charges').value) || 0;
+            const discount = parseFloat(document.getElementById('discount') ? document.getElementById('discount').value : 0) || 0;
+            const additional = parseFloat(document.getElementById('additional_services_amount') ? document.getElementById('additional_services_amount').value : 0) || 0;
             const received = parseFloat(document.getElementById('total_received').value) || 0;
 
             const pkgTotal = pkg * pax;
-            const total = pkgTotal + visa + flight + other;
+            const total = pkgTotal + visa + flight + other + additional - discount;
             const balance = total - received;
 
             document.getElementById('total_amount').value = total.toFixed(2);
@@ -1118,7 +1271,7 @@
             document.getElementById('sum_pkg').textContent = pkgTotal.toFixed(2);
             document.getElementById('sum_visa').textContent = visa.toFixed(2);
             document.getElementById('sum_flight').textContent = flight.toFixed(2);
-            document.getElementById('sum_other').textContent = other.toFixed(2);
+            document.getElementById('sum_other').textContent = (other + additional - discount).toFixed(2);
             document.getElementById('sum_total').textContent = total.toFixed(2);
         }
 
@@ -1181,5 +1334,35 @@
                 handleHotelDateCalc(e.target);
             });
         })();
+
+      $(document).ready(function() {
+    if (typeof $ !== 'undefined' && $.fn.summernote) {
+        // Initialize Summernote
+        $('#additional_services_detail').summernote({
+            height: 200,
+            placeholder: 'Enter additional service details here...',
+            toolbar: [
+                ['style', ['style']],
+                ['font', ['bold', 'italic', 'underline', 'clear']],
+                ['fontname', ['fontname']],
+                ['color', ['color']],
+                ['para', ['ul', 'ol', 'paragraph']],
+                ['height', ['height']],
+                ['insert', ['link', 'picture', 'hr']],
+                ['view', ['fullscreen', 'codeview']],
+                ['help', ['help']]
+            ]
+        });
+
+        // Fix: When the Additional Services tab is shown, refresh Summernote
+        $('a[href="#tab-additional-services"]').on('shown.bs.tab', function() {
+            $('#additional_services_detail').summernote('reset');
+            // Re-focus to ensure it renders properly
+            setTimeout(function() {
+                $('#additional_services_detail').summernote('focus');
+            }, 100);
+        });
+    }
+});
     </script>
 @endsection

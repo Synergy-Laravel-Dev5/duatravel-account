@@ -2,6 +2,7 @@
 @section('title', 'Edit Booking')
 
 @section('content')
+    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css" rel="stylesheet">
     <div class="content-page">
         <div class="content">
             <div class="container-fluid">
@@ -70,6 +71,8 @@
                                     class="mdi mdi-passport me-1"></i>Visa</a></li>
                         <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-costing"><i
                                     class="mdi mdi-cash me-1"></i>Costing</a></li>
+                        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-additional-services"><i
+                                    class="mdi mdi-plus-circle me-1"></i>Additional Services</a></li>
                     </ul>
 
                     <div class="tab-content border border-top-0 rounded-bottom p-4 bg-white">
@@ -120,6 +123,7 @@
                                         <option value="cancelled" {{ $booking->status == 'cancelled' ? 'selected' : '' }}>
                                             Cancelled</option>
                                     </select>
+                                    <input type="hidden" name="package_type" id="package_type" value="{{ old('package_type', $booking->package_type ?? 'umrah') }}">
                                 </div>
 
                             </div>
@@ -493,8 +497,12 @@
                                         <div class="row g-3">
                                             <div class="col-md-4">
                                                 <label class="form-label">Hotel Name</label>
-                                                <input type="text" name="hotels[{{ $loop->index }}][hotel_name]"
-                                                    class="form-control" value="{{ $hotel->hotel_name }}">
+                                                <select name="hotels[{{ $loop->index }}][hotel_name]" class="form-select">
+                                                    <option value="">Select Hotel</option>
+                                                    @foreach($hotels as $h)
+                                                        <option value="{{ $h->name }}" {{ $hotel->hotel_name == $h->name ? 'selected' : '' }}>{{ $h->name }} ({{ $h->city }})</option>
+                                                    @endforeach
+                                                </select>
                                             </div>
                                             <div class="col-md-2">
                                                 <label class="form-label">Nights</label>
@@ -749,6 +757,13 @@
                                         value="{{ old('other_charges', $booking->other_charges ?: '') }}"
                                         placeholder="Enter other charges" step="0.01">
                                 </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Discount</label>
+                                    <input type="number" name="discount" id="discount"
+                                        class="form-control calc"
+                                        value="{{ old('discount', $booking->discount ?: '') }}"
+                                        placeholder="Enter discount" step="0.01">
+                                </div>
 
                                 <div class="col-12">
                                     <div class="table-responsive">
@@ -834,6 +849,31 @@
                                     <i class="mdi mdi-arrow-left me-1"></i> Prev
                                 </button>
                                 <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-primary btn-next">Next <i class="mdi mdi-arrow-right ms-1"></i></button>
+                                    <button type="submit" class="btn btn-success px-5">
+                                        <i class="mdi mdi-content-save me-1"></i> Update Booking
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- TAB 9: Additional Services --}}
+                        <div class="tab-pane fade" id="tab-additional-services">
+                            <div class="row g-3">
+                                <div class="col-md-12">
+                                    <label class="form-label">Service Details</label>
+                                    <textarea name="additional_services_detail" id="additional_services_detail" class="form-control summernote">{{ old('additional_services_detail', $booking->additional_services_detail ?? '') }}</textarea>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Service Amount</label>
+                                    <input type="number" name="additional_services_amount" id="additional_services_amount" class="form-control calc" placeholder="Enter amount" step="0.01" value="{{ old('additional_services_amount', $booking->additional_services_amount ?? 0) }}">
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between mt-4">
+                                <button type="button" class="btn btn-outline-secondary btn-prev">
+                                    <i class="mdi mdi-arrow-left me-1"></i> Prev
+                                </button>
+                                <div class="d-flex gap-2">
                                     <a href="{{ route('booking.index') }}" class="btn btn-secondary">Cancel</a>
                                     <button type="submit" class="btn btn-success px-5">
                                         <i class="mdi mdi-content-save me-1"></i> Update Booking
@@ -884,9 +924,11 @@
         }
     </style>
 
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.js"></script>
     <script>
         const packagesData     = @json($packages);
         const clientsData      = @json($clients);
+        const hotelsData       = @json($hotels);
         const existingVisas    = @json($booking->visas);
         const transactionsPaid = {{ $transactionsPaid ?? 0 }};
 
@@ -922,7 +964,7 @@
                 }
             }
 
-            const pkgCost = parseFloat(pkg.adult_pkr || pkg.adult_sar || 0);
+            const pkgCost = parseFloat(pkg.package_amount || pkg.adult_pkr || pkg.adult_sar || 0);
             if (document.getElementById('package_cost')) {
                 document.getElementById('package_cost').value = pkgCost ? pkgCost.toFixed(2) : '0.00';
             }
@@ -996,6 +1038,15 @@
                         }
                         if (!nights) nights = 1;
 
+                        const hotelId = acc.hotel ? acc.hotel.id : '';
+                        let hotelOptions = '<option value="">Select Hotel</option>';
+                        if (typeof hotelsData !== 'undefined' && hotelsData.length > 0) {
+                            hotelsData.forEach(h => {
+                                const selected = h.id === hotelId ? 'selected' : '';
+                                hotelOptions += `<option value="${h.name}" ${selected}>${h.name} (${h.place || ''})</option>`;
+                            });
+                        }
+
                         hotelsList.insertAdjacentHTML('beforeend', `
                             <div class="hotel-block border rounded p-3 mb-3">
                                 <div class="d-flex justify-content-between mb-2">
@@ -1006,7 +1057,9 @@
                                 <div class="row g-3">
                                     <div class="col-md-4">
                                         <label class="form-label">Hotel Name</label>
-                                        <input type="text" name="hotels[${idx}][hotel_name]" class="form-control" value="${hotelName}" placeholder="Hotel name">
+                                        <select name="hotels[${idx}][hotel_name]" class="form-select">
+                                            ${hotelOptions}
+                                        </select>
                                     </div>
                                     <div class="col-md-2">
                                         <label class="form-label">Nights</label>
@@ -1453,7 +1506,10 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Hotel Name</label>
-                            <input type="text" name="hotels[${hotelIdx}][hotel_name]" class="form-control" placeholder="Hotel name">
+                            <select name="hotels[${hotelIdx}][hotel_name]" class="form-select">
+                                <option value="">Select Hotel</option>
+                                ${hotelsData ? hotelsData.map(h => `<option value="${h.name}">${h.name} (${h.place || ''})</option>`).join('') : ''}
+                            </select>
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">Nights</label>
@@ -1537,15 +1593,19 @@
             const visa = parseFloat(document.getElementById('visa_charges').value) || 0;
             const flight = parseFloat(document.getElementById('flight_charges').value) || 0;
             const other = parseFloat(document.getElementById('other_charges').value) || 0;
+            const discount = parseFloat(document.getElementById('discount') ? document.getElementById('discount').value : 0) || 0;
+            const additional = parseFloat(document.getElementById('additional_services_amount') ? document.getElementById('additional_services_amount').value : 0) || 0;
             const received = parseFloat(document.getElementById('total_received').value) || 0;
 
             const pkgTotal = pkg * pax;
-            const total = pkgTotal + visa + flight + other;
+            const total = pkgTotal + visa + flight + other + additional - discount;
 
             const balance = total - received - transactionsPaid;
 
             document.getElementById('total_amount').value = total.toFixed(2);
-            document.getElementById('balance').value = balance.toFixed(2);
+            if (document.getElementById('balance')) {
+                document.getElementById('balance').value = balance.toFixed(2);
+            }
 
             document.getElementById('bar_pax').textContent = pax;
             document.getElementById('bar_adult').textContent = pkgTotal.toFixed(2);
@@ -1558,7 +1618,7 @@
             document.getElementById('sum_pkg').textContent = pkgTotal.toFixed(2);
             document.getElementById('sum_visa').textContent = visa.toFixed(2);
             document.getElementById('sum_flight').textContent = flight.toFixed(2);
-            document.getElementById('sum_other').textContent = other.toFixed(2);
+            document.getElementById('sum_other').textContent = (other + additional - discount).toFixed(2);
             document.getElementById('sum_total').textContent = total.toFixed(2);
         }
 
@@ -1624,5 +1684,18 @@
                 handleHotelDateCalc(e.target);
             });
         })();
+
+        $(document).ready(function() {
+            if (typeof $ !== 'undefined' && $.fn.summernote) {
+                $('.summernote').summernote({
+                    height: 150,
+                    toolbar: [
+                        ['style', ['style']],
+                        ['font', ['bold', 'underline', 'clear']],
+                        ['para', ['ul', 'ol', 'paragraph']],
+                    ]
+                });
+            }
+        });
     </script>
 @endsection

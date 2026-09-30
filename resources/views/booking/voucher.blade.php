@@ -306,6 +306,18 @@
                     <td>Other Charges</td>
                     <td>PKR {{ number_format($booking->other_charges, 0) }}</td>
                 </tr>
+                @if($booking->additional_services_amount > 0)
+                <tr>
+                    <td>Additional Services<br><small style="color: #666; font-size: 11px;">{!! strip_tags($booking->additional_services_detail) !!}</small></td>
+                    <td>PKR {{ number_format($booking->additional_services_amount, 0) }}</td>
+                </tr>
+                @endif
+                @if($booking->discount > 0)
+                <tr>
+                    <td>Discount</td>
+                    <td style="color: red;">- PKR {{ number_format($booking->discount, 0) }}</td>
+                </tr>
+                @endif
                 <tr class="total-line">
                     <td>Total Amount</td>
                     <td>PKR {{ number_format($booking->total_amount, 0) }}</td>
