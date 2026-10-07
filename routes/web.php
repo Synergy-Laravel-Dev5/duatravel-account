@@ -47,6 +47,10 @@ Route::middleware('guest')->group(function () {
 
 Route::get('/booking/{booking}/hajj-agreement', [BookingController::class, 'agreement'])->middleware('signed')->name('booking.agreement');
 Route::post('/save-agreement-signature', [BookingController::class, 'saveAgreementSignature'])->name('save.agreement.signature');
+
+// Public Live Pilgrim E-Pass
+Route::get('/pilgrim/e-pass/{id}', [\App\Http\Controllers\PilgrimPassController::class, 'show'])->name('pilgrim.epass');
+
 Route::middleware(['auth:web,company'])->group(function () {
         Route::get('/', [DashboardController::class, 'welcome'])->name('welcome');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -414,6 +418,14 @@ Route::middleware(['auth:web,company'])->group(function () {
         });
 
         Route::get('reports/check-in', [CheckInReportController::class, 'index'])->name('reports.checkin');
+
+        // Pilgrim ID Badge & Bulk Badges
+        Route::get('pilgrim/badge/{id}', [\App\Http\Controllers\PilgrimPassController::class, 'badge'])->name('pilgrim.badge');
+        Route::get('booking/{booking}/badges', [\App\Http\Controllers\PilgrimPassController::class, 'bulkBadges'])->name('pilgrim.bulk-badges');
+
+        // Profit & Loss Report
+        Route::get('reports/profit-loss', [\App\Http\Controllers\ProfitLossReportController::class, 'index'])->name('report.profit-loss');
+        Route::get('reports/profit-loss/pdf', [\App\Http\Controllers\ProfitLossReportController::class, 'exportPdf'])->name('report.profit-loss.pdf');
 
         Route::post('/leads/{lead}/follow-ups', [FollowUpController::class, 'store'])->name('followUp.store');
         Route::post('/follow-ups/{followUp}/take', [FollowUpController::class, 'take'])->name('followUp.take');

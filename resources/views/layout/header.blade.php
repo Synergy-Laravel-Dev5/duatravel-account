@@ -319,6 +319,12 @@
                             </li> --}}
                             
                             <li>
+                                <a class="tp-link" href="{{ route('report.profit-loss') }}">
+                                    <i data-feather="dollar-sign"></i>
+                                    <span>Profit & Loss Report</span>
+                                </a>
+                            </li>
+                            <li>
                                 <a class="tp-link" href="{{ route('bank-transfer.index') }}">
                                     <i data-feather="repeat"></i>
                                     <span>Bank Transfers</span>

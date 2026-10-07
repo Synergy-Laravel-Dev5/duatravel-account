@@ -510,6 +510,9 @@
             </div>
 
             <div class="d-flex gap-2 flex-wrap">
+                <a href="{{ route('pilgrim.bulk-badges', $booking->id) }}" target="_blank" class="btn-action btn-action-secondary">
+                    <i class="mdi mdi-card-account-details-outline"></i> Print Badges
+                </a>
                 <button type="button" class="btn-action btn-action-secondary" id="toggleCostBtn" onclick="toggleCostingVisibility()">
                     <i class="mdi mdi-eye-off-outline" id="toggleCostIcon"></i>
                     <span id="toggleCostText">Hide Costing</span>
@@ -904,6 +907,7 @@
                                 <th>City & Blood</th>
                                 <th>Attached Documents</th>
                                 <th>Nominee</th>
+                                <th class="text-center no-print">Pass & Badge</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -982,6 +986,16 @@
                                         @else
                                             <span class="text-muted">—</span>
                                         @endif
+                                    </td>
+                                    <td class="text-center no-print">
+                                        <div class="d-flex justify-content-center gap-1">
+                                            <a href="{{ route('pilgrim.badge', $person->id) }}" target="_blank" class="doc-thumb-mini" title="Print Lanyard Badge">
+                                                <i class="mdi mdi-card-account-details-outline text-primary"></i> Badge
+                                            </a>
+                                            <a href="{{ route('pilgrim.epass', $person->id) }}" target="_blank" class="doc-thumb-mini" title="Live Mobile E-Pass">
+                                                <i class="mdi mdi-qrcode text-success"></i> E-Pass
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach
