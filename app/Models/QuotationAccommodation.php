@@ -23,7 +23,7 @@ class QuotationAccommodation extends Model
 
     public function supplier()
     {
-        return $this->belongsTo(Company::class, 'supplier_id');
+        return $this->belongsTo(Supplier::class, 'supplier_id');
     }
 
     public function mealPlans()

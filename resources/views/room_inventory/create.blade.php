@@ -86,9 +86,9 @@
                                 <label class="form-label fs-13 fw-semibold">Supplier / Vendor</label>
                                 <select name="supplier_id" class="form-select form-select-sm">
                                     <option value="">-- Direct Hotel / No Supplier --</option>
-                                    @foreach($companies as $company)
-                                        <option value="{{ $company->id }}" {{ old('supplier_id') == $company->id ? 'selected' : '' }}>
-                                            {{ $company->company_name }}
+                                    @foreach($suppliers as $sup)
+                                        <option value="{{ $sup->id }}" {{ old('supplier_id') == $sup->id ? 'selected' : '' }}>
+                                            {{ $sup->name }}{{ $sup->company_name ? ' (' . $sup->company_name . ')' : '' }} - {{ ucfirst($sup->service_type ?? 'Hotel') }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -142,10 +142,11 @@
 
                     <div class="card-body p-3">
                         <div class="row g-2 mb-2 text-muted fs-12 fw-semibold d-none d-md-flex">
-                            <div class="col-md-3">Room Type</div>
+                            <div class="col-md-2">Room Type</div>
                             <div class="col-md-3 text-primary">Number of Rooms / Beds (Stock)</div>
-                            <div class="col-md-3">Room View</div>
-                            <div class="col-md-3">Meal Plan</div>
+                            <div class="col-md-3">Room Number(s)</div>
+                            <div class="col-md-2">Room View</div>
+                            <div class="col-md-2">Meal Plan</div>
                         </div>
 
                         @php
@@ -163,7 +164,7 @@
                         @foreach($roomTypes as $type => $info)
                             <div class="room-input-row border-bottom pb-2 mb-2">
                                 <div class="row g-2 align-items-center">
-                                    <div class="col-md-3">
+                                    <div class="col-md-2">
                                         <span class="fw-bold fs-14 text-dark d-flex align-items-center gap-1">
                                             <i class="mdi mdi-bed me-1 text-primary"></i> {{ $info['label'] }}
                                             @if($type === 'Sharing')
@@ -208,6 +209,10 @@
                                         @endif
                                     </div>
                                     <div class="col-md-3">
+                                        <input type="text" name="room_numbers_{{ $type }}" class="form-control form-control-sm"
+                                            placeholder="e.g. 101, 102, 103 or 201-210" value="{{ old('room_numbers_' . $type) }}">
+                                    </div>
+                                    <div class="col-md-2">
                                         <select name="room_view_{{ $type }}" class="form-select form-select-sm">
                                             <option value="City View">City View</option>
                                             <option value="Haram View">Haram View</option>
@@ -216,7 +221,7 @@
                                             <option value="Courtyard View">Courtyard View</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-2">
                                         <select name="meal_plan_{{ $type }}" class="form-select form-select-sm">
                                             <option value="Room Only">Room Only (RO)</option>
                                             <option value="Bed & Breakfast">Bed & Breakfast (BB)</option>

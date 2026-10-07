@@ -11,12 +11,16 @@ class Booking extends Model
 
     protected $fillable = [
         'client_id',
+        'haji_id',
         'company_id',
         'package_id',
         'booking_for',
         'package_type',
         'passport_number',
+        'room_number',
         'package_year',
+        'booking_date',
+        'currency',
         'cnic',
         'no_of_pax',
         'care_of',
@@ -51,8 +55,15 @@ class Booking extends Model
         'visa_company',
         'visa_send_to',
         'package_name',
+        'flight_supplier_id',
+        'flight_roe',
+        'flight_cost_rate',
+        'flight_cost',
+        'flight_selling_rate',
+        'hotel_charges',
         'package_cost',
         'visa_charges',
+        'transport_charges',
         'flight_charges',
         'other_charges',
         'discount',
@@ -64,6 +75,11 @@ class Booking extends Model
         'status',
         'agreement_signature',
     ];
+
+    public function flightSupplier()
+    {
+        return $this->belongsTo(Supplier::class, 'flight_supplier_id');
+    }
 
     public function client()
     {

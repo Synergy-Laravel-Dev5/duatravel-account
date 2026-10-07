@@ -162,4 +162,10 @@ class HotelController extends Controller
 
         return redirect()->route('hotel.index')->with('success', 'Hotel restored successfully.');
     }
+
+    public function jsonList()
+    {
+        $hotels = Hotel::where('status', 'active')->orWhereNull('status')->orderBy('name')->get();
+        return response()->json($hotels);
+    }
 }

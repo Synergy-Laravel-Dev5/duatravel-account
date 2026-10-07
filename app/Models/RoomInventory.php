@@ -32,7 +32,7 @@ class RoomInventory extends Model
 
     public function supplier()
     {
-        return $this->belongsTo(Company::class, 'supplier_id');
+        return $this->belongsTo(Supplier::class, 'supplier_id');
     }
 
     public function scopeActive($query)
@@ -52,7 +52,11 @@ class RoomInventory extends Model
      */
     public static function getAvailability($hotelId, $roomType, $checkIn = null, $checkOut = null, $excludeQuotationId = null, $gender = null)
     {
-        if (!$hotelId) {
+        $hotel = is_numeric($hotelId) ? Hotel::find($hotelId) : Hotel::where('name', $hotelId)->first();
+        $numericHotelId = $hotel ? $hotel->id : (is_numeric($hotelId) ? (int) $hotelId : null);
+        $hotelName = $hotel ? $hotel->name : (is_string($hotelId) ? $hotelId : null);
+
+        if (!$numericHotelId && !$hotelName) {
             return [
                 'has_inventory' => false,
                 'is_sharing'    => false,
@@ -65,12 +69,24 @@ class RoomInventory extends Model
         }
 
         $isSharing = (strtolower(trim($roomType)) === 'sharing');
+        $cleanType = strtolower(trim($roomType));
 
-        // Check if ANY inventory exists for this hotel & room type
-        $hasAnyInventory = self::active()
-            ->where('hotel_id', $hotelId)
-            ->whereRaw('LOWER(TRIM(room_type)) = ?', [strtolower(trim($roomType))])
-            ->exists();
+        // Find all active inventory records for this hotel and room type
+        $baseInvQuery = self::active()
+            ->where(function($q) use ($numericHotelId, $hotelName) {
+                if ($numericHotelId) $q->where('hotel_id', $numericHotelId);
+                if ($hotelName) {
+                    $q->orWhereHas('hotel', function($hQ) use ($hotelName) {
+                        $hQ->where('name', $hotelName);
+                    });
+                }
+            })
+            ->where(function($q) use ($cleanType) {
+                $q->whereRaw('LOWER(TRIM(room_type)) = ?', [$cleanType])
+                  ->orWhereRaw('LOWER(TRIM(room_type)) LIKE ?', [$cleanType . '%']);
+            });
+
+        $hasAnyInventory = (clone $baseInvQuery)->exists();
 
         if (!$hasAnyInventory) {
             return [
@@ -84,17 +100,14 @@ class RoomInventory extends Model
             ];
         }
 
-        // 1. Find all active inventory records for this hotel and room type
-        $invQuery = self::active()
-            ->where('hotel_id', $hotelId)
-            ->whereRaw('LOWER(TRIM(room_type)) = ?', [strtolower(trim($roomType))]);
+        // 1. Check if there are date-specific inventory allotments or open stock
+        $invQuery = clone $baseInvQuery;
 
-        // If dates are provided, filter inventory that covers or overlaps these dates (or perpetual inventories)
         if ($checkIn && $checkOut) {
             $cIn = date('Y-m-d', strtotime($checkIn));
             $cOut = date('Y-m-d', strtotime($checkOut));
 
-            $invQuery->where(function ($q) use ($cIn, $cOut) {
+            $datedQuery = (clone $baseInvQuery)->where(function ($q) use ($cIn, $cOut) {
                 // Open / perpetual stock
                 $q->where(function ($sub) {
                     $sub->whereNull('check_in')->whereNull('check_out');
@@ -105,23 +118,30 @@ class RoomInventory extends Model
                         ->where('check_out', '>=', $cIn);
                 });
             });
+
+            if ($datedQuery->exists()) {
+                $invQuery = $datedQuery;
+            }
         }
 
         $totalStock = (int) (clone $invQuery)->sum('total_rooms');
+        if ($totalStock <= 0) {
+            $totalStock = (int) (clone $baseInvQuery)->sum('total_rooms');
+        }
 
         // 2. Calculate booked rooms from active quotations
         $bookedQuery = QuotationAccommodation::whereHas('quotation', function ($q) {
                 $q->whereNull('deleted_at')
                   ->whereNotIn('status', ['cancelled', 'rejected']);
             })
-            ->where(function ($q) use ($hotelId) {
-                $q->where('hotel_id', $hotelId);
-                $hotel = Hotel::find($hotelId);
-                if ($hotel) {
-                    $q->orWhere('hotel_name', $hotel->name);
-                }
+            ->where(function ($q) use ($numericHotelId, $hotelName) {
+                if ($numericHotelId) $q->where('hotel_id', $numericHotelId);
+                if ($hotelName) $q->orWhere('hotel_name', $hotelName);
             })
-            ->whereRaw('LOWER(TRIM(room_type)) = ?', [strtolower(trim($roomType))]);
+            ->where(function($q) use ($cleanType) {
+                $q->whereRaw('LOWER(TRIM(room_type)) = ?', [$cleanType])
+                  ->orWhereRaw('LOWER(TRIM(room_type)) LIKE ?', [$cleanType . '%']);
+            });
 
         if ($excludeQuotationId) {
             $bookedQuery->where('quotation_id', '!=', $excludeQuotationId);
@@ -152,6 +172,12 @@ class RoomInventory extends Model
                 $totalBeds = $totalStock;
             } elseif ($totalBeds <= 0 && ($maleStock > 0 || $femaleStock > 0)) {
                 $totalBeds = $maleStock + $femaleStock;
+            }
+            if ($totalBeds <= 0) {
+                $maleStock = (int) (clone $baseInvQuery)->sum('male_beds');
+                $femaleStock = (int) (clone $baseInvQuery)->sum('female_beds');
+                $totalBeds = (int) (clone $baseInvQuery)->sum('total_beds');
+                if ($totalBeds <= 0) $totalBeds = $maleStock + $femaleStock;
             }
 
             $maleBooked = (int) (clone $bookedQuery)->sum('male_beds');
@@ -225,42 +251,66 @@ class RoomInventory extends Model
      */
     public static function getHotelSummary($hotelId = null, $checkIn = null, $checkOut = null)
     {
+        $hotel = $hotelId ? (is_numeric($hotelId) ? Hotel::find($hotelId) : Hotel::where('name', $hotelId)->first()) : null;
+        $numericHotelId = $hotel ? $hotel->id : (is_numeric($hotelId) ? (int) $hotelId : null);
+        $hotelName = $hotel ? $hotel->name : (is_string($hotelId) ? $hotelId : null);
+
         $types = ['Double', 'Triple', 'Quad', 'Quint', 'Single', 'Sharing', 'Suite'];
         $summary = [];
 
         foreach ($types as $type) {
-            $invQuery = self::active()->whereRaw('LOWER(TRIM(room_type)) = ?', [strtolower($type)]);
-            if ($hotelId) {
-                $invQuery->where('hotel_id', $hotelId);
+            $cleanType = strtolower($type);
+            $baseInvQuery = self::active()->where(function($q) use ($cleanType) {
+                $q->whereRaw('LOWER(TRIM(room_type)) = ?', [$cleanType])
+                  ->orWhereRaw('LOWER(TRIM(room_type)) LIKE ?', [$cleanType . '%']);
+            });
+
+            if ($numericHotelId || $hotelName) {
+                $baseInvQuery->where(function($q) use ($numericHotelId, $hotelName) {
+                    if ($numericHotelId) $q->where('hotel_id', $numericHotelId);
+                    if ($hotelName) {
+                        $q->orWhereHas('hotel', function($hQ) use ($hotelName) {
+                            $hQ->where('name', $hotelName);
+                        });
+                    }
+                });
             }
 
+            $invQuery = clone $baseInvQuery;
             if ($checkIn && $checkOut) {
                 $cIn = date('Y-m-d', strtotime($checkIn));
                 $cOut = date('Y-m-d', strtotime($checkOut));
-                $invQuery->where(function ($q) use ($cIn, $cOut) {
+                $datedQuery = (clone $baseInvQuery)->where(function ($q) use ($cIn, $cOut) {
                     $q->where(function ($sub) {
                         $sub->whereNull('check_in')->whereNull('check_out');
                     })->orWhere(function ($sub) use ($cIn, $cOut) {
                         $sub->where('check_in', '<=', $cOut)->where('check_out', '>=', $cIn);
                     });
                 });
+
+                if ($datedQuery->exists()) {
+                    $invQuery = $datedQuery;
+                }
             }
 
-            $totalStock = (int) $invQuery->sum('total_rooms');
+            $totalStock = (int) (clone $invQuery)->sum('total_rooms');
+            if ($totalStock <= 0) {
+                $totalStock = (int) (clone $baseInvQuery)->sum('total_rooms');
+            }
 
             // Booked query
             $bookedQuery = QuotationAccommodation::whereHas('quotation', function ($q) {
                     $q->whereNull('deleted_at')->whereNotIn('status', ['cancelled', 'rejected']);
                 })
-                ->whereRaw('LOWER(TRIM(room_type)) = ?', [strtolower($type)]);
+                ->where(function($q) use ($cleanType) {
+                    $q->whereRaw('LOWER(TRIM(room_type)) = ?', [$cleanType])
+                      ->orWhereRaw('LOWER(TRIM(room_type)) LIKE ?', [$cleanType . '%']);
+                });
 
-            if ($hotelId) {
-                $hotel = Hotel::find($hotelId);
-                $bookedQuery->where(function ($q) use ($hotelId, $hotel) {
-                    $q->where('hotel_id', $hotelId);
-                    if ($hotel) {
-                        $q->orWhere('hotel_name', $hotel->name);
-                    }
+            if ($numericHotelId || $hotelName) {
+                $bookedQuery->where(function ($q) use ($numericHotelId, $hotelName) {
+                    if ($numericHotelId) $q->where('hotel_id', $numericHotelId);
+                    if ($hotelName) $q->orWhere('hotel_name', $hotelName);
                 });
             }
 
@@ -294,6 +344,10 @@ class RoomInventory extends Model
             if (strtolower($type) === 'sharing') {
                 $maleStock = (int) (clone $invQuery)->sum('male_beds');
                 $femaleStock = (int) (clone $invQuery)->sum('female_beds');
+                if ($maleStock <= 0 && $femaleStock <= 0) {
+                    $maleStock = (int) (clone $baseInvQuery)->sum('male_beds');
+                    $femaleStock = (int) (clone $baseInvQuery)->sum('female_beds');
+                }
                 $maleBooked = (int) (clone $bookedQuery)->sum('male_beds');
                 $femaleBooked = (int) (clone $bookedQuery)->sum('female_beds');
                 $maleAvail = max(0, $maleStock - $maleBooked);

@@ -302,15 +302,25 @@
 
                         <!-- TAB 1: ROOMING LIST -->
                         <div class="tab-pane fade show active" id="rooming-list-pane" role="tabpanel">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h6 class="fs-14 fw-semibold text-dark mb-0">
-                                    <i class="mdi mdi-format-list-bulleted text-primary me-1"></i> Quotation Rooming List
-                                </h6>
-                                <span class="fs-12 text-muted">All confirmed and active quotations consuming room inventory</span>
+                            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                                <div>
+                                    <h6 class="fs-14 fw-semibold text-dark mb-0">
+                                        <i class="mdi mdi-format-list-bulleted text-primary me-1"></i> Quotation Rooming List
+                                    </h6>
+                                    <span class="fs-12 text-muted">All confirmed and active quotations consuming room inventory</span>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="exportRoomingListPDF()">
+                                        <i class="mdi mdi-file-pdf-box me-1"></i> Export PDF
+                                    </button>
+                                    <button type="button" class="btn btn-outline-success btn-sm" onclick="exportRoomingListExcel()">
+                                        <i class="mdi mdi-file-excel-box me-1"></i> Export Excel
+                                    </button>
+                                </div>
                             </div>
 
                             <div class="table-responsive">
-                                <table class="table table-hover table-bordered table-sm align-middle fs-13 mb-0">
+                                <table class="table table-hover table-bordered table-sm align-middle fs-13 mb-0" id="tableRoomingList">
                                     <thead class="table-light">
                                         <tr>
                                             <th>Quotation #</th>
@@ -395,22 +405,34 @@
 
                         <!-- TAB 2: INVENTORY / ALLOTMENTS -->
                         <div class="tab-pane fade" id="allotments-pane" role="tabpanel">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h6 class="fs-14 fw-semibold text-dark mb-0">
-                                    <i class="mdi mdi-warehouse text-primary me-1"></i> Configured Room Stock Allotments
-                                </h6>
-                                <a href="{{ route('room-inventory.create') }}" class="btn btn-primary btn-sm">
-                                    <i class="mdi mdi-plus-circle me-1"></i> + Add New Stock
-                                </a>
+                            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                                <div>
+                                    <h6 class="fs-14 fw-semibold text-dark mb-0">
+                                        <i class="mdi mdi-warehouse text-primary me-1"></i> Configured Room Stock Allotments
+                                    </h6>
+                                    <span class="fs-12 text-muted">Hotel room inventory blocks and allocations</span>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="exportAllotmentsPDF()">
+                                        <i class="mdi mdi-file-pdf-box me-1"></i> Export PDF
+                                    </button>
+                                    <button type="button" class="btn btn-outline-success btn-sm" onclick="exportAllotmentsExcel()">
+                                        <i class="mdi mdi-file-excel-box me-1"></i> Export Excel
+                                    </button>
+                                    <a href="{{ route('room-inventory.create') }}" class="btn btn-primary btn-sm">
+                                        <i class="mdi mdi-plus-circle me-1"></i> + Add New Stock
+                                    </a>
+                                </div>
                             </div>
 
                             <div class="table-responsive">
-                                <table class="table table-hover table-bordered table-sm align-middle fs-13 mb-0">
+                                <table class="table table-hover table-bordered table-sm align-middle fs-13 mb-0" id="tableAllotments">
                                     <thead class="table-light">
                                         <tr>
                                             <th>Hotel Name</th>
                                             <th>Batch / Reference</th>
                                             <th>Room Type</th>
+                                            <th>Room Numbers</th>
                                             <th>View / Meals</th>
                                             <th>Valid Period (Dates)</th>
                                             <th class="text-center">Total Stock</th>
@@ -438,6 +460,13 @@
                                                     <span class="badge bg-soft-primary text-primary fs-11">{{ $inv->room_type }}</span>
                                                 </td>
                                                 <td>
+                                                    @if($inv->room_numbers)
+                                                        <span class="badge bg-soft-info text-info fs-11"><i class="mdi mdi-door"></i> {{ $inv->room_numbers }}</span>
+                                                    @else
+                                                        <span class="text-muted">-</span>
+                                                    @endif
+                                                </td>
+                                                <td>
                                                     <span class="fs-11">{{ $inv->room_view ?: 'City View' }}</span>
                                                     @if($inv->meal_plan)
                                                         <br><small class="text-muted">{{ $inv->meal_plan }}</small>
@@ -457,7 +486,7 @@
                                                         {{ $avail['available'] }} Available
                                                     </span>
                                                 </td>
-                                                <td>{{ $inv->supplier->company_name ?? '-' }}</td>
+                                                <td>{{ $inv->supplier ? ($inv->supplier->name . ($inv->supplier->company_name ? ' (' . $inv->supplier->company_name . ')' : '')) : '-' }}</td>
                                                 <td class="text-center">
                                                     <span class="badge {{ $inv->status === 'active' ? 'bg-success' : 'bg-secondary' }} fs-10 text-uppercase">
                                                         {{ $inv->status }}
@@ -481,7 +510,7 @@
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="11" class="text-center py-4 text-muted">
+                                                <td colspan="12" class="text-center py-4 text-muted">
                                                     <i class="mdi mdi-warehouse fs-22 d-block mb-1"></i>
                                                     No room stock allotments added yet. Click "+ Add Room Stock Allotment" to add your hotel room stocks.
                                                 </td>
@@ -510,5 +539,81 @@
             allowInput: true
         });
     });
+
+    // ─── Export Functions for Rooming List ──────────────────────
+    function exportRoomingListPDF() {
+        if (!window.jspdf || !window.jspdf.jsPDF) {
+            alert('PDF library is loading, please try again in a moment.');
+            return;
+        }
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('landscape');
+
+        doc.setFontSize(16);
+        doc.setTextColor(15, 83, 94);
+        doc.text('Dua Travels - Quotation Rooming List', 14, 15);
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text('Generated on: ' + new Date().toLocaleString(), 14, 22);
+
+        doc.autoTable({
+            html: '#tableRoomingList',
+            startY: 26,
+            theme: 'grid',
+            headStyles: { fillColor: [15, 83, 94], textColor: 255 },
+            styles: { fontSize: 8, cellPadding: 3 },
+            columns: [0, 1, 2, 3, 4, 5, 6, 7, 8] // skip action column
+        });
+
+        doc.save('Quotation_Rooming_List_' + new Date().toISOString().slice(0,10) + '.pdf');
+    }
+
+    function exportRoomingListExcel() {
+        if (typeof XLSX === 'undefined') {
+            alert('Excel export library is loading, please try again.');
+            return;
+        }
+        const table = document.getElementById('tableRoomingList');
+        const wb = XLSX.utils.table_to_book(table, { sheet: "Rooming List" });
+        XLSX.writeFile(wb, 'Quotation_Rooming_List_' + new Date().toISOString().slice(0,10) + '.xlsx');
+    }
+
+    // ─── Export Functions for Stock Allotments ──────────────────
+    function exportAllotmentsPDF() {
+        if (!window.jspdf || !window.jspdf.jsPDF) {
+            alert('PDF library is loading, please try again in a moment.');
+            return;
+        }
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('landscape');
+
+        doc.setFontSize(16);
+        doc.setTextColor(15, 83, 94);
+        doc.text('Dua Travels - Hotel Room Stock Allotments', 14, 15);
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text('Generated on: ' + new Date().toLocaleString(), 14, 22);
+
+        doc.autoTable({
+            html: '#tableAllotments',
+            startY: 26,
+            theme: 'grid',
+            headStyles: { fillColor: [15, 83, 94], textColor: 255 },
+            styles: { fontSize: 8, cellPadding: 3 },
+            columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] // skip action column
+        });
+
+        doc.save('Room_Stock_Allotments_' + new Date().toISOString().slice(0,10) + '.pdf');
+    }
+
+    function exportAllotmentsExcel() {
+        if (typeof XLSX === 'undefined') {
+            alert('Excel export library is loading, please try again.');
+            return;
+        }
+        const table = document.getElementById('tableAllotments');
+        const wb = XLSX.utils.table_to_book(table, { sheet: "Stock Allotments" });
+        XLSX.writeFile(wb, 'Room_Stock_Allotments_' + new Date().toISOString().slice(0,10) + '.xlsx');
+    }
 </script>
 @endsection

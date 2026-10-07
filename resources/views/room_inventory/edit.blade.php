@@ -67,9 +67,9 @@
                                 <label class="form-label fs-13 fw-semibold">Supplier / Vendor</label>
                                 <select name="supplier_id" class="form-select form-select-sm">
                                     <option value="">-- Direct Hotel / No Supplier --</option>
-                                    @foreach($companies as $company)
-                                        <option value="{{ $company->id }}" {{ (old('supplier_id', $inventory->supplier_id) == $company->id) ? 'selected' : '' }}>
-                                            {{ $company->company_name }}
+                                    @foreach($suppliers as $sup)
+                                        <option value="{{ $sup->id }}" {{ (old('supplier_id', $inventory->supplier_id) == $sup->id) ? 'selected' : '' }}>
+                                            {{ $sup->name }}{{ $sup->company_name ? ' (' . $sup->company_name . ')' : '' }} - {{ ucfirst($sup->service_type ?? 'Hotel') }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -102,6 +102,12 @@
                                 <label class="form-label fs-13 fw-semibold text-danger"><i class="mdi mdi-gender-female"></i> Female Beds (Sharing)</label>
                                 <input type="number" id="editFemaleBeds" name="female_beds" class="form-control form-control-sm border-danger"
                                     min="0" value="{{ old('female_beds', $inventory->female_beds ?? 0) }}">
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label fs-13 fw-semibold">Room Number(s)</label>
+                                <input type="text" name="room_numbers" class="form-control form-control-sm"
+                                    placeholder="e.g. 101, 102, 103" value="{{ old('room_numbers', $inventory->room_numbers) }}">
                             </div>
 
                             <div class="col-md-3">

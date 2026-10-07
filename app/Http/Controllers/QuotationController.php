@@ -18,6 +18,7 @@ use App\Models\Route as RouteModel;
 use App\Models\Vehicle;
 use App\Models\Package;
 use App\Models\Client;
+use App\Models\Supplier;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -46,6 +47,7 @@ class QuotationController extends Controller
         $vehicles = Vehicle::where('status', 'active')->orWhereNull('status')->get();
         $packages = Package::all();
         $clients = Client::all();
+        $suppliers = Supplier::where('status', 'active')->orWhereNull('status')->orderBy('name')->get();
 
         return view('quotation.create', compact(
             'selectedLead',
@@ -56,7 +58,8 @@ class QuotationController extends Controller
             'routes',
             'vehicles',
             'packages',
-            'clients'
+            'clients',
+            'suppliers'
         ));
     }
 
@@ -255,6 +258,7 @@ class QuotationController extends Controller
                         'male_beds'             => $maleBeds,
                         'female_beds'           => $femaleBeds,
                         'per_night_rate'        => floatval($accData['per_night_rate'] ?? 0),
+                        'selling_per_night_rate'=> floatval($accData['selling_per_night_rate'] ?? 0),
                         'add_total_rate'        => false,
                         'currency'              => $costCurr,
                         'cost_currency'         => $costCurr,
@@ -608,6 +612,7 @@ class QuotationController extends Controller
         $vehicles = Vehicle::where('status', 'active')->orWhereNull('status')->get();
         $packages = Package::all();
         $clients = Client::all();
+        $suppliers = Supplier::where('status', 'active')->orWhereNull('status')->orderBy('name')->get();
 
         return view('quotation.edit', compact(
             'quotation',
@@ -618,7 +623,8 @@ class QuotationController extends Controller
             'routes',
             'vehicles',
             'packages',
-            'clients'
+            'clients',
+            'suppliers'
         ));
     }
 
@@ -776,6 +782,7 @@ class QuotationController extends Controller
                         'male_beds'             => $maleBeds,
                         'female_beds'           => $femaleBeds,
                         'per_night_rate'        => floatval($accData['per_night_rate'] ?? 0),
+                        'selling_per_night_rate'=> floatval($accData['selling_per_night_rate'] ?? 0),
                         'add_total_rate'        => false,
                         'currency'              => $costCurr,
                         'cost_currency'         => $costCurr,

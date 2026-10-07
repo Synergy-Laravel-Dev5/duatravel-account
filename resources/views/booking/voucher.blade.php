@@ -228,14 +228,15 @@
             {{-- Header --}}
             <div class="header-row">
                 @php
-                    $isVoucherHajj = ($booking->package_type ?? session('dashboard_package', 'hajj')) === 'hajj';
+                    $isVoucherHajj = strtolower($booking->package_type ?? session('dashboard_package', 'hajj')) === 'hajj';
+                    $agencyName = $booking->company->name ?? ($isVoucherHajj ? 'KGM Hajj & Umrah Services' : 'Dua Travels & Tours');
                 @endphp
                 <img src="{{ $isVoucherHajj ? asset('assets/images/logo/kgm.png') : asset('assets/images/logo/logo.png') }}" alt="Logo" style="height:60px; object-fit:contain;">
                 <div class="header-right">
-                    <div class="company-name">Maxims Group &amp; UMRAH SERVICES (PVT) LTD</div>
-                    <div class="company-address-ar">شركــة إعـمـار الضیافــة الفندقیــة</div>
+                    <div class="company-name">{{ $agencyName }}</div>
+                    <div class="company-address-ar">{{ $isVoucherHajj ? 'خدمات الحج والعمرة' : 'خدمات السياحة والسفر والحج والعمرة' }}</div>
                     <div class="company-meta">
-                        Telephone: +92-XXX-XXXXXXX &nbsp;|&nbsp; Email: info@gulfhajjumrah.com
+                        {{ $isVoucherHajj ? 'Hajj & Umrah Travel Services' : 'Travel & Tourism Services' }}
                     </div>
                 </div>
             </div>
@@ -260,6 +261,7 @@
                         <th>Location</th>
                         <th>Room Type</th>
                         <th class="num">Rooms</th>
+                        <th class="num">Room #</th>
                         <th>Check-In</th>
                         <th>Check-Out</th>
                         <th class="num">Nights</th>
@@ -272,6 +274,7 @@
                             <td>{{ $hotel->location ? ucfirst($hotel->location) : '-' }}</td>
                             <td>{{ $hotel->room_type ? ucfirst($hotel->room_type) : '-' }}</td>
                             <td class="num">{{ $hotel->no_of_rooms ?? '-' }}</td>
+                            <td class="num">{{ $hotel->room_number ?? '-' }}</td>
                             <td>{{ $hotel->check_in ? \Carbon\Carbon::parse($hotel->check_in)->format('d-m-Y') : '-' }}
                             </td>
                             <td>{{ $hotel->check_out ? \Carbon\Carbon::parse($hotel->check_out)->format('d-m-Y') : '-' }}
@@ -280,11 +283,15 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center text-muted">No hotels added for this booking.</td>
+                            <td colspan="8" class="text-center text-muted">No hotels added for this booking.</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
+
+            @php
+                $currency = $booking->currency ?: 'PKR';
+            @endphp
 
             <div class="section-bar" style="margin-top:14px;">Costing Summary</div>
 
@@ -292,39 +299,39 @@
                 <tr>
                     <td>Package Cost ({{ number_format($booking->package_cost, 0) }} x {{ $booking->no_of_pax }} pax)
                     </td>
-                    <td>PKR {{ number_format($booking->package_cost * $booking->no_of_pax, 0) }}</td>
+                    <td>{{ $currency }} {{ number_format($booking->package_cost * $booking->no_of_pax, 0) }}</td>
                 </tr>
                 <tr>
                     <td>Visa Charges</td>
-                    <td>PKR {{ number_format($booking->visa_charges, 0) }}</td>
+                    <td>{{ $currency }} {{ number_format($booking->visa_charges, 0) }}</td>
                 </tr>
                 <tr>
                     <td>Flight Charges</td>
-                    <td>PKR {{ number_format($booking->flight_charges, 0) }}</td>
+                    <td>{{ $currency }} {{ number_format($booking->flight_charges, 0) }}</td>
                 </tr>
                 <tr>
                     <td>Other Charges</td>
-                    <td>PKR {{ number_format($booking->other_charges, 0) }}</td>
+                    <td>{{ $currency }} {{ number_format($booking->other_charges, 0) }}</td>
                 </tr>
                 @if($booking->additional_services_amount > 0)
                 <tr>
                     <td>Additional Services<br><small style="color: #666; font-size: 11px;">{!! strip_tags($booking->additional_services_detail) !!}</small></td>
-                    <td>PKR {{ number_format($booking->additional_services_amount, 0) }}</td>
+                    <td>{{ $currency }} {{ number_format($booking->additional_services_amount, 0) }}</td>
                 </tr>
                 @endif
                 @if($booking->discount > 0)
                 <tr>
                     <td>Discount</td>
-                    <td style="color: red;">- PKR {{ number_format($booking->discount, 0) }}</td>
+                    <td style="color: red;">- {{ $currency }} {{ number_format($booking->discount, 0) }}</td>
                 </tr>
                 @endif
                 <tr class="total-line">
                     <td>Total Amount</td>
-                    <td>PKR {{ number_format($booking->total_amount, 0) }}</td>
+                    <td>{{ $currency }} {{ number_format($booking->total_amount, 0) }}</td>
                 </tr>
                 <tr>
                     <td>Total Received</td>
-                    <td>PKR {{ number_format($booking->total_received, 0) }}</td>
+                    <td>{{ $currency }} {{ number_format($booking->total_received, 0) }}</td>
                 </tr>
                 @php
                     $bal = $booking->balance;
@@ -333,7 +340,7 @@
                 @endphp
                 <tr class="balance-line">
                     <td>{{ $balLabel }}</td>
-                    <td>PKR {{ $balSign }}{{ number_format(abs($bal), 0) }}</td>
+                    <td>{{ $currency }} {{ $balSign }}{{ number_format(abs($bal), 0) }}</td>
                 </tr>
             </table>
 
@@ -403,26 +410,7 @@
             @endphp
 
             <div class="words-bar">
-                <strong>Total Amount in Words:</strong> {{ numberToWordsVoucher($booking->total_amount) }} Rupees Only
-            </div>
-
-            <div class="note-bar">** For Booking Transactions **</div>
-
-            {{-- Bank Details --}}
-            <div class="bank-cols">
-                <div class="bank-col">
-                    <strong>UNITED BANK LIMITED</strong><br>
-                    MAXIMS GROUP Hajj &amp; UMRAH SERVICES<br>
-                    Account #: 050701047181<br>
-                    IBAN: PK46UNIL0112050701047181<br>
-                    LIAQUAT BAZAR BRANCH QUETTA.
-                </div>
-            </div>
-
-            <div class="footer-note">
-                This is a system generated voucher. Please collect official receipt after payment.<br>
-                <span class="footer-company">Maxims Group HAJJ &amp; UMRAH SERVICES (PVT) LTD</span><br>
-                Printed by {{ auth()->user()->name ?? 'Admin' }} on {{ now()->format('d-m-Y H:i:s') }}
+                <strong>Total Amount in Words:</strong> {{ numberToWordsVoucher($booking->total_amount) }} {{ $currency == 'PKR' ? 'Rupees' : $currency }} Only
             </div>
 
         </div>

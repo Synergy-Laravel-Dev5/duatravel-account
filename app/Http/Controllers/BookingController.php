@@ -6,6 +6,7 @@ use App\Models\Booking;
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\Package;
+use App\Models\Supplier;
 use App\Models\Transaction;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -37,98 +38,16 @@ class BookingController extends Controller
         return view('booking.index', compact('bookings', 'trashCount', 'package', 'year'));
     }
 
-    // public function create()
-    // {
-    //     $clients   = Client::where('status', 'active')->get();
-    //     $companies = Company::all();
-    //     $years     = [date('Y'), date('Y') + 1, date('Y') + 2];
-
-    //     return view('booking.create', compact('clients', 'companies', 'years'));
-    // }
-
-    // public function store(Request $request)
-    // {
-    //     $request->validate([
-    //         'booking_for'  => 'required|in:client,company',
-    //         'client_id'    => 'required_if:booking_for,client|nullable|exists:clients,id',
-    //         'company_id'   => 'required_if:booking_for,company|nullable|exists:companies,id',
-    //         'package_type' => 'required|in:umrah,hajj,other',
-    //     ]);
-
-    //     $clientId  = $request->booking_for === 'client'  ? $request->client_id  : null;
-    //     $companyId = $request->booking_for === 'company' ? $request->company_id : null;
-
-    //     $total = (($request->package_cost ?? 0) * ($request->no_of_pax ?? 1))
-    //         + ($request->visa_charges ?? 0)
-    //         + ($request->flight_charges ?? 0)
-    //         + ($request->other_charges ?? 0);
-
-    //     $booking = Booking::create(array_merge(
-    //         $request->except(['persons', 'hotels', 'transports', 'visas', 'flight_persons', '_token']),
-    //         [
-    //             'client_id'      => $clientId,
-    //             'company_id'     => $companyId,
-    //             'package_cost'   => $request->package_cost ?? 0,
-    //             'visa_charges'   => $request->visa_charges ?? 0,
-    //             'flight_charges' => $request->flight_charges ?? 0,
-    //             'other_charges'  => $request->other_charges ?? 0,
-    //             'total_received' => $request->total_received ?? 0,
-    //             'total_amount'   => $total,
-    //             'balance'        => $total - ($request->total_received ?? 0),
-    //         ]
-    //     ));
-
-    //     if ($request->has('persons')) {
-    //         foreach ($request->persons as $person) {
-    //             if (!empty($person['full_name'])) {
-    //                 $booking->persons()->create($person);
-    //             }
-    //         }
-    //     }
-
-    //     if ($request->has('hotels')) {
-    //         foreach ($request->hotels as $hotel) {
-    //             if (!empty($hotel['hotel_name'])) {
-    //                 $booking->hotels()->create($hotel);
-    //             }
-    //         }
-    //     }
-
-    //     if ($request->has('transports')) {
-    //         foreach ($request->transports as $transport) {
-    //             if (!empty($transport['route'])) {
-    //                 $booking->transports()->create($transport);
-    //             }
-    //         }
-    //     }
-
-    //     if ($request->has('visas')) {
-    //         foreach ($request->visas as $visa) {
-    //             if (!empty($visa['passport_number'])) {
-    //                 $booking->visas()->create($visa);
-    //             }
-    //         }
-    //     }
-
-    //     logUserActivity(
-    //         'Booking Created',
-    //         'Type: ' . $request->booking_for . ' | Package: ' . $booking->package_type . ' | Total: ' . $booking->total_amount,
-    //         $booking->id,
-    //         'Booking'
-    //     );
-
-    //     return redirect()->route('booking.index')->with('success', 'Booking created successfully!');
-    // }
-
     public function create()
     {
-        $clients   = Client::where('status', 'active')->get();
+        $clients   = Client::where('status', 'active')->orWhereNull('status')->orderBy('name')->get();
         $companies = Company::all();
         $packages  = Package::with(['accommodations.hotel', 'transports', 'transportFlights'])->latest()->get();
         $hotels    = \App\Models\Hotel::all();
+        $suppliers = Supplier::where('status', 'active')->orWhereNull('status')->orderBy('name')->get();
         $years     = [date('Y'), date('Y') + 1, date('Y') + 2];
 
-        return view('booking.create', compact('clients', 'companies', 'packages', 'hotels', 'years'));
+        return view('booking.create', compact('clients', 'companies', 'packages', 'hotels', 'suppliers', 'years'));
     }
 
     public function store(Request $request)
@@ -148,19 +67,23 @@ class BookingController extends Controller
 
         \Log::info('Store Request: ', $request->all());
         $request->validate([
-            'booking_for'  => 'nullable|in:client,company',
-            'client_id'    => 'required_if:booking_for,client|nullable|exists:clients,id',
-            'company_id'   => 'nullable|exists:companies,id',
+            'client_id'    => 'required|exists:clients,id',
             'package_id'   => 'nullable|exists:packages,id',
-            'package_type' => 'nullable|in:umrah,hajj,other',
+            'package_type' => 'nullable|string',
+            'haji_id'      => 'nullable|string|max:100',
+            'room_number'  => 'nullable|string|max:100',
         ]);
 
-        $bookingFor = $request->booking_for ?? 'company';
-        $clientId  = $bookingFor === 'client'  ? $request->client_id  : null;
-        $companyId = $bookingFor === 'company' ? $request->company_id : null;
+        $bookingFor = 'client';
+        $clientId  = $request->client_id;
+        $companyId = null;
+        $hajiId    = $request->haji_id ?? ($request->persons[0]['haji_id'] ?? null);
+        $roomNumber = $request->room_number ?? ($request->persons[0]['room_number'] ?? null);
 
         $total = (($request->package_cost ?? 0) * ($request->no_of_pax ?? 1))
+            + ($request->hotel_charges ?? 0)
             + ($request->visa_charges ?? 0)
+            + ($request->transport_charges ?? 0)
             + ($request->flight_charges ?? 0)
             + ($request->other_charges ?? 0)
             + ($request->additional_services_amount ?? 0)
@@ -169,18 +92,29 @@ class BookingController extends Controller
         $bookingData = array_merge(
             $request->except(['persons', 'hotels', 'transports', 'visas', 'flight_persons', '_token', 'cnic_front', 'cnic_back', 'passport_photo', 'photo', 'medical_certificate', 'flight_attachment']),
             [
-                'booking_for'    => $bookingFor,
-                'client_id'      => $clientId,
-                'company_id'     => $companyId,
-                'package_cost'   => $request->package_cost ?? 0,
-                'visa_charges'   => $request->visa_charges ?? 0,
-                'flight_charges' => $request->flight_charges ?? 0,
-                'other_charges'  => $request->other_charges ?? 0,
-                'discount'       => $request->discount ?? 0,
+                'booking_for'         => $bookingFor,
+                'client_id'           => $clientId,
+                'company_id'          => $companyId,
+                'booking_date'        => $request->booking_date ? date('Y-m-d', strtotime($request->booking_date)) : now()->toDateString(),
+                'currency'            => $request->currency ?? 'PKR',
+                'haji_id'             => $hajiId,
+                'room_number'         => $roomNumber,
+                'flight_roe'          => $request->flight_roe ?? 1,
+                'flight_cost_rate'    => $request->flight_cost_rate ?? 0,
+                'flight_cost'         => $request->flight_cost ?? 0,
+                'flight_selling_rate' => $request->flight_selling_rate ?? 0,
+                'package_cost'        => $request->package_cost ?? 0,
+                'hotel_charges'       => $request->hotel_charges ?? 0,
+                'visa_charges'        => $request->visa_charges ?? 0,
+                'transport_charges'   => $request->transport_charges ?? 0,
+                'flight_charges'      => $request->flight_charges ?? 0,
+                'other_charges'       => $request->other_charges ?? 0,
+                'discount'            => $request->discount ?? 0,
+                'additional_services_amount' => $request->additional_services_amount ?? 0,
                 'additional_services_detail' => $additionalServicesDetail,           
-                'total_received' => $request->total_received ?? 0,
-                'total_amount'   => $total,
-                'balance'        => $total - ($request->total_received ?? 0),
+                'total_received'      => $request->total_received ?? 0,
+                'total_amount'        => $total,
+                'balance'             => $total - ($request->total_received ?? 0),
             ]
         );
 
@@ -210,6 +144,7 @@ class BookingController extends Controller
 
                 $personData = [
                     'full_name'        => $paxName,
+                    'haji_id'          => $person['haji_id'] ?? ($idx === 0 ? $hajiId : null),
                     'surname'          => $surname,
                     'given_name'       => $givenName,
                     'father_name'      => $person['father_name'] ?? null,
@@ -218,6 +153,7 @@ class BookingController extends Controller
                     'city'             => $person['city'] ?? null,
                     'blood_group'      => $person['blood_group'] ?? null,
                     'passport_number'  => $person['passport_number'] ?? null,
+                    'room_number'      => $person['room_number'] ?? ($idx === 0 ? $roomNumber : null),
                     'cnic'             => $person['cnic'] ?? null,
                     'phone'            => $person['phone'] ?? null,
                     'nominee_name'     => $person['nominee_name'] ?? null,
@@ -288,24 +224,25 @@ class BookingController extends Controller
 
     public function show($id)
     {
-        $booking = Booking::with(['package', 'client', 'company', 'persons', 'hotels', 'transports', 'visas'])->findOrFail($id);
+        $booking = Booking::with(['package', 'client', 'company', 'persons', 'hotels.supplier', 'transports.supplier', 'visas.supplier', 'flightSupplier'])->findOrFail($id);
         return view('booking.show', compact('booking'));
     }
 
     public function edit($id)
     {
-        $booking   = Booking::with(['package', 'persons', 'hotels', 'transports', 'visas'])->findOrFail($id);
-        $clients   = Client::where('status', 'active')->get();
+        $booking   = Booking::with(['package', 'persons', 'hotels.supplier', 'transports', 'visas.supplier', 'flightSupplier', 'client', 'company'])->findOrFail($id);
+        $clients   = Client::where('status', 'active')->orWhereNull('status')->orderBy('name')->get();
         $companies = Company::all();
         $packages  = Package::with(['accommodations.hotel', 'transports', 'transportFlights'])->latest()->get();
         $hotels    = \App\Models\Hotel::all();
+        $suppliers = Supplier::where('status', 'active')->orWhereNull('status')->orderBy('name')->get();
         $years     = [date('Y'), date('Y') + 1, date('Y') + 2];
 
         $transactionsPaid = Transaction::where('client_id', $booking->client_id)
             ->where('status', 'confirmed')
             ->sum('amount');
 
-        return view('booking.edit', compact('booking', 'clients', 'companies', 'packages', 'hotels', 'years', 'transactionsPaid'));
+        return view('booking.edit', compact('booking', 'clients', 'companies', 'packages', 'hotels', 'suppliers', 'years', 'transactionsPaid'));
     }
 
     public function update(Request $request, $id)
@@ -321,39 +258,59 @@ class BookingController extends Controller
         $booking = Booking::findOrFail($id);
 
         $request->validate([
-            'booking_for'  => 'nullable|in:client,company',
-            'client_id'    => 'required_if:booking_for,client|nullable|exists:clients,id',
-            'company_id'   => 'nullable|exists:companies,id',
+            'client_id'    => 'required|exists:clients,id',
             'package_id'   => 'nullable|exists:packages,id',
-            'package_type' => 'nullable|in:umrah,hajj,other',
+            'package_type' => 'nullable|string',
+            'haji_id'      => 'nullable|string|max:100',
+            'room_number'  => 'nullable|string|max:100',
         ]);
 
-        $bookingFor = $request->booking_for ?? 'company';
-        $clientId  = $bookingFor === 'client'  ? $request->client_id  : null;
-        $companyId = $bookingFor === 'company' ? $request->company_id : null;
+        $bookingFor = 'client';
+        $clientId  = $request->client_id;
+        $companyId = null;
+        $hajiId    = $request->haji_id ?? ($request->persons[0]['haji_id'] ?? null);
+        $roomNumber = $request->room_number ?? ($request->persons[0]['room_number'] ?? null);
 
         $total = (($request->package_cost ?? 0) * ($request->no_of_pax ?? 1))
+            + ($request->hotel_charges ?? 0)
             + ($request->visa_charges ?? 0)
+            + ($request->transport_charges ?? 0)
             + ($request->flight_charges ?? 0)
             + ($request->other_charges ?? 0)
             + ($request->additional_services_amount ?? 0)
             - ($request->discount ?? 0);
 
+        $additionalServicesDetail = $request->additional_services_detail;
+        if (trim(strip_tags($additionalServicesDetail ?? '')) === '') {
+            $additionalServicesDetail = null;
+        }
+
         $bookingData = array_merge(
             $request->except(['persons', 'hotels', 'transports', 'visas', 'flight_persons', '_token', '_method', 'cnic_front', 'cnic_back', 'passport_photo', 'photo', 'medical_certificate', 'flight_attachment']),
             [
-                'booking_for'    => $bookingFor,
-                'client_id'      => $clientId,
-                'company_id'     => $companyId,
-                'package_cost'   => $request->package_cost ?? 0,
-                'visa_charges'   => $request->visa_charges ?? 0,
-                'flight_charges' => $request->flight_charges ?? 0,
-                'other_charges'  => $request->other_charges ?? 0,
-                'discount'       => $request->discount ?? 0,
+                'booking_for'         => $bookingFor,
+                'client_id'           => $clientId,
+                'company_id'          => $companyId,
+                'booking_date'        => $request->booking_date ? date('Y-m-d', strtotime($request->booking_date)) : $booking->booking_date,
+                'currency'            => $request->currency ?? ($booking->currency ?? 'PKR'),
+                'haji_id'             => $hajiId,
+                'room_number'         => $roomNumber,
+                'flight_roe'          => $request->flight_roe ?? 1,
+                'flight_cost_rate'    => $request->flight_cost_rate ?? 0,
+                'flight_cost'         => $request->flight_cost ?? 0,
+                'flight_selling_rate' => $request->flight_selling_rate ?? 0,
+                'package_cost'        => $request->package_cost ?? 0,
+                'hotel_charges'       => $request->hotel_charges ?? 0,
+                'visa_charges'        => $request->visa_charges ?? 0,
+                'transport_charges'   => $request->transport_charges ?? 0,
+                'flight_charges'      => $request->flight_charges ?? 0,
+                'other_charges'       => $request->other_charges ?? 0,
+                'discount'            => $request->discount ?? 0,
                 'additional_services_amount' => $request->additional_services_amount ?? 0,
-                'total_received' => $request->total_received ?? 0,
-                'total_amount'   => $total,
-                'balance'        => $total - ($request->total_received ?? 0),
+                'additional_services_detail' => $additionalServicesDetail,
+                'total_received'      => $request->total_received ?? 0,
+                'total_amount'        => $total,
+                'balance'             => $total - ($request->total_received ?? 0),
             ]
         );
 
@@ -386,6 +343,7 @@ class BookingController extends Controller
 
                 $personData = [
                     'full_name'        => $paxName,
+                    'haji_id'          => $person['haji_id'] ?? ($idx === 0 ? $hajiId : null),
                     'surname'          => $surname,
                     'given_name'       => $givenName,
                     'father_name'      => $person['father_name'] ?? null,
@@ -394,6 +352,7 @@ class BookingController extends Controller
                     'city'             => $person['city'] ?? null,
                     'blood_group'      => $person['blood_group'] ?? null,
                     'passport_number'  => $person['passport_number'] ?? null,
+                    'room_number'      => $person['room_number'] ?? ($idx === 0 ? $roomNumber : null),
                     'cnic'             => $person['cnic'] ?? null,
                     'phone'            => $person['phone'] ?? null,
                     'nominee_name'     => $person['nominee_name'] ?? null,

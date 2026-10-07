@@ -84,7 +84,7 @@
         if (isset($package) && is_string($package) && in_array($package, ['hajj', 'umrah'])) {
             $activePackage = $package;
         }
-        $isHajjPackage = ($activePackage === 'hajj');
+        $isHajjPackage = $activePackage === 'hajj';
     @endphp
 
     <div class="logo-box sidebar-logo-box text-center">
@@ -179,86 +179,14 @@
                                     <span>Quotations</span>
                                 </a>
                             </li>
-                            <li>
-                                <a class="tp-link" href="{{ route('room-inventory.index') }}">
-                                    <i data-feather="clipboard"></i>
-                                    <span>Rooming List & Stock</span>
-                                </a>
-                            </li>
                         </ul>
                     </div>
                 </li>
 
-                <li>
-                    <a href="#sidebarBankingManagement" data-bs-toggle="collapse">
-                        <i data-feather="dollar-sign"></i>
-                        <span>Accounts & Banking</span>
-                        <span class="menu-arrow"></span>
-                    </a>
-                    <div class="collapse" id="sidebarBankingManagement">
-                        <ul class="nav-second-level">
-                            <li>
-                                <a class="tp-link" href="{{ route('account.index') }}">
-                                    <i data-feather="credit-card"></i>
-                                    <span>Accounts</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="tp-link" href="{{ route('bank.index') }}">
-                                    <i data-feather="briefcase"></i>
-                                    <span>Banks</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="tp-link" href="{{ route('bank-transfer.index') }}">
-                                    <i data-feather="repeat"></i>
-                                    <span>Bank Transfers</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
-
-                <li>
-                    <a href="#sidebarHRManagement" data-bs-toggle="collapse">
-                        <i data-feather="users"></i>
-                        <span>HR Management</span>
-                        <span class="menu-arrow"></span>
-                    </a>
-                    <div class="collapse" id="sidebarHRManagement">
-                        <ul class="nav-second-level">
-                            <li>
-                                <a class="tp-link" href="{{ route('department.index') }}">
-                                    <i data-feather="grid"></i>
-                                    <span>Departments</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="tp-link" href="{{ route('designation.index') }}">
-                                    <i data-feather="award"></i>
-                                    <span>Designations</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="tp-link" href="{{ route('staff.index') }}">
-                                    <i data-feather="user"></i>
-                                    <span>Staff</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
-
-                <li>
-                    <a href="{{ route('company.index') }}">
-                        <i data-feather="briefcase"></i>
-                        <span>Companies</span>
-                    </a>
-                </li>
                 <li>
                     <a href="#sidebarPackageManagement" data-bs-toggle="collapse">
                         <i data-feather="layers"></i>
-                        <span>Package Management</span>
+                        <span>{{ $isHajjPackage ? 'Package Management' : 'Umrah Management' }}</span>
                         <span class="menu-arrow"></span>
                     </a>
                     <div class="collapse" id="sidebarPackageManagement">
@@ -266,7 +194,7 @@
                             <li>
                                 <a class="tp-link" href="{{ route('package.index') }}">
                                     <i data-feather="package"></i>
-                                    <span>Packages</span>
+                                    <span>{{ $isHajjPackage ? 'Packages' : 'Umrah Packages' }}</span>
                                 </a>
                             </li>
                             @can('hotel_view')
@@ -278,11 +206,24 @@
                                 </li>
                             @endcan
                             <li>
-                                <a class="tp-link" href="{{ route('room-inventory.index') }}">
+                                <a class="tp-link" href="{{ route('room-type.index') }}">
                                     <i data-feather="grid"></i>
+                                    <span>Room Types</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="tp-link" href="{{ route('room-inventory.index') }}">
+                                    <i data-feather="box"></i>
                                     <span>Room Inventory</span>
                                 </a>
                             </li>
+                            <li>
+                                <a class="tp-link" href="{{ route('report.rooming-list') }}">
+                                    <i data-feather="clipboard"></i>
+                                    <span>Room Allocation Manifest</span>
+                                </a>
+                            </li>
+
                             @can('airline_view')
                                 <li>
                                     <a class="tp-link" href="{{ route('airline.index') }}">
@@ -349,52 +290,125 @@
                         </a>
                     </li>
                 @endcan
-                @can('expense_view')
-                    <li>
-                        <a href="{{ route('expense.index') }}">
-                            <i data-feather="dollar-sign"></i>
-                            <span>Add Expense</span>
-                        </a>
-                    </li>
-                @endcan
-                @can('expense_transaction_view')
-                    <li>
-                        <a href="{{ route('expense.transaction.index') }}">
-                            <i data-feather="credit-card"></i>
-                            <span>Expense Transactions</span>
-                        </a>
-                    </li>
-                @endcan
-
-                @can('client_Transactions_view')
-                    <li>
-                        <a href="{{ route('transaction.index') }}">
-                            <i data-feather="list"></i>
-                            <span>Transactions</span>
-                        </a>
-                    </li>
-                @endcan
-                @can('Ledger_Filter_view')
-                    <li>
-                        <a href="{{ route('transaction.ledger.filter') }}">
-                            <i data-feather="filter"></i>
-                            <span>Ledger Filter</span>
-                        </a>
-                    </li>
-                @endcan
                 <li>
-                    <a href="{{ route('expense.transaction.report.filter') }}">
-                        <i data-feather="filter"></i>
-                        <span>Expense Filter</span>
+                    <a href="#sidebarFinanceManagement" data-bs-toggle="collapse">
+                        <i data-feather="dollar-sign"></i>
+                        <span>Finance</span>
+                        <span class="menu-arrow"></span>
+                    </a>
+                    <div class="collapse" id="sidebarFinanceManagement">
+                        <ul class="nav-second-level">
+                            <li>
+                                <a class="tp-link" href="{{ route('expense.transaction.index') }}">
+                                    <i data-feather="credit-card"></i>
+                                    <span>Transactions</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="tp-link" href="{{ route('bank.index') }}">
+                                    <i data-feather="briefcase"></i>
+                                    <span>Banks</span>
+                                </a>
+                            </li>
+
+                            {{-- <li>
+                                <a class="tp-link" href="{{ route('account.index') }}">
+                                    <i data-feather="credit-card"></i>
+                                    <span>Accounts</span>
+                                </a>
+                            </li> --}}
+                            
+                            <li>
+                                <a class="tp-link" href="{{ route('bank-transfer.index') }}">
+                                    <i data-feather="repeat"></i>
+                                    <span>Bank Transfers</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="tp-link" href="{{ route('expense.index') }}">
+                                    <i data-feather="file-text"></i>
+                                    <span>Expense Heads</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="tp-link" href="{{ route('reports.checkin') }}">
+                                    <i data-feather="calendar"></i>
+                                    <span>Check-In Report</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="tp-link" href="{{ route('report.rooming-list') }}">
+                                    <i data-feather="clipboard"></i>
+                                    <span>Room Allocation Manifest</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="tp-link" href="{{ route('expense.transaction.report.filter') }}">
+                                    <i data-feather="pie-chart"></i>
+                                    <span>Transaction Reports</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="tp-link" href="{{ route('transaction.ledger.filter') }}">
+                                    <i data-feather="book"></i>
+                                    <span>Client Ledger</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="tp-link" href="{{ route('transaction.company-ledger.filter') }}">
+                                    <i data-feather="book-open"></i>
+                                    <span>Company Ledger</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+
+                <li>
+                    <a href="#sidebarHRManagement" data-bs-toggle="collapse">
+                        <i data-feather="users"></i>
+                        <span>HR Management</span>
+                        <span class="menu-arrow"></span>
+                    </a>
+                    <div class="collapse" id="sidebarHRManagement">
+                        <ul class="nav-second-level">
+                            <li>
+                                <a class="tp-link" href="{{ route('department.index') }}">
+                                    <i data-feather="grid"></i>
+                                    <span>Departments</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="tp-link" href="{{ route('designation.index') }}">
+                                    <i data-feather="award"></i>
+                                    <span>Designations</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="tp-link" href="{{ route('staff.index') }}">
+                                    <i data-feather="user"></i>
+                                    <span>Staff</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li>
+                    <a href="{{ route('company.index') }}">
+                        <i data-feather="briefcase"></i>
+                        <span>Companies</span>
                     </a>
                 </li>
 
                 <li>
-                    <a href="{{ route('transaction.company-ledger.filter') }}">
-                        <i data-feather="filter"></i>
-                        <span>Company Filter</span>
+                    <a href="{{ route('supplier.index') }}">
+                        <i data-feather="truck"></i>
+                        <span>Suppliers</span>
                     </a>
                 </li>
+
             </ul>
         </div>
         <div class="clearfix"></div>

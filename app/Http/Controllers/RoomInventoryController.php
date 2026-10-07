@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\RoomInventory;
 use App\Models\Hotel;
 use App\Models\Company;
+use App\Models\Supplier;
 use App\Models\QuotationAccommodation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +21,7 @@ class RoomInventoryController extends Controller
         $checkOut = $request->get('check_out');
 
         $hotels = Hotel::where('status', 'active')->orWhereNull('status')->orderBy('name')->get();
+        $suppliers = Supplier::where('status', 'active')->orWhereNull('status')->orderBy('name')->get();
         $companies = Company::orderBy('company_name')->get();
 
         // 1. Calculate Room Type Summary Breakdown
@@ -91,6 +93,7 @@ class RoomInventoryController extends Controller
 
         return view('room_inventory.index', compact(
             'hotels',
+            'suppliers',
             'companies',
             'summary',
             'totalStock',
@@ -110,10 +113,11 @@ class RoomInventoryController extends Controller
     public function create()
     {
         $hotels = Hotel::where('status', 'active')->orWhereNull('status')->orderBy('name')->get();
+        $suppliers = Supplier::where('status', 'active')->orWhereNull('status')->orderBy('name')->get();
         $companies = Company::orderBy('company_name')->get();
         $roomTypes = ['Double', 'Triple', 'Quad', 'Quint', 'Single', 'Sharing', 'Suite'];
 
-        return view('room_inventory.create', compact('hotels', 'companies', 'roomTypes'));
+        return view('room_inventory.create', compact('hotels', 'suppliers', 'companies', 'roomTypes'));
     }
 
     public function store(Request $request)
@@ -188,11 +192,13 @@ class RoomInventoryController extends Controller
                 $sellingRate = floatval($request->input("selling_rate_{$roomType}", $request->selling_rate ?? 0));
                 $roomView = $request->input("room_view_{$roomType}", $request->room_view ?? 'City View');
                 $mealPlan = $request->input("meal_plan_{$roomType}", $request->meal_plan ?? 'Room Only');
+                $roomNumbers = $request->input("room_numbers_{$roomType}", $request->room_numbers ?? null);
 
                 RoomInventory::create([
                     'hotel_id'     => $hotelId,
                     'batch_name'   => $batchName,
                     'room_type'    => $roomType,
+                    'room_numbers' => $roomNumbers,
                     'room_view'    => $roomView,
                     'meal_plan'    => $mealPlan,
                     'check_in'     => $checkIn,
@@ -228,10 +234,11 @@ class RoomInventoryController extends Controller
     {
         $inventory = RoomInventory::findOrFail($id);
         $hotels = Hotel::where('status', 'active')->orWhereNull('status')->orderBy('name')->get();
+        $suppliers = Supplier::where('status', 'active')->orWhereNull('status')->orderBy('name')->get();
         $companies = Company::orderBy('company_name')->get();
         $roomTypes = ['Double', 'Triple', 'Quad', 'Quint', 'Single', 'Sharing', 'Suite'];
 
-        return view('room_inventory.edit', compact('inventory', 'hotels', 'companies', 'roomTypes'));
+        return view('room_inventory.edit', compact('inventory', 'hotels', 'suppliers', 'companies', 'roomTypes'));
     }
 
     public function update(Request $request, $id)
@@ -255,6 +262,7 @@ class RoomInventoryController extends Controller
             'hotel_id'     => $request->hotel_id,
             'batch_name'   => $request->batch_name ?: $inventory->batch_name,
             'room_type'    => $request->room_type,
+            'room_numbers' => $request->room_numbers ?: null,
             'room_view'    => $request->room_view ?: 'City View',
             'meal_plan'    => $request->meal_plan ?: 'Room Only',
             'check_in'     => !empty($request->check_in) ? date('Y-m-d', strtotime($request->check_in)) : null,
@@ -296,7 +304,7 @@ class RoomInventoryController extends Controller
         $roomType = $request->room_type ?: 'Double';
         $checkIn = $request->check_in;
         $checkOut = $request->check_out;
-        $excludeQuotationId = $request->quotation_id;
+        $excludeQuotationId = $request->exclude_quotation_id ?: $request->quotation_id;
         $requestedRooms = intval($request->requested_rooms ?? 1);
         $gender = $request->gender ? strtolower(trim($request->gender)) : null;
 
@@ -308,7 +316,7 @@ class RoomInventoryController extends Controller
             }
         }
 
-        $result = RoomInventory::getAvailability($hotelId, $roomType, $checkIn, $checkOut, $excludeQuotationId, $gender);
+        $result = RoomInventory::getAvailability($hotelId ?: $hotelName, $roomType, $checkIn, $checkOut, $excludeQuotationId, $gender);
 
         $result['can_fulfill'] = !$result['has_inventory'] || ($result['available'] >= $requestedRooms);
         $result['requested'] = $requestedRooms;

@@ -26,6 +26,10 @@ use App\Http\Controllers\RouteController;
 use App\Http\Controllers\TravelRouteController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\RoomInventoryController;
+use App\Http\Controllers\RoomTypeController;
+use App\Http\Controllers\RoomingListController;
+use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\CheckInReportController;
 
 
 
@@ -172,6 +176,21 @@ Route::middleware(['auth:web,company'])->group(function () {
             Route::get('restore/{id}', 'restore')->name('company.restore');
         });
 
+        Route::controller(SupplierController::class)->prefix('supplier')->group(function () {
+            Route::get('/', 'index')->name('supplier.index');
+            Route::get('create', 'create')->name('supplier.create');
+            Route::post('store', 'store')->name('supplier.store');
+            Route::get('edit/{id}', 'edit')->name('supplier.edit');
+            Route::put('update/{id}', 'update')->name('supplier.update');
+            Route::delete('delete/{id}', 'destroy')->name('supplier.delete');
+            Route::get('trash', 'trash')->name('supplier.trash');
+            Route::get('restore/{id}', 'restore')->name('supplier.restore');
+            Route::get('json-list', 'jsonList')->name('supplier.json-list');
+            Route::get('ledger/filter', 'ledgerFilter')->name('supplier.ledger.filter');
+            Route::get('ledger/{id?}', 'ledger')->name('supplier.ledger.show');
+            Route::post('ledger/view', 'ledger')->name('supplier.ledger.view');
+        });
+
         Route::controller(PackageController::class)
             ->prefix('package')->group(function () {
                 Route::get('/', 'index')->name('package.index');
@@ -295,6 +314,7 @@ Route::middleware(['auth:web,company'])->group(function () {
             Route::delete('delete/{id}', 'destroy')->name('hotel.delete');
             Route::get('trash', 'trash')->name('hotel.trash');
             Route::get('restore/{id}', 'restore')->name('hotel.restore');
+            Route::get('json-list', 'jsonList')->name('hotel.json-list');
         });
 
         Route::controller(AirlineController::class)->prefix('airline')->group(function () {
@@ -368,6 +388,29 @@ Route::middleware(['auth:web,company'])->group(function () {
 
 
 
+
+        Route::controller(RoomTypeController::class)->prefix('room-type')->group(function () {
+            Route::get('/', 'index')->name('room-type.index');
+            Route::get('create', 'create')->name('room-type.create');
+            Route::post('store', 'store')->name('room-type.store');
+            Route::get('edit/{id}', 'edit')->name('room-type.edit');
+            Route::put('update/{id}', 'update')->name('room-type.update');
+            Route::delete('delete/{id}', 'destroy')->name('room-type.delete');
+            Route::get('trash', 'trash')->name('room-type.trash');
+            Route::get('restore/{id}', 'restore')->name('room-type.restore');
+        });
+
+        Route::controller(RoomingListController::class)->group(function () {
+            Route::get('rooming-list', 'index')->name('report.rooming-list');
+            Route::get('rooming-list/export-pdf', 'exportPdf')->name('report.rooming-list.export-pdf');
+            Route::get('rooming-list/export-excel', 'exportExcel')->name('report.rooming-list.export-excel');
+            Route::post('rooming-list/adjust-bed', 'adjustBed')->name('report.rooming-list.adjust-bed');
+            Route::post('rooming-list/assign-room', 'assignRoom')->name('report.rooming-list.assign-room');
+            Route::post('rooming-list/unassign-room', 'unassignRoom')->name('report.rooming-list.unassign-room');
+            Route::get('api/hotel-room/check-capacity', 'checkCapacityApi')->name('api.hotel-room.check-capacity');
+        });
+
+        Route::get('reports/check-in', [CheckInReportController::class, 'index'])->name('reports.checkin');
 
         Route::post('/leads/{lead}/follow-ups', [FollowUpController::class, 'store'])->name('followUp.store');
         Route::post('/follow-ups/{followUp}/take', [FollowUpController::class, 'take'])->name('followUp.take');

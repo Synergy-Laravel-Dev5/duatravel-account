@@ -532,7 +532,7 @@
         function exportExcel() {
 
             if (typeof XLSX === 'undefined') {
-                alert('Excel library load nahi hui. Internet connection check karein.');
+                alert('Excel export library could not be loaded. Please check your internet connection.');
                 return;
             }
 
@@ -650,7 +650,7 @@
         function exportPDF() {
 
             if (typeof window.jspdf === 'undefined') {
-                alert('PDF library load nahi hui. Internet connection check karein.');
+                alert('PDF export library could not be loaded. Please check your internet connection.');
                 return;
             }
 

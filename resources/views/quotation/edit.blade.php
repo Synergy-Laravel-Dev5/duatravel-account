@@ -414,6 +414,13 @@
                                                         <label class="form-label fs-12 fw-semibold text-danger mb-1"><i class="mdi mdi-truck-delivery-outline me-1"></i> Supplier / Vendor</label>
                                                         <select name="accommodations[{{ $index }}][supplier_id]" class="form-select form-select-sm">
                                                             <option value="">-- Select Supplier / Vendor --</option>
+                                                            @if(isset($suppliers))
+                                                                @foreach ($suppliers as $sup)
+                                                                    <option value="{{ $sup->id }}" {{ $acc->supplier_id == $sup->id ? 'selected' : '' }}>
+                                                                        {{ $sup->name }}{{ $sup->company_name ? ' (' . $sup->company_name . ')' : '' }} - {{ ucfirst($sup->service_type ?? 'Supplier') }}
+                                                                    </option>
+                                                                @endforeach
+                                                            @endif
                                                             @foreach ($clients as $client)
                                                                 @if($client->type == 'vendor' || $client->type == 'client')
                                                                     <option value="{{ $client->id }}" {{ $acc->supplier_id == $client->id ? 'selected' : '' }}>
@@ -445,9 +452,14 @@
                                                             value="{{ ($acc->selling_currency ?? ($acc->currency ?? 'PKR')) == 'PKR' ? 1 : ($acc->selling_exchange_rate ?? ($acc->exchange_rate ?? 1)) }}" {{ ($acc->selling_currency ?? ($acc->currency ?? 'PKR')) == 'PKR' ? 'readonly' : '' }}>
                                                     </div>
                                                     <div class="col-md-2">
+                                                        <label class="form-label fs-12 fw-semibold text-success mb-1">Sell Rate / Night</label>
+                                                        <input type="number" step="any" name="accommodations[{{ $index }}][selling_per_night_rate]"
+                                                            class="form-control form-control-sm border-success acc-selling-per-night" value="{{ $acc->selling_per_night_rate ?? 0 }}">
+                                                    </div>
+                                                    <div class="col-md-2">
                                                         <label class="form-label fs-12 fw-semibold text-success mb-1">Selling Amount (Foreign)</label>
                                                         <input type="number" step="any" name="accommodations[{{ $index }}][selling_amount]"
-                                                            class="form-control form-control-sm acc-selling bg-light" value="{{ $acc->selling_amount ?? 0 }}" readonly>
+                                                            class="form-control form-control-sm acc-selling" value="{{ $acc->selling_amount ?? 0 }}">
                                                     </div>
                                                     <div class="col-md-2">
                                                         <label class="form-label fs-12 fw-semibold text-success mb-1">Selling PKR</label>
@@ -1007,83 +1019,123 @@
                 const nights = parseFloat(accItem.querySelector(".acc-nights")?.value) || 0;
                 const rooms = parseFloat(accItem.querySelector(".acc-rooms")?.value) || 1;
                 const perNightRate = parseFloat(accItem.querySelector(".acc-per-night")?.value) || 0;
+                const sellingPerNightRate = parseFloat(accItem.querySelector(".acc-selling-per-night")?.value) || 0;
                 const costInput = accItem.querySelector(".acc-cost");
+                const sellingInput = accItem.querySelector(".acc-selling");
 
                 if (costInput && (perNightRate > 0 || nights > 0)) {
                     const calculatedCost = nights * rooms * perNightRate;
                     costInput.value = calculatedCost > 0 ? calculatedCost : 0;
                 }
+
+                if (sellingInput && sellingPerNightRate > 0) {
+                    const calculatedSelling = nights * rooms * sellingPerNightRate;
+                    sellingInput.value = calculatedSelling > 0 ? calculatedSelling : 0;
+                }
             }
 
             function calculateNights(item) {
-                const cinInput = item.querySelector(".flatpickr-checkin");
-                const coutInput = item.querySelector(".flatpickr-checkout");
+                const cin = item.querySelector(".flatpickr-checkin")?.value;
+                const cout = item.querySelector(".flatpickr-checkout")?.value;
                 const nightsInput = item.querySelector(".acc-nights");
-                
-                const cin = cinInput?.value;
-                const cout = coutInput?.value;
 
                 if (cin && cout && nightsInput) {
                     const d1 = new Date(cin);
                     const d2 = new Date(cout);
-                    
-                    if (d2 < d1) {
-                        alert('Check-out date cannot be earlier than Check-in date');
-                        if (coutInput._flatpickr) {
-                            coutInput._flatpickr.clear();
-                        } else {
-                            coutInput.value = '';
-                        }
-                        nightsInput.value = '';
-                    } else {
-                        const diffDays = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
-                        if (diffDays > 0) {
-                            nightsInput.value = diffDays;
-                        }
+                    const diffDays = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
+                    if (diffDays > 0) {
+                        nightsInput.value = diffDays;
                     }
                 }
                 calculateAccommodationCost(item);
+                recalculateAll();
             }
 
-            document.querySelectorAll(".accommodation-item").forEach(function(item) {
-                const checkin = item.querySelector(".flatpickr-checkin");
-                const checkout = item.querySelector(".flatpickr-checkout");
-                if (checkin && !checkin._flatpickr) {
-                    flatpickr(checkin, {
-                        dateFormat: "m/d/Y",
-                        onChange: function(selectedDates, dateStr, instance) { 
-                            if (selectedDates[0]) {
-                                const today = new Date();
-                                today.setHours(0,0,0,0);
-                                if (selectedDates[0] < today) {
-                                    alert("You cannot select a past date.");
-                                    instance.clear();
+            // Sequential Date Management: Chain Check-out -> Next Check-in
+            function syncAccommodationDateSequencing() {
+                const accItems = Array.from(document.querySelectorAll(".accommodation-item"));
+                let prevCheckoutDate = null;
+
+                accItems.forEach(function(item, idx) {
+                    const checkin = item.querySelector(".flatpickr-checkin");
+                    const checkout = item.querySelector(".flatpickr-checkout");
+
+                    const minAllowedCheckin = (idx > 0 && prevCheckoutDate) ? prevCheckoutDate : null;
+
+                    if (checkin) {
+                        if (checkin._flatpickr) {
+                            checkin._flatpickr.set("minDate", minAllowedCheckin || "");
+                        } else {
+                            flatpickr(checkin, {
+                                dateFormat: "m/d/Y",
+                                minDate: minAllowedCheckin || undefined,
+                                onChange: function(selectedDates, dateStr, instance) {
+                                    if (selectedDates[0] && idx > 0 && prevCheckoutDate) {
+                                        const minD = new Date(prevCheckoutDate);
+                                        minD.setHours(0,0,0,0);
+                                        if (selectedDates[0] < minD) {
+                                            alert(`Check-in date cannot be earlier than previous stay check-out date (${prevCheckoutDate}).`);
+                                            instance.clear();
+                                            return;
+                                        }
+                                    }
+                                    if (checkout && checkout._flatpickr && dateStr) {
+                                        checkout._flatpickr.set("minDate", dateStr);
+                                    }
+                                    calculateNights(item);
+                                    syncAccommodationDateSequencing();
                                 }
-                            }
-                            calculateNights(item); 
+                            });
                         }
-                    });
-                }
-                if (checkout && !checkout._flatpickr) {
-                    flatpickr(checkout, {
-                        dateFormat: "m/d/Y",
-                        onChange: function(selectedDates, dateStr, instance) { 
-                            if (selectedDates[0]) {
-                                const today = new Date();
-                                today.setHours(0,0,0,0);
-                                if (selectedDates[0] < today) {
-                                    alert("You cannot select a past date.");
-                                    instance.clear();
+
+                        if (idx > 0 && prevCheckoutDate && checkin.value) {
+                            const curIn = new Date(checkin.value);
+                            const prevOut = new Date(prevCheckoutDate);
+                            if (curIn < prevOut) {
+                                checkin.value = prevCheckoutDate;
+                                if (checkin._flatpickr) checkin._flatpickr.setDate(prevCheckoutDate, false);
+                                calculateNights(item);
+                            }
+                        }
+                    }
+
+                    if (checkout) {
+                        const curInVal = checkin?.value || minAllowedCheckin;
+                        if (checkout._flatpickr) {
+                            checkout._flatpickr.set("minDate", curInVal || "");
+                        } else {
+                            flatpickr(checkout, {
+                                dateFormat: "m/d/Y",
+                                minDate: curInVal || undefined,
+                                onChange: function(selectedDates, dateStr, instance) {
+                                    if (selectedDates[0] && checkin?.value) {
+                                        const curInD = new Date(checkin.value);
+                                        curInD.setHours(0,0,0,0);
+                                        if (selectedDates[0] < curInD) {
+                                            alert("Check-out date cannot be earlier than check-in date.");
+                                            instance.clear();
+                                            return;
+                                        }
+                                    }
+                                    calculateNights(item);
+                                    syncAccommodationDateSequencing();
                                 }
-                            }
-                            calculateNights(item); 
+                            });
                         }
-                    });
-                }
-            });
+                    }
+
+                    if (checkout && checkout.value) {
+                        prevCheckoutDate = checkout.value;
+                    } else {
+                        prevCheckoutDate = null;
+                    }
+                });
+            }
+
+            syncAccommodationDateSequencing();
 
             document.addEventListener("input", function(e) {
-                if (e.target.matches(".acc-nights, .acc-rooms, .acc-per-night")) {
+                if (e.target.matches(".acc-nights, .acc-rooms, .acc-per-night, .acc-selling-per-night")) {
                     const accItem = e.target.closest(".accommodation-item");
                     if (accItem) {
                         calculateAccommodationCost(accItem);
@@ -1102,6 +1154,11 @@
 
             const suppliersOptions = `
                 <option value="">-- Select Supplier / Vendor --</option>
+                @if(isset($suppliers))
+                    @foreach ($suppliers as $sup)
+                        <option value="{{ $sup->id }}">{{ $sup->name }}{{ $sup->company_name ? ' (' . $sup->company_name . ')' : '' }} - {{ ucfirst($sup->service_type ?? 'Supplier') }}</option>
+                    @endforeach
+                @endif
                 @foreach ($clients as $client)
                     @if($client->type == 'vendor' || $client->type == 'client')
                         <option value="{{ $client->id }}">{{ $client->name }} ({{ ucfirst($client->type) }}{{ $client->company_name ? ' - ' . $client->company_name : '' }})</option>
@@ -1971,14 +2028,18 @@
                             <input type="number" step="0.0001" name="accommodations[${accCounter-1}][selling_exchange_rate]" class="form-control form-control-sm border-success acc-selling-roe bg-light" readonly placeholder="1.00" value="1">
                         </div>
                         <div class="col-md-2">
+                            <label class="form-label fs-12 fw-semibold text-success mb-1">Sell Rate / Night</label>
+                            <input type="number" step="any" name="accommodations[${accCounter-1}][selling_per_night_rate]" class="form-control form-control-sm border-success acc-selling-per-night" value="0">
+                        </div>
+                        <div class="col-md-2">
                             <label class="form-label fs-12 fw-semibold text-success mb-1">Selling Amount (Foreign)</label>
-                            <input type="number" step="any" name="accommodations[${accCounter-1}][selling_amount]" class="form-control form-control-sm acc-selling bg-light" value="0" readonly>
+                            <input type="number" step="any" name="accommodations[${accCounter-1}][selling_amount]" class="form-control form-control-sm acc-selling" value="0">
                         </div>
                         <div class="col-md-2">
                             <label class="form-label fs-12 fw-semibold text-success mb-1">Selling PKR</label>
                             <div class="fs-13 fw-bold text-success pt-1 acc-sale-pkr-badge">PKR 0</div>
                         </div>
-                        <div class="col-md-12">
+                        <div class="col-md-2">
                             <label class="form-label fs-12 fw-semibold text-primary mb-1">Estimated Stay Profit</label>
                             <div class="fs-13 fw-bold text-primary pt-1 acc-profit-pkr-badge">PKR 0</div>
                         </div>
@@ -1997,11 +2058,8 @@
                 `;
 
                 container.appendChild(newCard);
-                flatpickr(".flatpickr-date", { dateFormat: "m/d/Y" });
-                const cin = newCard.querySelector(".flatpickr-checkin");
-                const cout = newCard.querySelector(".flatpickr-checkout");
-                if (cin) flatpickr(cin, { dateFormat: "m/d/Y", onChange: function() { calculateNights(newCard); } });
-                if (cout) flatpickr(cout, { dateFormat: "m/d/Y", onChange: function() { calculateNights(newCard); } });
+                flatpickr(newCard.querySelectorAll(".flatpickr-date"), { dateFormat: "m/d/Y" });
+                syncAccommodationDateSequencing();
                 recalculateAll();
             }
 
@@ -2013,6 +2071,7 @@
                     const item = e.target.closest(".accommodation-item");
                     if (item) {
                         item.remove();
+                        syncAccommodationDateSequencing();
                         recalculateAll();
                     }
                 }

@@ -36,4 +36,9 @@ class Client extends Model
     {
         return $this->belongsTo(Lead::class);
     }
+
+    public function getClientNameAttribute()
+    {
+        return $this->name;
+    }
 }

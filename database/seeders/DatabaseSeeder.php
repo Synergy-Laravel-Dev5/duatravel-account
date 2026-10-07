@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
         try {
 
             $this->call(PermissionTableSeeder::class);
+            $this->call(MasterDataSeeder::class);
 
             $adminRole = Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
 

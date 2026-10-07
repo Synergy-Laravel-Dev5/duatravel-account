@@ -1,6 +1,6 @@
 @extends('layout.master')
 
-@section('title', 'Expense Transaction Report')
+@section('title', 'Transaction Report')
 @section('content')
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css">
@@ -351,9 +351,9 @@
 
                 {{-- Print-only header --}}
                 <div class="print-header">
-                    <h5>Expense Transaction Report</h5>
+                    <h5>Transaction Report</h5>
                     <p>
-                        {{ ucfirst($filters['hajj_umrah'] ?? '') }} &bull; Year: {{ $filters['year'] ?? '' }}
+                        {{ !empty($filters['hajj_umrah']) && $filters['hajj_umrah'] !== 'all' ? ucfirst($filters['hajj_umrah']) : 'All Seasons' }} &bull; Year: {{ !empty($filters['year']) && $filters['year'] !== 'all' ? $filters['year'] : 'All Years' }}
                         @if (!empty($filters['currency']))
                             &bull; Currency: {{ $filters['currency'] }}
                         @endif
@@ -370,13 +370,13 @@
                 {{-- Page header --}}
                 <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-3 no-print">
                     <div>
-                        <h4 class="fw-bold mb-1" style="color:#1e1b4b">Expense Transaction Report</h4>
+                        <h4 class="fw-bold mb-1" style="color:#1e1b4b">Transaction Report</h4>
                         <p class="mb-0" style="font-size:13px;color:#64748b">
                             <span
-                                class="et-badge {{ ($filters['hajj_umrah'] ?? '') === 'hajj' ? 'et-badge-hajj' : 'et-badge-umrah' }}">
-                                {{ ucfirst($filters['hajj_umrah'] ?? '—') }}
+                                class="et-badge {{ ($filters['hajj_umrah'] ?? '') === 'hajj' ? 'et-badge-hajj' : (($filters['hajj_umrah'] ?? '') === 'umrah' ? 'et-badge-umrah' : 'bg-secondary text-white') }}">
+                                {{ !empty($filters['hajj_umrah']) && $filters['hajj_umrah'] !== 'all' ? ucfirst($filters['hajj_umrah']) : 'All Seasons' }}
                             </span>
-                            &nbsp;{{ $filters['year'] ?? '—' }}
+                            &nbsp;{{ !empty($filters['year']) && $filters['year'] !== 'all' ? $filters['year'] : 'All Years' }}
                             @if (!empty($filters['currency']))
                                 &nbsp;<span
                                     class="et-badge {{ $filters['currency'] === 'SAR' ? 'et-badge-sar' : 'et-badge-pkr' }}">{{ $filters['currency'] }}</span>
@@ -404,6 +404,349 @@
                         </button>
                     </div>
                 </div>
+
+                @if(!empty($selectedSupplier))
+                    {{-- SUPPLIER REFLECTION CARD --}}
+                    <div class="card border-0 mb-4 shadow-sm" style="border-radius:14px; overflow:hidden; border-left: 5px solid #f59e0b !important;">
+                        <div class="card-body p-4">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+                                <div>
+                                    <span class="badge bg-warning text-dark px-3 py-1 mb-2 fs-12 fw-bold">Supplier Reflection Ledger</span>
+                                    <h4 class="fw-bold text-dark m-0">{{ $selectedSupplier->name }}</h4>
+                                    <div class="text-muted fs-13 mt-1">
+                                        @if($selectedSupplier->company_name) <span class="me-3"><i class="ri-building-line me-1"></i>{{ $selectedSupplier->company_name }}</span> @endif
+                                        @if($selectedSupplier->service_type) <span class="me-3"><i class="ri-service-line me-1"></i>Type: {{ ucfirst($selectedSupplier->service_type) }}</span> @endif
+                                        @if($selectedSupplier->phone) <span class="me-3"><i class="ri-phone-line me-1"></i>{{ $selectedSupplier->phone }}</span> @endif
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <span class="text-muted fs-12 d-block">Package & Year</span>
+                                    <span class="badge bg-primary fs-13">{{ ucfirst($filters['hajj_umrah'] ?? 'All') }} - {{ $filters['year'] ?? '' }}</span>
+                                </div>
+                            </div>
+
+                            {{-- Reflection Stats --}}
+                            <div class="row g-3 mt-2">
+                                <div class="col-md-3 col-6">
+                                    <div class="p-3 bg-light rounded-3 border">
+                                        <div class="text-muted small fw-semibold text-uppercase">Hotel Cost</div>
+                                        <div class="fs-18 fw-bold text-dark mt-1">PKR {{ number_format($supplierSummary['total_hotel_cost'], 2) }}</div>
+                                        <div class="small text-muted">{{ $supplierHotels->count() }} Hotel records</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6">
+                                    <div class="p-3 bg-light rounded-3 border">
+                                        <div class="text-muted small fw-semibold text-uppercase">Flight Cost</div>
+                                        <div class="fs-18 fw-bold text-dark mt-1">PKR {{ number_format($supplierSummary['total_flight_cost'], 2) }}</div>
+                                        <div class="small text-muted">{{ $supplierFlights->count() }} Flight records</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6">
+                                    <div class="p-3 bg-light rounded-3 border">
+                                        <div class="text-muted small fw-semibold text-uppercase">Visa Cost</div>
+                                        <div class="fs-18 fw-bold text-dark mt-1">PKR {{ number_format($supplierSummary['total_visa_cost'], 2) }}</div>
+                                        <div class="small text-muted">{{ $supplierVisas->count() }} Visa records</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6">
+                                    <div class="p-3 bg-light rounded-3 border">
+                                        <div class="text-muted small fw-semibold text-uppercase">Transport Cost</div>
+                                        <div class="fs-18 fw-bold text-dark mt-1">PKR {{ number_format($supplierSummary['total_transport_cost'], 2) }}</div>
+                                        <div class="small text-muted">{{ $supplierTransports->count() }} Transport records</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-12">
+                                    <div class="p-3 rounded-3 border text-white" style="background: linear-gradient(135deg, #4f46e5, #4338ca);">
+                                        <div class="small fw-semibold text-uppercase opacity-75">Total Booking Payable</div>
+                                        <div class="fs-20 fw-bold mt-1">PKR {{ number_format($supplierSummary['total_payable'], 2) }}</div>
+                                        <div class="small opacity-75">Sum of all service costs</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-12">
+                                    <div class="p-3 rounded-3 border text-white" style="background: linear-gradient(135deg, #16a34a, #15803d);">
+                                        <div class="small fw-semibold text-uppercase opacity-75">Total Paid (Transactions)</div>
+                                        <div class="fs-20 fw-bold mt-1">PKR {{ number_format($supplierSummary['total_paid'], 2) }}</div>
+                                        <div class="small opacity-75">Paid via recorded transactions</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-12">
+                                    <div class="p-3 rounded-3 border text-white" style="background: linear-gradient(135deg, {{ $supplierSummary['balance_due'] > 0 ? '#dc2626, #b91c1c' : '#0284c7, #0369a1' }});">
+                                        <div class="small fw-semibold text-uppercase opacity-75">Balance Due</div>
+                                        <div class="fs-20 fw-bold mt-1">PKR {{ number_format($supplierSummary['balance_due'], 2) }}</div>
+                                        <div class="small opacity-75">{{ $supplierSummary['balance_due'] > 0 ? 'Payable remaining' : 'Settled' }}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Service Breakdown Details Tabs --}}
+                            @if($supplierHotels->isNotEmpty() || $supplierFlights->isNotEmpty() || $supplierVisas->isNotEmpty() || $supplierTransports->isNotEmpty())
+                                <div class="mt-4">
+                                    <h5 class="fw-bold text-dark mb-3"><i class="ri-list-check-2 me-1 text-primary"></i> Booking Services Linked to Supplier</h5>
+                                    
+                                    <ul class="nav nav-pills mb-3" id="supplierServiceTabs" role="tablist">
+                                        @if($supplierHotels->isNotEmpty())
+                                            <li class="nav-item">
+                                                <button class="nav-link active btn-sm" id="tab-hotel" data-bs-toggle="pill" data-bs-target="#pills-hotel" type="button">
+                                                    <i class="ri-hotel-line me-1"></i> Hotels ({{ $supplierHotels->count() }})
+                                                </button>
+                                            </li>
+                                        @endif
+                                        @if($supplierFlights->isNotEmpty())
+                                            <li class="nav-item">
+                                                <button class="nav-link {{ $supplierHotels->isEmpty() ? 'active' : '' }} btn-sm" id="tab-flight" data-bs-toggle="pill" data-bs-target="#pills-flight" type="button">
+                                                    <i class="ri-flight-takeoff-line me-1"></i> Flights ({{ $supplierFlights->count() }})
+                                                </button>
+                                            </li>
+                                        @endif
+                                        @if($supplierVisas->isNotEmpty())
+                                            <li class="nav-item">
+                                                <button class="nav-link {{ $supplierHotels->isEmpty() && $supplierFlights->isEmpty() ? 'active' : '' }} btn-sm" id="tab-visa" data-bs-toggle="pill" data-bs-target="#pills-visa" type="button">
+                                                    <i class="ri-passport-line me-1"></i> Visas ({{ $supplierVisas->count() }})
+                                                </button>
+                                            </li>
+                                        @endif
+                                        @if($supplierTransports->isNotEmpty())
+                                            <li class="nav-item">
+                                                <button class="nav-link {{ $supplierHotels->isEmpty() && $supplierFlights->isEmpty() && $supplierVisas->isEmpty() ? 'active' : '' }} btn-sm" id="tab-transport" data-bs-toggle="pill" data-bs-target="#pills-transport" type="button">
+                                                    <i class="ri-bus-line me-1"></i> Transport ({{ $supplierTransports->count() }})
+                                                </button>
+                                            </li>
+                                        @endif
+                                    </ul>
+
+                                    <div class="tab-content border rounded-3 p-3 bg-white" id="supplierServiceTabsContent">
+                                        @if($supplierHotels->isNotEmpty())
+                                            <div class="tab-pane fade show active" id="pills-hotel">
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-bordered align-middle mb-0">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th>#</th>
+                                                                <th>Booking / Client</th>
+                                                                <th>Hotel</th>
+                                                                <th>Check-In</th>
+                                                                <th>Check-Out</th>
+                                                                <th>Nights</th>
+                                                                <th>Rooms</th>
+                                                                <th>Cost / Night</th>
+                                                                <th class="text-end">Total Cost</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach($supplierHotels as $idx => $h)
+                                                                <tr>
+                                                                    <td>{{ $idx + 1 }}</td>
+                                                                    <td>
+                                                                        <strong>#{{ $h->booking_id }}</strong> - {{ $h->booking->client->client_name ?? '—' }}
+                                                                    </td>
+                                                                    <td>{{ $h->hotel_name ?? '—' }} ({{ $h->location ?? '—' }})</td>
+                                                                    <td>{{ $h->check_in ? \Carbon\Carbon::parse($h->check_in)->format('d M Y') : '—' }}</td>
+                                                                    <td>{{ $h->check_out ? \Carbon\Carbon::parse($h->check_out)->format('d M Y') : '—' }}</td>
+                                                                    <td>{{ $h->no_of_nights ?? 1 }}</td>
+                                                                    <td>{{ $h->no_of_rooms ?? 1 }}</td>
+                                                                    <td>{{ number_format($h->cost_per_night, 2) }}</td>
+                                                                    <td class="text-end fw-bold text-danger">PKR {{ number_format($h->cost_amount, 2) }}</td>
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        @endif
+
+                                        @if($supplierFlights->isNotEmpty())
+                                            <div class="tab-pane fade {{ $supplierHotels->isEmpty() ? 'show active' : '' }}" id="pills-flight">
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-bordered align-middle mb-0">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th>#</th>
+                                                                <th>Booking / Client</th>
+                                                                <th>Airline</th>
+                                                                <th>Departure Date</th>
+                                                                <th>Departure PNR</th>
+                                                                <th>Pax</th>
+                                                                <th>Flight Cost Rate</th>
+                                                                <th class="text-end">Total Flight Cost</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach($supplierFlights as $idx => $f)
+                                                                <tr>
+                                                                    <td>{{ $idx + 1 }}</td>
+                                                                    <td><strong>#{{ $f->id }}</strong> - {{ $f->client->client_name ?? '—' }}</td>
+                                                                    <td>{{ $f->departure_airline ?? '—' }} ({{ $f->departure_flight ?? '—' }})</td>
+                                                                    <td>{{ $f->departure_date ? \Carbon\Carbon::parse($f->departure_date)->format('d M Y') : '—' }}</td>
+                                                                    <td>{{ $f->departure_pnr ?? '—' }}</td>
+                                                                    <td>{{ $f->no_of_pax ?? 1 }}</td>
+                                                                    <td>{{ number_format($f->flight_cost_rate, 2) }}</td>
+                                                                    <td class="text-end fw-bold text-danger">PKR {{ number_format($f->flight_cost, 2) }}</td>
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        @endif
+
+                                        @if($supplierVisas->isNotEmpty())
+                                            <div class="tab-pane fade {{ $supplierHotels->isEmpty() && $supplierFlights->isEmpty() ? 'show active' : '' }}" id="pills-visa">
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-bordered align-middle mb-0">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th>#</th>
+                                                                <th>Booking / Client</th>
+                                                                <th>Pilgrim / Name</th>
+                                                                <th>Passport #</th>
+                                                                <th>Cost Rate</th>
+                                                                <th class="text-end">Cost Amount</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach($supplierVisas as $idx => $v)
+                                                                <tr>
+                                                                    <td>{{ $idx + 1 }}</td>
+                                                                    <td><strong>#{{ $v->booking_id }}</strong> - {{ $v->booking->client->client_name ?? '—' }}</td>
+                                                                    <td>{{ $v->given_name ?? '—' }}</td>
+                                                                    <td>{{ $v->passport_number ?? '—' }}</td>
+                                                                    <td>{{ number_format($v->cost_rate, 2) }}</td>
+                                                                    <td class="text-end fw-bold text-danger">PKR {{ number_format($v->cost_amount, 2) }}</td>
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        @endif
+
+                                        @if($supplierTransports->isNotEmpty())
+                                            <div class="tab-pane fade {{ $supplierHotels->isEmpty() && $supplierFlights->isEmpty() && $supplierVisas->isEmpty() ? 'show active' : '' }}" id="pills-transport">
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-bordered align-middle mb-0">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th>#</th>
+                                                                <th>Booking / Client</th>
+                                                                <th>Route</th>
+                                                                <th>Transport Type</th>
+                                                                <th>Cost Rate</th>
+                                                                <th class="text-end">Cost Amount</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach($supplierTransports as $idx => $t)
+                                                                <tr>
+                                                                    <td>{{ $idx + 1 }}</td>
+                                                                    <td><strong>#{{ $t->booking_id }}</strong> - {{ $t->booking->client->client_name ?? '—' }}</td>
+                                                                    <td>{{ $t->route ?? '—' }}</td>
+                                                                    <td>{{ $t->transport_type ?? '—' }}</td>
+                                                                    <td>{{ number_format($t->cost_rate, 2) }}</td>
+                                                                    <td class="text-end fw-bold text-danger">PKR {{ number_format($t->cost_amount, 2) }}</td>
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                @endif
+
+                @if(!empty($selectedClient))
+                    {{-- CLIENT REFLECTION CARD --}}
+                    <div class="card border-0 mb-4 shadow-sm" style="border-radius:14px; overflow:hidden; border-left: 5px solid #0284c7 !important;">
+                        <div class="card-body p-4">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+                                <div>
+                                    <span class="badge bg-info text-dark px-3 py-1 mb-2 fs-12 fw-bold">Client Reflection Ledger</span>
+                                    <h4 class="fw-bold text-dark m-0">{{ $selectedClient->client_name }}</h4>
+                                    <div class="text-muted fs-13 mt-1">
+                                        @if($selectedClient->phone) <span class="me-3"><i class="ri-phone-line me-1"></i>{{ $selectedClient->phone }}</span> @endif
+                                        @if($selectedClient->email) <span class="me-3"><i class="ri-mail-line me-1"></i>{{ $selectedClient->email }}</span> @endif
+                                        @if($selectedClient->city) <span class="me-3"><i class="ri-map-pin-line me-1"></i>{{ $selectedClient->city }}</span> @endif
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <span class="text-muted fs-12 d-block">Package & Year</span>
+                                    <span class="badge bg-primary fs-13">{{ ucfirst($filters['hajj_umrah'] ?? 'All') }} - {{ $filters['year'] ?? '' }}</span>
+                                </div>
+                            </div>
+
+                            {{-- Reflection Stats --}}
+                            <div class="row g-3 mt-2">
+                                <div class="col-md-4 col-12">
+                                    <div class="p-3 rounded-3 border text-white" style="background: linear-gradient(135deg, #4f46e5, #4338ca);">
+                                        <div class="small fw-semibold text-uppercase opacity-75">Total Booking Amount</div>
+                                        <div class="fs-20 fw-bold mt-1">PKR {{ number_format($clientSummary['total_bookings_amount'], 2) }}</div>
+                                        <div class="small opacity-75">{{ $clientBookings->count() }} Total Bookings</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-12">
+                                    <div class="p-3 rounded-3 border text-white" style="background: linear-gradient(135deg, #16a34a, #15803d);">
+                                        <div class="small fw-semibold text-uppercase opacity-75">Total Paid / Received</div>
+                                        <div class="fs-20 fw-bold mt-1">PKR {{ number_format($clientSummary['total_received'], 2) }}</div>
+                                        <div class="small opacity-75">Booking: PKR {{ number_format($clientSummary['booking_received'], 2) }} | Trans: PKR {{ number_format($clientSummary['transaction_paid'], 2) }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-12">
+                                    <div class="p-3 rounded-3 border text-white" style="background: linear-gradient(135deg, {{ $clientSummary['balance_due'] > 0 ? '#dc2626, #b91c1c' : '#0284c7, #0369a1' }});">
+                                        <div class="small fw-semibold text-uppercase opacity-75">Balance Due</div>
+                                        <div class="fs-20 fw-bold mt-1">PKR {{ number_format($clientSummary['balance_due'], 2) }}</div>
+                                        <div class="small opacity-75">{{ $clientSummary['balance_due'] > 0 ? 'Receivable from client' : 'Settled' }}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Client Bookings List --}}
+                            @if($clientBookings->isNotEmpty())
+                                <div class="mt-4">
+                                    <h5 class="fw-bold text-dark mb-3"><i class="ri-calendar-todo-line me-1 text-primary"></i> Client Bookings ({{ ucfirst($filters['hajj_umrah'] ?? '') }} {{ $filters['year'] ?? '' }})</h5>
+                                    <div class="table-responsive border rounded-3 bg-white p-2">
+                                        <table class="table table-sm table-bordered align-middle mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Voucher #</th>
+                                                    <th>Package Name</th>
+                                                    <th>Pax</th>
+                                                    <th>Departure Date</th>
+                                                    <th class="text-end">Total Amount</th>
+                                                    <th class="text-end">Received</th>
+                                                    <th class="text-end">Balance</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($clientBookings as $idx => $b)
+                                                    <tr>
+                                                        <td>{{ $idx + 1 }}</td>
+                                                        <td><span class="fw-bold text-primary">{{ $b->voucher_number ?? ('#' . $b->id) }}</span></td>
+                                                        <td>{{ $b->package_name ?? '—' }}</td>
+                                                        <td>{{ $b->no_of_pax ?? 1 }}</td>
+                                                        <td>{{ $b->departure_date ? \Carbon\Carbon::parse($b->departure_date)->format('d M Y') : '—' }}</td>
+                                                        <td class="text-end fw-bold">PKR {{ number_format($b->total_amount, 2) }}</td>
+                                                        <td class="text-end text-success fw-bold">PKR {{ number_format($b->total_received, 2) }}</td>
+                                                        <td class="text-end text-danger fw-bold">PKR {{ number_format($b->balance, 2) }}</td>
+                                                        <td>
+                                                            <span class="badge {{ $b->status === 'confirmed' ? 'bg-success' : 'bg-warning text-dark' }}">
+                                                                {{ ucfirst($b->status ?? 'pending') }}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                @endif
 
                 {{-- Summary cards --}}
                 <div class="row g-3 mb-4">
@@ -476,10 +819,18 @@
                         @if ($transactions->isEmpty())
                             <div class="et-empty">
                                 <i class="ri-inbox-2-line"></i>
-                                <p>No transactions found for the selected filters.</p>
+                                @if(!empty($selectedSupplier))
+                                    <p class="fw-semibold text-dark mb-1">No direct payout / payment transactions recorded yet for <strong>{{ $selectedSupplier->name }}</strong>.</p>
+                                    <p class="text-muted fs-12 mb-0">Supplier's booking payables and service breakdown are displayed in the summary card above.</p>
+                                @elseif(!empty($selectedClient))
+                                    <p class="fw-semibold text-dark mb-1">No separate transaction receipts recorded yet for <strong>{{ $selectedClient->client_name }}</strong>.</p>
+                                    <p class="text-muted fs-12 mb-0">Client's bookings, total receivable and balances are displayed in the summary card above.</p>
+                                @else
+                                    <p>No transactions found for the selected filters.</p>
+                                @endif
                                 <a href="{{ route('expense.transaction.report.filter') }}"
-                                    class="et-btn et-btn-filter no-print" style="display:inline-flex;margin-top:12px">
-                                    <i class="ri-filter-3-line"></i> Try Different Filters
+                                    class="et-btn et-btn-filter no-print" style="display:inline-flex;margin-top:14px">
+                                    <i class="ri-filter-3-line"></i> Change / Reset Filters
                                 </a>
                             </div>
                         @else
@@ -489,12 +840,13 @@
                                         <tr>
                                             <th>#</th>
                                             <th>Date</th>
-                                            <th>Expense Category</th>
+                                            <th>Category / Payee</th>
+                                            <th>Bank Account</th>
                                             <th>Package</th>
                                             <th>Year</th>
                                             <th>Payment Method</th>
                                             <th>Reference No.</th>
-                                            <th>Narration</th>
+                                            <th>Description</th>
                                             <th>Currency</th>
                                             <th class="text-end">Amount</th>
                                             <th class="text-end">PKR Equivalent</th>
@@ -507,14 +859,14 @@
                                                     'cash' => 'et-badge-cash',
                                                     'bank' => 'et-badge-bank',
                                                     'online' => 'et-badge-online',
-                                                    'ewallet' => 'et-badge-ewallet',
-                                                    default => '',
+                                                    'cheque' => 'et-badge-ewallet',
+                                                    default => 'et-badge-bank',
                                                 };
                                                 $pmLabel = match ($txn->payment_type) {
                                                     'cash' => 'Cash',
-                                                    'bank' => 'Bank',
+                                                    'bank' => 'Bank Transfer',
                                                     'online' => 'Online',
-                                                    'ewallet' => 'E-Wallet',
+                                                    'cheque' => 'Cheque',
                                                     default => ucfirst($txn->payment_type),
                                                 };
                                                 $currBadge = $txn->currency === 'SAR' ? 'et-badge-sar' : 'et-badge-pkr';
@@ -526,41 +878,86 @@
                                             <tr>
                                                 <td class="text-muted fw-medium">{{ $i + 1 }}</td>
                                                 <td>{{ \Carbon\Carbon::parse($txn->date)->format('d M Y') }}</td>
-                                                <td class="fw-medium">{{ $txn->expense->name ?? '—' }}</td>
+                                                <td>
+                                                    @if($txn->payee_type === 'supplier' || $txn->supplier)
+                                                        <div>
+                                                            <span class="badge bg-warning text-dark me-1">Supplier</span>
+                                                            <span class="fw-bold">{{ $txn->supplier->name ?? '—' }}</span>
+                                                        </div>
+                                                    @elseif($txn->payee_type === 'client' || $txn->client)
+                                                        <div>
+                                                            <span class="badge bg-info text-dark me-1">Client</span>
+                                                            <span class="fw-bold">{{ $txn->client->client_name ?? '—' }}</span>
+                                                        </div>
+                                                    @elseif($txn->payee_type === 'staff' || $txn->staff)
+                                                        <div>
+                                                            <span class="badge bg-success me-1">Staff</span>
+                                                            <span class="fw-bold">{{ $txn->staff->first_name ?? '' }} {{ $txn->staff->last_name ?? '' }}</span>
+                                                        </div>
+                                                    @elseif($txn->payee_type === 'company' || $txn->company)
+                                                        <div>
+                                                            <span class="badge bg-primary me-1">Company</span>
+                                                            <span class="fw-bold">{{ $txn->company->company_name ?? '—' }}</span>
+                                                        </div>
+                                                    @elseif($txn->payee_type === 'self')
+                                                        <div>
+                                                            <span class="badge bg-secondary me-1">Self</span>
+                                                            <span class="fw-bold">Internal Transfer</span>
+                                                        </div>
+                                                    @else
+                                                        <div>
+                                                            <span class="badge bg-dark me-1">Expense Head</span>
+                                                            <span class="fw-bold">{{ $txn->expense->name ?? 'General Expense' }}</span>
+                                                        </div>
+                                                    @endif
+                                                    @if($txn->expense && $txn->payee_type !== 'expense')
+                                                        <small class="text-muted d-block">Head: {{ $txn->expense->name }}</small>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    @if($txn->bank)
+                                                        <span class="fw-medium text-dark"><i class="ri-bank-line me-1 text-primary"></i>{{ $txn->bank->name }}</span>
+                                                        @if(!empty($txn->bank->account_name) || (!empty($txn->bank->account_number) && $txn->bank->account_number !== '0'))
+                                                            <small class="text-muted d-block">
+                                                                {{ $txn->bank->account_name }}
+                                                                @if(!empty($txn->bank->account_number) && $txn->bank->account_number !== '0')
+                                                                    ({{ $txn->bank->account_number }})
+                                                                @endif
+                                                            </small>
+                                                        @endif
+                                                    @elseif($txn->payment_type === 'cash')
+                                                        <span class="text-muted"><i class="ri-money-dollar-circle-line me-1 text-success"></i>Cash in Hand</span>
+                                                    @else
+                                                        <span class="text-muted">—</span>
+                                                    @endif
+                                                </td>
                                                 <td>
                                                     <span
                                                         class="et-badge {{ $txn->hajj_umrah === 'hajj' ? 'et-badge-hajj' : 'et-badge-umrah' }}">{{ ucfirst($txn->hajj_umrah) }}</span>
                                                 </td>
                                                 <td>{{ $txn->year }}</td>
-                                                <td><span class="et-badge {{ $pmBadge }}">{{ $pmLabel }}</span>
-                                                </td>
+                                                <td><span class="et-badge {{ $pmBadge }}">{{ $pmLabel }}</span></td>
                                                 <td class="text-muted">{{ $txn->reference_no ?: '—' }}</td>
-                                                <td class="text-muted">{{ $txn->description ?: '—' }}</td>
-                                                <td><span class="et-badge {{ $currBadge }}">{{ $txn->currency }}</span>
-                                                </td>
+                                                <td class="text-muted" style="max-width:200px;">{{ $txn->description ?: '—' }}</td>
+                                                <td><span class="et-badge {{ $currBadge }}">{{ $txn->currency }}</span></td>
                                                 <td class="text-end fw-bold" style="color:#1e1b4b">
                                                     {{ number_format($txn->amount, 2) }}
                                                     @if ($txn->currency === 'SAR')
-                                                        {{-- Exchange rate chota dikhao --}}
                                                         <div style="font-size:10.5px;color:#94a3b8;font-weight:500;">
-                                                            @ {{ number_format($txn->exchange_rate, 2) }}</div>
+                                                             @ {{ number_format($txn->exchange_rate, 2) }}</div>
                                                     @endif
                                                 </td>
                                                 <td class="text-end">
                                                     @if ($pkrEquivalent !== null)
-                                                        {{-- SAR ka PKR equivalent --}}
                                                         <span class="fw-bold" style="color:#be123c;">
-                                                            {{ number_format($pkrEquivalent, 2) }}
+                                                             {{ number_format($pkrEquivalent, 2) }}
                                                         </span>
-                                                        <div style="font-size:10.5px;color:#94a3b8;font-weight:500;">PKR
-                                                        </div>
+                                                        <div style="font-size:10.5px;color:#94a3b8;font-weight:500;">PKR</div>
                                                     @else
-                                                        {{-- PKR transaction ke liye same amount --}}
                                                         <span class="fw-bold" style="color:#0e7490;">
                                                             {{ number_format($txn->amount, 2) }}
                                                         </span>
-                                                        <div style="font-size:10.5px;color:#94a3b8;font-weight:500;">PKR
-                                                        </div>
+                                                        <div style="font-size:10.5px;color:#94a3b8;font-weight:500;">PKR</div>
                                                     @endif
                                                 </td>
                                             </tr>
@@ -570,7 +967,7 @@
                                         @if ($currencyTotals->count() > 1)
                                             @foreach ($currencyTotals as $curr => $total)
                                                 <tr>
-                                                    <td colspan="8" class="text-end"
+                                                    <td colspan="9" class="text-end"
                                                         style="color:#4f46e5;font-size:13px">Grand Total</td>
                                                     <td><span
                                                             class="et-badge {{ $curr === 'SAR' ? 'et-badge-sar' : 'et-badge-pkr' }}">{{ $curr }}</span>
@@ -579,7 +976,7 @@
                                                         {{ number_format($total, 2) }}</td>
                                                     <td class="text-end" style="color:#be123c;font-size:13px">
                                                         @if ($curr === 'SAR' && $sarPkrTotal > 0)
-                                                            ≈ PKR {{ number_format($sarPkrTotal, 2) }}
+                                                             ≈ PKR {{ number_format($sarPkrTotal, 2) }}
                                                         @elseif ($curr === 'PKR')
                                                             PKR {{ number_format($total, 2) }}
                                                         @else
@@ -590,7 +987,7 @@
                                             @endforeach
                                         @else
                                             <tr>
-                                                <td colspan="8" class="text-end" style="color:#4f46e5;font-size:13px">
+                                                <td colspan="9" class="text-end" style="color:#4f46e5;font-size:13px">
                                                     Grand Total</td>
                                                 <td>
                                                     @if ($transactions->isNotEmpty())
@@ -623,7 +1020,7 @@
     <script>
         /* ── PHP data passed to JS ─────────────────────────── */
         const REPORT = {
-            title: 'Expense Transaction Report',
+            title: 'Transaction Report',
             package: '{{ ucfirst($filters['hajj_umrah'] ?? '') }}',
             year: '{{ $filters['year'] ?? '' }}',
             currency: '{{ $filters['currency'] ?? '' }}',
@@ -645,13 +1042,23 @@
                 @foreach ($transactions as $i => $txn)
                     @php
                         $rowPkrEquiv = $txn->currency === 'SAR' ? $txn->amount * $txn->exchange_rate : $txn->amount;
+                        $payeeName = match($txn->payee_type) {
+                            'supplier' => ($txn->supplier->name ?? 'Supplier'),
+                            'client'   => ($txn->client->client_name ?? 'Client'),
+                            'staff'    => (($txn->staff->first_name ?? '') . ' ' . ($txn->staff->last_name ?? '') . ' (Staff)'),
+                            'company'  => ($txn->company->company_name ?? 'Company'),
+                            'self'     => 'Internal Transfer',
+                            default    => ($txn->expense->name ?? 'General Expense'),
+                        };
+                        $bankName = $txn->bank ? ($txn->bank->name . (!empty($txn->bank->account_name) ? (' - ' . $txn->bank->account_name) : '')) : ($txn->payment_type === 'cash' ? 'Cash in Hand' : '—');
                     @endphp {
                         no: {{ $i + 1 }},
                         date: '{{ \Carbon\Carbon::parse($txn->date)->format('d M Y') }}',
-                        category: '{{ addslashes($txn->expense->name ?? '—') }}',
+                        category: '{{ addslashes($payeeName) }}',
+                        bank: '{{ addslashes($bankName) }}',
                         package: '{{ ucfirst($txn->hajj_umrah) }}',
                         year: {{ $txn->year }},
-                        payment: '{{ match ($txn->payment_type) {'cash' => 'Cash','bank' => 'Bank','online' => 'Online','ewallet' => 'E-Wallet',default => ucfirst($txn->payment_type)} }}',
+                        payment: '{{ match ($txn->payment_type) {'cash' => 'Cash','bank' => 'Bank','online' => 'Online','cheque' => 'Cheque',default => ucfirst($txn->payment_type)} }}',
                         ref: '{{ addslashes($txn->reference_no ?: '—') }}',
                         currency: '{{ $txn->currency }}',
                         amount: {{ $txn->amount }},
@@ -663,7 +1070,7 @@
                 @endforeach
             ],
             grandTotal: '{{ number_format($transactions->sum('amount'), 2) }}',
-            filename: 'expense-transaction-report-{{ $filters['year'] ?? 'report' }}'
+            filename: 'transaction-report-{{ $filters['year'] ?? 'report' }}'
         };
 
         /* ── PDF Export ─────────────────────────────────────── */
@@ -685,7 +1092,7 @@
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(14);
             doc.setTextColor(255, 255, 255);
-            doc.text('Expense Transaction Report', 30, 23);
+            doc.text('Transaction Report', 30, 23);
 
             /* meta line */
             doc.setFont('helvetica', 'normal');
@@ -709,7 +1116,7 @@
                 .map(([curr, total]) => `${curr}: ${total.toLocaleString()}`)
                 .join('   |   ');
             let sumText =
-                `Transactions: ${REPORT.summary.transactions}   |   ${currencyLine}   |   Cash: ${REPORT.summary.cash.toLocaleString()}   |   Bank/Online/Ewallet: ${REPORT.summary.other.toLocaleString()}`;
+                `Transactions: ${REPORT.summary.transactions}   |   ${currencyLine}   |   Cash: ${REPORT.summary.cash.toLocaleString()}   |   Bank/Online: ${REPORT.summary.other.toLocaleString()}`;
             if (REPORT.sarPkrTotal > 0) {
                 sumText +=
                     `   |   SAR in PKR: ${REPORT.sarPkrTotal.toLocaleString(undefined, {minimumFractionDigits:2,maximumFractionDigits:2})}`;
@@ -718,7 +1125,7 @@
 
             /* foot rows */
             const footRows = Object.entries(REPORT.currencyTotals).map(([curr, total]) => [
-                '', '', '', '', '', '', 'Grand Total', curr,
+                '', '', '', '', '', '', '', 'Grand Total', curr,
                 total.toLocaleString(undefined, {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2
@@ -738,11 +1145,11 @@
             doc.autoTable({
                 startY: 75,
                 head: [
-                    ['#', 'Date', 'Expense Category', 'Package', 'Year', 'Payment Method', 'Reference No.',
+                    ['#', 'Date', 'Category / Payee', 'Bank', 'Package', 'Year', 'Payment Method', 'Reference No.',
                         'Currency', 'Amount', 'PKR Equivalent'
                     ]
                 ],
-                body: REPORT.rows.map(r => [r.no, r.date, r.category, r.package, r.year, r.payment, r.ref,
+                body: REPORT.rows.map(r => [r.no, r.date, r.category, r.bank, r.package, r.year, r.payment, r.ref,
                     r.currency,
                     r.currency === 'SAR' ? r.amountFmt + ' (@ ' + r.exchangeRate.toFixed(2) + ')' : r
                     .amountFmt,
@@ -766,10 +1173,10 @@
                     textColor: [55, 65, 81]
                 },
                 columnStyles: {
-                    8: {
+                    9: {
                         halign: 'right'
                     },
-                    9: {
+                    10: {
                         halign: 'right'
                     }
                 },
@@ -822,13 +1229,13 @@
             data.push([]);
 
             /* header row */
-            data.push(['#', 'Date', 'Expense Category', 'Package', 'Year', 'Payment Method', 'Reference No.',
+            data.push(['#', 'Date', 'Category / Payee', 'Bank Account', 'Package', 'Year', 'Payment Method', 'Reference No.',
                 'Currency', 'Amount', 'Exchange Rate', 'PKR Equivalent'
             ]);
 
             /* data rows */
             REPORT.rows.forEach(r => data.push([
-                r.no, r.date, r.category, r.package, r.year, r.payment, r.ref,
+                r.no, r.date, r.category, r.bank, r.package, r.year, r.payment, r.ref,
                 r.currency, r.amount,
                 r.currency === 'SAR' ? r.exchangeRate : 1,
                 r.pkrEquiv
@@ -837,7 +1244,7 @@
             /* grand total rows */
             Object.entries(REPORT.currencyTotals).forEach(([curr, total]) => {
                 data.push([
-                    '', '', '', '', '', '', '', 'Grand Total (' + curr + ')', total, '',
+                    '', '', '', '', '', '', '', '', 'Grand Total (' + curr + ')', total, '',
                     curr === 'SAR' ? REPORT.sarPkrTotal : total
                 ]);
             });
@@ -850,6 +1257,8 @@
                     wch: 14
                 }, {
                     wch: 26
+                }, {
+                    wch: 20
                 }, {
                     wch: 10
                 }, {
@@ -884,7 +1293,7 @@
                 };
             }
 
-            ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'].forEach(col => {
+            ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'].forEach(col => {
                 const cell = ws[col + (headerRowIdx + 1)];
                 if (cell) {
                     cell.s = {
@@ -908,7 +1317,7 @@
 
             const currencyCount = Object.keys(REPORT.currencyTotals).length;
             for (let r = data.length - currencyCount + 1; r <= data.length; r++) {
-                ['H', 'I', 'K'].forEach(col => {
+                ['I', 'J', 'L'].forEach(col => {
                     const cell = ws[col + r];
                     if (cell) {
                         cell.s = {
