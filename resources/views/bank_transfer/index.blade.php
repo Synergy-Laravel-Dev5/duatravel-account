@@ -7,6 +7,9 @@
                 <div class="py-3 d-flex align-items-center justify-content-between">
                     <h4 class="fs-18 fw-semibold m-0">Bank Transfers</h4>
                     <div class="d-flex gap-2">
+                        <a href="{{ route('bank-transfer.report.filter') }}" class="btn btn-outline-primary btn-sm">
+                            <i class="mdi mdi-file-chart me-1"></i> Transfer Report
+                        </a>
                         <a href="{{ route('bank-transfer.create') }}" class="btn btn-primary btn-sm">
                             + New Transfer
                         </a>

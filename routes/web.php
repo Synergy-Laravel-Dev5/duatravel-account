@@ -251,6 +251,9 @@ Route::middleware(['auth:web,company'])->group(function () {
             Route::get('create', 'create')->name('bank-transfer.create');
             Route::post('store', 'store')->name('bank-transfer.store');
             Route::delete('delete/{bankTransfer}', 'destroy')->name('bank-transfer.destroy');
+            Route::get('report/filter', 'reportFilter')->name('bank-transfer.report.filter');
+            Route::match(['get', 'post'], 'report', 'report')->name('bank-transfer.report');
+            Route::get('report/pdf', 'reportPdf')->name('bank-transfer.report.pdf');
         });
 
         Route::controller(App\Http\Controllers\DepartmentController::class)->prefix('department')->group(function () {

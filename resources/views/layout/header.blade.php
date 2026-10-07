@@ -325,6 +325,12 @@
                                 </a>
                             </li>
                             <li>
+                                <a class="tp-link" href="{{ route('bank-transfer.report.filter') }}">
+                                    <i data-feather="trending-up"></i>
+                                    <span>Bank Transfer Report</span>
+                                </a>
+                            </li>
+                            <li>
                                 <a class="tp-link" href="{{ route('expense.index') }}">
                                     <i data-feather="file-text"></i>
                                     <span>Expense Heads</span>
