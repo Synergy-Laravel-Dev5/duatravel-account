@@ -157,7 +157,7 @@ Route::middleware(['auth:web,company'])->group(function () {
                 Route::get('trash', 'trash')->name('transaction.trash');
                 Route::post('restore/{id}', 'restore')->name('transaction.restore');
                 Route::get('ledger/filter', 'ledgerFilter')->name('transaction.ledger.filter');
-                Route::post('ledger/view', 'ledgerView')->name('transaction.ledger.view');
+                Route::match(['get', 'post'], 'ledger/view', 'ledgerView')->name('transaction.ledger.view');
                 Route::get('company-ledger/filter', 'companyLedgerFilter')->name('transaction.company-ledger.filter');
                 Route::get('company-ledger/view', 'companyLedgerView')->name('transaction.company-ledger.view');
                 Route::get('show/{id}', 'show')->name('transaction.show');
@@ -426,6 +426,10 @@ Route::middleware(['auth:web,company'])->group(function () {
         // Profit & Loss Report
         Route::get('reports/profit-loss', [\App\Http\Controllers\ProfitLossReportController::class, 'index'])->name('report.profit-loss');
         Route::get('reports/profit-loss/pdf', [\App\Http\Controllers\ProfitLossReportController::class, 'exportPdf'])->name('report.profit-loss.pdf');
+
+        // All Transactions Report
+        Route::get('reports/transactions', [\App\Http\Controllers\TransactionReportController::class, 'index'])->name('reports.transactions');
+        Route::get('reports/transactions/export-excel', [\App\Http\Controllers\TransactionReportController::class, 'exportExcel'])->name('reports.transactions.export-excel');
 
         Route::post('/leads/{lead}/follow-ups', [FollowUpController::class, 'store'])->name('followUp.store');
         Route::post('/follow-ups/{followUp}/take', [FollowUpController::class, 'take'])->name('followUp.take');

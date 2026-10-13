@@ -548,9 +548,7 @@
                                 Voucher #: {{ $booking->voucher_number }}
                             </span>
                         @endif
-                        <span class="badge-tag" style="background: rgba(201,168,76,0.3); color: #fde68a;">
-                            Currency: {{ $currency }}
-                        </span>
+                        
                     </div>
 
                     <h1 class="voucher-title">{{ $displayName }}</h1>
@@ -559,7 +557,7 @@
                         @if($booking->package_name)
                             <span><i class="mdi mdi-tag-outline me-1"></i>{{ $booking->package_name }}</span> · 
                         @endif
-                        <span><i class="mdi mdi-account-group me-1"></i>{{ $booking->no_of_pax ?? 1 }} Passenger(s)</span>
+                        <span><i class="mdi mdi-account-group me-1"></i>{{ $booking->no_of_pax ?? 1 }} Passenger(s)@if(($booking->adults_count ?? 0) > 0 || ($booking->children_count ?? 0) > 0 || ($booking->infants_count ?? 0) > 0) <span class="badge bg-white text-dark py-0 px-1 font-monospace" style="font-size: 10px;">{{ $booking->adults_count ?? 1 }} Adults, {{ $booking->children_count ?? 0 }} Child, {{ $booking->infants_count ?? 0 }} Infant</span>@endif</span>
                         @if($booking->booking_date)
                             · <span><i class="mdi mdi-calendar-check me-1"></i>Booking Date: {{ date('d M Y', strtotime($booking->booking_date)) }}</span>
                         @endif
@@ -884,6 +882,32 @@
                     </div>
                     @endif
                 </div>
+
+                @if(($booking->flight_adult_sell ?? 0) > 0 || ($booking->flight_child_sell ?? 0) > 0 || ($booking->flight_infant_sell ?? 0) > 0)
+                <div class="mt-3 pt-2 border-top">
+                    <div class="fs-11 fw-bold text-muted mb-1"><i class="mdi mdi-ticket-percent-outline"></i> Passenger Flight Rates (Per Pax SAR & PKR):</div>
+                    <div class="d-flex flex-wrap gap-2">
+                        @if(($booking->adults_count ?? 1) > 0)
+                        <span class="badge bg-light text-dark border p-2 text-start">
+                            <strong>Adult ({{ $booking->adults_count ?? 1 }}x):</strong><br>
+                            {{ number_format($booking->flight_adult_sell, 2) }} SAR <span class="text-muted">({{ number_format(($booking->flight_adult_sell ?? 0) * ($booking->flight_roe ?: 75), 2) }} PKR)</span>
+                        </span>
+                        @endif
+                        @if(($booking->children_count ?? 0) > 0)
+                        <span class="badge bg-light text-dark border p-2 text-start">
+                            <strong>Child ({{ $booking->children_count }}x):</strong><br>
+                            {{ number_format($booking->flight_child_sell, 2) }} SAR <span class="text-muted">({{ number_format(($booking->flight_child_sell ?? 0) * ($booking->flight_roe ?: 75), 2) }} PKR)</span>
+                        </span>
+                        @endif
+                        @if(($booking->infants_count ?? 0) > 0)
+                        <span class="badge bg-light text-dark border p-2 text-start">
+                            <strong>Infant ({{ $booking->infants_count }}x):</strong><br>
+                            {{ number_format($booking->flight_infant_sell, 2) }} SAR <span class="text-muted">({{ number_format(($booking->flight_infant_sell ?? 0) * ($booking->flight_roe ?: 75), 2) }} PKR)</span>
+                        </span>
+                        @endif
+                    </div>
+                </div>
+                @endif
             </div>
         </div>
 
@@ -899,107 +923,80 @@
                 <div class="app-card-body p-0">
                     <table class="voucher-table">
                         <thead>
-                            <tr>
-                                <th style="width: 35px;" class="text-center">#</th>
-                                <th>Passenger Full Name & Haji ID</th>
-                                <th>Passport & DOB</th>
-                                <th>CNIC & Phone</th>
-                                <th>City & Blood</th>
-                                <th>Attached Documents</th>
-                                <th>Nominee</th>
-                                <th class="text-center no-print">Pass & Badge</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($booking->persons as $person)
-                                <tr>
-                                    <td class="text-center text-muted fw-bold">{{ $loop->iteration }}</td>
-                                    <td>
-                                        <strong class="text-dark">{{ $person->full_name }}</strong>
-                                        @if($person->haji_id)
-                                            <br><span class="badge haji-badge px-2 py-0 fs-10 mt-1" style="background:#0f535e;color:#fff;">
-                                                <i class="mdi mdi-card-account-details-outline me-1"></i>{{ $person->haji_id }}
-                                            </span>
-                                        @endif
-                                        @if($person->father_name)
-                                            <br><small class="text-muted">S/O, D/O: {{ $person->father_name }}</small>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        <strong>{{ $person->passport_number ?? '—' }}</strong>
-                                        @if($person->dob)
-                                            <br><small class="text-muted">{{ date('d M Y', strtotime($person->dob)) }}</small>
-                                        @endif
-                                        @if($person->gender)
-                                            · <span class="badge bg-light text-dark fs-10">{{ ucfirst($person->gender) }}</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        <span>{{ $person->cnic ?? '—' }}</span>
-                                        @if($person->phone)
-                                            <br><small class="text-muted"><i class="mdi mdi-phone fs-10"></i> {{ $person->phone }}</small>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        <span>{{ $person->city ?? '—' }}</span>
-                                        @if($person->blood_group)
-                                            <br><span class="badge bg-soft-danger text-danger fw-bold fs-10">{{ $person->blood_group }}</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        <div class="d-flex flex-wrap gap-1">
-                                            @if($person->cnic_front)
-                                                @php $isPdf = Str::endsWith(strtolower($person->cnic_front), '.pdf'); @endphp
-                                                <button type="button" class="doc-thumb-mini" onclick="openDocModal('{{ asset('storage/'.$person->cnic_front) }}', '{{ $isPdf ? 'pdf' : 'image' }}', 'CNIC Front — {{ $person->full_name }}')">
-                                                    CNIC F
-                                                </button>
-                                            @endif
-                                            @if($person->cnic_back)
-                                                @php $isPdf = Str::endsWith(strtolower($person->cnic_back), '.pdf'); @endphp
-                                                <button type="button" class="doc-thumb-mini" onclick="openDocModal('{{ asset('storage/'.$person->cnic_back) }}', '{{ $isPdf ? 'pdf' : 'image' }}', 'CNIC Back — {{ $person->full_name }}')">
-                                                    CNIC B
-                                                </button>
-                                            @endif
-                                            @if($person->passport_photo)
-                                                @php $isPdf = Str::endsWith(strtolower($person->passport_photo), '.pdf'); @endphp
-                                                <button type="button" class="doc-thumb-mini" onclick="openDocModal('{{ asset('storage/'.$person->passport_photo) }}', '{{ $isPdf ? 'pdf' : 'image' }}', 'Passport — {{ $person->full_name }}')">
-                                                    Pass
-                                                </button>
-                                            @endif
-                                            @if($person->photo)
-                                                @php $isPdf = Str::endsWith(strtolower($person->photo), '.pdf'); @endphp
-                                                <button type="button" class="doc-thumb-mini" onclick="openDocModal('{{ asset('storage/'.$person->photo) }}', '{{ $isPdf ? 'pdf' : 'image' }}', 'Photo — {{ $person->full_name }}')">
-                                                    Photo
-                                                </button>
-                                            @endif
-                                            @if(!$person->cnic_front && !$person->cnic_back && !$person->passport_photo && !$person->photo)
-                                                <span class="text-muted">—</span>
-                                            @endif
-                                        </div>
-                                    </td>
-                                    <td>
-                                        @if($person->nominee_name)
-                                            <div class="fs-11">
-                                                <strong>{{ $person->nominee_name }}</strong>
-                                                @if($person->nominee_relation)<br><small class="text-muted">{{ $person->nominee_relation }}</small>@endif
-                                            </div>
-                                        @else
-                                            <span class="text-muted">—</span>
-                                        @endif
-                                    </td>
-                                    <td class="text-center no-print">
-                                        <div class="d-flex justify-content-center gap-1">
-                                            <a href="{{ route('pilgrim.badge', $person->id) }}" target="_blank" class="doc-thumb-mini" title="Print Lanyard Badge">
-                                                <i class="mdi mdi-card-account-details-outline text-primary"></i> Badge
-                                            </a>
-                                            <a href="{{ route('pilgrim.epass', $person->id) }}" target="_blank" class="doc-thumb-mini" title="Live Mobile E-Pass">
-                                                <i class="mdi mdi-qrcode text-success"></i> E-Pass
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
+    <tr>
+        <th style="width: 35px;" class="text-center">#</th>
+        <th>Passenger Full Name</th>
+        <th>Passport & DOB</th>
+        <th>Gender</th>
+        <th>City</th>
+        <th>Attached Documents</th>
+        <th class="text-center no-print">Pass & Badge</th>
+    </tr>
+</thead>
+<tbody>
+    @foreach($booking->persons as $person)
+        <tr>
+            <td class="text-center text-muted fw-bold">{{ $loop->iteration }}</td>
+            <td>
+                <strong class="text-dark">{{ $person->full_name }}</strong>
+            </td>
+            <td>
+                <strong>{{ $person->passport_number ?? '—' }}</strong>
+                @if($person->dob)
+                    <br><small class="text-muted">{{ date('d M Y', strtotime($person->dob)) }}</small>
+                @endif
+            </td>
+            <td>
+                @if($person->gender)
+                    <span class="badge bg-light text-dark fs-11">{{ ucfirst($person->gender) }}</span>
+                @else
+                    <span class="text-muted">—</span>
+                @endif
+            </td>
+            <td>
+                @if($person->phone)
+                    <div><i class="mdi mdi-phone fs-11 text-muted"></i> {{ $person->phone }}</div>
+                @endif
+                <small class="text-muted">{{ $person->city ?? '—' }}</small>
+            </td>
+            <td>
+                <div class="d-flex flex-wrap gap-1">
+                    @if($person->passport_photo)
+                        @php $isPdf = Str::endsWith(strtolower($person->passport_photo), '.pdf'); @endphp
+                        <button type="button" class="doc-thumb-mini" onclick="openDocModal('{{ asset('storage/'.$person->passport_photo) }}', '{{ $isPdf ? 'pdf' : 'image' }}', 'Passport — {{ $person->full_name }}')">
+                            Passport
+                        </button>
+                    @endif
+                    @if($person->photo)
+                        @php $isPdf = Str::endsWith(strtolower($person->photo), '.pdf'); @endphp
+                        <button type="button" class="doc-thumb-mini" onclick="openDocModal('{{ asset('storage/'.$person->photo) }}', '{{ $isPdf ? 'pdf' : 'image' }}', 'Photo — {{ $person->full_name }}')">
+                            Photo
+                        </button>
+                    @endif
+                    @if($person->medical_certificate)
+                        @php $isPdf = Str::endsWith(strtolower($person->medical_certificate), '.pdf'); @endphp
+                        <button type="button" class="doc-thumb-mini" onclick="openDocModal('{{ asset('storage/'.$person->medical_certificate) }}', '{{ $isPdf ? 'pdf' : 'image' }}', 'Medical Cert — {{ $person->full_name }}')">
+                            Medical
+                        </button>
+                    @endif
+                    @if(!$person->passport_photo && !$person->photo && !$person->medical_certificate)
+                        <span class="text-muted">—</span>
+                    @endif
+                </div>
+            </td>
+            <td class="text-center no-print">
+                <div class="d-flex justify-content-center gap-1">
+                    <a href="{{ route('pilgrim.badge', $person->id) }}" target="_blank" class="doc-thumb-mini" title="Print Lanyard Badge">
+                        <i class="mdi mdi-card-account-details-outline text-primary"></i> Badge
+                    </a>
+                    <a href="{{ route('pilgrim.epass', $person->id) }}" target="_blank" class="doc-thumb-mini" title="Live Mobile E-Pass">
+                        <i class="mdi mdi-qrcode text-success"></i> E-Pass
+                    </a>
+                </div>
+            </td>
+        </tr>
+    @endforeach
+</tbody>
                     </table>
                 </div>
             </div>

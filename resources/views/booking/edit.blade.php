@@ -37,33 +37,22 @@
                 {{-- Summary Bar --}}
                 <div class="booking-summary-bar mb-3 px-3 py-2 d-flex flex-wrap gap-3 align-items-center justify-content-between rounded shadow-sm"
                     style="background:#f0f4ff; border:1px solid #d0d9f0; font-size:13px;">
-                    <div class="d-flex flex-wrap gap-3 align-items-center">
-                        <span>Persons: <strong id="bar_pax">{{ $booking->no_of_pax }}</strong></span>
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                        <span><i class="mdi mdi-account-group text-primary"></i> Pax: <strong id="bar_pax">{{ $booking->no_of_pax }}</strong></span>
                         <span style="{{ $isUmrah ? 'display:none;' : '' }}">|</span>
-                        <span style="{{ $isUmrah ? 'display:none;' : '' }}">Package Cost: <strong id="bar_adult">{{ number_format($booking->package_cost * $booking->no_of_pax, 2) }}</strong></span>
+                        <span style="{{ $isUmrah ? 'display:none;' : '' }}">Package: <strong id="bar_adult">{{ number_format($booking->package_cost * $booking->no_of_pax, 2) }}</strong></span>
                         <span>|</span>
-                        <span>Hotel: <strong id="bar_hotel">{{ number_format($booking->hotel_charges ?? 0, 2) }}</strong></span>
+                        <span>Flight: <strong id="bar_flight" class="text-dark">SAR 0.00 / PKR {{ number_format($booking->flight_charges ?? 0, 2) }}</strong></span>
                         <span>|</span>
-                        <span>Visa: <strong id="bar_visa">{{ number_format($booking->visa_charges ?? 0, 2) }}</strong></span>
+                        <span>Hotel: <strong id="bar_hotel" class="text-dark">SAR 0.00 / PKR {{ number_format($booking->hotel_charges ?? 0, 2) }}</strong></span>
                         <span>|</span>
-                        <span>Flight: <strong id="bar_flight">{{ number_format($booking->flight_charges ?? 0, 2) }}</strong></span>
+                        <span>Transport: <strong id="bar_transport" class="text-dark">SAR 0.00 / PKR {{ number_format($booking->transport_charges ?? 0, 2) }}</strong></span>
                         <span>|</span>
-                        <span>Transport: <strong id="bar_transport">{{ number_format($booking->transport_charges ?? 0, 2) }}</strong></span>
+                        <span>Visa: <strong id="bar_visa" class="text-dark">SAR 0.00 / PKR {{ number_format($booking->visa_charges ?? 0, 2) }}</strong></span>
                         <span>|</span>
-                        <span class="text-primary fw-semibold">Total: <strong
-                                id="bar_total">{{ number_format($booking->total_amount, 2) }}</strong></span>
+                        <span class="text-primary fw-bold">Total: <strong id="bar_total">SAR 0.00 / PKR {{ number_format($booking->total_amount, 2) }}</strong></span>
                         <span>|</span>
-                        <span class="text-danger fw-semibold">Balance: <strong
-                                id="bar_balance">{{ number_format($booking->balance, 2) }}</strong></span>
-                    </div>
-                    <div class="d-flex align-items-center gap-2 bg-white px-2 py-1 rounded border">
-                        <label for="top_currency_select" class="form-label mb-0 fs-12 fw-bold text-dark text-nowrap"><i class="mdi mdi-cash-multiple text-primary me-1"></i>Currency:</label>
-                        <select id="top_currency_select" class="form-select form-select-sm py-0 px-2 fw-bold text-primary border-0 bg-transparent" style="width: 85px; height: 26px; cursor: pointer;">
-                            <option value="PKR" {{ old('currency', $booking->currency ?? 'PKR') === 'PKR' ? 'selected' : '' }}>PKR (Rs)</option>
-                            <option value="SAR" {{ old('currency', $booking->currency ?? 'PKR') === 'SAR' ? 'selected' : '' }}>SAR (SAR)</option>
-                            <option value="USD" {{ old('currency', $booking->currency ?? 'PKR') === 'USD' ? 'selected' : '' }}>USD ($)</option>
-                            <option value="AED" {{ old('currency', $booking->currency ?? 'PKR') === 'AED' ? 'selected' : '' }}>AED (AED)</option>
-                        </select>
+                        <span class="text-danger fw-bold">Balance: <strong id="bar_balance">SAR 0.00 / PKR {{ number_format($booking->balance, 2) }}</strong></span>
                     </div>
                 </div>
 
@@ -182,12 +171,47 @@
                                     </select>
                                 </div>
 
-                                <div class="col-md-4">
-                                    <label class="form-label">No of Pax <span class="text-danger">*</span></label>
-                                    <input type="number" name="no_of_pax" id="no_of_pax" class="form-control"
-                                        value="{{ old('no_of_pax', $booking->no_of_pax) }}" min="1" required>
-                                    <small class="text-muted">Persons, Flight & Visa tabs will update automatically</small>
+                                <div class="col-md-12">
+                                    <div class="card bg-light border p-3 mb-1">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <h6 class="text-primary mb-0"><i class="mdi mdi-account-group me-1"></i> Passengers Breakdown</h6>
+                                            <span class="badge bg-primary fs-12">Total Pax: <span id="bar_pax_badge">{{ $booking->no_of_pax }}</span></span>
+                                        </div>
+                                        <div class="row g-3">
+                                            <div class="col-md-3">
+                                                <label class="form-label fw-semibold">Adults (12+ yrs) <span class="text-danger">*</span></label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text"><i class="mdi mdi-account"></i></span>
+                                                    <input type="number" name="adults_count" id="pax_adults" class="form-control pax-breakdown-calc"
+                                                        value="{{ old('adults_count', $booking->adults_count ?? $booking->no_of_pax ?? 1) }}" min="1" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label fw-semibold">Children (2-11 yrs)</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text"><i class="mdi mdi-account-child"></i></span>
+                                                    <input type="number" name="children_count" id="pax_children" class="form-control pax-breakdown-calc"
+                                                        value="{{ old('children_count', $booking->children_count ?? 0) }}" min="0">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label fw-semibold">Infants (0-2 yrs)</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text"><i class="mdi mdi-baby-carriage"></i></span>
+                                                    <input type="number" name="infants_count" id="pax_infants" class="form-control pax-breakdown-calc"
+                                                        value="{{ old('infants_count', $booking->infants_count ?? 0) }}" min="0">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label fw-semibold text-primary">Total Passengers</label>
+                                                <input type="number" name="no_of_pax" id="no_of_pax" class="form-control bg-white fw-bold text-primary"
+                                                    value="{{ old('no_of_pax', $booking->no_of_pax) }}" min="1" readonly required>
+                                            </div>
+                                        </div>
+                                        <small class="text-muted mt-2"><i class="mdi mdi-information-outline"></i> Persons, Flight, Hotel, Transport & Visa tabs will update automatically based on passenger breakdown.</small>
+                                    </div>
                                 </div>
+
                                 <div class="col-md-4">
                                     <label class="form-label">Care Of</label>
                                     <input type="text" name="care_of" class="form-control"
@@ -213,20 +237,9 @@
                                     <input type="text" name="emergency_phone" class="form-control"
                                         value="{{ old('emergency_phone', $booking->emergency_phone) }}" placeholder="+92 300 0000000">
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Booking Date <small class="text-muted">(Optional)</small></label>
-                                    <input type="date" name="booking_date" id="booking_date" class="form-control"
-                                        value="{{ old('booking_date', $booking->booking_date ? \Carbon\Carbon::parse($booking->booking_date)->format('Y-m-d') : date('Y-m-d')) }}">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Currency <span class="text-danger">*</span></label>
-                                    <select name="currency" id="booking_currency" class="form-select">
-                                        <option value="PKR" {{ old('currency', $booking->currency ?? 'PKR') === 'PKR' ? 'selected' : '' }}>PKR (Rs)</option>
-                                        <option value="SAR" {{ old('currency', $booking->currency ?? 'PKR') === 'SAR' ? 'selected' : '' }}>SAR (SAR)</option>
-                                        <option value="USD" {{ old('currency', $booking->currency ?? 'PKR') === 'USD' ? 'selected' : '' }}>USD ($)</option>
-                                        <option value="AED" {{ old('currency', $booking->currency ?? 'PKR') === 'AED' ? 'selected' : '' }}>AED (AED)</option>
-                                    </select>
-                                </div>
+                                <input type="hidden" name="booking_date" id="booking_date"
+                                    value="{{ old('booking_date', $booking->booking_date ? \Carbon\Carbon::parse($booking->booking_date)->format('Y-m-d') : date('Y-m-d')) }}">
+                                <input type="hidden" name="currency" id="booking_currency" value="{{ $booking->currency ?? "PKR" }}">
                             </div>
                             <div class="d-flex justify-content-between mt-4">
                                 <div>
@@ -248,163 +261,89 @@
                             </p>
                             <div id="personsList">
                                 @foreach ($booking->persons as $i => $person)
-                                    <div class="person-card" id="person_card_{{ $i }}">
-                                        <div class="mb-2">
-                                            <strong class="text-primary" style="font-size:13px;">
-                                                {{ $i === 0 ? 'Main Passenger' : 'Passenger ' . ($i + 1) }}
-                                            </strong>
-                                        </div>
-                                        <div class="row g-2">
-                                            <div class="col-md-3">
-                                                <label class="form-label" style="font-size:12px;">Haji ID</label>
-                                                <input type="text" name="persons[{{ $i }}][haji_id]" id="person_haji_id_{{ $i }}"
-                                                    class="form-control form-control-sm" value="{{ old('persons.'.$i.'.haji_id', $person->haji_id) }}" placeholder="Haji ID">
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label" style="font-size:12px;">Surname (Passport)</label>
-                                                <input type="text" name="persons[{{ $i }}][surname]" id="person_surname_{{ $i }}"
-                                                    class="form-control form-control-sm" value="{{ $person->surname }}" placeholder="Surname" oninput="updatePersonFullName({{ $i }})">
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label" style="font-size:12px;">Given Name (Passport)</label>
-                                                <input type="text" name="persons[{{ $i }}][given_name]" id="person_given_name_{{ $i }}"
-                                                    class="form-control form-control-sm" value="{{ $person->given_name }}" placeholder="Given Name" oninput="updatePersonFullName({{ $i }})">
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label" style="font-size:12px;">Full Name</label>
-                                                <input type="text" name="persons[{{ $i }}][full_name]" id="person_name_{{ $i }}"
-                                                    class="form-control form-control-sm" value="{{ $person->full_name }}">
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label" style="font-size:12px;">Father Name</label>
-                                                <input type="text" name="persons[{{ $i }}][father_name]" id="person_father_name_{{ $i }}"
-                                                    class="form-control form-control-sm" value="{{ $person->father_name }}" placeholder="Father Name">
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label" style="font-size:12px;">Passport #</label>
-                                                <input type="text" name="persons[{{ $i }}][passport_number]" id="person_passport_{{ $i }}"
-                                                    class="form-control form-control-sm" value="{{ $person->passport_number }}">
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label" style="font-size:12px;">Date of Birth</label>
-                                                <input type="date" name="persons[{{ $i }}][dob]" id="person_dob_{{ $i }}"
-                                                    class="form-control form-control-sm" value="{{ $person->dob ? \Carbon\Carbon::parse($person->dob)->format('Y-m-d') : '' }}">
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label" style="font-size:12px;">Gender</label>
-                                                <select name="persons[{{ $i }}][gender]" id="person_gender_{{ $i }}" class="form-select form-select-sm">
-                                                    <option value="">-- Select --</option>
-                                                    <option value="male" {{ strtolower($person->gender ?? '') == 'male' ? 'selected' : '' }}>Male</option>
-                                                    <option value="female" {{ strtolower($person->gender ?? '') == 'female' ? 'selected' : '' }}>Female</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label" style="font-size:12px;">Blood Group</label>
-                                                <select name="persons[{{ $i }}][blood_group]" id="person_blood_group_{{ $i }}" class="form-select form-select-sm">
-                                                    <option value="">-- Select --</option>
-                                                    @foreach(['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'] as $bg)
-                                                        <option value="{{ $bg }}" {{ ($person->blood_group ?? '') == $bg ? 'selected' : '' }}>{{ $bg }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label" style="font-size:12px;">CNIC</label>
-                                                <input type="text" name="persons[{{ $i }}][cnic]"
-                                                    id="person_cnic_{{ $i }}"
-                                                    class="form-control form-control-sm"
-                                                    value="{{ $person->cnic ?? '' }}">
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label" style="font-size:12px;">Phone</label>
-                                                <input type="text" name="persons[{{ $i }}][phone]"
-                                                    id="person_phone_{{ $i }}"
-                                                    class="form-control form-control-sm"
-                                                    value="{{ $person->phone ?? '' }}">
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label" style="font-size:12px;">City</label>
-                                                <input type="text" name="persons[{{ $i }}][city]"
-                                                    id="person_city_{{ $i }}"
-                                                    class="form-control form-control-sm"
-                                                    value="{{ $person->city ?? '' }}" placeholder="e.g. Lahore / Karachi">
-                                            </div>
-                                        </div>
+    <div class="person-card" id="person_card_{{ $i }}">
+        <div class="mb-2">
+            <strong class="text-primary" style="font-size:13px;">
+                {{ $i === 0 ? 'Main Passenger' : 'Passenger ' . ($i + 1) }}
+            </strong>
+        </div>
+        <div class="row g-2">
+            <div class="col-md-3">
+                <label class="form-label" style="font-size:12px;">Surname (Passport)</label>
+                <input type="text" name="persons[{{ $i }}][surname]" id="person_surname_{{ $i }}"
+                    class="form-control form-control-sm" value="{{ $person->surname }}" placeholder="Surname" oninput="updatePersonFullName({{ $i }})">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" style="font-size:12px;">Given Name (Passport)</label>
+                <input type="text" name="persons[{{ $i }}][given_name]" id="person_given_name_{{ $i }}"
+                    class="form-control form-control-sm" value="{{ $person->given_name }}" placeholder="Given Name" oninput="updatePersonFullName({{ $i }})">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" style="font-size:12px;">Full Name</label>
+                <input type="text" name="persons[{{ $i }}][full_name]" id="person_name_{{ $i }}"
+                    class="form-control form-control-sm" value="{{ $person->full_name }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" style="font-size:12px;">Passport #</label>
+                <input type="text" name="persons[{{ $i }}][passport_number]" id="person_passport_{{ $i }}"
+                    class="form-control form-control-sm" value="{{ $person->passport_number }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" style="font-size:12px;">Date of Birth</label>
+                <input type="date" name="persons[{{ $i }}][dob]" id="person_dob_{{ $i }}"
+                    class="form-control form-control-sm" value="{{ $person->dob ? \Carbon\Carbon::parse($person->dob)->format('Y-m-d') : '' }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" style="font-size:12px;">Gender</label>
+                <select name="persons[{{ $i }}][gender]" id="person_gender_{{ $i }}" class="form-select form-select-sm">
+                    <option value="">-- Select --</option>
+                    <option value="male" {{ strtolower($person->gender ?? '') == 'male' ? 'selected' : '' }}>Male</option>
+                    <option value="female" {{ strtolower($person->gender ?? '') == 'female' ? 'selected' : '' }}>Female</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" style="font-size:12px;">City</label>
+                <input type="text" name="persons[{{ $i }}][city]"
+                    id="person_city_{{ $i }}"
+                    class="form-control form-control-sm"
+                    value="{{ $person->city ?? '' }}" placeholder="e.g. Lahore / Karachi">
+            </div>
+        </div>
 
-                                        {{-- Passenger Documents --}}
-                                        <div class="border-top mt-3 pt-3">
-                                            <strong class="text-secondary d-block mb-2" style="font-size:12px;">
-                                                <i class="mdi mdi-file-document-multiple me-1"></i> Documents (Optional)
-                                            </strong>
-                                            <div class="row g-2">
-                                                <div class="col-md-3">
-                                                    <label class="form-label" style="font-size:11px;">CNIC Front</label>
-                                                    @if($person->cnic_front)
-                                                        <div class="mb-1"><a href="{{ asset('storage/' . $person->cnic_front) }}" target="_blank" class="badge bg-primary text-white">View</a></div>
-                                                    @endif
-                                                    <input type="hidden" name="persons[{{ $i }}][old_cnic_front]" value="{{ $person->cnic_front }}">
-                                                    <input type="file" name="persons[{{ $i }}][cnic_front]" class="form-control form-control-sm" accept="image/*,.pdf">
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="form-label" style="font-size:11px;">CNIC Back</label>
-                                                    @if($person->cnic_back)
-                                                        <div class="mb-1"><a href="{{ asset('storage/' . $person->cnic_back) }}" target="_blank" class="badge bg-primary text-white">View</a></div>
-                                                    @endif
-                                                    <input type="hidden" name="persons[{{ $i }}][old_cnic_back]" value="{{ $person->cnic_back }}">
-                                                    <input type="file" name="persons[{{ $i }}][cnic_back]" class="form-control form-control-sm" accept="image/*,.pdf">
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="form-label" style="font-size:11px;">Passport First Page</label>
-                                                    @if($person->passport_photo)
-                                                        <div class="mb-1"><a href="{{ asset('storage/' . $person->passport_photo) }}" target="_blank" class="badge bg-primary text-white">View</a></div>
-                                                    @endif
-                                                    <input type="hidden" name="persons[{{ $i }}][old_passport_photo]" value="{{ $person->passport_photo }}">
-                                                    <input type="file" name="persons[{{ $i }}][passport_photo]" class="form-control form-control-sm" accept="image/*,.pdf">
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="form-label" style="font-size:11px;">Picture of Haji</label>
-                                                    @if($person->photo)
-                                                        <div class="mb-1"><a href="{{ asset('storage/' . $person->photo) }}" target="_blank" class="badge bg-primary text-white">View</a></div>
-                                                    @endif
-                                                    <input type="hidden" name="persons[{{ $i }}][old_photo]" value="{{ $person->photo }}">
-                                                    <input type="file" name="persons[{{ $i }}][photo]" class="form-control form-control-sm" accept="image/*">
-                                                </div>
-                                                <div class="col-md-4 mt-2">
-                                                    <label class="form-label" style="font-size:11px;">Medical Fitness Certificate</label>
-                                                    @if($person->medical_certificate)
-                                                        <div class="mb-1"><a href="{{ asset('storage/' . $person->medical_certificate) }}" target="_blank" class="badge bg-primary text-white">View</a></div>
-                                                    @endif
-                                                    <input type="hidden" name="persons[{{ $i }}][old_medical_certificate]" value="{{ $person->medical_certificate }}">
-                                                    <input type="file" name="persons[{{ $i }}][medical_certificate]" class="form-control form-control-sm" accept="image/*,.pdf">
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {{-- Nominee Details --}}
-                                        <div class="border-top mt-3 pt-3">
-                                            <strong class="text-secondary d-block mb-2" style="font-size:12px;">
-                                                <i class="mdi mdi-account-alert me-1"></i> Nominee Details
-                                            </strong>
-                                            <div class="row g-2">
-                                                <div class="col-md-3">
-                                                    <label class="form-label" style="font-size:11px;">Nominee Name</label>
-                                                    <input type="text" name="persons[{{ $i }}][nominee_name]" class="form-control form-control-sm" placeholder="Nominee full name" value="{{ $person->nominee_name }}">
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="form-label" style="font-size:11px;">Relation with Haji</label>
-                                                    <input type="text" name="persons[{{ $i }}][nominee_relation]" class="form-control form-control-sm" placeholder="e.g. Son / Wife / Brother" value="{{ $person->nominee_relation }}">
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="form-label" style="font-size:11px;">Nominee CNIC</label>
-                                                    <input type="text" name="persons[{{ $i }}][nominee_cnic]" class="form-control form-control-sm" placeholder="XXXXX-XXXXXXX-X" value="{{ $person->nominee_cnic }}">
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="form-label" style="font-size:11px;">Nominee Mobile</label>
-                                                    <input type="text" name="persons[{{ $i }}][nominee_mobile]" class="form-control form-control-sm" placeholder="+92 300 0000000" value="{{ $person->nominee_mobile }}">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
+        {{-- Passenger Documents --}}
+        <div class="border-top mt-3 pt-3">
+            <strong class="text-secondary d-block mb-2" style="font-size:12px;">
+                <i class="mdi mdi-file-document-multiple me-1"></i> Documents (Optional)
+            </strong>
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <label class="form-label" style="font-size:11px;">Passport First Page</label>
+                    @if($person->passport_photo)
+                        <div class="mb-1"><a href="{{ asset('storage/' . $person->passport_photo) }}" target="_blank" class="badge bg-primary text-white">View</a></div>
+                    @endif
+                    <input type="hidden" name="persons[{{ $i }}][old_passport_photo]" value="{{ $person->passport_photo }}">
+                    <input type="file" name="persons[{{ $i }}][passport_photo]" class="form-control form-control-sm" accept="image/*,.pdf">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" style="font-size:11px;">Picture of Passenger</label>
+                    @if($person->photo)
+                        <div class="mb-1"><a href="{{ asset('storage/' . $person->photo) }}" target="_blank" class="badge bg-primary text-white">View</a></div>
+                    @endif
+                    <input type="hidden" name="persons[{{ $i }}][old_photo]" value="{{ $person->photo }}">
+                    <input type="file" name="persons[{{ $i }}][photo]" class="form-control form-control-sm" accept="image/*">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" style="font-size:11px;">Medical Fitness Certificate</label>
+                    @if($person->medical_certificate)
+                        <div class="mb-1"><a href="{{ asset('storage/' . $person->medical_certificate) }}" target="_blank" class="badge bg-primary text-white">View</a></div>
+                    @endif
+                    <input type="hidden" name="persons[{{ $i }}][old_medical_certificate]" value="{{ $person->medical_certificate }}">
+                    <input type="file" name="persons[{{ $i }}][medical_certificate]" class="form-control form-control-sm" accept="image/*,.pdf">
+                </div>
+            </div>
+        </div>
+    </div>
+@endforeach
                             </div>
                             <div class="d-flex justify-content-between mt-4">
                                 <button type="button" class="btn btn-outline-secondary btn-prev"><i
@@ -417,49 +356,141 @@
                         {{-- TAB 4: Flight --}}
                         <div class="tab-pane fade" id="tab-flight">
 
-                            {{-- SUPPLIER & COSTING / SELLING --}}
-                            <div class="row g-3 mb-4 p-3 border rounded bg-light align-items-center">
-                                <div class="col-12 d-flex justify-content-between align-items-center border-bottom pb-2 mb-0">
-                                    <h6 class="text-primary mb-0">
-                                        <i class="mdi mdi-airplane me-1"></i> Flight Supplier & Rates
+                            {{-- SUPPLIER & COSTING / SELLING (Dual Currency SAR & PKR + Tier Rates) --}}
+                            <div class="card mb-4 border shadow-sm">
+                                <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
+                                    <h6 class="text-primary mb-0 font-weight-bold">
+                                        <i class="mdi mdi-airplane me-1"></i> Flight Supplier & Passenger Tier Rates (SAR & PKR)
                                     </h6>
-                                    <span class="badge bg-soft-primary text-primary px-2 py-1 fs-11">Currency: <span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span></span>
+                                    <span class="badge bg-info text-white">Dual Currency (SAR & PKR)</span>
                                 </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">Flight Supplier / Vendor</label>
-                                    <select name="flight_supplier_id" id="flight_supplier_id" class="form-select">
-                                        <option value="">-- Select Flight Supplier --</option>
-                                        @foreach ($suppliers as $sup)
-                                            <option value="{{ $sup->id }}" {{ old('flight_supplier_id', $booking->flight_supplier_id) == $sup->id ? 'selected' : '' }}>
-                                                {{ $sup->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-1">
-                                    <label class="form-label text-primary">ROE</label>
-                                    <input type="number" step="0.0001" name="flight_roe" id="flight_roe"
-                                        class="form-control flight-roe" placeholder="1.00" value="{{ old('flight_roe', $booking->flight_roe ?? 1) }}">
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label text-danger">Cost Rate (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</label>
-                                    <input type="number" step="0.01" name="flight_cost_rate" id="flight_cost_rate"
-                                        class="form-control flight-cost-rate" placeholder="0.00" value="{{ old('flight_cost_rate', $booking->flight_cost_rate ?? 0) }}">
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label text-danger">Total Flight Cost (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</label>
-                                    <input type="number" step="0.01" name="flight_cost" id="flight_cost"
-                                        class="form-control flight-cost-total bg-light" placeholder="0.00" value="{{ old('flight_cost', $booking->flight_cost ?? 0) }}" readonly>
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label text-success">Selling Rate (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</label>
-                                    <input type="number" step="0.01" name="flight_selling_rate" id="flight_selling_rate"
-                                        class="form-control flight-sell-rate" placeholder="0.00" value="{{ old('flight_selling_rate', $booking->flight_selling_rate ?? 0) }}">
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label text-success">Total Flight Sell (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</label>
-                                    <input type="number" step="0.01" name="flight_charges" id="flight_charges"
-                                        class="form-control flight-sell-total bg-light" placeholder="0.00" value="{{ old('flight_charges', $booking->flight_charges ?? 0) }}" readonly>
+                                <div class="card-body">
+                                    <div class="row g-3 mb-3 align-items-end">
+                                        <div class="col-md-8">
+                                            <label class="form-label d-flex justify-content-between align-items-center mb-1">
+                                                <span class="fw-semibold">Flight Supplier / Vendor</span>
+                                                <button type="button" class="btn btn-xs btn-link text-primary p-0 text-decoration-none" onclick="refreshSuppliersList(true)" title="Reload Suppliers"><i class="mdi mdi-refresh"></i> Refresh</button>
+                                            </label>
+                                            <select name="flight_supplier_id" id="flight_supplier_id" class="form-select">
+                                                <option value="">-- Select Flight Supplier --</option>
+                                                @foreach ($suppliers as $sup)
+                                                    <option value="{{ $sup->id }}" {{ old('flight_supplier_id', $booking->flight_supplier_id) == $sup->id ? 'selected' : '' }}>
+                                                        {{ $sup->name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label text-primary fw-bold">Flight ROE (Rate of Exchange: SAR to PKR) <span class="text-danger">*</span></label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-primary text-white fw-bold">1 SAR =</span>
+                                                <input type="number" step="0.0001" name="flight_roe" id="flight_roe"
+                                                    class="form-control flight-roe fw-bold text-primary" placeholder="75.00" value="{{ old('flight_roe', $booking->flight_roe ?? 75) }}">
+                                                <span class="input-group-text">PKR</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {{-- Passenger Tier Rates Table --}}
+                                    <div class="table-responsive mb-3">
+                                        <table class="table table-bordered table-sm align-middle text-center mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th style="width: 20%;">Pax Category</th>
+                                                    <th style="width: 10%;">Pax Count</th>
+                                                    <th style="width: 18%;" class="text-danger">Cost Rate (SAR)</th>
+                                                    <th style="width: 17%;" class="text-danger">Total Cost (SAR)</th>
+                                                    <th style="width: 18%;" class="text-success">Sell Rate (SAR)</th>
+                                                    <th style="width: 17%;" class="text-success">Total Sell (SAR)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td class="text-start fw-semibold"><i class="mdi mdi-account text-primary me-1"></i> Adult (12+ yrs)</td>
+                                                    <td><span class="badge bg-secondary fs-12" id="flight_adult_pax_label">{{ $booking->adults_count ?? 1 }}</span></td>
+                                                    <td>
+                                                        <input type="number" step="0.01" name="flight_adult_cost" id="flight_adult_cost"
+                                                            class="form-control form-control-sm text-end flight-tier-calc" placeholder="0.00"
+                                                            value="{{ old('flight_adult_cost', $booking->flight_adult_cost ?? $booking->flight_cost_rate ?? 0) }}">
+                                                    </td>
+                                                    <td class="text-end fw-bold text-danger"><span id="flight_adult_cost_sar_disp">0.00</span> SAR</td>
+                                                    <td>
+                                                        <input type="number" step="0.01" name="flight_adult_sell" id="flight_adult_sell"
+                                                            class="form-control form-control-sm text-end flight-tier-calc" placeholder="0.00"
+                                                            value="{{ old('flight_adult_sell', $booking->flight_adult_sell ?? $booking->flight_selling_rate ?? 0) }}">
+                                                    </td>
+                                                    <td class="text-end fw-bold text-success"><span id="flight_adult_sell_sar_disp">0.00</span> SAR</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="text-start fw-semibold"><i class="mdi mdi-account-child text-info me-1"></i> Child (2-11 yrs)</td>
+                                                    <td><span class="badge bg-secondary fs-12" id="flight_child_pax_label">{{ $booking->children_count ?? 0 }}</span></td>
+                                                    <td>
+                                                        <input type="number" step="0.01" name="flight_child_cost" id="flight_child_cost"
+                                                            class="form-control form-control-sm text-end flight-tier-calc" placeholder="0.00"
+                                                            value="{{ old('flight_child_cost', $booking->flight_child_cost ?? 0) }}">
+                                                    </td>
+                                                    <td class="text-end fw-bold text-danger"><span id="flight_child_cost_sar_disp">0.00</span> SAR</td>
+                                                    <td>
+                                                        <input type="number" step="0.01" name="flight_child_sell" id="flight_child_sell"
+                                                            class="form-control form-control-sm text-end flight-tier-calc" placeholder="0.00"
+                                                            value="{{ old('flight_child_sell', $booking->flight_child_sell ?? 0) }}">
+                                                    </td>
+                                                    <td class="text-end fw-bold text-success"><span id="flight_child_sell_sar_disp">0.00</span> SAR</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="text-start fw-semibold"><i class="mdi mdi-baby-carriage text-warning me-1"></i> Infant (0-2 yrs)</td>
+                                                    <td><span class="badge bg-secondary fs-12" id="flight_infant_pax_label">{{ $booking->infants_count ?? 0 }}</span></td>
+                                                    <td>
+                                                        <input type="number" step="0.01" name="flight_infant_cost" id="flight_infant_cost"
+                                                            class="form-control form-control-sm text-end flight-tier-calc" placeholder="0.00"
+                                                            value="{{ old('flight_infant_cost', $booking->flight_infant_cost ?? 0) }}">
+                                                    </td>
+                                                    <td class="text-end fw-bold text-danger"><span id="flight_infant_cost_sar_disp">0.00</span> SAR</td>
+                                                    <td>
+                                                        <input type="number" step="0.01" name="flight_infant_sell" id="flight_infant_sell"
+                                                            class="form-control form-control-sm text-end flight-tier-calc" placeholder="0.00"
+                                                            value="{{ old('flight_infant_sell', $booking->flight_infant_sell ?? 0) }}">
+                                                    </td>
+                                                    <td class="text-end fw-bold text-success"><span id="flight_infant_sell_sar_disp">0.00</span> SAR</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    {{-- Flight Dual Currency Totals Display --}}
+                                    <div class="row g-2 p-2 rounded bg-light border">
+                                        <div class="col-md-3">
+                                            <div class="border rounded p-2 bg-white text-center">
+                                                <small class="text-muted d-block">Flight Cost (SAR)</small>
+                                                <strong class="text-danger fs-14" id="flight_cost_sar_total">0.00 SAR</strong>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="border rounded p-2 bg-white text-center">
+                                                <small class="text-muted d-block">Flight Cost (PKR)</small>
+                                                <strong class="text-danger fs-14" id="flight_cost_pkr_total">{{ number_format($booking->flight_cost ?? 0, 2) }} PKR</strong>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="border rounded p-2 bg-white text-center">
+                                                <small class="text-muted d-block">Flight Sell (SAR)</small>
+                                                <strong class="text-success fs-14" id="flight_sell_sar_total">0.00 SAR</strong>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="border rounded p-2 bg-white text-center">
+                                                <small class="text-muted d-block">Flight Sell (PKR)</small>
+                                                <strong class="text-success fs-14" id="flight_sell_pkr_total">{{ number_format($booking->flight_charges ?? 0, 2) }} PKR</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {{-- Hidden fields for Controller compatibility --}}
+                                    <input type="hidden" name="flight_cost_rate" id="flight_cost_rate" value="{{ $booking->flight_cost_rate ?? 0 }}">
+                                    <input type="hidden" name="flight_cost" id="flight_cost" value="{{ $booking->flight_cost ?? 0 }}">
+                                    <input type="hidden" name="flight_selling_rate" id="flight_selling_rate" value="{{ $booking->flight_selling_rate ?? 0 }}">
+                                    <input type="hidden" name="flight_charges" id="flight_charges" value="{{ $booking->flight_charges ?? 0 }}">
+                                    <input type="hidden" name="flight_charges_disp" id="flight_charges_disp" value="{{ $booking->flight_charges ?? 0 }}">
                                 </div>
                             </div>
 
@@ -573,6 +604,38 @@
 
                         {{-- TAB 5: Hotel --}}
                         <div class="tab-pane fade" id="tab-hotel">
+                            {{-- Hotel Dual Currency Totals Display --}}
+                            <div class="row g-2 p-2 rounded bg-light border mb-3">
+                                <div class="col-md-3">
+                                    <div class="border rounded p-2 bg-white text-center shadow-sm">
+                                        <small class="text-muted d-block fw-semibold">Total Hotel Cost (SAR)</small>
+                                        <strong class="text-danger fs-14" id="hotel_cost_sar_total">0.00 SAR</strong>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="border rounded p-2 bg-white text-center shadow-sm">
+                                        <small class="text-muted d-block fw-semibold">Total Hotel Cost (PKR)</small>
+                                        <strong class="text-danger fs-14" id="hotel_cost_pkr_total">0.00 PKR</strong>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="border rounded p-2 bg-white text-center shadow-sm">
+                                        <small class="text-muted d-block fw-semibold">Total Hotel Sell (SAR)</small>
+                                        <strong class="text-success fs-14" id="hotel_sell_sar_total">0.00 SAR</strong>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="border rounded p-2 bg-white text-center shadow-sm">
+                                        <small class="text-muted d-block fw-semibold">Total Hotel Sell (PKR)</small>
+                                        <strong class="text-success fs-14" id="hotel_sell_pkr_total">0.00 PKR</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="noHotelAlert" class="alert alert-light border py-4 text-center text-muted mb-3" style="{{ $booking->hotels && $booking->hotels->count() > 0 ? 'display:none;' : '' }}">
+                                <i class="mdi mdi-hotel fs-36 text-primary d-block mb-1"></i>
+                                <strong>No hotels added yet.</strong>
+                                <p class="small text-muted mb-0">Click one of the buttons below to add a hotel for Makkah, Madinah or Other city.</p>
+                            </div>
                             <div id="hotelsList">
                                 @foreach ($booking->hotels as $hotel)
                                     <div class="hotel-block border rounded p-3 mb-3">
@@ -655,28 +718,36 @@
                                                     class="form-control hotel-checkout" value="{{ old('hotels.'.$loop->index.'.check_out', $hotel->check_out) }}">
                                             </div>
                                             <div class="col-md-3">
-                                                <label class="form-label">Cost Rate / Night (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</label>
+                                                <label class="form-label text-danger fw-semibold">Cost Rate / Night (SAR)</label>
                                                 <input type="number" step="0.01" name="hotels[{{ $loop->index }}][cost_per_night]"
                                                     class="form-control hotel-cost-rate" placeholder="0.00"
                                                     value="{{ old('hotels.'.$loop->index.'.cost_per_night', $hotel->cost_per_night ?? 0) }}">
                                             </div>
                                             <div class="col-md-3">
-                                                <label class="form-label text-danger">Total Hotel Cost (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</label>
-                                                <input type="number" step="0.01" name="hotels[{{ $loop->index }}][cost_amount]"
-                                                    class="form-control hotel-cost-total bg-light" placeholder="0.00"
-                                                    value="{{ old('hotels.'.$loop->index.'.cost_amount', $hotel->cost_amount ?? 0) }}" readonly>
+                                                <label class="form-label text-danger fw-semibold">Total Cost (SAR & PKR)</label>
+                                                <div class="p-1 px-2 border rounded bg-light">
+                                                    <div class="d-flex justify-content-between small text-danger"><span>SAR:</span><strong class="hotel-cost-sar-disp">{{ number_format(($hotel->cost_per_night ?? 0) * ($hotel->no_of_nights ?? 1) * ($hotel->no_of_rooms ?? 1), 2) }} SAR</strong></div>
+                                                    <div class="d-flex justify-content-between small text-danger"><span>PKR:</span><strong class="hotel-cost-pkr-disp">{{ number_format($hotel->cost_amount ?? 0, 2) }} PKR</strong></div>
+                                                </div>
+                                                <input type="hidden" name="hotels[{{ $loop->index }}][cost_amount]"
+                                                    class="hotel-cost-total"
+                                                    value="{{ old('hotels.'.$loop->index.'.cost_amount', $hotel->cost_amount ?? 0) }}">
                                             </div>
                                             <div class="col-md-3">
-                                                <label class="form-label">Sell Rate / Night (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</label>
+                                                <label class="form-label text-success fw-semibold">Sell Rate / Night (SAR)</label>
                                                 <input type="number" step="0.01" name="hotels[{{ $loop->index }}][selling_per_night]"
                                                     class="form-control hotel-sell-rate" placeholder="0.00"
                                                     value="{{ old('hotels.'.$loop->index.'.selling_per_night', $hotel->selling_per_night ?? 0) }}">
                                             </div>
                                             <div class="col-md-3">
-                                                <label class="form-label text-success">Total Hotel Sell (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</label>
-                                                <input type="number" step="0.01" name="hotels[{{ $loop->index }}][selling_amount]"
-                                                    class="form-control hotel-sell-total bg-light" placeholder="0.00"
-                                                    value="{{ old('hotels.'.$loop->index.'.selling_amount', $hotel->selling_amount ?? 0) }}" readonly>
+                                                <label class="form-label text-success fw-semibold">Total Sell (SAR & PKR)</label>
+                                                <div class="p-1 px-2 border rounded bg-light">
+                                                    <div class="d-flex justify-content-between small text-success"><span>SAR:</span><strong class="hotel-sell-sar-disp">{{ number_format(($hotel->selling_per_night ?? 0) * ($hotel->no_of_nights ?? 1) * ($hotel->no_of_rooms ?? 1), 2) }} SAR</strong></div>
+                                                    <div class="d-flex justify-content-between small text-success"><span>PKR:</span><strong class="hotel-sell-pkr-disp">{{ number_format($hotel->selling_amount ?? 0, 2) }} PKR</strong></div>
+                                                </div>
+                                                <input type="hidden" name="hotels[{{ $loop->index }}][selling_amount]"
+                                                    class="hotel-sell-total"
+                                                    value="{{ old('hotels.'.$loop->index.'.selling_amount', $hotel->selling_amount ?? 0) }}">
                                             </div>
                                             <div class="col-md-6">
                                                 <label class="form-label">Hotel Voucher / Booking Confirmation</label>
@@ -690,8 +761,20 @@
                                     </div>
                                 @endforeach
                             </div>
-                            <button type="button" class="btn btn-outline-primary btn-sm" id="addHotel">+ Add
-                                Hotel</button>
+                            <div class="d-flex flex-wrap gap-2 mt-2">
+                                <button type="button" class="btn btn-primary btn-sm" onclick="addNewHotel('makkah')">
+                                    <i class="mdi mdi-plus-circle me-1"></i> + Add Makkah Hotel
+                                </button>
+                                <button type="button" class="btn btn-success btn-sm" onclick="addNewHotel('madinah')">
+                                    <i class="mdi mdi-plus-circle me-1"></i> + Add Madinah Hotel
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addNewHotel('other')">
+                                    <i class="mdi mdi-plus-circle me-1"></i> + Add Other Hotel
+                                </button>
+                                <button type="button" class="btn btn-info btn-sm text-white" id="addHotel">
+                                    <i class="mdi mdi-plus me-1"></i> + Add Hotel (Select)
+                                </button>
+                            </div>
 
                             <div class="d-flex justify-content-between mt-4">
                                 <button type="button" class="btn btn-outline-secondary btn-prev"><i
@@ -703,6 +786,33 @@
 
                         {{-- TAB 6: Transport --}}
                         <div class="tab-pane fade" id="tab-transport">
+                            {{-- Transport Dual Currency Totals Display --}}
+                            <div class="row g-2 p-2 rounded bg-light border mb-3">
+                                <div class="col-md-3">
+                                    <div class="border rounded p-2 bg-white text-center shadow-sm">
+                                        <small class="text-muted d-block fw-semibold">Total Transport Cost (SAR)</small>
+                                        <strong class="text-danger fs-14" id="transport_cost_sar_total">0.00 SAR</strong>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="border rounded p-2 bg-white text-center shadow-sm">
+                                        <small class="text-muted d-block fw-semibold">Total Transport Cost (PKR)</small>
+                                        <strong class="text-danger fs-14" id="transport_cost_pkr_total">0.00 PKR</strong>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="border rounded p-2 bg-white text-center shadow-sm">
+                                        <small class="text-muted d-block fw-semibold">Total Transport Sell (SAR)</small>
+                                        <strong class="text-success fs-14" id="transport_sell_sar_total">0.00 SAR</strong>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="border rounded p-2 bg-white text-center shadow-sm">
+                                        <small class="text-muted d-block fw-semibold">Total Transport Sell (PKR)</small>
+                                        <strong class="text-success fs-14" id="transport_sell_pkr_total">0.00 PKR</strong>
+                                    </div>
+                                </div>
+                            </div>
                             <div id="routesList">
                                 @forelse($booking->transports as $i => $t)
                                     <div class="route-block border rounded p-3 mb-2">
@@ -745,25 +855,33 @@
                                                 <input type="number" step="0.0001" name="transports[{{ $i }}][roe]"
                                                     class="form-control transport-roe" placeholder="1.00" value="{{ old('transports.'.$i.'.roe', $t->roe ?? 1) }}">
                                             </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label text-danger">Cost Rate (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</label>
+                                            <div class="col-md-2">
+                                                <label class="form-label text-danger fw-semibold">Cost Rate (SAR)</label>
                                                 <input type="number" step="0.01" name="transports[{{ $i }}][cost_rate]"
                                                     class="form-control transport-cost-rate" placeholder="0.00" value="{{ old('transports.'.$i.'.cost_rate', $t->cost_rate ?? 0) }}">
                                             </div>
                                             <div class="col-md-3">
-                                                <label class="form-label text-danger">Total Cost Amount (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</label>
-                                                <input type="number" step="0.01" name="transports[{{ $i }}][cost_amount]"
-                                                    class="form-control transport-cost-amount bg-light" placeholder="0.00" value="{{ old('transports.'.$i.'.cost_amount', $t->cost_amount ?? 0) }}" readonly>
+                                                <label class="form-label text-danger fw-semibold">Total Cost (SAR & PKR)</label>
+                                                <div class="p-1 px-2 border rounded bg-light">
+                                                    <div class="d-flex justify-content-between small text-danger"><span>SAR:</span><strong class="transport-cost-sar-disp">{{ number_format($t->cost_rate ?? 0, 2) }} SAR</strong></div>
+                                                    <div class="d-flex justify-content-between small text-danger"><span>PKR:</span><strong class="transport-cost-pkr-disp">{{ number_format($t->cost_amount ?? 0, 2) }} PKR</strong></div>
+                                                </div>
+                                                <input type="hidden" name="transports[{{ $i }}][cost_amount]"
+                                                    class="transport-cost-amount" value="{{ old('transports.'.$i.'.cost_amount', $t->cost_amount ?? 0) }}">
                                             </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label text-success">Selling Rate (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</label>
+                                            <div class="col-md-2">
+                                                <label class="form-label text-success fw-semibold">Sell Rate (SAR)</label>
                                                 <input type="number" step="0.01" name="transports[{{ $i }}][selling_rate]"
                                                     class="form-control transport-sell-rate" placeholder="0.00" value="{{ old('transports.'.$i.'.selling_rate', $t->selling_rate ?? 0) }}">
                                             </div>
                                             <div class="col-md-3">
-                                                <label class="form-label text-success">Total Selling Amount (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</label>
-                                                <input type="number" step="0.01" name="transports[{{ $i }}][selling_amount]"
-                                                    class="form-control transport-sell-amount bg-light" placeholder="0.00" value="{{ old('transports.'.$i.'.selling_amount', $t->selling_amount ?? 0) }}" readonly>
+                                                <label class="form-label text-success fw-semibold">Total Sell (SAR & PKR)</label>
+                                                <div class="p-1 px-2 border rounded bg-light">
+                                                    <div class="d-flex justify-content-between small text-success"><span>SAR:</span><strong class="transport-sell-sar-disp">{{ number_format($t->selling_rate ?? 0, 2) }} SAR</strong></div>
+                                                    <div class="d-flex justify-content-between small text-success"><span>PKR:</span><strong class="transport-sell-pkr-disp">{{ number_format($t->selling_amount ?? 0, 2) }} PKR</strong></div>
+                                                </div>
+                                                <input type="hidden" name="transports[{{ $i }}][selling_amount]"
+                                                    class="transport-sell-amount" value="{{ old('transports.'.$i.'.selling_amount', $t->selling_amount ?? 0) }}">
                                             </div>
                                             <div class="col-md-6">
                                                 <label class="form-label">Notes</label>
@@ -814,22 +932,22 @@
                                                     class="form-control transport-roe" placeholder="1.00" value="1">
                                             </div>
                                             <div class="col-md-3">
-                                                <label class="form-label text-danger">Cost Rate (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</label>
+                                                <label class="form-label text-danger">Cost Rate </label>
                                                 <input type="number" step="0.01" name="transports[0][cost_rate]"
                                                     class="form-control transport-cost-rate" placeholder="0.00" value="0">
                                             </div>
                                             <div class="col-md-3">
-                                                <label class="form-label text-danger">Total Cost Amount (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</label>
+                                                <label class="form-label text-danger">Total Cost Amount </label>
                                                 <input type="number" step="0.01" name="transports[0][cost_amount]"
                                                     class="form-control transport-cost-amount bg-light" placeholder="0.00" value="0" readonly>
                                             </div>
                                             <div class="col-md-3">
-                                                <label class="form-label text-success">Selling Rate (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</label>
+                                                <label class="form-label text-success">Selling Rate </label>
                                                 <input type="number" step="0.01" name="transports[0][selling_rate]"
                                                     class="form-control transport-sell-rate" placeholder="0.00" value="0">
                                             </div>
                                             <div class="col-md-3">
-                                                <label class="form-label text-success">Total Selling Amount (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</label>
+                                                <label class="form-label text-success">Total Selling Amount </label>
                                                 <input type="number" step="0.01" name="transports[0][selling_amount]"
                                                     class="form-control transport-sell-amount bg-light" placeholder="0.00" value="0" readonly>
                                             </div>
@@ -859,6 +977,33 @@
 
                         {{-- TAB 7: Visa --}}
                         <div class="tab-pane fade" id="tab-visa">
+                            {{-- Visa Dual Currency Totals Display --}}
+                            <div class="row g-2 p-2 rounded bg-light border mb-3">
+                                <div class="col-md-3">
+                                    <div class="border rounded p-2 bg-white text-center shadow-sm">
+                                        <small class="text-muted d-block fw-semibold">Total Visa Cost (SAR)</small>
+                                        <strong class="text-danger fs-14" id="visa_cost_sar_total">0.00 SAR</strong>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="border rounded p-2 bg-white text-center shadow-sm">
+                                        <small class="text-muted d-block fw-semibold">Total Visa Cost (PKR)</small>
+                                        <strong class="text-danger fs-14" id="visa_cost_pkr_total">0.00 PKR</strong>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="border rounded p-2 bg-white text-center shadow-sm">
+                                        <small class="text-muted d-block fw-semibold">Total Visa Sell (SAR)</small>
+                                        <strong class="text-success fs-14" id="visa_sell_sar_total">0.00 SAR</strong>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="border rounded p-2 bg-white text-center shadow-sm">
+                                        <small class="text-muted d-block fw-semibold">Total Visa Sell (PKR)</small>
+                                        <strong class="text-success fs-14" id="visa_sell_pkr_total">0.00 PKR</strong>
+                                    </div>
+                                </div>
+                            </div>
                             <p class="text-muted small mb-3">
                                 <i class="mdi mdi-information me-1"></i>
                                 Edit visa details for each passenger below.
@@ -933,28 +1078,36 @@
                                                 <input type="file" name="visas[{{ $i }}][visa_attachment]" class="form-control form-control-sm" accept="image/*,.pdf">
                                             </div>
                                             <div class="col-md-3">
-                                                <label class="form-label text-danger" style="font-size:12px;">Cost Rate (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</label>
+                                                <label class="form-label text-danger fw-semibold" style="font-size:12px;">Cost Rate (SAR)</label>
                                                 <input type="number" step="0.01" name="visas[{{ $i }}][cost_rate]"
                                                     class="form-control form-control-sm visa-cost-rate" placeholder="0.00"
                                                     value="{{ old('visas.'.$i.'.cost_rate', $visa->cost_rate ?? 0) }}">
                                             </div>
                                             <div class="col-md-3">
-                                                <label class="form-label text-danger" style="font-size:12px;">Cost Amount (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</label>
-                                                <input type="number" step="0.01" name="visas[{{ $i }}][cost_amount]"
-                                                    class="form-control form-control-sm visa-cost-amount bg-light" placeholder="0.00"
-                                                    value="{{ old('visas.'.$i.'.cost_amount', $visa->cost_amount ?? 0) }}" readonly>
+                                                <label class="form-label text-danger fw-semibold" style="font-size:12px;">Total Cost (SAR & PKR)</label>
+                                                <div class="p-1 px-2 border rounded bg-light">
+                                                    <div class="d-flex justify-content-between small text-danger"><span>SAR:</span><strong class="visa-cost-sar-disp">{{ number_format($visa->cost_rate ?? 0, 2) }} SAR</strong></div>
+                                                    <div class="d-flex justify-content-between small text-danger"><span>PKR:</span><strong class="visa-cost-pkr-disp">{{ number_format($visa->cost_amount ?? (($visa->cost_rate ?? 0) * ($visa->roe ?? 75)), 2) }} PKR</strong></div>
+                                                </div>
+                                                <input type="hidden" name="visas[{{ $i }}][cost_amount]"
+                                                    class="visa-cost-amount"
+                                                    value="{{ old('visas.'.$i.'.cost_amount', $visa->cost_amount ?? 0) }}">
                                             </div>
                                             <div class="col-md-3">
-                                                <label class="form-label text-success" style="font-size:12px;">Selling Rate (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</label>
+                                                <label class="form-label text-success fw-semibold" style="font-size:12px;">Sell Rate (SAR)</label>
                                                 <input type="number" step="0.01" name="visas[{{ $i }}][selling_rate]"
                                                     class="form-control form-control-sm visa-sell-rate" placeholder="0.00"
                                                     value="{{ old('visas.'.$i.'.selling_rate', $visa->selling_rate ?? 0) }}">
                                             </div>
                                             <div class="col-md-3">
-                                                <label class="form-label text-success" style="font-size:12px;">Selling Amount (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</label>
-                                                <input type="number" step="0.01" name="visas[{{ $i }}][selling_amount]"
-                                                    class="form-control form-control-sm visa-sell-amount bg-light" placeholder="0.00"
-                                                    value="{{ old('visas.'.$i.'.selling_amount', $visa->selling_amount ?? 0) }}" readonly>
+                                                <label class="form-label text-success fw-semibold" style="font-size:12px;">Total Sell (SAR & PKR)</label>
+                                                <div class="p-1 px-2 border rounded bg-light">
+                                                    <div class="d-flex justify-content-between small text-success"><span>SAR:</span><strong class="visa-sell-sar-disp">{{ number_format($visa->selling_rate ?? 0, 2) }} SAR</strong></div>
+                                                    <div class="d-flex justify-content-between small text-success"><span>PKR:</span><strong class="visa-sell-pkr-disp">{{ number_format($visa->selling_amount ?? (($visa->selling_rate ?? 0) * ($visa->roe ?? 75)), 2) }} PKR</strong></div>
+                                                </div>
+                                                <input type="hidden" name="visas[{{ $i }}][selling_amount]"
+                                                    class="visa-sell-amount"
+                                                    value="{{ old('visas.'.$i.'.selling_amount', $visa->selling_amount ?? 0) }}">
                                             </div>
                                             <div class="col-md-3">
                                                 <label class="form-label" style="font-size:12px;">Status</label>
@@ -983,49 +1136,49 @@
                         <div class="tab-pane fade" id="tab-costing">
                             <div class="row g-3">
                                 <div class="col-md-3" id="costing_package_cost_col" style="{{ $isUmrah ? 'display:none;' : '' }}">
-                                    <label class="form-label">Package Cost / Person (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</label>
+                                    <label class="form-label">Package Cost / Person </label>
                                     <input type="number" name="package_cost" id="package_cost"
                                         class="form-control calc"
                                         value="{{ old('package_cost', $booking->package_cost ?: '') }}"
                                         placeholder="Enter package cost" step="0.01">
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label">Hotel Charges (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</label>
+                                    <label class="form-label">Hotel Charges </label>
                                     <input type="number" name="hotel_charges" id="hotel_charges"
                                         class="form-control calc bg-light"
                                         value="{{ old('hotel_charges', $booking->hotel_charges ?? 0) }}"
                                         placeholder="0.00" step="0.01" readonly>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label">Visa Charges (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</label>
+                                    <label class="form-label">Visa Charges </label>
                                     <input type="number" name="visa_charges" id="visa_charges"
                                         class="form-control calc bg-light"
                                         value="{{ old('visa_charges', $booking->visa_charges ?: '') }}"
                                         placeholder="0.00" step="0.01" readonly>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label">Flight Charges (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</label>
+                                    <label class="form-label">Flight Charges </label>
                                     <input type="number" name="flight_charges_disp" id="flight_charges_disp"
                                         class="form-control calc bg-light"
                                         value="{{ old('flight_charges', $booking->flight_charges ?: '') }}"
                                         placeholder="0.00" step="0.01" readonly>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label">Transport Charges (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</label>
+                                    <label class="form-label">Transport Charges </label>
                                     <input type="number" name="transport_charges" id="transport_charges"
                                         class="form-control calc bg-light"
                                         value="{{ old('transport_charges', $booking->transport_charges ?? 0) }}"
                                         placeholder="0.00" step="0.01" readonly>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label">Qurbani & Other Charges (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</label>
+                                    <label class="form-label">Qurbani & Other Charges </label>
                                     <input type="number" name="other_charges" id="other_charges"
                                         class="form-control calc"
                                         value="{{ old('other_charges', $booking->other_charges ?: '') }}"
                                         placeholder="Enter other charges" step="0.01">
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label">Discount (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</label>
+                                    <label class="form-label">Discount </label>
                                     <input type="number" name="discount" id="discount"
                                         class="form-control calc"
                                         value="{{ old('discount', $booking->discount ?: '') }}"
@@ -1033,19 +1186,87 @@
                                 </div>
 
                                 <div class="col-12">
+                                    {{-- Dual Currency Summary Cards --}}
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-6">
+                                            <div class="card border-primary border-opacity-25 bg-light mb-0">
+                                                <div class="card-body p-3">
+                                                    <h6 class="text-primary fw-bold mb-2"><i class="mdi mdi-cash-multiple me-1"></i> SAR (Saudi Riyal) Total</h6>
+                                                    <div class="d-flex justify-content-between mb-1">
+                                                        <span>Flight SAR:</span>
+                                                        <strong id="cost_sar_flight">0.00 SAR</strong>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between mb-1">
+                                                        <span>Hotel SAR:</span>
+                                                        <strong id="cost_sar_hotel">0.00 SAR</strong>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between mb-1">
+                                                        <span>Transport SAR:</span>
+                                                        <strong id="cost_sar_transport">0.00 SAR</strong>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between mb-1">
+                                                        <span>Visa SAR:</span>
+                                                        <strong id="cost_sar_visa">0.00 SAR</strong>
+                                                    </div>
+                                                    <hr class="my-2">
+                                                    <div class="d-flex justify-content-between text-primary fs-15 fw-bold">
+                                                        <span>Total Selling (SAR):</span>
+                                                        <span id="cost_sar_total">0.00 SAR</span>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between text-danger fs-14 fw-semibold">
+                                                        <span>Balance Remaining (SAR):</span>
+                                                        <span id="cost_sar_balance">0.00 SAR</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="card border-success border-opacity-25 bg-light mb-0">
+                                                <div class="card-body p-3">
+                                                    <h6 class="text-success fw-bold mb-2"><i class="mdi mdi-currency-usd me-1"></i> PKR (Pakistani Rupee) Total</h6>
+                                                    <div class="d-flex justify-content-between mb-1">
+                                                        <span>Flight PKR:</span>
+                                                        <strong id="cost_pkr_flight">{{ number_format($booking->flight_charges ?? 0, 2) }} PKR</strong>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between mb-1">
+                                                        <span>Hotel PKR:</span>
+                                                        <strong id="cost_pkr_hotel">{{ number_format($booking->hotel_charges ?? 0, 2) }} PKR</strong>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between mb-1">
+                                                        <span>Transport PKR:</span>
+                                                        <strong id="cost_pkr_transport">{{ number_format($booking->transport_charges ?? 0, 2) }} PKR</strong>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between mb-1">
+                                                        <span>Visa PKR:</span>
+                                                        <strong id="cost_pkr_visa">{{ number_format($booking->visa_charges ?? 0, 2) }} PKR</strong>
+                                                    </div>
+                                                    <hr class="my-2">
+                                                    <div class="d-flex justify-content-between text-success fs-15 fw-bold">
+                                                        <span>Total Selling (PKR):</span>
+                                                        <span id="cost_pkr_total">{{ number_format($booking->total_amount ?? 0, 2) }} PKR</span>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between text-danger fs-14 fw-semibold">
+                                                        <span>Balance Remaining (PKR):</span>
+                                                        <span id="cost_pkr_balance">{{ number_format($booking->balance ?? 0, 2) }} PKR</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div class="table-responsive">
                                         <table class="table table-bordered table-sm bg-light">
                                             <thead class="table-primary">
                                                 <tr>
                                                     <th>Persons</th>
                                                     <th style="{{ $isUmrah ? 'display:none;' : '' }}">Pkg Cost × Pax</th>
-                                                    <th>Hotel (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</th>
-                                                    <th>Visa (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</th>
-                                                    <th>Flight (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</th>
-                                                    <th>Transport (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</th>
-                                                    <th>Other & Services (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</th>
-                                                    <th>Discount (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</th>
-                                                    <th class="text-success">Total (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</th>
+                                                    <th>Hotel (PKR)</th>
+                                                    <th>Visa (PKR)</th>
+                                                    <th>Flight (PKR)</th>
+                                                    <th>Transport (PKR)</th>
+                                                    <th>Other & Services (PKR)</th>
+                                                    <th>Discount (PKR)</th>
+                                                    <th class="text-success">Total (PKR)</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -1069,14 +1290,14 @@
                                 </div>
 
                                 <div class="col-md-4">
-                                    <label class="form-label">Total Amount (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</label>
+                                    <label class="form-label">Total Amount </label>
                                     <input type="number" name="total_amount" id="total_amount"
                                         class="form-control bg-light fw-bold text-primary fs-16"
                                         value="{{ old('total_amount', $booking->total_amount ?: '') }}"
                                         placeholder="Auto calculated" readonly>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">Total Received (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)</label>
+                                    <label class="form-label">Total Received </label>
                                     <input type="number" name="total_received" id="total_received"
                                         class="form-control calc"
                                         value="{{ old('total_received', $booking->total_received ?: '') }}"
@@ -1095,7 +1316,7 @@
 
                                 <div class="col-md-4">
                                     <label class="form-label">
-                                        Balance Remaining (<span class="curr-symbol">{{ $booking->currency ?? 'PKR' }}</span>)
+                                        Balance Remaining 
                                         @if ($bookingBalance > 0)
                                             <span class="badge bg-danger ms-1" style="font-size:10px;">Due</span>
                                         @elseif ($bookingBalance < 0)
@@ -1209,6 +1430,9 @@
         const suppliersOptions = `<option value="">-- Select Supplier --</option>` +
             (typeof suppliersData !== 'undefined' ? suppliersData.map(s => `<option value="${s.id}">${s.name}</option>`).join('') : '');
 
+        const hotelsOptions = `<option value="">Select Hotel</option>` +
+            (typeof hotelsData !== 'undefined' ? hotelsData.map(h => `<option value="${h.name}">${h.name} (${h.city || h.place || ''})</option>`).join('') : '');
+
         function updatePersonFullName(idx) {
             const sur   = document.getElementById(`person_surname_${idx}`)?.value || '';
             const given = document.getElementById(`person_given_name_${idx}`)?.value || '';
@@ -1232,7 +1456,6 @@
             if (document.getElementById('person_name_0')) document.getElementById('person_name_0').value = client.name || '';
             if (document.getElementById('person_passport_0')) document.getElementById('person_passport_0').value = client.passport_number || '';
             if (document.getElementById('person_cnic_0')) document.getElementById('person_cnic_0').value = client.cnic || '';
-            if (document.getElementById('person_phone_0')) document.getElementById('person_phone_0').value = client.phone || '';
 
             const parts = (client.name || '').trim().split(' ');
             if (parts.length > 1) {
@@ -1286,135 +1509,7 @@
                 document.getElementById('package_cost').value = pkgCost ? pkgCost.toFixed(2) : '0.00';
             }
 
-            if (pkg.transport_flights && pkg.transport_flights.length > 0) {
-                const fl = pkg.transport_flights[0];
-                const setV = (n, v) => { const e = document.querySelector('[name="' + n + '"]'); if (e) e.value = v || ''; };
-                setV('departure_date', fl.departure_date);
-                setV('departure_flight', fl.flight_no);
-                setV('departure_time', fl.departure_time);
-                setV('departure_airline', fl.airline);
-                setV('departure_pnr', fl.pnr_no);
-                setV('arrival_date', fl.arrival_date);
-                setV('arrival_flight', fl.arrival_flight || fl.flight_no);
-                setV('arrival_time', fl.arrival_time);
-                setV('arrival_airline', fl.airline);
-                setV('arrival_pnr', fl.pnr_no);
-            }
-
-            if (pkg.accommodations && pkg.accommodations.length > 0) {
-                const hotelsList = document.getElementById('hotelsList');
-                if (hotelsList) {
-                    hotelsList.innerHTML = '';
-                    pkg.accommodations.forEach((acc, idx) => {
-                        const loc = acc.place ? acc.place.toLowerCase() : (idx === 0 ? 'makkah' : 'madinah');
-                        const hotelName = acc.hotel ? acc.hotel.name : (acc.accommodation_type || '');
-                        const roomType = acc.sharing_type || 'double';
-                        let checkIn = acc.check_in ? acc.check_in.substring(0, 10) : '';
-                        let checkOut = acc.check_out ? acc.check_out.substring(0, 10) : '';
-                        let nights = acc.nights || acc.days || '';
-
-                        if (checkIn && checkOut) {
-                            const diff = Math.round((new Date(checkOut) - new Date(checkIn)) / 86400000);
-                            if (!isNaN(diff) && diff >= 0) nights = diff;
-                        } else if (checkIn && nights && !checkOut) {
-                            const d = new Date(checkIn); d.setDate(d.getDate() + parseInt(nights));
-                            checkOut = d.toISOString().split('T')[0];
-                        }
-                        if (!nights) nights = 1;
-
-                        const costPerNight = parseFloat(acc.per_night_rate || acc.cost_amount || 0) || 0;
-                        const costTotal = (nights * 1 * costPerNight).toFixed(2);
-                        const sellPerNight = parseFloat(acc.selling_per_night_rate || acc.selling_amount || 0) || 0;
-                        const sellTotal = (nights * 1 * sellPerNight).toFixed(2);
-
-                        let hotelOptions = '<option value="">Select Hotel</option>';
-                        hotelsData.forEach(h => {
-                            const sel = (h.name === hotelName) ? 'selected' : '';
-                            hotelOptions += `<option value="${h.name}" ${sel}>${h.name} (${h.city || h.place || ''})</option>`;
-                        });
-
-                        hotelsList.insertAdjacentHTML('beforeend', `
-                            <div class="hotel-block border rounded p-3 mb-3">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <h6 class="text-primary mb-0"><i class="mdi mdi-hotel me-1"></i> ${acc.place || 'Hotel Option ' + (idx + 1)}</h6>
-                                    ${idx >= 2 ? '<button type="button" class="btn btn-outline-danger btn-sm remove-hotel">× Remove</button>' : ''}
-                                </div>
-                                <input type="hidden" name="hotels[${idx}][location]" value="${loc}">
-                                <div class="row g-3">
-                                    <div class="col-md-4"><label class="form-label">Hotel Name</label>
-                                        <select name="hotels[${idx}][hotel_name]" class="form-select hotel-name-select">${hotelOptions}</select></div>
-                                    <div class="col-md-4"><label class="form-label">Hotel Supplier / Vendor</label>
-                                        <select name="hotels[${idx}][supplier_id]" class="form-select">${suppliersOptions}</select></div>
-                                    <div class="col-md-2"><label class="form-label text-primary">ROE</label>
-                                        <input type="number" step="0.0001" name="hotels[${idx}][roe]" class="form-control hotel-roe" value="1" placeholder="1.00"></div>
-                                    <div class="col-md-2"><label class="form-label">Room Type</label>
-                                        <select name="hotels[${idx}][room_type]" class="form-select">
-                                            <option value="single" ${roomType === 'single' ? 'selected' : ''}>Single</option>
-                                            <option value="double" ${roomType === 'double' ? 'selected' : ''}>Double</option>
-                                            <option value="triple" ${roomType === 'triple' ? 'selected' : ''}>Triple</option>
-                                            <option value="quad" ${roomType === 'quad' ? 'selected' : ''}>Quad</option>
-                                            <option value="sharing" ${roomType === 'sharing' ? 'selected' : ''}>Sharing</option>
-                                            <option value="suite" ${roomType === 'suite' ? 'selected' : ''}>Suite</option>
-                                        </select></div>
-                                    <div class="col-md-2"><label class="form-label">Nights</label>
-                                        <input type="number" name="hotels[${idx}][no_of_nights]" class="form-control hotel-nights" value="${nights}" min="1"></div>
-                                    <div class="col-md-2"><label class="form-label">No. of Rooms</label>
-                                        <input type="number" name="hotels[${idx}][no_of_rooms]" class="form-control hotel-rooms" value="1" min="1"></div>
-                                    <div class="col-md-2"><label class="form-label">Hotel Room #</label>
-                                        <input type="text" name="hotels[${idx}][room_number]" class="form-control hotel-room-number-input" placeholder="e.g. 402 / 505"></div>
-                                    <div class="col-md-3"><label class="form-label">Check In</label>
-                                        <input type="date" name="hotels[${idx}][check_in]" class="form-control hotel-checkin" value="${checkIn}"></div>
-                                    <div class="col-md-3"><label class="form-label">Check Out</label>
-                                        <input type="date" name="hotels[${idx}][check_out]" class="form-control hotel-checkout" value="${checkOut}"></div>
-                                    <div class="col-md-3"><label class="form-label">Cost Rate / Night</label>
-                                        <input type="number" step="0.01" name="hotels[${idx}][cost_per_night]" class="form-control hotel-cost-rate" placeholder="0.00" value="${costPerNight}"></div>
-                                    <div class="col-md-3"><label class="form-label text-danger">Total Hotel Cost</label>
-                                        <input type="number" step="0.01" name="hotels[${idx}][cost_amount]" class="form-control hotel-cost-total bg-light" placeholder="0.00" value="${costTotal}" readonly></div>
-                                    <div class="col-md-3"><label class="form-label">Sell Rate / Night</label>
-                                        <input type="number" step="0.01" name="hotels[${idx}][selling_per_night]" class="form-control hotel-sell-rate" placeholder="0.00" value="${sellPerNight}"></div>
-                                    <div class="col-md-3"><label class="form-label text-success">Total Hotel Sell</label>
-                                        <input type="number" step="0.01" name="hotels[${idx}][selling_amount]" class="form-control hotel-sell-total bg-light" placeholder="0.00" value="${sellTotal}" readonly></div>
-                                    <div class="col-md-6"><label class="form-label">Hotel Voucher</label>
-                                        <input type="file" name="hotels[${idx}][hotel_voucher]" class="form-control" accept="image/*,.pdf"></div>
-                                </div>
-                            </div>
-                        `);
-                    });
-                }
-            }
-
-            if (pkg.transports && pkg.transports.length > 0) {
-                const routesList = document.getElementById('routesList');
-                if (routesList) {
-                    routesList.innerHTML = '';
-                    pkg.transports.forEach((tr, idx) => {
-                        routesList.insertAdjacentHTML('beforeend', `
-                            <div class="route-block border rounded p-3 mb-2">
-                                <div class="row g-3">
-                                    <div class="col-md-3"><input type="text" name="transports[${idx}][route]" class="form-control" value="${tr.route || ''}" placeholder="Route"></div>
-                                    <div class="col-md-3"><select name="transports[${idx}][transport_type]" class="form-select">
-                                        <option value="private_car" ${tr.type === 'private_car' ? 'selected' : ''}>Private Car</option>
-                                        <option value="bus" ${tr.type === 'bus' ? 'selected' : ''}>Bus / Coach</option>
-                                        <option value="train" ${tr.type === 'train' ? 'selected' : ''}>Train</option>
-                                        <option value="shared_van" ${tr.type === 'shared_van' ? 'selected' : ''}>Shared Van</option>
-                                        <option value="taxi" ${tr.type === 'taxi' ? 'selected' : ''}>Taxi</option>
-                                        <option value="flight" ${tr.type === 'flight' ? 'selected' : ''}>Flight</option>
-                                    </select></div>
-                                    <div class="col-md-4"><select name="transports[${idx}][supplier_id]" class="form-select">${suppliersOptions}</select></div>
-                                    <div class="col-md-2"><input type="number" step="0.0001" name="transports[${idx}][roe]" class="form-control transport-roe" placeholder="1.00" value="1"></div>
-                                    <div class="col-md-3"><input type="number" step="0.01" name="transports[${idx}][cost_rate]" class="form-control transport-cost-rate" placeholder="Cost Rate" value="0"></div>
-                                    <div class="col-md-3"><input type="number" step="0.01" name="transports[${idx}][cost_amount]" class="form-control transport-cost-amount bg-light" placeholder="0.00" value="0" readonly></div>
-                                    <div class="col-md-3"><input type="number" step="0.01" name="transports[${idx}][selling_rate]" class="form-control transport-sell-rate" placeholder="Sell Rate" value="0"></div>
-                                    <div class="col-md-3"><input type="number" step="0.01" name="transports[${idx}][selling_amount]" class="form-control transport-sell-amount bg-light" placeholder="0.00" value="0" readonly></div>
-                                    <div class="col-md-6"><input type="text" name="transports[${idx}][notes]" class="form-control" value="${tr.vehicle || ''}" placeholder="Optional Notes"></div>
-                                    <div class="col-md-6"><input type="file" name="transports[${idx}][transport_ticket]" class="form-control" accept="image/*,.pdf"></div>
-                                </div>
-                            </div>
-                        `);
-                    });
-                }
-            }
-
+            syncBookingHotelDates();
             calcTotal();
         }
 
@@ -1478,35 +1573,42 @@
                     <div class="person-card" id="person_card_${i}">
                         <div class="mb-2"><strong class="text-primary" style="font-size:13px;">Passenger ${i + 1}</strong></div>
                         <div class="row g-2">
-                            <div class="col-md-3"><label class="form-label" style="font-size:12px;">Haji ID </label>
-                                <input type="text" name="persons[${i}][haji_id]" class="form-control form-control-sm" placeholder="e.g. H-00123"></div>
-                            <div class="col-md-3"><label class="form-label" style="font-size:12px;">Surname</label>
+                            <div class="col-md-3"><label class="form-label" style="font-size:12px;">Surname (Passport)</label>
                                 <input type="text" name="persons[${i}][surname]" id="person_surname_${i}" class="form-control form-control-sm" oninput="updatePersonFullName(${i})"></div>
-                            <div class="col-md-3"><label class="form-label" style="font-size:12px;">Given Name</label>
+                            <div class="col-md-3"><label class="form-label" style="font-size:12px;">Given Name (Passport)</label>
                                 <input type="text" name="persons[${i}][given_name]" id="person_given_name_${i}" class="form-control form-control-sm" oninput="updatePersonFullName(${i})"></div>
                             <div class="col-md-3"><label class="form-label" style="font-size:12px;">Full Name</label>
                                 <input type="text" name="persons[${i}][full_name]" id="person_name_${i}" class="form-control form-control-sm"></div>
-                            <div class="col-md-3"><label class="form-label" style="font-size:12px;">Father Name</label>
-                                <input type="text" name="persons[${i}][father_name]" class="form-control form-control-sm"></div>
                             <div class="col-md-3"><label class="form-label" style="font-size:12px;">Passport #</label>
                                 <input type="text" name="persons[${i}][passport_number]" id="person_passport_${i}" class="form-control form-control-sm"></div>
-                            <div class="col-md-3"><label class="form-label" style="font-size:12px;">DOB</label>
+                            <div class="col-md-4"><label class="form-label" style="font-size:12px;">DOB</label>
                                 <input type="date" name="persons[${i}][dob]" class="form-control form-control-sm"></div>
-                            <div class="col-md-3"><label class="form-label" style="font-size:12px;">Gender</label>
+                            <div class="col-md-4"><label class="form-label" style="font-size:12px;">Gender</label>
                                 <select name="persons[${i}][gender]" class="form-select form-select-sm">
                                     <option value="">-- Select --</option><option value="male">Male</option><option value="female">Female</option>
                                 </select></div>
-                            <div class="col-md-3"><label class="form-label" style="font-size:12px;">Blood Group</label>
-                                <select name="persons[${i}][blood_group]" class="form-select form-select-sm">
-                                    <option value="">-- Select --</option>
-                                    ${['A+','A-','B+','B-','O+','O-','AB+','AB-'].map(b => `<option value="${b}">${b}</option>`).join('')}
-                                </select></div>
-                            <div class="col-md-4"><label class="form-label" style="font-size:12px;">CNIC</label>
-                                <input type="text" name="persons[${i}][cnic]" id="person_cnic_${i}" class="form-control form-control-sm"></div>
-                            <div class="col-md-4"><label class="form-label" style="font-size:12px;">Phone</label>
-                                <input type="text" name="persons[${i}][phone]" id="person_phone_${i}" class="form-control form-control-sm"></div>
                             <div class="col-md-4"><label class="form-label" style="font-size:12px;">City</label>
-                                <input type="text" name="persons[${i}][city]" class="form-control form-control-sm"></div>
+                                <input type="text" name="persons[${i}][city]" class="form-control form-control-sm" placeholder="e.g. Lahore / Karachi"></div>
+                        </div>
+
+                        <div class="border-top mt-3 pt-3">
+                            <strong class="text-secondary d-block mb-2" style="font-size:12px;">
+                                <i class="mdi mdi-file-document-multiple me-1"></i> Documents (Optional)
+                            </strong>
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <label class="form-label" style="font-size:11px;">Passport First Page</label>
+                                    <input type="file" name="persons[${i}][passport_photo]" class="form-control form-control-sm" accept="image/*,.pdf">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label" style="font-size:11px;">Picture of Passenger</label>
+                                    <input type="file" name="persons[${i}][photo]" class="form-control form-control-sm" accept="image/*">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label" style="font-size:11px;">Medical Fitness Certificate</label>
+                                    <input type="file" name="persons[${i}][medical_certificate]" class="form-control form-control-sm" accept="image/*,.pdf">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 `);
@@ -1546,6 +1648,39 @@
             }
         }
 
+        function syncPaxInputs() {
+            const adults   = parseInt(document.getElementById('pax_adults')?.value) || 0;
+            const children = parseInt(document.getElementById('pax_children')?.value) || 0;
+            const infants  = parseInt(document.getElementById('pax_infants')?.value) || 0;
+            const pax      = Math.max(1, adults + children + infants);
+
+            if (document.getElementById('no_of_pax')) document.getElementById('no_of_pax').value = pax;
+            if (document.getElementById('bar_pax_badge')) document.getElementById('bar_pax_badge').textContent = pax;
+
+            if (document.getElementById('flight_adult_pax_label')) document.getElementById('flight_adult_pax_label').textContent = adults;
+            if (document.getElementById('flight_child_pax_label')) document.getElementById('flight_child_pax_label').textContent = children;
+            if (document.getElementById('flight_infant_pax_label')) document.getElementById('flight_infant_pax_label').textContent = infants;
+
+            rebuildPersonsList(pax);
+            rebuildVisasList(pax);
+            calculateFlight();
+            calcTotal();
+        }
+
+        document.querySelectorAll('.pax-breakdown-calc').forEach(el => {
+            el.addEventListener('input', syncPaxInputs);
+        });
+
+        document.getElementById('no_of_pax')?.addEventListener('input', function() {
+            const val = parseInt(this.value);
+            if (val >= 1) {
+                rebuildPersonsList(val);
+                rebuildVisasList(val);
+            }
+            calculateFlight();
+            calcTotal();
+        });
+
         function rebuildVisasList(newPax) {
             const container = document.getElementById('visasList');
             if (!container) return;
@@ -1555,27 +1690,31 @@
                 for (let i = currentCount - 1; i >= newPax; i--) {
                     document.getElementById('visa_card_' + i)?.remove();
                 }
+                calcTotal();
                 return;
             }
 
-            const curr = document.getElementById('booking_currency')?.value || 'PKR';
-
             for (let i = currentCount; i < newPax; i++) {
-                const v = existingVisas[i] || {};
+                const v = (typeof existingVisas !== 'undefined' && existingVisas && existingVisas[i]) ? existingVisas[i] : {};
                 const pName = document.getElementById(`person_name_${i}`)?.value || (v.given_name || '');
                 const pPass = document.getElementById(`person_passport_${i}`)?.value || (v.passport_number || '');
                 const pDob = document.getElementById(`person_dob_${i}`)?.value || (v.date_of_birth || '');
+                const defaultRoe = document.getElementById('flight_roe')?.value || 75;
+                const costRate = parseFloat(v.cost_rate) || 0;
+                const costAmt = parseFloat(v.cost_amount) || (costRate * parseFloat(defaultRoe));
+                const sellRate = parseFloat(v.selling_rate) || 0;
+                const sellAmt = parseFloat(v.selling_amount) || (sellRate * parseFloat(defaultRoe));
 
-                let supplierOptionsHtml = `<option value="">-- Select Supplier --</option>` +
+                let supOptions = `<option value="">-- Select Supplier --</option>` +
                     (typeof suppliersData !== 'undefined' ? suppliersData.map(s => `<option value="${s.id}" ${s.id == v.supplier_id ? 'selected' : ''}>${s.name}</option>`).join('') : '');
 
                 container.insertAdjacentHTML('beforeend', `
-                    <div class="visa-card" id="visa_card_${i}">
+                    <div class="visa-card border rounded p-3 mb-2 bg-white" id="visa_card_${i}">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <strong class="text-warning" style="font-size:13px;">
                                 <i class="mdi mdi-passport me-1"></i> Visa ${i + 1}: ${pName || 'Passenger ' + (i + 1)}
                             </strong>
-                            <span class="badge bg-soft-warning text-dark fs-11">Currency: <span class="curr-symbol">${curr}</span></span>
+                            <span class="badge bg-warning text-dark">${((v.status || 'pending')).toUpperCase()}</span>
                         </div>
                         <div class="row g-2 mt-1">
                             <div class="col-md-3"><label class="form-label" style="font-size:12px;">Passport #</label>
@@ -1586,7 +1725,7 @@
                                 <input type="date" name="visas[${i}][date_of_birth]" class="form-control form-control-sm" value="${pDob}"></div>
                             <div class="col-md-3"><label class="form-label" style="font-size:12px;">Visa Supplier / Vendor</label>
                                 <select name="visas[${i}][supplier_id]" class="form-select form-select-sm">
-                                    ${supplierOptionsHtml}
+                                    ${supOptions}
                                 </select></div>
                             <div class="col-md-3"><label class="form-label" style="font-size:12px;">Company</label>
                                 <input type="text" name="visas[${i}][company]" class="form-control form-control-sm" value="${v.company || ''}"></div>
@@ -1597,162 +1736,285 @@
                                     <option value="consulate" ${v.send_to === 'consulate' ? 'selected' : ''}>Consulate</option>
                                     <option value="both" ${v.send_to === 'both' ? 'selected' : ''}>Both</option>
                                 </select></div>
-                            <div class="col-md-2"><label class="form-label text-primary" style="font-size:12px;">ROE</label>
-                                <input type="number" step="0.0001" name="visas[${i}][roe]" class="form-control form-control-sm visa-roe" placeholder="1.00" value="${v.roe || 1}"></div>
-                            <div class="col-md-4"><label class="form-label" style="font-size:12px;">Visa Attachment</label>
-                                <input type="file" name="visas[${i}][visa_attachment]" class="form-control form-control-sm" accept="image/*,.pdf"></div>
-                            <div class="col-md-3"><label class="form-label text-danger" style="font-size:12px;">Cost Rate (<span class="curr-symbol">${curr}</span>)</label>
-                                <input type="number" step="0.01" name="visas[${i}][cost_rate]" class="form-control form-control-sm visa-cost-rate" placeholder="0.00" value="${v.cost_rate || 0}"></div>
-                            <div class="col-md-3"><label class="form-label text-danger" style="font-size:12px;">Cost Amount (<span class="curr-symbol">${curr}</span>)</label>
-                                <input type="number" step="0.01" name="visas[${i}][cost_amount]" class="form-control form-control-sm visa-cost-amount bg-light" placeholder="0.00" value="${v.cost_amount || 0}" readonly></div>
-                            <div class="col-md-3"><label class="form-label text-success" style="font-size:12px;">Selling Rate (<span class="curr-symbol">${curr}</span>)</label>
-                                <input type="number" step="0.01" name="visas[${i}][selling_rate]" class="form-control form-control-sm visa-sell-rate" placeholder="0.00" value="${v.selling_rate || 0}"></div>
-                            <div class="col-md-3"><label class="form-label text-success" style="font-size:12px;">Selling Amount (<span class="curr-symbol">${curr}</span>)</label>
-                                <input type="number" step="0.01" name="visas[${i}][selling_amount]" class="form-control form-control-sm visa-sell-amount bg-light" placeholder="0.00" value="${v.selling_amount || 0}" readonly></div>
+                            <div class="col-md-2"><label class="form-label text-primary fw-semibold" style="font-size:12px;">ROE</label>
+                                <input type="number" step="0.0001" name="visas[${i}][roe]" class="form-control form-control-sm visa-roe" placeholder="75.00" value="${v.roe || defaultRoe}"></div>
+                            <div class="col-md-2"><label class="form-label text-danger fw-semibold" style="font-size:12px;">Cost Rate (SAR)</label>
+                                <input type="number" step="0.01" name="visas[${i}][cost_rate]" class="form-control form-control-sm visa-cost-rate" placeholder="0.00" value="${costRate}"></div>
+                            <div class="col-md-3"><label class="form-label text-danger fw-semibold" style="font-size:12px;">Total Cost (SAR & PKR)</label>
+                                <div class="p-1 px-2 border rounded bg-light">
+                                    <div class="d-flex justify-content-between small text-danger"><span>SAR:</span><strong class="visa-cost-sar-disp">${costRate.toFixed(2)} SAR</strong></div>
+                                    <div class="d-flex justify-content-between small text-danger"><span>PKR:</span><strong class="visa-cost-pkr-disp">${costAmt.toFixed(2)} PKR</strong></div>
+                                </div>
+                                <input type="hidden" name="visas[${i}][cost_amount]" class="visa-cost-amount" value="${costAmt.toFixed(2)}"></div>
+                            <div class="col-md-2"><label class="form-label text-success fw-semibold" style="font-size:12px;">Sell Rate (SAR)</label>
+                                <input type="number" step="0.01" name="visas[${i}][selling_rate]" class="form-control form-control-sm visa-sell-rate" placeholder="0.00" value="${sellRate}"></div>
+                            <div class="col-md-3"><label class="form-label text-success fw-semibold" style="font-size:12px;">Total Sell (SAR & PKR)</label>
+                                <div class="p-1 px-2 border rounded bg-light">
+                                    <div class="d-flex justify-content-between small text-success"><span>SAR:</span><strong class="visa-sell-sar-disp">${sellRate.toFixed(2)} SAR</strong></div>
+                                    <div class="d-flex justify-content-between small text-success"><span>PKR:</span><strong class="visa-sell-pkr-disp">${sellAmt.toFixed(2)} PKR</strong></div>
+                                </div>
+                                <input type="hidden" name="visas[${i}][selling_amount]" class="visa-sell-amount" value="${sellAmt.toFixed(2)}"></div>
                             <div class="col-md-3"><label class="form-label" style="font-size:12px;">Status</label>
                                 <select name="visas[${i}][status]" class="form-select form-select-sm">
                                     <option value="pending" ${(v.status || 'pending') === 'pending' ? 'selected' : ''}>Pending</option>
-                                    <option value="submitted" ${v.status === 'submitted' ? 'selected' : ''}>Submitted</option>
+                                    <option value="applied" ${v.status === 'applied' ? 'selected' : ''}>Applied</option>
                                     <option value="approved" ${v.status === 'approved' ? 'selected' : ''}>Approved</option>
                                     <option value="rejected" ${v.status === 'rejected' ? 'selected' : ''}>Rejected</option>
                                 </select></div>
+                            <div class="col-md-6"><label class="form-label" style="font-size:12px;">Visa Attachment</label>
+                                <input type="file" name="visas[${i}][visa_attachment]" class="form-control form-control-sm" accept="image/*,.pdf"></div>
                         </div>
                     </div>
                 `);
             }
+            calcTotal();
         }
 
-        document.getElementById('no_of_pax').addEventListener('input', function() {
-            const val = parseInt(this.value);
-            if (val >= 1) {
-                rebuildPersonsList(val);
-                rebuildVisasList(val);
-            }
+        // Flight Calculation (SAR & PKR for Adult, Child, Infant)
+        function calculateFlight() {
+            const adults   = parseInt(document.getElementById('pax_adults')?.value) || 0;
+            const children = parseInt(document.getElementById('pax_children')?.value) || 0;
+            const infants  = parseInt(document.getElementById('pax_infants')?.value) || 0;
+
+            const roe = parseFloat(document.getElementById('flight_roe')?.value) || 75;
+
+            const adultCostSar = parseFloat(document.getElementById('flight_adult_cost')?.value) || 0;
+            const adultSellSar = parseFloat(document.getElementById('flight_adult_sell')?.value) || 0;
+
+            const childCostSar = parseFloat(document.getElementById('flight_child_cost')?.value) || 0;
+            const childSellSar = parseFloat(document.getElementById('flight_child_sell')?.value) || 0;
+
+            const infantCostSar = parseFloat(document.getElementById('flight_infant_cost')?.value) || 0;
+            const infantSellSar = parseFloat(document.getElementById('flight_infant_sell')?.value) || 0;
+
+            const totalAdultCostSar = adults * adultCostSar;
+            const totalAdultSellSar = adults * adultSellSar;
+
+            const totalChildCostSar = children * childCostSar;
+            const totalChildSellSar = children * childSellSar;
+
+            const totalInfantCostSar = infants * infantCostSar;
+            const totalInfantSellSar = infants * infantSellSar;
+
+            const totalCostSar = totalAdultCostSar + totalChildCostSar + totalInfantCostSar;
+            const totalSellSar = totalAdultSellSar + totalChildSellSar + totalInfantSellSar;
+
+            const totalCostPkr = totalCostSar * roe;
+            const totalSellPkr = totalSellSar * roe;
+
+            // Badges / Pax labels
+            const adultBadge = document.getElementById('flight_adult_pax_label');
+            if (adultBadge) adultBadge.textContent = adults;
+            const childBadge = document.getElementById('flight_child_pax_label');
+            if (childBadge) childBadge.textContent = children;
+            const infantBadge = document.getElementById('flight_infant_pax_label');
+            if (infantBadge) infantBadge.textContent = infants;
+
+            // Row displays
+            const elAdultCostDisp = document.getElementById('flight_adult_cost_sar_disp');
+            if (elAdultCostDisp) elAdultCostDisp.textContent = totalAdultCostSar.toFixed(2);
+            const elAdultSellDisp = document.getElementById('flight_adult_sell_sar_disp');
+            if (elAdultSellDisp) elAdultSellDisp.textContent = totalAdultSellSar.toFixed(2);
+
+            const elChildCostDisp = document.getElementById('flight_child_cost_sar_disp');
+            if (elChildCostDisp) elChildCostDisp.textContent = totalChildCostSar.toFixed(2);
+            const elChildSellDisp = document.getElementById('flight_child_sell_sar_disp');
+            if (elChildSellDisp) elChildSellDisp.textContent = totalChildSellSar.toFixed(2);
+
+            const elInfantCostDisp = document.getElementById('flight_infant_cost_sar_disp');
+            if (elInfantCostDisp) elInfantCostDisp.textContent = totalInfantCostSar.toFixed(2);
+            const elInfantSellDisp = document.getElementById('flight_infant_sell_sar_disp');
+            if (elInfantSellDisp) elInfantSellDisp.textContent = totalInfantSellSar.toFixed(2);
+
+            // Summary cards
+            const elCostSarTot = document.getElementById('flight_cost_sar_total');
+            if (elCostSarTot) elCostSarTot.textContent = totalCostSar.toFixed(2) + ' SAR';
+            const elCostPkrTot = document.getElementById('flight_cost_pkr_total');
+            if (elCostPkrTot) elCostPkrTot.textContent = totalCostPkr.toFixed(2) + ' PKR';
+            const elSellSarTot = document.getElementById('flight_sell_sar_total');
+            if (elSellSarTot) elSellSarTot.textContent = totalSellSar.toFixed(2) + ' SAR';
+            const elSellPkrTot = document.getElementById('flight_sell_pkr_total');
+            if (elSellPkrTot) elSellPkrTot.textContent = totalSellPkr.toFixed(2) + ' PKR';
+
+            // Backend compatibility hidden inputs
+            const elCost = document.getElementById('flight_cost');
+            if (elCost) elCost.value = totalCostPkr.toFixed(2);
+            const elCharges = document.getElementById('flight_charges');
+            if (elCharges) elCharges.value = totalSellPkr.toFixed(2);
+            const elChargesDisp = document.getElementById('flight_charges_disp');
+            if (elChargesDisp) elChargesDisp.value = totalSellPkr.toFixed(2);
+            const elCostRate = document.getElementById('flight_cost_rate');
+            if (elCostRate) elCostRate.value = totalCostSar.toFixed(2);
+            const elSellRate = document.getElementById('flight_selling_rate');
+            if (elSellRate) elSellRate.value = totalSellSar.toFixed(2);
+
             calcTotal();
-        });
+        }
 
-        let hotelIdx = {{ $booking->hotels->count() ?: 2 }};
+        // Hotels Dynamic Management
+        let hotelIdx = {{ $booking->hotels->count() ?: 1 }};
 
-        document.getElementById('addHotel').addEventListener('click', function() {
-            const curr = document.getElementById('booking_currency')?.value || 'PKR';
-            document.getElementById('hotelsList').insertAdjacentHTML('beforeend', `
-                <div class="hotel-block border rounded p-3 mb-3">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="text-primary mb-0"><i class="mdi mdi-hotel me-1"></i> Additional Hotel</h6>
-                        <button type="button" class="btn btn-outline-danger btn-sm remove-hotel">× Remove</button>
+        function addNewHotel(loc = 'makkah') {
+            const noHotelAlert = document.getElementById('noHotelAlert');
+            if (noHotelAlert) noHotelAlert.style.display = 'none';
+
+            let locLabel = 'Makkah Hotel';
+            let locVal = 'makkah';
+            if (loc === 'madinah') { locLabel = 'Madinah Hotel'; locVal = 'madinah'; }
+            else if (loc === 'other') { locLabel = 'Other Hotel'; locVal = 'other'; }
+            else if (loc === 'jeddah') { locLabel = 'Jeddah Hotel'; locVal = 'jeddah'; }
+
+            const defaultRoe = document.getElementById('flight_roe')?.value || 75;
+
+            const html = `
+            <div class="hotel-block border rounded p-3 mb-3 bg-white shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+                    <h6 class="text-primary mb-0 fw-bold"><i class="mdi mdi-hotel me-1"></i> ${locLabel}</h6>
+                    <button type="button" class="btn btn-outline-danger btn-sm remove-hotel"><i class="mdi mdi-delete-outline me-1"></i> Remove</button>
+                </div>
+                <input type="hidden" name="hotels[${hotelIdx}][location]" value="${locVal}">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Hotel Name</label>
+                        <select name="hotels[${hotelIdx}][hotel_name]" class="form-select hotel-name-select">
+                            ${hotelsOptions}
+                        </select>
                     </div>
-                    <div class="row g-3">
-                        <div class="col-md-4"><label class="form-label">Location</label>
-                            <select name="hotels[${hotelIdx}][location]" class="form-select">
-                                <option value="makkah">Makkah</option><option value="madinah">Madinah</option><option value="other">Other</option>
-                            </select></div>
-                        <div class="col-md-4"><label class="form-label">Hotel Name</label>
-                            <select name="hotels[${hotelIdx}][hotel_name]" class="form-select hotel-name-select">
-                                <option value="">Select Hotel</option>
-                                ${hotelsData.map(h => `<option value="${h.name}">${h.name} (${h.city || h.place || ''})</option>`).join('')}
-                            </select></div>
-                        <div class="col-md-4"><label class="form-label">Hotel Supplier / Vendor</label>
-                            <select name="hotels[${hotelIdx}][supplier_id]" class="form-select">
-                                ${suppliersOptions}
-                            </select></div>
-                        <div class="col-md-2"><label class="form-label text-primary">ROE</label>
-                            <input type="number" step="0.0001" name="hotels[${hotelIdx}][roe]" class="form-control hotel-roe" value="1" placeholder="1.00"></div>
-                        <div class="col-md-2"><label class="form-label">Room Type</label>
-                            <select name="hotels[${hotelIdx}][room_type]" class="form-select">
-                                <option value="single">Single</option><option value="double" selected>Double</option><option value="triple">Triple</option>
-                                <option value="quad">Quad</option><option value="sharing">Sharing</option><option value="suite">Suite</option>
-                            </select></div>
-                        <div class="col-md-2"><label class="form-label">Nights</label>
-                            <input type="number" name="hotels[${hotelIdx}][no_of_nights]" class="form-control hotel-nights" value="1" min="1"></div>
-                        <div class="col-md-2"><label class="form-label">No. of Rooms</label>
-                            <input type="number" name="hotels[${hotelIdx}][no_of_rooms]" class="form-control hotel-rooms" value="1" min="1"></div>
-                        <div class="col-md-2"><label class="form-label">Hotel Room #</label>
-                            <input type="text" name="hotels[${hotelIdx}][room_number]" class="form-control hotel-room-number-input" placeholder="e.g. 402 / 505"></div>
-                        <div class="col-md-3"><label class="form-label">Check In</label>
-                            <input type="date" name="hotels[${hotelIdx}][check_in]" class="form-control hotel-checkin"></div>
-                        <div class="col-md-3"><label class="form-label">Check Out</label>
-                            <input type="date" name="hotels[${hotelIdx}][check_out]" class="form-control hotel-checkout"></div>
-                        <div class="col-md-3"><label class="form-label">Cost Rate / Night (<span class="curr-symbol">${curr}</span>)</label>
-                            <input type="number" step="0.01" name="hotels[${hotelIdx}][cost_per_night]" class="form-control hotel-cost-rate" placeholder="0.00" value="0"></div>
-                        <div class="col-md-3"><label class="form-label text-danger">Total Hotel Cost (<span class="curr-symbol">${curr}</span>)</label>
-                            <input type="number" step="0.01" name="hotels[${hotelIdx}][cost_amount]" class="form-control hotel-cost-total bg-light" placeholder="0.00" value="0" readonly></div>
-                        <div class="col-md-3"><label class="form-label">Sell Rate / Night (<span class="curr-symbol">${curr}</span>)</label>
-                            <input type="number" step="0.01" name="hotels[${hotelIdx}][selling_per_night]" class="form-control hotel-sell-rate" placeholder="0.00" value="0"></div>
-                        <div class="col-md-3"><label class="form-label text-success">Total Hotel Sell (<span class="curr-symbol">${curr}</span>)</label>
-                            <input type="number" step="0.01" name="hotels[${hotelIdx}][selling_amount]" class="form-control hotel-sell-total bg-light" placeholder="0.00" value="0" readonly></div>
-                        <div class="col-md-6"><label class="form-label">Hotel Voucher</label>
-                            <input type="file" name="hotels[${hotelIdx}][hotel_voucher]" class="form-control" accept="image/*,.pdf"></div>
+                    <div class="col-md-4">
+                        <label class="form-label d-flex justify-content-between align-items-center mb-1">
+                            <span>Hotel Supplier / Vendor</span>
+                            <button type="button" class="btn btn-xs btn-link text-primary p-0 text-decoration-none" onclick="refreshSuppliersList(true)" title="Reload Suppliers"><i class="mdi mdi-refresh"></i> Refresh</button>
+                        </label>
+                        <select name="hotels[${hotelIdx}][supplier_id]" class="form-select">
+                            ${suppliersOptions}
+                        </select>
                     </div>
-                </div>`);
+                    <div class="col-md-4">
+                        <label class="form-label text-primary fw-semibold">ROE (SAR to PKR)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">1 SAR =</span>
+                            <input type="number" step="0.0001" name="hotels[${hotelIdx}][roe]" class="form-control hotel-roe" value="${defaultRoe}" placeholder="75.00">
+                            <span class="input-group-text">PKR</span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">Room Type</label>
+                        <select name="hotels[${hotelIdx}][room_type]" class="form-select">
+                            <option value="single">Single</option>
+                            <option value="double" selected>Double</option>
+                            <option value="triple">Triple</option>
+                            <option value="quad">Quad</option>
+                            <option value="sharing">Sharing</option>
+                            <option value="suite">Suite</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Nights</label>
+                        <input type="number" name="hotels[${hotelIdx}][no_of_nights]" class="form-control hotel-nights" value="1" min="1">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">No. of Rooms</label>
+                        <input type="number" name="hotels[${hotelIdx}][no_of_rooms]" class="form-control hotel-rooms" value="1" min="1">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Hotel Room #</label>
+                        <input type="text" name="hotels[${hotelIdx}][room_number]" class="form-control hotel-room-number-input" placeholder="e.g. 402 / 505">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Check In</label>
+                        <input type="date" name="hotels[${hotelIdx}][check_in]" class="form-control hotel-checkin">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Check Out</label>
+                        <input type="date" name="hotels[${hotelIdx}][check_out]" class="form-control hotel-checkout">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label text-danger fw-semibold">Cost Rate / Night (SAR)</label>
+                        <input type="number" step="0.01" name="hotels[${hotelIdx}][cost_per_night]" class="form-control hotel-cost-rate" placeholder="0.00" value="0">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-danger fw-semibold">Total Cost (SAR & PKR)</label>
+                        <div class="p-1 px-2 border rounded bg-light">
+                            <div class="d-flex justify-content-between small text-danger"><span>SAR:</span><strong class="hotel-cost-sar-disp">0.00 SAR</strong></div>
+                            <div class="d-flex justify-content-between small text-danger"><span>PKR:</span><strong class="hotel-cost-pkr-disp">0.00 PKR</strong></div>
+                        </div>
+                        <input type="hidden" name="hotels[${hotelIdx}][cost_amount]" class="hotel-cost-total" value="0">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label text-success fw-semibold">Sell Rate / Night (SAR)</label>
+                        <input type="number" step="0.01" name="hotels[${hotelIdx}][selling_per_night]" class="form-control hotel-sell-rate" placeholder="0.00" value="0">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-success fw-semibold">Total Sell (SAR & PKR)</label>
+                        <div class="p-1 px-2 border rounded bg-light">
+                            <div class="d-flex justify-content-between small text-success"><span>SAR:</span><strong class="hotel-sell-sar-disp">0.00 SAR</strong></div>
+                            <div class="d-flex justify-content-between small text-success"><span>PKR:</span><strong class="hotel-sell-pkr-disp">0.00 PKR</strong></div>
+                        </div>
+                        <input type="hidden" name="hotels[${hotelIdx}][selling_amount]" class="hotel-sell-total" value="0">
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label">Hotel Voucher / Booking Confirmation</label>
+                        <input type="file" name="hotels[${hotelIdx}][hotel_voucher]" class="form-control" accept="image/*,.pdf">
+                    </div>
+                </div>
+            </div>`;
+
+            document.getElementById('hotelsList').insertAdjacentHTML('beforeend', html);
             hotelIdx++;
+            syncBookingHotelDates();
+            const lastRow = document.querySelector('#hotelsList .hotel-block:last-child');
+            if (lastRow) calculateHotelRow(lastRow);
+            calcTotal();
+        }
+
+        document.getElementById('addHotel')?.addEventListener('click', function() {
+            addNewHotel('other');
         });
 
-        document.getElementById('hotelsList').addEventListener('click', function(e) {
-            if (e.target.classList.contains('remove-hotel')) {
+        document.getElementById('hotelsList')?.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-hotel') || e.target.closest('.remove-hotel')) {
                 e.target.closest('.hotel-block').remove();
-                let totalHotelSelling = 0;
-                document.querySelectorAll('.hotel-sell-total').forEach(el => {
-                    totalHotelSelling += parseFloat(el.value) || 0;
-                });
-                if (document.getElementById('hotel_charges')) {
-                    document.getElementById('hotel_charges').value = totalHotelSelling.toFixed(2);
+                if (document.querySelectorAll('#hotelsList .hotel-block').length === 0) {
+                    const noHotelAlert = document.getElementById('noHotelAlert');
+                    if (noHotelAlert) noHotelAlert.style.display = '';
                 }
+                syncBookingHotelDates();
                 calcTotal();
             }
         });
 
-        let routeIdx = {{ $booking->transports->count() ?: 1 }};
-
-        document.getElementById('addRoute').addEventListener('click', function() {
-            const curr = document.getElementById('booking_currency')?.value || 'PKR';
-            document.getElementById('routesList').insertAdjacentHTML('beforeend', `
-                <div class="route-block border rounded p-3 mb-2">
-                    <div class="d-flex justify-content-end mb-1">
-                        <button type="button" class="btn btn-outline-danger btn-sm remove-route">×</button>
-                    </div>
-                    <div class="row g-3">
-                        <div class="col-md-3"><label class="form-label">Route</label><input type="text" name="transports[${routeIdx}][route]" class="form-control" placeholder="Route"></div>
-                        <div class="col-md-3"><label class="form-label">Transport Type</label><select name="transports[${routeIdx}][transport_type]" class="form-select">
-                            <option value="private_car">Private Car</option><option value="bus">Bus / Coach</option>
-                            <option value="train">Train</option><option value="shared_van">Shared Van</option>
-                            <option value="taxi">Taxi</option><option value="flight">Flight</option>
-                        </select></div>
-                        <div class="col-md-4"><label class="form-label">Transport Supplier / Vendor</label><select name="transports[${routeIdx}][supplier_id]" class="form-select">
-                            ${suppliersOptions}
-                        </select></div>
-                        <div class="col-md-2"><label class="form-label text-primary">ROE</label><input type="number" step="0.0001" name="transports[${routeIdx}][roe]" class="form-control transport-roe" placeholder="1.00" value="1"></div>
-                        <div class="col-md-3"><label class="form-label text-danger">Cost Rate (<span class="curr-symbol">${curr}</span>)</label><input type="number" step="0.01" name="transports[${routeIdx}][cost_rate]" class="form-control transport-cost-rate" placeholder="0.00" value="0"></div>
-                        <div class="col-md-3"><label class="form-label text-danger">Total Cost Amount (<span class="curr-symbol">${curr}</span>)</label><input type="number" step="0.01" name="transports[${routeIdx}][cost_amount]" class="form-control transport-cost-amount bg-light" placeholder="0.00" value="0" readonly></div>
-                        <div class="col-md-3"><label class="form-label text-success">Selling Rate (<span class="curr-symbol">${curr}</span>)</label><input type="number" step="0.01" name="transports[${routeIdx}][selling_rate]" class="form-control transport-sell-rate" placeholder="0.00" value="0"></div>
-                        <div class="col-md-3"><label class="form-label text-success">Total Selling Amount (<span class="curr-symbol">${curr}</span>)</label><input type="number" step="0.01" name="transports[${routeIdx}][selling_amount]" class="form-control transport-sell-amount bg-light" placeholder="0.00" value="0" readonly></div>
-                        <div class="col-md-6"><label class="form-label">Notes</label><input type="text" name="transports[${routeIdx}][notes]" class="form-control" placeholder="Optional"></div>
-                        <div class="col-md-6"><label class="form-label">Transport Ticket / Receipt</label><input type="file" name="transports[${routeIdx}][transport_ticket]" class="form-control" accept="image/*,.pdf"></div>
-                    </div>
-                </div>`);
-            routeIdx++;
-        });
-
-        document.getElementById('routesList').addEventListener('click', function(e) {
-            if (e.target.classList.contains('remove-route')) {
-                e.target.closest('.route-block').remove();
-                calculateAllTransports();
-            }
-        });
-
-        // Calculate hotel row costs and sells
         function calculateHotelRow(row) {
             if (!row) return;
             const nights = parseFloat(row.querySelector('.hotel-nights')?.value) || 0;
             const rooms = parseFloat(row.querySelector('.hotel-rooms')?.value) || 0;
-            const roe = parseFloat(row.querySelector('.hotel-roe')?.value) || 1;
+            const roe = parseFloat(row.querySelector('.hotel-roe')?.value) || 75;
             const costRate = parseFloat(row.querySelector('.hotel-cost-rate')?.value) || 0;
             const sellRate = parseFloat(row.querySelector('.hotel-sell-rate')?.value) || 0;
 
+            const costSar = nights * rooms * costRate;
+            const costPkr = costSar * roe;
+            const sellSar = nights * rooms * sellRate;
+            const sellPkr = sellSar * roe;
+
+            const costSarDisp = row.querySelector('.hotel-cost-sar-disp');
+            const costPkrDisp = row.querySelector('.hotel-cost-pkr-disp');
             const costTotalInput = row.querySelector('.hotel-cost-total');
+
+            const sellSarDisp = row.querySelector('.hotel-sell-sar-disp');
+            const sellPkrDisp = row.querySelector('.hotel-sell-pkr-disp');
             const sellTotalInput = row.querySelector('.hotel-sell-total');
 
-            if (costTotalInput) costTotalInput.value = (nights * rooms * costRate * roe).toFixed(2);
-            if (sellTotalInput) sellTotalInput.value = (nights * rooms * sellRate * roe).toFixed(2);
+            if (costSarDisp) costSarDisp.textContent = costSar.toFixed(2) + ' SAR';
+            if (costPkrDisp) costPkrDisp.textContent = costPkr.toFixed(2) + ' PKR';
+            if (costTotalInput) costTotalInput.value = costPkr.toFixed(2);
+
+            if (sellSarDisp) sellSarDisp.textContent = sellSar.toFixed(2) + ' SAR';
+            if (sellPkrDisp) sellPkrDisp.textContent = sellPkr.toFixed(2) + ' PKR';
+            if (sellTotalInput) sellTotalInput.value = sellPkr.toFixed(2);
 
             let totalHotelSelling = 0;
             document.querySelectorAll('.hotel-sell-total').forEach(el => {
@@ -1764,41 +2026,89 @@
             calcTotal();
         }
 
-        // Calculate visa row costs and sells
-        function calculateVisaRow(row) {
-            if (!row) return;
-            const roe = parseFloat(row.querySelector('.visa-roe')?.value) || 1;
-            const costRate = parseFloat(row.querySelector('.visa-cost-rate')?.value) || 0;
-            const sellRate = parseFloat(row.querySelector('.visa-sell-rate')?.value) || 0;
+        // Transports Dynamic Management
+        let routeIdx = {{ $booking->transports->count() ?: 1 }};
 
-            const costAmtInput = row.querySelector('.visa-cost-amount');
-            const sellAmtInput = row.querySelector('.visa-sell-amount');
+        document.getElementById('addRoute')?.addEventListener('click', function() {
+            document.getElementById('routesList').insertAdjacentHTML('beforeend', `
+                <div class="route-block border rounded p-3 mb-2 bg-white">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-muted small">Route</span>
+                        <button type="button" class="btn btn-outline-danger btn-sm remove-route">×</button>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-3"><label class="form-label">Route</label>
+                            <input type="text" name="transports[${routeIdx}][route]" class="form-control" placeholder="Route"></div>
+                        <div class="col-md-3"><label class="form-label">Transport Type</label>
+                            <select name="transports[${routeIdx}][transport_type]" class="form-select">
+                                <option value="private_car">Private Car</option><option value="bus">Bus / Coach</option>
+                                <option value="train">Train</option><option value="shared_van">Shared Van</option>
+                                <option value="taxi">Taxi</option><option value="flight">Flight</option>
+                            </select></div>
+                        <div class="col-md-4"><label class="form-label">Transport Supplier / Vendor</label>
+                            <select name="transports[${routeIdx}][supplier_id]" class="form-select">
+                                ${suppliersOptions}
+                            </select></div>
+                        <div class="col-md-2"><label class="form-label text-primary fw-semibold">ROE</label>
+                            <input type="number" step="0.0001" name="transports[${routeIdx}][roe]" class="form-control transport-roe" placeholder="75.00" value="75"></div>
+                        <div class="col-md-2"><label class="form-label text-danger fw-semibold">Cost Rate (SAR)</label>
+                            <input type="number" step="0.01" name="transports[${routeIdx}][cost_rate]" class="form-control transport-cost-rate" placeholder="0.00" value="0"></div>
+                        <div class="col-md-3"><label class="form-label text-danger fw-semibold">Total Cost (SAR & PKR)</label>
+                            <div class="p-1 px-2 border rounded bg-light">
+                                <div class="d-flex justify-content-between small text-danger"><span>SAR:</span><strong class="transport-cost-sar-disp">0.00 SAR</strong></div>
+                                <div class="d-flex justify-content-between small text-danger"><span>PKR:</span><strong class="transport-cost-pkr-disp">0.00 PKR</strong></div>
+                            </div>
+                            <input type="hidden" name="transports[${routeIdx}][cost_amount]" class="transport-cost-amount" value="0"></div>
+                        <div class="col-md-2"><label class="form-label text-success fw-semibold">Sell Rate (SAR)</label>
+                            <input type="number" step="0.01" name="transports[${routeIdx}][selling_rate]" class="form-control transport-sell-rate" placeholder="0.00" value="0"></div>
+                        <div class="col-md-3"><label class="form-label text-success fw-semibold">Total Sell (SAR & PKR)</label>
+                            <div class="p-1 px-2 border rounded bg-light">
+                                <div class="d-flex justify-content-between small text-success"><span>SAR:</span><strong class="transport-sell-sar-disp">0.00 SAR</strong></div>
+                                <div class="d-flex justify-content-between small text-success"><span>PKR:</span><strong class="transport-sell-pkr-disp">0.00 PKR</strong></div>
+                            </div>
+                            <input type="hidden" name="transports[${routeIdx}][selling_amount]" class="transport-sell-amount" value="0"></div>
+                        <div class="col-md-6"><label class="form-label">Notes</label>
+                            <input type="text" name="transports[${routeIdx}][notes]" class="form-control" placeholder="Notes"></div>
+                        <div class="col-md-6"><label class="form-label">Transport Ticket / Receipt</label>
+                            <input type="file" name="transports[${routeIdx}][transport_ticket]" class="form-control" accept="image/*,.pdf"></div>
+                    </div>
+                </div>`);
+            routeIdx++;
+        });
 
-            if (costAmtInput) costAmtInput.value = (costRate * roe).toFixed(2);
-            if (sellAmtInput) sellAmtInput.value = (sellRate * roe).toFixed(2);
-
-            let totalVisaSelling = 0;
-            document.querySelectorAll('.visa-sell-amount').forEach(el => {
-                totalVisaSelling += parseFloat(el.value) || 0;
-            });
-            if (document.getElementById('visa_charges')) {
-                document.getElementById('visa_charges').value = totalVisaSelling.toFixed(2);
+        document.getElementById('routesList')?.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-route') || e.target.closest('.remove-route')) {
+                e.target.closest('.route-block').remove();
+                calculateAllTransports();
             }
-            calcTotal();
-        }
+        });
 
-        // Calculate transport row costs and sells
         function calculateTransportRow(row) {
             if (!row) return;
-            const roe = parseFloat(row.querySelector('.transport-roe')?.value) || 1;
+            const roe = parseFloat(row.querySelector('.transport-roe')?.value) || 75;
             const costRate = parseFloat(row.querySelector('.transport-cost-rate')?.value) || 0;
             const sellRate = parseFloat(row.querySelector('.transport-sell-rate')?.value) || 0;
 
+            const costSar = costRate;
+            const costPkr = costSar * roe;
+            const sellSar = sellRate;
+            const sellPkr = sellSar * roe;
+
+            const costSarDisp = row.querySelector('.transport-cost-sar-disp');
+            const costPkrDisp = row.querySelector('.transport-cost-pkr-disp');
             const costAmtInput = row.querySelector('.transport-cost-amount');
+
+            const sellSarDisp = row.querySelector('.transport-sell-sar-disp');
+            const sellPkrDisp = row.querySelector('.transport-sell-pkr-disp');
             const sellAmtInput = row.querySelector('.transport-sell-amount');
 
-            if (costAmtInput) costAmtInput.value = (costRate * roe).toFixed(2);
-            if (sellAmtInput) sellAmtInput.value = (sellRate * roe).toFixed(2);
+            if (costSarDisp) costSarDisp.textContent = costSar.toFixed(2) + ' SAR';
+            if (costPkrDisp) costPkrDisp.textContent = costPkr.toFixed(2) + ' PKR';
+            if (costAmtInput) costAmtInput.value = costPkr.toFixed(2);
+
+            if (sellSarDisp) sellSarDisp.textContent = sellSar.toFixed(2) + ' SAR';
+            if (sellPkrDisp) sellPkrDisp.textContent = sellPkr.toFixed(2) + ' PKR';
+            if (sellAmtInput) sellAmtInput.value = sellPkr.toFixed(2);
 
             calculateAllTransports();
         }
@@ -1814,48 +2124,43 @@
             calcTotal();
         }
 
-        // Flight Cost & Selling Calculation
-        function calculateFlight() {
-            const roe = parseFloat(document.getElementById('flight_roe')?.value) || 1;
-            const costRate = parseFloat(document.getElementById('flight_cost_rate')?.value) || 0;
-            const sellRate = parseFloat(document.getElementById('flight_selling_rate')?.value) || 0;
+        function calculateVisaRow(row) {
+            if (!row) return;
+            const roe = parseFloat(row.querySelector('.visa-roe')?.value) || 75;
+            const costRate = parseFloat(row.querySelector('.visa-cost-rate')?.value) || 0;
+            const sellRate = parseFloat(row.querySelector('.visa-sell-rate')?.value) || 0;
 
-            const totalCost = costRate * roe;
-            const totalSell = sellRate * roe;
+            const costSar = costRate;
+            const costPkr = costSar * roe;
+            const sellSar = sellRate;
+            const sellPkr = sellSar * roe;
 
-            if (document.getElementById('flight_cost')) {
-                document.getElementById('flight_cost').value = totalCost.toFixed(2);
-            }
-            if (document.getElementById('flight_charges')) {
-                document.getElementById('flight_charges').value = totalSell.toFixed(2);
-            }
-            if (document.getElementById('flight_charges_disp')) {
-                document.getElementById('flight_charges_disp').value = totalSell.toFixed(2);
-            }
+            const costSarDisp = row.querySelector('.visa-cost-sar-disp');
+            const costPkrDisp = row.querySelector('.visa-cost-pkr-disp');
+            const costAmtInput = row.querySelector('.visa-cost-amount');
 
+            const sellSarDisp = row.querySelector('.visa-sell-sar-disp');
+            const sellPkrDisp = row.querySelector('.visa-sell-pkr-disp');
+            const sellAmtInput = row.querySelector('.visa-sell-amount');
+
+            if (costSarDisp) costSarDisp.textContent = costSar.toFixed(2) + ' SAR';
+            if (costPkrDisp) costPkrDisp.textContent = costPkr.toFixed(2) + ' PKR';
+            if (costAmtInput) costAmtInput.value = costPkr.toFixed(2);
+
+            if (sellSarDisp) sellSarDisp.textContent = sellSar.toFixed(2) + ' SAR';
+            if (sellPkrDisp) sellPkrDisp.textContent = sellPkr.toFixed(2) + ' PKR';
+            if (sellAmtInput) sellAmtInput.value = sellPkr.toFixed(2);
+
+            let totalVisaSelling = 0;
+            document.querySelectorAll('.visa-sell-amount').forEach(el => {
+                totalVisaSelling += parseFloat(el.value) || 0;
+            });
+            if (document.getElementById('visa_charges')) {
+                document.getElementById('visa_charges').value = totalVisaSelling.toFixed(2);
+            }
             calcTotal();
         }
 
-        document.getElementById('flight_roe')?.addEventListener('input', calculateFlight);
-        document.getElementById('flight_cost_rate')?.addEventListener('input', calculateFlight);
-        document.getElementById('flight_selling_rate')?.addEventListener('input', calculateFlight);
-
-        document.addEventListener('input', function(e) {
-            if (e.target.matches('.hotel-nights, .hotel-rooms, .hotel-roe, .hotel-cost-rate, .hotel-sell-rate')) {
-                const row = e.target.closest('.hotel-block');
-                calculateHotelRow(row);
-            }
-            if (e.target.matches('.visa-roe, .visa-cost-rate, .visa-sell-rate')) {
-                const row = e.target.closest('.visa-card');
-                calculateVisaRow(row);
-            }
-            if (e.target.matches('.transport-roe, .transport-cost-rate, .transport-sell-rate')) {
-                const row = e.target.closest('.route-block');
-                calculateTransportRow(row);
-            }
-        });
-
-        // Hotel Date Sequential Chaining
         function syncBookingHotelDates() {
             const hotelBlocks = Array.from(document.querySelectorAll('.hotel-block'));
             let prevCheckoutDate = null;
@@ -1897,7 +2202,6 @@
             });
         }
 
-        // Handle hotel date calculation & night count
         function handleHotelDateCalc(target) {
             const row = target.closest('.hotel-block');
             if (!row) return;
@@ -1945,175 +2249,242 @@
             calculateHotelRow(row);
         }
 
-        document.addEventListener('input', function(e) {
-            if (e.target.matches('input[name*="[check_in]"], input[name*="[check_out]"], input[name*="[no_of_nights]"]')) {
-                handleHotelDateCalc(e.target);
-            }
-        });
-        document.addEventListener('change', function(e) {
-            if (e.target.matches('input[name*="[check_in]"], input[name*="[check_out]"], input[name*="[no_of_nights]"]')) {
-                handleHotelDateCalc(e.target);
-            }
-        });
-
-        function updateCurrencyUI(curr) {
-            curr = curr || document.getElementById('booking_currency')?.value || 'PKR';
-            
-            const topSel = document.getElementById('top_currency_select');
-            const formSel = document.getElementById('booking_currency');
-            if (topSel && topSel.value !== curr) topSel.value = curr;
-            if (formSel && formSel.value !== curr) formSel.value = curr;
-
-            document.querySelectorAll('.curr-symbol').forEach(el => {
-                el.textContent = curr;
-            });
-
-            // Ensure ROE fields are fully editable and default to 1 on SAR switch
-            document.querySelectorAll('.hotel-roe, .visa-roe, .transport-roe, #flight_roe, .flight-roe').forEach(input => {
-                input.removeAttribute('readonly');
-                input.classList.remove('bg-light');
-                if (curr === 'SAR') {
-                    if (!input.value || input.value === '75' || input.value === '75.00') {
-                        input.value = '1';
-                    }
-                }
-            });
-
-            // Re-calculate all items
-            document.querySelectorAll('.hotel-block').forEach(row => calculateHotelRow(row));
-            document.querySelectorAll('.visa-card').forEach(row => calculateVisaRow(row));
-            document.querySelectorAll('.route-block').forEach(row => calculateTransportRow(row));
-            calculateFlight();
-            calcTotal();
-        }
-
-        document.getElementById('booking_currency')?.addEventListener('change', function() {
-            updateCurrencyUI(this.value);
-        });
-
-        document.getElementById('top_currency_select')?.addEventListener('change', function() {
-            updateCurrencyUI(this.value);
-        });
-
+        // Main Total and Dual Currency Costing Calculation
         function calcTotal() {
-            const curr = document.getElementById('booking_currency')?.value || 'PKR';
-            const pax = parseInt(document.getElementById('no_of_pax')?.value) || 1;
-            const pkg = parseFloat(document.getElementById('package_cost')?.value) || 0;
-            
-            let hotel = 0;
-            document.querySelectorAll('.hotel-sell-total').forEach(el => { hotel += parseFloat(el.value) || 0; });
-            if (document.getElementById('hotel_charges')) document.getElementById('hotel_charges').value = hotel.toFixed(2);
+            const adults   = parseInt(document.getElementById('pax_adults')?.value) || 0;
+            const children = parseInt(document.getElementById('pax_children')?.value) || 0;
+            const infants  = parseInt(document.getElementById('pax_infants')?.value) || 0;
+            const pax      = Math.max(1, adults + children + infants);
 
-            let visa = 0;
-            document.querySelectorAll('.visa-sell-amount').forEach(el => { visa += parseFloat(el.value) || 0; });
-            if (document.getElementById('visa_charges')) document.getElementById('visa_charges').value = visa.toFixed(2);
+            // 1. Flight SAR & PKR
+            let flightSar = 0;
+            const flSellSarDisp = document.getElementById('flight_sell_sar_total')?.textContent || '';
+            flightSar = parseFloat(flSellSarDisp) || 0;
+            let flightPkr = parseFloat(document.getElementById('flight_charges')?.value) || 0;
 
-            const flight = parseFloat(document.getElementById('flight_charges')?.value) || 0;
-            if (document.getElementById('flight_charges_disp')) document.getElementById('flight_charges_disp').value = flight.toFixed(2);
+            // 2. Hotel SAR & PKR
+            let hotelCostSar = 0;
+            let hotelCostPkr = 0;
+            let hotelSellSar = 0;
+            let hotelSellPkr = 0;
+            document.querySelectorAll('.hotel-block').forEach(row => {
+                const nights   = parseFloat(row.querySelector('.hotel-nights')?.value) || 0;
+                const rooms    = parseFloat(row.querySelector('.hotel-rooms')?.value) || 0;
+                const costRate = parseFloat(row.querySelector('.hotel-cost-rate')?.value) || 0;
+                const sellRate = parseFloat(row.querySelector('.hotel-sell-rate')?.value) || 0;
+                const roe      = parseFloat(row.querySelector('.hotel-roe')?.value) || 75;
 
-            let transport = 0;
-            document.querySelectorAll('.transport-sell-amount').forEach(el => { transport += parseFloat(el.value) || 0; });
-            if (document.getElementById('transport_charges')) document.getElementById('transport_charges').value = transport.toFixed(2);
+                const cSar = nights * rooms * costRate;
+                hotelCostSar += cSar;
+                hotelCostPkr += cSar * roe;
 
-            const other = parseFloat(document.getElementById('other_charges')?.value) || 0;
-            const discount = parseFloat(document.getElementById('discount')?.value) || 0;
+                const sSar = nights * rooms * sellRate;
+                hotelSellSar += sSar;
+                hotelSellPkr += sSar * roe;
+            });
+            if (document.getElementById('hotel_charges')) document.getElementById('hotel_charges').value = hotelSellPkr.toFixed(2);
+            if (document.getElementById('hotel_cost_sar_total')) document.getElementById('hotel_cost_sar_total').textContent = hotelCostSar.toFixed(2) + ' SAR';
+            if (document.getElementById('hotel_cost_pkr_total')) document.getElementById('hotel_cost_pkr_total').textContent = hotelCostPkr.toFixed(2) + ' PKR';
+            if (document.getElementById('hotel_sell_sar_total')) document.getElementById('hotel_sell_sar_total').textContent = hotelSellSar.toFixed(2) + ' SAR';
+            if (document.getElementById('hotel_sell_pkr_total')) document.getElementById('hotel_sell_pkr_total').textContent = hotelSellPkr.toFixed(2) + ' PKR';
+
+            // 3. Transport SAR & PKR
+            let transportCostSar = 0;
+            let transportCostPkr = 0;
+            let transportSellSar = 0;
+            let transportSellPkr = 0;
+            document.querySelectorAll('.route-block').forEach(row => {
+                const costRate = parseFloat(row.querySelector('.transport-cost-rate')?.value) || 0;
+                const sellRate = parseFloat(row.querySelector('.transport-sell-rate')?.value) || 0;
+                const roe      = parseFloat(row.querySelector('.transport-roe')?.value) || 75;
+
+                transportCostSar += costRate;
+                transportCostPkr += costRate * roe;
+
+                transportSellSar += sellRate;
+                transportSellPkr += sellRate * roe;
+            });
+            if (document.getElementById('transport_charges')) document.getElementById('transport_charges').value = transportSellPkr.toFixed(2);
+            if (document.getElementById('transport_cost_sar_total')) document.getElementById('transport_cost_sar_total').textContent = transportCostSar.toFixed(2) + ' SAR';
+            if (document.getElementById('transport_cost_pkr_total')) document.getElementById('transport_cost_pkr_total').textContent = transportCostPkr.toFixed(2) + ' PKR';
+            if (document.getElementById('transport_sell_sar_total')) document.getElementById('transport_sell_sar_total').textContent = transportSellSar.toFixed(2) + ' SAR';
+            if (document.getElementById('transport_sell_pkr_total')) document.getElementById('transport_sell_pkr_total').textContent = transportSellPkr.toFixed(2) + ' PKR';
+
+            // 4. Visa SAR & PKR
+            let visaCostSar = 0;
+            let visaCostPkr = 0;
+            let visaSellSar = 0;
+            let visaSellPkr = 0;
+            document.querySelectorAll('.visa-card').forEach(row => {
+                const costRate = parseFloat(row.querySelector('.visa-cost-rate')?.value) || 0;
+                const sellRate = parseFloat(row.querySelector('.visa-sell-rate')?.value) || 0;
+                const roe      = parseFloat(row.querySelector('.visa-roe')?.value) || 75;
+
+                visaCostSar += costRate;
+                visaCostPkr += costRate * roe;
+
+                visaSellSar += sellRate;
+                visaSellPkr += sellRate * roe;
+            });
+            if (document.getElementById('visa_charges')) document.getElementById('visa_charges').value = visaSellPkr.toFixed(2);
+            if (document.getElementById('visa_cost_sar_total')) document.getElementById('visa_cost_sar_total').textContent = visaCostSar.toFixed(2) + ' SAR';
+            if (document.getElementById('visa_cost_pkr_total')) document.getElementById('visa_cost_pkr_total').textContent = visaCostPkr.toFixed(2) + ' PKR';
+            if (document.getElementById('visa_sell_sar_total')) document.getElementById('visa_sell_sar_total').textContent = visaSellSar.toFixed(2) + ' SAR';
+            if (document.getElementById('visa_sell_pkr_total')) document.getElementById('visa_sell_pkr_total').textContent = visaSellPkr.toFixed(2) + ' PKR';
+
+            // Package, Other, Discount
+            const pkgCost     = parseFloat(document.getElementById('package_cost')?.value) || 0;
+            const pkgTotalPkr = pkgCost * pax;
+
+            const other      = parseFloat(document.getElementById('other_charges')?.value) || 0;
+            const discount   = parseFloat(document.getElementById('discount')?.value) || 0;
             const additional = parseFloat(document.getElementById('additional_services_amount')?.value) || 0;
-            const received = parseFloat(document.getElementById('total_received')?.value) || 0;
+            const received   = parseFloat(document.getElementById('total_received')?.value) || 0;
 
-            const pkgTotal = pkg * pax;
-            const total = pkgTotal + hotel + visa + flight + transport + other + additional - discount;
-            const balance = total - received - transactionsPaid;
+            const totalSar   = flightSar + hotelSellSar + transportSellSar + visaSellSar;
+            const totalPkr   = pkgTotalPkr + hotelSellPkr + visaSellPkr + flightPkr + transportSellPkr + other + additional - discount;
+            const balancePkr = totalPkr - received - transactionsPaid;
 
-            const setV = (id, v) => { const e = document.getElementById(id); if (e) e.value = v; };
-            const setT = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+            const avgRoe     = totalSar > 0 ? (totalPkr / totalSar) : 75;
+            const balanceSar = avgRoe > 0 ? (balancePkr / avgRoe) : 0;
 
-            setV('total_amount', total.toFixed(2));
-            setV('balance', balance.toFixed(2));
+            if (document.getElementById('total_amount')) document.getElementById('total_amount').value = totalPkr.toFixed(2);
+            if (document.getElementById('balance')) document.getElementById('balance').value = balancePkr.toFixed(2);
 
             // Summary Bar
-            setT('bar_pax', pax);
-            setT('bar_adult', `${curr} ${pkgTotal.toFixed(2)}`);
-            setT('bar_hotel', `${curr} ${hotel.toFixed(2)}`);
-            setT('bar_visa', `${curr} ${visa.toFixed(2)}`);
-            setT('bar_flight', `${curr} ${flight.toFixed(2)}`);
-            setT('bar_transport', `${curr} ${transport.toFixed(2)}`);
-            setT('bar_total', `${curr} ${total.toFixed(2)}`);
-            setT('bar_balance', `${curr} ${balance.toFixed(2)}`);
+            if (document.getElementById('bar_pax')) document.getElementById('bar_pax').textContent = `${pax} (A:${adults}, C:${children}, I:${infants})`;
+            if (document.getElementById('bar_pax_badge')) document.getElementById('bar_pax_badge').textContent = pax;
+            if (document.getElementById('bar_adult')) document.getElementById('bar_adult').textContent = `PKR ${pkgTotalPkr.toFixed(2)}`;
+            if (document.getElementById('bar_flight')) document.getElementById('bar_flight').textContent = `SAR ${flightSar.toFixed(2)} / PKR ${flightPkr.toFixed(2)}`;
+            if (document.getElementById('bar_hotel')) document.getElementById('bar_hotel').textContent = `SAR ${hotelSellSar.toFixed(2)} / PKR ${hotelSellPkr.toFixed(2)}`;
+            if (document.getElementById('bar_transport')) document.getElementById('bar_transport').textContent = `SAR ${transportSellSar.toFixed(2)} / PKR ${transportSellPkr.toFixed(2)}`;
+            if (document.getElementById('bar_visa')) document.getElementById('bar_visa').textContent = `SAR ${visaSellSar.toFixed(2)} / PKR ${visaSellPkr.toFixed(2)}`;
+            if (document.getElementById('bar_total')) document.getElementById('bar_total').textContent = `SAR ${totalSar.toFixed(2)} / PKR ${totalPkr.toFixed(2)}`;
+            if (document.getElementById('bar_balance')) document.getElementById('bar_balance').textContent = `SAR ${balanceSar.toFixed(2)} / PKR ${balancePkr.toFixed(2)}`;
+
+            // Costing Dual Currency Cards
+            if (document.getElementById('cost_sar_flight')) document.getElementById('cost_sar_flight').textContent = `${flightSar.toFixed(2)} SAR`;
+            if (document.getElementById('cost_sar_hotel')) document.getElementById('cost_sar_hotel').textContent = `${hotelSellSar.toFixed(2)} SAR`;
+            if (document.getElementById('cost_sar_transport')) document.getElementById('cost_sar_transport').textContent = `${transportSellSar.toFixed(2)} SAR`;
+            if (document.getElementById('cost_sar_visa')) document.getElementById('cost_sar_visa').textContent = `${visaSellSar.toFixed(2)} SAR`;
+            if (document.getElementById('cost_sar_total')) document.getElementById('cost_sar_total').textContent = `${totalSar.toFixed(2)} SAR`;
+            if (document.getElementById('cost_sar_balance')) document.getElementById('cost_sar_balance').textContent = `${balanceSar.toFixed(2)} SAR`;
+
+            if (document.getElementById('cost_pkr_flight')) document.getElementById('cost_pkr_flight').textContent = `${flightPkr.toFixed(2)} PKR`;
+            if (document.getElementById('cost_pkr_hotel')) document.getElementById('cost_pkr_hotel').textContent = `${hotelSellPkr.toFixed(2)} PKR`;
+            if (document.getElementById('cost_pkr_transport')) document.getElementById('cost_pkr_transport').textContent = `${transportSellPkr.toFixed(2)} PKR`;
+            if (document.getElementById('cost_pkr_visa')) document.getElementById('cost_pkr_visa').textContent = `${visaSellPkr.toFixed(2)} PKR`;
+            if (document.getElementById('cost_pkr_total')) document.getElementById('cost_pkr_total').textContent = `${totalPkr.toFixed(2)} PKR`;
+            if (document.getElementById('cost_pkr_balance')) document.getElementById('cost_pkr_balance').textContent = `${balancePkr.toFixed(2)} PKR`;
 
             // Costing Table Breakdown
-            setT('sum_pax', pax);
-            setT('sum_pkg', `${curr} ${pkgTotal.toFixed(2)}`);
-            setT('sum_hotel', `${curr} ${hotel.toFixed(2)}`);
-            setT('sum_visa', `${curr} ${visa.toFixed(2)}`);
-            setT('sum_flight', `${curr} ${flight.toFixed(2)}`);
-            setT('sum_transport', `${curr} ${transport.toFixed(2)}`);
-            setT('sum_other', `${curr} ${(other + additional).toFixed(2)}`);
-            setT('sum_discount', `${curr} ${discount.toFixed(2)}`);
-            setT('sum_total', `${curr} ${total.toFixed(2)}`);
+            if (document.getElementById('sum_pax')) document.getElementById('sum_pax').textContent = pax;
+            if (document.getElementById('sum_pkg')) document.getElementById('sum_pkg').textContent = pkgTotalPkr.toFixed(2);
+            if (document.getElementById('sum_hotel')) document.getElementById('sum_hotel').textContent = hotelSellPkr.toFixed(2);
+            if (document.getElementById('sum_visa')) document.getElementById('sum_visa').textContent = visaSellPkr.toFixed(2);
+            if (document.getElementById('sum_flight')) document.getElementById('sum_flight').textContent = flightPkr.toFixed(2);
+            if (document.getElementById('sum_transport')) document.getElementById('sum_transport').textContent = transportSellPkr.toFixed(2);
+            if (document.getElementById('sum_other')) document.getElementById('sum_other').textContent = (other + additional).toFixed(2);
+            if (document.getElementById('sum_discount')) document.getElementById('sum_discount').textContent = discount.toFixed(2);
+            if (document.getElementById('sum_total')) document.getElementById('sum_total').textContent = totalPkr.toFixed(2);
         }
 
-        document.querySelectorAll('.calc').forEach(el => el.addEventListener('input', calcTotal));
-        document.getElementById('no_of_pax')?.addEventListener('input', calcTotal);
-
-        document.addEventListener('DOMContentLoaded', function() {
-            syncFlightPersons();
-            syncBookingHotelDates();
-            updateCurrencyUI();
-            calcTotal();
+        // Global Event Delegation for live calculations
+        document.addEventListener('input', function(e) {
+            if (e.target.matches('.hotel-nights, .hotel-rooms, .hotel-roe, .hotel-cost-rate, .hotel-sell-rate')) {
+                const row = e.target.closest('.hotel-block');
+                calculateHotelRow(row);
+            }
+            if (e.target.matches('.visa-roe, .visa-cost-rate, .visa-sell-rate')) {
+                const row = e.target.closest('.visa-card');
+                calculateVisaRow(row);
+            }
+            if (e.target.matches('.transport-roe, .transport-cost-rate, .transport-sell-rate')) {
+                const row = e.target.closest('.route-block');
+                calculateTransportRow(row);
+            }
+            if (e.target.matches('.flight-tier-calc, #flight_roe')) {
+                calculateFlight();
+            }
+            if (e.target.matches('.calc, #package_cost, #other_charges, #discount, #additional_services_amount, #total_received')) {
+                calcTotal();
+            }
+            if (e.target.matches('input[name*="[check_in]"], input[name*="[check_out]"], input[name*="[no_of_nights]"]')) {
+                handleHotelDateCalc(e.target);
+            }
         });
 
-        // ===== SUMMERNOTE INIT — Bulletproof =====
-        (function () {
-            var tries = 0;
-            function boot() {
-                if (typeof window.jQuery === 'undefined' || !window.jQuery.fn.summernote) {
-                    if (tries++ < 200) return setTimeout(boot, 100);
-                    console.error('❌ Summernote/jQuery not loaded');
-                    return;
-                }
-                var $ = window.jQuery;
+        document.addEventListener('change', function(e) {
+            if (e.target.matches('.hotel-nights, .hotel-rooms, .hotel-roe, .hotel-cost-rate, .hotel-sell-rate')) {
+                const row = e.target.closest('.hotel-block');
+                calculateHotelRow(row);
+            }
+            if (e.target.matches('.visa-roe, .visa-cost-rate, .visa-sell-rate')) {
+                const row = e.target.closest('.visa-card');
+                calculateVisaRow(row);
+            }
+            if (e.target.matches('.transport-roe, .transport-cost-rate, .transport-sell-rate')) {
+                const row = e.target.closest('.route-block');
+                calculateTransportRow(row);
+            }
+            if (e.target.matches('.flight-tier-calc, #flight_roe')) {
+                calculateFlight();
+            }
+            if (e.target.matches('.calc, #package_cost, #other_charges, #discount, #additional_services_amount, #total_received')) {
+                calcTotal();
+            }
+            if (e.target.matches('input[name*="[check_in]"], input[name*="[check_out]"], input[name*="[no_of_nights]"]')) {
+                handleHotelDateCalc(e.target);
+            }
+        });
 
-                function initSN() {
-                    var el = document.getElementById('additional_services_detail');
-                    if (!el) return;
-                    if (el.nextElementSibling && el.nextElementSibling.classList.contains('note-editor')) return;
-                    try {
-                        $(el).summernote({
+        // Initialize on page load
+        document.querySelectorAll('.hotel-block').forEach(r => calculateHotelRow(r));
+        document.querySelectorAll('.route-block').forEach(r => calculateTransportRow(r));
+        document.querySelectorAll('.visa-card').forEach(r => calculateVisaRow(r));
+        syncBookingHotelDates();
+        calculateFlight();
+        calcTotal();
+
+        $(document).ready(function() {
+            if (typeof $ !== 'undefined' && $.fn.summernote) {
+                $('a[href="#tab-additional-services"]').on('shown.bs.tab', function() {
+                    if (!$('#additional_services_detail').next().hasClass('note-editor')) {
+                        $('#additional_services_detail').summernote({
                             height: 200,
                             placeholder: 'Enter additional service details here...',
                             toolbar: [
                                 ['style', ['style']],
                                 ['font', ['bold', 'italic', 'underline', 'clear']],
+                                ['fontname', ['fontname']],
+                                ['color', ['color']],
                                 ['para', ['ul', 'ol', 'paragraph']],
-                                ['insert', ['link', 'picture']],
-                                ['view', ['fullscreen', 'codeview']]
+                                ['height', ['height']],
+                                ['insert', ['link', 'picture', 'hr']],
+                                ['view', ['fullscreen', 'codeview']],
+                                ['help', ['help']]
                             ]
                         });
-                        console.log('✅ Summernote initialized');
-                    } catch (e) {
-                        console.error('Summernote init error:', e);
-                    }
-                }
-
-                $(document).ready(function () {
-                    $(document).on('show.bs.tab shown.bs.tab', 'a[href="#tab-additional-services"]', function () {
-                        setTimeout(initSN, 80);
-                    });
-                    $(document).on('click', 'a[href="#tab-additional-services"]', function () {
-                        setTimeout(initSN, 200);
-                    });
-                    var pane = document.getElementById('tab-additional-services');
-                    if (pane && (pane.classList.contains('active') || pane.classList.contains('show'))) {
-                        setTimeout(initSN, 200);
                     }
                 });
+                
+                if ($('#tab-additional-services').hasClass('active')) {
+                    $('#additional_services_detail').summernote({
+                        height: 200,
+                        placeholder: 'Enter additional service details here...',
+                        toolbar: [
+                            ['style', ['style']],
+                            ['font', ['bold', 'italic', 'underline', 'clear']],
+                            ['para', ['ul', 'ol', 'paragraph']],
+                        ]
+                    });
+                }
             }
-            boot();
-        })();
+        });
 
         // Live Room Capacity Real-Time Checker
         function checkHotelRoomCapacity(input) {
-            const row = input.closest('.hotel-row') || input.closest('.row');
+            const row = input.closest('.hotel-row') || input.closest('.row') || input.closest('.hotel-block');
             if (!row) return;
 
             const roomNumber = input.value.trim();
@@ -2127,7 +2498,7 @@
 
             const hotelSelect = row.querySelector('select[name*="[hotel_name]"]') || row.querySelector('input[name*="[hotel_name]"]');
             const hotelName = hotelSelect ? (hotelSelect.options ? (hotelSelect.options[hotelSelect.selectedIndex]?.text || hotelSelect.value) : hotelSelect.value) : '';
-            const locSelect = row.querySelector('select[name*="[location]"]');
+            const locSelect = row.querySelector('select[name*="[location]"]') || row.querySelector('input[name*="[location]"]');
             const location = locSelect ? locSelect.value : '';
             const typeSelect = row.querySelector('select[name*="[room_type]"]');
             const roomType = typeSelect ? typeSelect.value : '';

@@ -6,6 +6,7 @@ use App\Models\Booking;
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\Transaction;
+use App\Models\ExpenseTransaction;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -274,66 +275,255 @@ class TransactionController extends Controller
         ]);
 
         $clientId = $request->client_id;
+        $fromDate = $request->from_date;
+        $toDate   = $request->to_date;
 
         if ($clientId === 'all') {
-            $query = Transaction::with(['booking', 'client', 'company']);
-
-            if ($request->from_date && $request->to_date) {
-                $query->whereBetween('payment_date', [
-                    $request->from_date,
-                    $request->to_date,
-                ]);
-            }
-
-            $transactions     = $query->latest()->get();
-            $transactionsPaid = $transactions->where('status', 'confirmed')->sum('amount');
-            $bookingReceived  = Booking::sum('total_received');
-            $totalBooking     = Booking::sum('total_amount');
-            $totalPaid        = $bookingReceived + $transactionsPaid;
-            $balance          = $totalBooking - $totalPaid;
-
             $client = (object)[
                 'id'     => 'all',
-                'name'   => 'All Clients',
+                'name'   => 'All Clients (Consolidated)',
+                'company_name' => 'All Associated Companies / Walk-ins',
                 'phone'  => null,
                 'email'  => null,
                 'status' => 'active',
+                'passport_number' => null,
+                'cnic'   => null,
+            ];
+        } else {
+            if (!Client::where('id', $clientId)->exists()) {
+                abort(404);
+            }
+            $client = Client::findOrFail($clientId);
+        }
+
+        // 1. Calculate Opening Balance prior to from_date
+        $openingBalance = 0;
+        if ($fromDate) {
+            $priorBookingDebits = (float) Booking::where(function ($q) use ($clientId) {
+                if ($clientId !== 'all') $q->where('client_id', $clientId);
+            })->whereDate('booking_date', '<', $fromDate)->sum('total_amount');
+
+            $priorBookingCredits = (float) Booking::where(function ($q) use ($clientId) {
+                if ($clientId !== 'all') $q->where('client_id', $clientId);
+            })->whereDate('booking_date', '<', $fromDate)->sum('total_received');
+
+            $priorTxnCredits = (float) Transaction::where('status', 'confirmed')
+                ->where(function ($q) use ($clientId) {
+                    if ($clientId !== 'all') $q->where('client_id', $clientId);
+                })->whereDate('payment_date', '<', $fromDate)->sum('amount');
+
+            $priorEtCredits = (float) ExpenseTransaction::where('payee_type', 'client')
+                ->where(function ($q) use ($clientId) {
+                    if ($clientId !== 'all') $q->where('client_id', $clientId);
+                })->whereDate('date', '<', $fromDate)->sum('amount');
+
+            $openingBalance = $priorBookingDebits - ($priorBookingCredits + $priorTxnCredits + $priorEtCredits);
+        }
+
+        // 2. Retrieve Bookings in Date Range (Debit = Charges, Credit = Initial Advance)
+        $bookingsQuery = Booking::with(['package', 'client', 'company']);
+        if ($clientId !== 'all') {
+            $bookingsQuery->where('client_id', $clientId);
+        }
+        if ($fromDate) {
+            $bookingsQuery->whereDate('booking_date', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $bookingsQuery->whereDate('booking_date', '<=', $toDate);
+        }
+        $bookings = $bookingsQuery->latest('booking_date')->get();
+
+        $rawEntries = [];
+        $bookingReceived = 0;
+        $totalBooking = 0;
+
+        foreach ($bookings as $b) {
+            $bDate = $b->booking_date ? Carbon::parse($b->booking_date)->format('Y-m-d') : Carbon::parse($b->created_at)->format('Y-m-d');
+            $bTimestamp = $b->booking_date ? Carbon::parse($b->booking_date)->startOfDay()->timestamp : Carbon::parse($b->created_at)->timestamp;
+
+            $totalAmount = (float) $b->total_amount;
+            $advanceAmount = (float) $b->total_received;
+            $totalBooking += $totalAmount;
+            $bookingReceived += $advanceAmount;
+
+            // Debit Entry: Booking Invoice / Charges
+            $rawEntries[] = [
+                'date'           => $bDate,
+                'timestamp'      => $bTimestamp,
+                'entry_type'     => 'invoice',
+                'badge_class'    => 'bg-soft-primary text-primary',
+                'type_label'     => 'Booking Charges',
+                'voucher_no'     => 'BK-' . $b->id,
+                'ref_no'         => $b->voucher_number ?: ('#BK-' . $b->id),
+                'description'    => 'Booking #' . $b->id . ' — ' . ($b->package_name ?: ($b->package->name ?? 'Package')) . ' (' . ($b->no_of_pax ?: 1) . ' Pax)' . ($b->voucher_number ? ' [Voucher: ' . $b->voucher_number . ']' : ''),
+                'client_id'      => $b->client_id,
+                'client_name'    => $b->client->name ?? '—',
+                'booking_id'     => $b->id,
+                'debit'          => $totalAmount,
+                'credit'         => 0.00,
+                'payment_method' => 'Invoice Bill',
+                'status'         => 'confirmed',
+                'proof'          => null,
             ];
 
-            return view('transaction.ledger', compact(
-                'client',
-                'transactions',
-                'totalPaid',
-                'totalBooking',
-                'balance',
-                'bookingReceived',
-                'transactionsPaid'
-            ));
+            // Credit Entry: Initial Advance Received at Booking
+            if ($advanceAmount > 0) {
+                $rawEntries[] = [
+                    'date'           => $bDate,
+                    'timestamp'      => $bTimestamp + 1,
+                    'entry_type'     => 'receipt',
+                    'badge_class'    => 'bg-soft-success text-success',
+                    'type_label'     => 'Advance at Booking',
+                    'voucher_no'     => 'ADV-' . $b->id,
+                    'ref_no'         => '#ADV-' . $b->id,
+                    'description'    => 'Initial Advance Payment received at Booking #' . $b->id,
+                    'client_id'      => $b->client_id,
+                    'client_name'    => $b->client->name ?? '—',
+                    'booking_id'     => $b->id,
+                    'debit'          => 0.00,
+                    'credit'         => $advanceAmount,
+                    'payment_method' => 'Advance / Cash',
+                    'status'         => 'confirmed',
+                    'proof'          => null,
+                ];
+            }
         }
 
-        if (!Client::where('id', $clientId)->exists()) {
-            abort(404);
+        // 3. Retrieve Confirmed Transactions (Credit = Payments Received)
+        $txQuery = Transaction::with(['booking', 'client', 'company']);
+        if ($clientId !== 'all') {
+            $txQuery->where('client_id', $clientId);
+        }
+        if ($fromDate) {
+            $txQuery->whereDate('payment_date', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $txQuery->whereDate('payment_date', '<=', $toDate);
+        }
+        $transactions = $txQuery->latest('payment_date')->get();
+
+        $transactionsPaid = 0;
+
+        foreach ($transactions as $t) {
+            $tDate = $t->payment_date ? Carbon::parse($t->payment_date)->format('Y-m-d') : Carbon::parse($t->created_at)->format('Y-m-d');
+            $tTimestamp = $t->payment_date ? Carbon::parse($t->payment_date)->startOfDay()->timestamp + 2 : Carbon::parse($t->created_at)->timestamp;
+            $amt = (float) $t->amount;
+
+            if ($t->status === 'confirmed') {
+                $transactionsPaid += $amt;
+            }
+
+            $rawEntries[] = [
+                'date'           => $tDate,
+                'timestamp'      => $tTimestamp,
+                'entry_type'     => 'receipt',
+                'badge_class'    => $t->status === 'confirmed' ? 'bg-soft-success text-success' : 'bg-soft-warning text-warning',
+                'type_label'     => 'Payment Received',
+                'voucher_no'     => 'TXN-' . $t->id,
+                'ref_no'         => $t->reference_number ?: ('#TXN-' . $t->id),
+                'description'    => 'Payment Received via ' . ucwords(str_replace('_', ' ', $t->payment_type)) . ($t->notes ? ' — ' . $t->notes : '') . ($t->booking_id ? ' [For Booking #' . $t->booking_id . ']' : ''),
+                'client_id'      => $t->client_id,
+                'client_name'    => $t->client->name ?? '—',
+                'booking_id'     => $t->booking_id,
+                'debit'          => 0.00,
+                'credit'         => $t->status === 'confirmed' ? $amt : 0.00,
+                'payment_method' => ucwords(str_replace('_', ' ', $t->payment_type)),
+                'status'         => $t->status,
+                'proof'          => $t->proof_of_payment ? asset('assets/images/transaction_proofs/' . $t->proof_of_payment) : null,
+            ];
         }
 
-        $client = Client::findOrFail($clientId);
-        $query  = Transaction::with('booking')->where('client_id', $clientId);
+        // 4. Retrieve Client ExpenseTransactions (if any recorded in expense_transactions with payee_type=client)
+        $etQuery = ExpenseTransaction::with(['client'])->where('payee_type', 'client');
+        if ($clientId !== 'all') {
+            $etQuery->where('client_id', $clientId);
+        }
+        if ($fromDate) {
+            $etQuery->whereDate('date', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $etQuery->whereDate('date', '<=', $toDate);
+        }
+        $etList = $etQuery->latest('date')->get();
 
-        if ($request->from_date && $request->to_date) {
-            $query->whereBetween('payment_date', [
-                $request->from_date,
-                $request->to_date,
-            ]);
+        foreach ($etList as $et) {
+            $etDate = Carbon::parse($et->date)->format('Y-m-d');
+            $etTimestamp = Carbon::parse($et->date)->startOfDay()->timestamp + 3;
+            $amt = (float) $et->amount;
+            $transactionsPaid += $amt;
+
+            $rawEntries[] = [
+                'date'           => $etDate,
+                'timestamp'      => $etTimestamp,
+                'entry_type'     => 'receipt',
+                'badge_class'    => 'bg-soft-info text-info',
+                'type_label'     => 'Client Receipt',
+                'voucher_no'     => 'REC-' . $et->id,
+                'ref_no'         => $et->reference_no ?: ('#REC-' . $et->id),
+                'description'    => 'Payment Received via ' . ucwords(str_replace('_', ' ', $et->payment_type)) . ($et->description ? ' — ' . $et->description : ''),
+                'client_id'      => $et->client_id,
+                'client_name'    => $et->client->name ?? '—',
+                'booking_id'     => null,
+                'debit'          => 0.00,
+                'credit'         => $amt,
+                'payment_method' => ucwords(str_replace('_', ' ', $et->payment_type)),
+                'status'         => 'confirmed',
+                'proof'          => $et->proof ? asset('assets/images/expense_proofs/' . $et->proof) : null,
+            ];
         }
 
-        $transactions     = $query->latest()->get();
-        $transactionsPaid = $transactions->where('status', 'confirmed')->sum('amount');
-        $bookingReceived  = Booking::where('client_id', $clientId)->sum('total_received');
-        $totalBooking     = Booking::where('client_id', $clientId)->sum('total_amount');
-        $totalPaid        = $bookingReceived + $transactionsPaid;
-        $balance          = $totalBooking - $totalPaid;
+        // 5. Sort chronologically (earliest first)
+        usort($rawEntries, function ($a, $b) {
+            if ($a['date'] === $b['date']) {
+                return $a['timestamp'] <=> $b['timestamp'];
+            }
+            return strcmp($a['date'], $b['date']);
+        });
+
+        // 6. Running Balance Line by Line
+        $runningBalance = $openingBalance;
+        $periodDebits = 0;
+        $periodCredits = 0;
+        $statementLines = [];
+
+        foreach ($rawEntries as $row) {
+            $deb = (float) $row['debit'];
+            $crd = (float) $row['credit'];
+
+            $periodDebits += $deb;
+            $periodCredits += $crd;
+            $runningBalance += ($deb - $crd);
+
+            $row['running_balance'] = $runningBalance;
+            $row['balance_type']    = $runningBalance > 0 ? 'Dr' : ($runningBalance < 0 ? 'Cr' : 'Nil');
+            $statementLines[]       = $row;
+        }
+
+        $closingBalance = $runningBalance;
+        $totalDebits    = ($openingBalance > 0 ? $openingBalance : 0) + $periodDebits;
+        $totalCredits   = ($openingBalance < 0 ? abs($openingBalance) : 0) + $periodCredits;
+        $balance        = $closingBalance;
+        $totalPaid      = $bookingReceived + $transactionsPaid;
+
+        $clients = Client::where('status', 'active')->orderBy('name')->get();
+        $bookingsCount = $bookings->count();
+        $transactionsCount = count($statementLines);
 
         return view('transaction.ledger', compact(
             'client',
+            'statementLines',
+            'openingBalance',
+            'periodDebits',
+            'periodCredits',
+            'totalDebits',
+            'totalCredits',
+            'closingBalance',
+            'fromDate',
+            'toDate',
+            'clients',
+            'bookingsCount',
+            'transactionsCount',
+            // Legacy / backward-compat variables:
             'transactions',
             'totalPaid',
             'totalBooking',
@@ -342,7 +532,6 @@ class TransactionController extends Controller
             'transactionsPaid'
         ));
     }
-
     public function invoiceFilter(Request $request)
     {
         $clients = Client::where('status', 'active')->get();

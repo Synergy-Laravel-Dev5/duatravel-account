@@ -154,7 +154,7 @@
                 <li>
                     <a href="#sidebarLeadManagement" data-bs-toggle="collapse">
                         <i data-feather="user-plus"></i>
-                        <span>Lead Management</span>
+                        <span>Account Management</span>
                         <span class="menu-arrow"></span>
                     </a>
                     <div class="collapse" id="sidebarLeadManagement">
@@ -173,57 +173,19 @@
                                     </a>
                                 </li>
                             @endcan
+
                             <li>
-                                <a class="tp-link" href="{{ route('quotation.index') }}">
+                                <a class="tp-link" href="{{ route('expense.index') }}">
                                     <i data-feather="file-text"></i>
-                                    <span>Quotations</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
-
-                <li>
-                    <a href="#sidebarPackageManagement" data-bs-toggle="collapse">
-                        <i data-feather="layers"></i>
-                        <span>{{ $isHajjPackage ? 'Package Management' : 'Umrah Management' }}</span>
-                        <span class="menu-arrow"></span>
-                    </a>
-                    <div class="collapse" id="sidebarPackageManagement">
-                        <ul class="nav-second-level">
-                            <li>
-                                <a class="tp-link" href="{{ route('package.index') }}">
-                                    <i data-feather="package"></i>
-                                    <span>{{ $isHajjPackage ? 'Packages' : 'Umrah Packages' }}</span>
-                                </a>
-                            </li>
-                            @can('hotel_view')
-                                <li>
-                                    <a class="tp-link" href="{{ route('hotel.index') }}">
-                                        <i data-feather="home"></i>
-                                        <span>Hotels</span>
-                                    </a>
-                                </li>
-                            @endcan
-                            <li>
-                                <a class="tp-link" href="{{ route('room-type.index') }}">
-                                    <i data-feather="grid"></i>
-                                    <span>Room Types</span>
+                                    <span>Expense Heads</span>
                                 </a>
                             </li>
                             <li>
-                                <a class="tp-link" href="{{ route('room-inventory.index') }}">
-                                    <i data-feather="box"></i>
-                                    <span>Room Inventory</span>
+                                <a class="tp-link" href="{{ route('bank.index') }}">
+                                    <i data-feather="briefcase"></i>
+                                    <span>Banks</span>
                                 </a>
                             </li>
-                            <li>
-                                <a class="tp-link" href="{{ route('report.rooming-list') }}">
-                                    <i data-feather="clipboard"></i>
-                                    <span>Room Allocation Manifest</span>
-                                </a>
-                            </li>
-
                             @can('airline_view')
                                 <li>
                                     <a class="tp-link" href="{{ route('airline.index') }}">
@@ -272,6 +234,57 @@
                                     </a>
                                 </li>
                             @endcan
+                            @can('hotel_view')
+                                <li>
+                                    <a class="tp-link" href="{{ route('hotel.index') }}">
+                                        <i data-feather="home"></i>
+                                        <span>Hotels</span>
+                                    </a>
+                                </li>
+                            @endcan
+                            <li>
+                                <a class="tp-link" href="{{ route('room-type.index') }}">
+                                    <i data-feather="grid"></i>
+                                    <span>Room Types</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="tp-link" href="{{ route('quotation.index') }}">
+                                    <i data-feather="file-text"></i>
+                                    <span>Quotations</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li>
+                    <a href="#sidebarPackageManagement" data-bs-toggle="collapse">
+                        <i data-feather="layers"></i>
+                        <span>{{ $isHajjPackage ? 'Package Management' : 'Umrah Management' }}</span>
+                        <span class="menu-arrow"></span>
+                    </a>
+                    <div class="collapse" id="sidebarPackageManagement">
+                        <ul class="nav-second-level">
+                            <li>
+                                <a class="tp-link" href="{{ route('package.index') }}">
+                                    <i data-feather="package"></i>
+                                    <span>{{ $isHajjPackage ? 'Packages' : 'Umrah Packages' }}</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="tp-link" href="{{ route('room-inventory.index') }}">
+                                    <i data-feather="box"></i>
+                                    <span>Room Inventory</span>
+                                </a>
+                            </li>
+                            {{-- <li>
+                                <a class="tp-link" href="{{ route('report.rooming-list') }}">
+                                    <i data-feather="clipboard"></i>
+                                    <span>Room Allocation Manifest</span>
+                                </a>
+                            </li> --}}
+
                             <li>
                                 <a class="tp-link" href="{{ route('training-session.index') }}">
                                     <i data-feather="book-open"></i>
@@ -304,12 +317,6 @@
                                     <span>Transactions</span>
                                 </a>
                             </li>
-                            <li>
-                                <a class="tp-link" href="{{ route('bank.index') }}">
-                                    <i data-feather="briefcase"></i>
-                                    <span>Banks</span>
-                                </a>
-                            </li>
 
                             {{-- <li>
                                 <a class="tp-link" href="{{ route('account.index') }}">
@@ -317,7 +324,7 @@
                                     <span>Accounts</span>
                                 </a>
                             </li> --}}
-                            
+
                             <li>
                                 <a class="tp-link" href="{{ route('report.profit-loss') }}">
                                     <i data-feather="dollar-sign"></i>
@@ -337,33 +344,33 @@
                                 </a>
                             </li>
                             <li>
-                                <a class="tp-link" href="{{ route('expense.index') }}">
-                                    <i data-feather="file-text"></i>
-                                    <span>Expense Heads</span>
-                                </a>
-                            </li>
-                            <li>
                                 <a class="tp-link" href="{{ route('reports.checkin') }}">
                                     <i data-feather="calendar"></i>
                                     <span>Check-In Report</span>
                                 </a>
                             </li>
-                            <li>
+                            {{-- <li>
                                 <a class="tp-link" href="{{ route('report.rooming-list') }}">
                                     <i data-feather="clipboard"></i>
                                     <span>Room Allocation Manifest</span>
                                 </a>
-                            </li>
+                            </li> --}}
                             <li>
-                                <a class="tp-link" href="{{ route('expense.transaction.report.filter') }}">
-                                    <i data-feather="pie-chart"></i>
-                                    <span>Transaction Reports</span>
+                                <a class="tp-link" href="{{ route('reports.transactions') }}">
+                                    <i data-feather="file-text"></i>
+                                    <span>All Transactions Report</span>
                                 </a>
                             </li>
                             <li>
                                 <a class="tp-link" href="{{ route('transaction.ledger.filter') }}">
                                     <i data-feather="book"></i>
-                                    <span>Client Ledger</span>
+                                    <span>Client Ledger (Dr / Cr)</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="tp-link" href="{{ route('expense.transaction.report.filter') }}">
+                                    <i data-feather="pie-chart"></i>
+                                    <span>Expense Category Reports</span>
                                 </a>
                             </li>
                             <li>

@@ -102,7 +102,7 @@
                     <div class="btn-group btn-group-sm shadow-sm" role="group">
                         <a href="{{ route('reports.checkin', array_merge(request()->query(), ['view_mode' => 'full'])) }}" 
                            class="btn {{ ($viewMode ?? 'full') === 'full' ? 'btn-primary' : 'btn-outline-primary' }}"
-                           title="Show both Cost and Sale amounts with Net Margin">
+                           title="Show both Cost and Sale amounts">
                             <i class="mdi mdi-currency-usd me-1"></i> Full (Cost & Sale)
                         </a>
                         <a href="{{ route('reports.checkin', array_merge(request()->query(), ['view_mode' => 'cost_only'])) }}" 
@@ -132,7 +132,7 @@
             {{-- Summary KPI Metric Cards --}}
             <div class="row g-3 mb-3 no-print">
                 {{-- Guests / Check-Ins Count --}}
-                <div class="col-xl-3 col-md-6 col-sm-6">
+                <div class="col-xl-4 col-md-4 col-sm-12">
                     <div class="card metric-card p-3 h-100">
                         <div class="d-flex align-items-center justify-content-between">
                             <div>
@@ -147,9 +147,9 @@
                     </div>
                 </div>
 
-                {{-- Financial Card 1 (Cost / Sale dependent on View Mode) --}}
+                {{-- Financial Card 1: Operational Cost --}}
                 @if(($viewMode ?? 'full') !== 'sale_only')
-                <div class="col-xl-3 col-md-6 col-sm-6">
+                <div class="{{ ($viewMode ?? 'full') === 'cost_only' ? 'col-xl-8 col-md-8 col-sm-12' : 'col-xl-4 col-md-4 col-sm-6' }}">
                     <div class="card metric-card p-3 h-100 border-start border-4 border-danger">
                         <div class="d-flex align-items-center justify-content-between">
                             <div>
@@ -167,9 +167,9 @@
                 </div>
                 @endif
 
-                {{-- Financial Card 2 (Sale) --}}
+                {{-- Financial Card 2: Selling Revenue --}}
                 @if(($viewMode ?? 'full') !== 'cost_only')
-                <div class="col-xl-3 col-md-6 col-sm-6">
+                <div class="{{ ($viewMode ?? 'full') === 'sale_only' ? 'col-xl-8 col-md-8 col-sm-12' : 'col-xl-4 col-md-4 col-sm-6' }}">
                     <div class="card metric-card p-3 h-100 border-start border-4 border-info">
                         <div class="d-flex align-items-center justify-content-between">
                             <div>
@@ -181,47 +181,6 @@
                             </div>
                             <div class="avatar-sm bg-soft-info rounded-circle d-flex align-items-center justify-content-center">
                                 <i class="mdi mdi-arrow-up-bold-circle fs-22 text-info"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                @endif
-
-                {{-- Financial Card 3 (Net Margin) --}}
-                @if(($viewMode ?? 'full') === 'full')
-                <div class="col-xl-3 col-md-6 col-sm-6">
-                    <div class="card metric-card p-3 h-100 border-start border-4 {{ $totalMarginPKR >= 0 ? 'border-success' : 'border-danger' }}">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <span class="fs-11 text-muted fw-bold text-uppercase">Net Margin / Profit</span>
-                                <h3 class="fs-20 fw-bold {{ $totalMarginPKR >= 0 ? 'text-success' : 'text-danger' }} mb-0 mt-1">
-                                    Rs {{ number_format($totalMarginPKR, 0) }}
-                                </h3>
-                                @if($currencyFilter === 'sar' || $currencyFilter === 'all')
-                                    <small class="text-success fw-semibold">SAR {{ number_format($totalMarginSAR, 2) }}</small>
-                                @endif
-                            </div>
-                            <div class="avatar-sm bg-soft-success rounded-circle d-flex align-items-center justify-content-center">
-                                <i class="mdi mdi-trending-up fs-22 text-success"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                @else
-                {{-- Schedule summary card when in cost_only or sale_only mode --}}
-                <div class="col-xl-3 col-md-6 col-sm-6">
-                    <div class="card metric-card p-3 h-100 border-start border-4 border-warning">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <span class="fs-11 text-muted fw-bold text-uppercase">Check-In Schedule</span>
-                                <div class="d-flex gap-2 mt-1">
-                                    <span class="badge bg-danger fs-11">Today: {{ $todayCheckIns }}</span>
-                                    <span class="badge bg-primary fs-11">Upcoming: {{ $upcomingCheckIns }}</span>
-                                </div>
-                                <small class="text-muted mt-1 d-block">Umrah: {{ $totalUmrah }} | Hajj: {{ $totalHujjaj }}</small>
-                            </div>
-                            <div class="avatar-sm bg-soft-warning rounded-circle d-flex align-items-center justify-content-center">
-                                <i class="mdi mdi-bell-ring fs-22 text-warning"></i>
                             </div>
                         </div>
                     </div>
@@ -244,7 +203,7 @@
                                     <i class="mdi mdi-eye-outline me-1"></i> Cost & Sale Mode
                                 </label>
                                 <select name="view_mode" class="form-select form-select-sm" onchange="this.form.submit()">
-                                    <option value="full" {{ ($viewMode ?? 'full') === 'full' ? 'selected' : '' }}>💰 Full (Cost, Sale & Margin)</option>
+                                    <option value="full" {{ ($viewMode ?? 'full') === 'full' ? 'selected' : '' }}>💰 Full (Cost & Sale)</option>
                                     <option value="cost_only" {{ ($viewMode ?? '') === 'cost_only' ? 'selected' : '' }}>📉 Cost Only (Without Sale)</option>
                                     <option value="sale_only" {{ ($viewMode ?? '') === 'sale_only' ? 'selected' : '' }}>📈 Sale Only (Without Cost)</option>
                                 </select>
@@ -408,9 +367,7 @@
                                             @if(($viewMode ?? 'full') !== 'cost_only')
                                                 <th class="text-end bg-soft-info">Total Sale</th>
                                             @endif
-                                            @if(($viewMode ?? 'full') === 'full')
-                                                <th class="text-end bg-soft-success">Net Margin</th>
-                                            @endif
+
                                             <th class="text-center">Ref</th>
                                             <th class="text-center no-print">Action</th>
                                         </tr>
@@ -527,17 +484,7 @@
                                                 </td>
                                                 @endif
 
-                                                {{-- Net Margin Column --}}
-                                                @if(($viewMode ?? 'full') === 'full')
-                                                <td class="text-end">
-                                                    <span class="badge {{ $r->margin_pkr >= 0 ? 'bg-soft-success text-success' : 'bg-soft-danger text-danger' }} fs-11 fw-bold">
-                                                        Rs {{ number_format($r->margin_pkr, 0) }}
-                                                    </span>
-                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
-                                                        <br><small class="text-success fw-semibold">SAR {{ number_format($r->margin_sar, 2) }}</small>
-                                                    @endif
-                                                </td>
-                                                @endif
+                                                
 
                                                 {{-- Ref --}}
                                                 <td class="text-center">
@@ -618,9 +565,7 @@
                                             @if(($viewMode ?? 'full') !== 'cost_only')
                                                 <th class="text-end bg-soft-info">Hotel Sale</th>
                                             @endif
-                                            @if(($viewMode ?? 'full') === 'full')
-                                                <th class="text-end bg-soft-success">Hotel Margin</th>
-                                            @endif
+
                                             <th class="text-center no-print">Action</th>
                                         </tr>
                                     </thead>
@@ -687,14 +632,7 @@
                                                 </td>
                                                 @endif
 
-                                                {{-- Hotel Margin --}}
-                                                @if(($viewMode ?? 'full') === 'full')
-                                                <td class="text-end">
-                                                    <span class="badge {{ $hr->margin_pkr >= 0 ? 'bg-soft-success text-success' : 'bg-soft-danger text-danger' }} fs-11 fw-bold">
-                                                        Rs {{ number_format($hr->margin_pkr, 0) }}
-                                                    </span>
-                                                </td>
-                                                @endif
+                                                
 
                                                 <td class="text-center no-print">
                                                     <a href="{{ route('booking.show', $hr->booking_id) }}" class="btn btn-xs btn-outline-info" target="_blank">
@@ -758,9 +696,7 @@
                                             @if(($viewMode ?? 'full') !== 'cost_only')
                                                 <th class="text-end bg-soft-info">Flight Sale</th>
                                             @endif
-                                            @if(($viewMode ?? 'full') === 'full')
-                                                <th class="text-end bg-soft-success">Flight Margin</th>
-                                            @endif
+
                                             <th class="text-center no-print">Action</th>
                                         </tr>
                                     </thead>
@@ -826,14 +762,7 @@
                                                 </td>
                                                 @endif
 
-                                                {{-- Flight Margin --}}
-                                                @if(($viewMode ?? 'full') === 'full')
-                                                <td class="text-end">
-                                                    <span class="badge {{ $fr->margin_pkr >= 0 ? 'bg-soft-success text-success' : 'bg-soft-danger text-danger' }} fs-11 fw-bold">
-                                                        Rs {{ number_format($fr->margin_pkr, 0) }}
-                                                    </span>
-                                                </td>
-                                                @endif
+                                                
 
                                                 <td class="text-center no-print">
                                                     <a href="{{ route('booking.show', $fr->booking_id) }}" class="btn btn-xs btn-outline-info" target="_blank">
@@ -896,9 +825,7 @@
                                             @if(($viewMode ?? 'full') !== 'cost_only')
                                                 <th class="text-end bg-soft-info">Transport Sale</th>
                                             @endif
-                                            @if(($viewMode ?? 'full') === 'full')
-                                                <th class="text-end bg-soft-success">Transport Margin</th>
-                                            @endif
+
                                             <th class="text-center no-print">Action</th>
                                         </tr>
                                     </thead>
@@ -958,14 +885,7 @@
                                                 </td>
                                                 @endif
 
-                                                {{-- Transport Margin --}}
-                                                @if(($viewMode ?? 'full') === 'full')
-                                                <td class="text-end">
-                                                    <span class="badge {{ $tr->margin_pkr >= 0 ? 'bg-soft-success text-success' : 'bg-soft-danger text-danger' }} fs-11 fw-bold">
-                                                        Rs {{ number_format($tr->margin_pkr, 0) }}
-                                                    </span>
-                                                </td>
-                                                @endif
+                                                
 
                                                 <td class="text-center no-print">
                                                     <a href="{{ route('booking.show', $tr->booking_id) }}" class="btn btn-xs btn-outline-info" target="_blank">
@@ -1028,9 +948,7 @@
                                             @if(($viewMode ?? 'full') !== 'cost_only')
                                                 <th class="text-end bg-soft-info">Visa Sale</th>
                                             @endif
-                                            @if(($viewMode ?? 'full') === 'full')
-                                                <th class="text-end bg-soft-success">Visa Margin</th>
-                                            @endif
+
                                             <th class="text-center no-print">Action</th>
                                         </tr>
                                     </thead>
@@ -1087,14 +1005,7 @@
                                                 </td>
                                                 @endif
 
-                                                {{-- Visa Margin --}}
-                                                @if(($viewMode ?? 'full') === 'full')
-                                                <td class="text-end">
-                                                    <span class="badge {{ $vr->margin_pkr >= 0 ? 'bg-soft-success text-success' : 'bg-soft-danger text-danger' }} fs-11 fw-bold">
-                                                        Rs {{ number_format($vr->margin_pkr, 0) }}
-                                                    </span>
-                                                </td>
-                                                @endif
+                                                
 
                                                 <td class="text-center no-print">
                                                     <a href="{{ route('booking.show', $vr->booking_id) }}" class="btn btn-xs btn-outline-info" target="_blank">

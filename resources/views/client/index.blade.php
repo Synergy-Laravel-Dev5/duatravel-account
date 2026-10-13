@@ -91,6 +91,10 @@
                                             </td>
                                             <td>
                                                 <div class="d-flex gap-1">
+                                                    <a href="{{ route('transaction.ledger.view') }}?client_id={{ $client->id }}"
+                                                        class="btn btn-sm btn-outline-primary" title="Statement / Ledger (Dr/Cr)">
+                                                        <i class="mdi mdi-book-open-page-variant"></i>
+                                                    </a>
                                                     @can('client_edit')
                                                         <a href="{{ route('client.edit', $client->id) }}"
                                                             class="btn btn-sm btn-outline-success" title="Edit">

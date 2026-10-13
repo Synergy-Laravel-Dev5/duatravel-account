@@ -1,24 +1,31 @@
 @extends('layout.master')
 
-@section('title', 'Client Ledger - ' . $client->name)
+@section('title', 'Client Ledger (Dr / Cr) - ' . $client->name)
 
 @section('content')
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
     <style>
         .ledger-stat-card {
-            border-radius: 16px;
+            border-radius: 14px;
             border: none;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, .07);
-            transition: transform .15s;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, .05);
+            transition: transform .15s ease, box-shadow .15s ease;
+            background: #fff;
         }
 
         .ledger-stat-card:hover {
             transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, .08);
         }
 
         .ledger-stat-card .icon-box {
-            width: 56px;
-            height: 56px;
-            border-radius: 14px;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -26,111 +33,70 @@
         }
 
         .ledger-stat-card .stat-label {
-            font-size: 10.5px;
-            font-weight: 600;
-            letter-spacing: .7px;
-            text-transform: uppercase;
-            color: #8c96a5;
-            margin-bottom: 4px;
-        }
-
-        .ledger-stat-card .stat-value {
-            font-size: 22px;
-            font-weight: 700;
-            line-height: 1.2;
-        }
-
-        .ledger-stat-card .stat-sub {
-            font-size: 11px;
-            margin-top: 3px;
-        }
-
-        .info-label {
-            font-size: 10.5px;
-            font-weight: 600;
-            letter-spacing: .6px;
-            text-transform: uppercase;
-            color: #8c96a5;
-            margin-bottom: 4px;
-        }
-
-        .info-value {
-            font-size: 14.5px;
-            font-weight: 600;
-            color: #1a1f36;
-        }
-
-        .breakdown-table td {
-            padding: 13px 20px;
-            vertical-align: middle;
-            font-size: 13.5px;
-        }
-
-        .breakdown-table .bd-label {
-            color: #5a6278;
-        }
-
-        .breakdown-table .bd-value {
-            font-weight: 600;
-            white-space: nowrap;
-        }
-
-        .txn-table thead th {
             font-size: 11px;
             font-weight: 700;
             letter-spacing: .5px;
             text-transform: uppercase;
             color: #8c96a5;
-            border-bottom: 1px solid #eef0f4;
-            background: #f8f9fc;
-            padding: 12px 16px;
+            margin-bottom: 2px;
         }
 
-        .txn-table tbody td {
-            font-size: 13.5px;
-            padding: 13px 16px;
-            vertical-align: middle;
-            border-bottom: 1px solid #f3f4f8;
+        .ledger-stat-card .stat-value {
+            font-size: 20px;
+            font-weight: 800;
+            line-height: 1.2;
         }
 
-        .txn-table tbody tr:hover {
-            background: #f8f9fc;
-        }
-
-        .section-card {
-            border-radius: 16px;
-            border: none;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, .07);
-            overflow: hidden;
-        }
-
-        .section-card .card-header {
-            background: #fff;
-            border-bottom: 1px solid #f0f2f7;
-            padding: 16px 24px;
-        }
-
-        .section-card .card-header h5 {
-            font-size: 14.5px;
+        .statement-table thead th {
+            font-size: 11px;
             font-weight: 700;
-            color: #1a1f36;
-            margin: 0;
+            letter-spacing: .5px;
+            text-transform: uppercase;
+            color: #64748b;
+            border-bottom: 2px solid #e2e8f0;
+            background: #f8fafc;
+            padding: 12px 14px;
+            vertical-align: middle;
         }
 
-        .booking-row {
-            background: #f0fff8 !important;
+        .statement-table tbody td {
+            font-size: 13px;
+            padding: 12px 14px;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f5f9;
         }
 
-        .booking-row:hover {
-            background: #e6fff4 !important;
+        .statement-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .opening-row {
+            background: #fffbeb !important;
+            font-weight: 600;
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background: #fff;
+            }
+            .content-page {
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .card {
+                border: 1px solid #ddd !important;
+                box-shadow: none !important;
+            }
         }
     </style>
 
-    {{-- ── Single source of truth for balance sign/labels, reused everywhere below ── --}}
     @php
-        $absBalance = abs($balance);
-        $balanceLabel = $balance > 0 ? 'Balance Due' : ($balance < 0 ? 'Advance Balance' : 'Balance Remaining');
-        $balanceSign = $balance < 0 ? '+' : '';
+        $absClosing = abs($closingBalance);
+        $closingTag = $closingBalance > 0 ? 'Dr (Due)' : ($closingBalance < 0 ? 'Cr (Advance)' : 'Nil');
+        $closingBadgeClass = $closingBalance > 0 ? 'bg-danger text-white' : ($closingBalance < 0 ? 'bg-success text-white' : 'bg-secondary text-white');
     @endphp
 
     <div class="content-page">
@@ -138,386 +104,327 @@
             <div class="container-fluid">
 
                 <!-- TOP BAR -->
-                <div class="py-4 d-flex align-items-center justify-content-between border-bottom mb-1">
+                <div class="py-3 d-flex flex-wrap align-items-center justify-content-between border-bottom mb-3 no-print">
                     <div>
-                        <p class="text-muted mb-0" style="font-size:12px;letter-spacing:.5px;">ACCOUNT STATEMENT</p>
-                        <h4 class="fw-bold text-dark mb-0" style="font-size:22px;">Client Ledger</h4>
-                        <div class="d-flex align-items-center gap-2 mt-1">
-                            <i class="mdi mdi-account-circle text-primary" style="font-size:18px;"></i>
-                            <span class="fw-semibold text-primary" style="font-size:16px;">{{ $client->name }}</span>
-                            <span
-                                class="badge {{ $client->status == 'active' ? 'bg-success' : 'bg-secondary' }} ms-1 px-2 py-1"
-                                style="font-size:10px;">
-                                {{ ucfirst($client->status) }}
-                            </span>
-                        </div>
+                        <p class="text-muted mb-0 fs-12 text-uppercase fw-semibold">ACCOUNT STATEMENT / KHATA</p>
+                        <h4 class="fw-bold text-dark mb-0 fs-20">
+                            <i class="mdi mdi-book-open-page-variant text-primary me-1"></i> Client Ledger (Debit / Credit)
+                        </h4>
                     </div>
 
-                    <div class="d-flex align-items-center gap-2">
-                        <button onclick="exportExcel()" class="btn btn-success btn-sm d-flex align-items-center gap-2 px-3">
-                            <i class="mdi mdi-microsoft-excel"></i> Export Excel
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <button onclick="exportExcelStatement()" class="btn btn-success btn-sm shadow-sm">
+                            <i class="mdi mdi-file-excel me-1"></i> Export Excel
                         </button>
-                        <button onclick="exportPDF()" class="btn btn-danger btn-sm d-flex align-items-center gap-2 px-3">
-                            <i class="mdi mdi-file-pdf-box"></i> Export PDF
+                        <button onclick="exportPDFStatement()" class="btn btn-danger btn-sm shadow-sm">
+                            <i class="mdi mdi-file-pdf-box me-1"></i> Export PDF
                         </button>
-                        <a href="{{ route('transaction.index') }}"
-                            class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2 px-3">
-                            <i class="mdi mdi-arrow-left"></i> Back to Transactions
+                        <button onclick="window.print()" class="btn btn-secondary btn-sm shadow-sm">
+                            <i class="mdi mdi-printer me-1"></i> Print
+                        </button>
+                        <a href="{{ route('transaction.ledger.filter') }}" class="btn btn-outline-primary btn-sm">
+                            <i class="mdi mdi-filter-variant me-1"></i> Filter Client / Date
+                        </a>
+                        <a href="{{ route('reports.transactions') }}" class="btn btn-outline-dark btn-sm">
+                            <i class="mdi mdi-format-list-bulleted me-1"></i> All Transactions Report
                         </a>
                     </div>
-
                 </div>
 
-                <!-- SUMMARY CARDS -->
-                <div class="row g-3 mt-1">
-
-                    <div class="col-lg-3 col-md-6">
-                        <div class="card ledger-stat-card p-4">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <div class="stat-label">Total Booking Amount</div>
-                                    <div class="stat-value text-dark">PKR {{ number_format($totalBooking, 0) }}</div>
-                                    <div class="stat-sub text-muted">All bookings combined</div>
-                                </div>
-                                <div class="icon-box bg-primary bg-opacity-10">
-                                    <i class="mdi mdi-file-document-multiple text-primary" style="font-size:26px;"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-lg-3 col-md-6">
-                        <div class="card ledger-stat-card p-4">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <div class="stat-label">Received at Booking</div>
-                                    <div class="stat-value text-info">PKR {{ number_format($bookingReceived, 0) }}</div>
-                                    <div class="stat-sub text-muted">Initial payment on booking</div>
-                                </div>
-                                <div class="icon-box bg-info bg-opacity-10">
-                                    <i class="mdi mdi-cash-fast text-info" style="font-size:26px;"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-lg-3 col-md-6">
-                        <div class="card ledger-stat-card p-4">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <div class="stat-label">Total Paid</div>
-                                    <div class="stat-value text-success">PKR {{ number_format($totalPaid, 0) }}</div>
-                                    <div class="stat-sub text-muted">
-                                        Booking + {{ number_format($transactionsPaid, 0) }} via transactions
+                <!-- CLIENT PROFILE & FILTER INFO -->
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body p-3">
+                        <div class="row align-items-center g-3">
+                            <div class="col-md-7">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <div class="bg-primary text-white rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="mdi mdi-account fs-20"></i>
                                     </div>
-                                </div>
-                                <div class="icon-box bg-success bg-opacity-10">
-                                    <i class="mdi mdi-check-decagram text-success" style="font-size:26px;"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-lg-3 col-md-6">
-                        <div class="card ledger-stat-card p-4"
-                            style="border-left: 4px solid {{ $balance > 0 ? '#f44336' : '#4caf50' }} !important;">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <div class="stat-label">Remaining Balance</div>
-                                    <div class="stat-value {{ $balance > 0 ? 'text-danger' : 'text-success' }}">
-                                        PKR {{ $balanceSign }}{{ number_format($absBalance, 0) }}
-                                    </div>
-                                    <div class="stat-sub {{ $balance > 0 ? 'text-danger' : 'text-success' }}">
-                                        @if ($balance > 0)
-                                            <i class="mdi mdi-alert-circle-outline me-1"></i>Amount Due
-                                        @elseif ($balance < 0)
-                                            <i class="mdi mdi-check-circle-outline me-1"></i>Advance Paid
-                                        @else
-                                            <i class="mdi mdi-check-circle-outline me-1"></i>Fully Cleared
+                                    <div>
+                                        <h4 class="fw-bold text-dark m-0 fs-18">{{ $client->name }}</h4>
+                                        @if(!empty($client->company_name))
+                                            <span class="text-muted fs-12"><i class="mdi mdi-domain me-1"></i>{{ $client->company_name }}</span>
                                         @endif
                                     </div>
                                 </div>
-                                <div class="icon-box {{ $balance > 0 ? 'bg-danger' : 'bg-success' }} bg-opacity-10">
-                                    <i class="mdi mdi-scale-balance {{ $balance > 0 ? 'text-danger' : 'text-success' }}"
-                                        style="font-size:26px;"></i>
+                                <div class="d-flex flex-wrap gap-3 fs-12 text-muted mt-2">
+                                    @if(!empty($client->phone))
+                                        <span><i class="mdi mdi-phone me-1 text-primary"></i><strong>Phone:</strong> {{ $client->phone }}</span>
+                                    @endif
+                                    @if(!empty($client->email))
+                                        <span><i class="mdi mdi-email me-1 text-primary"></i><strong>Email:</strong> {{ $client->email }}</span>
+                                    @endif
+                                    @if(!empty($client->cnic))
+                                        <span><i class="mdi mdi-card-account-details me-1 text-primary"></i><strong>CNIC:</strong> {{ $client->cnic }}</span>
+                                    @endif
+                                    @if(!empty($client->passport_number))
+                                        <span><i class="mdi mdi-passport me-1 text-primary"></i><strong>Passport:</strong> {{ $client->passport_number }}</span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- Switch Client & Date Range -->
+                            <div class="col-md-5 text-md-end no-print">
+                                <form action="{{ route('transaction.ledger.view') }}" method="GET" class="d-inline-flex align-items-center gap-2">
+                                    <select name="client_id" class="form-select form-select-sm" onchange="this.form.submit()" style="max-width: 200px;">
+                                        <option value="all" {{ (string)$client->id === 'all' ? 'selected' : '' }}>-- All Clients --</option>
+                                        @foreach($clients as $c)
+                                            <option value="{{ $c->id }}" {{ (string)$client->id === (string)$c->id ? 'selected' : '' }}>
+                                                {{ $c->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @if($fromDate) <input type="hidden" name="from_date" value="{{ $fromDate }}"> @endif
+                                    @if($toDate) <input type="hidden" name="to_date" value="{{ $toDate }}"> @endif
+                                </form>
+                                <div class="fs-12 text-muted mt-2">
+                                    <strong>Statement Date:</strong> {{ now()->format('d M, Y h:i A') }}
+                                </div>
+                                @if($fromDate || $toDate)
+                                    <div class="badge bg-soft-info text-info mt-1 fs-11">
+                                        <i class="mdi mdi-calendar-clock me-1"></i> Filtered: {{ $fromDate ? \Carbon\Carbon::parse($fromDate)->format('d M, Y') : 'Start' }} — {{ $toDate ? \Carbon\Carbon::parse($toDate)->format('d M, Y') : 'Today' }}
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PRINT HEADER ONLY -->
+                <div class="d-none d-print-block mb-3 p-3 border-bottom">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="fw-bold mb-0">DUA TRAVEL & TOURS</h3>
+                            <h5 class="text-primary mb-0">CLIENT STATEMENT OF ACCOUNT (LEDGER)</h5>
+                            <p class="fs-13 mb-0"><strong>Client:</strong> {{ $client->name }} | {{ $client->phone ?? '' }}</p>
+                        </div>
+                        <div class="text-end fs-12">
+                            <div><strong>Statement Date:</strong> {{ now()->format('d M, Y h:i A') }}</div>
+                            @if($fromDate || $toDate)
+                                <div><strong>Period:</strong> {{ $fromDate ? \Carbon\Carbon::parse($fromDate)->format('d M, Y') : 'Start' }} to {{ $toDate ? \Carbon\Carbon::parse($toDate)->format('d M, Y') : 'Today' }}</div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4 EXECUTIVE KPI SUMMARY CARDS -->
+                <div class="row g-3 mb-3">
+                    <!-- Total Debits (Invoiced) -->
+                    <div class="col-6 col-md-3">
+                        <div class="card ledger-stat-card border-start border-4 border-danger p-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="stat-label text-danger">Total Debits (Charges / Billed)</div>
+                                    <div class="stat-value text-danger">PKR {{ number_format($totalDebits, 2) }}</div>
+                                    <small class="text-muted fs-11">{{ $bookingsCount }} Bookings billed</small>
+                                </div>
+                                <div class="icon-box bg-soft-danger text-danger">
+                                    <i class="mdi mdi-arrow-up-bold fs-22"></i>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                </div>
-
-                <!-- CLIENT INFO + BREAKDOWN -->
-                <div class="row g-3 mt-1">
-
-                    <div class="col-lg-7">
-                        <div class="card section-card h-100">
-                            <div class="card-header">
-                                <h5><i class="mdi mdi-account-circle me-2 text-primary"></i>Client Information</h5>
-                            </div>
-                            <div class="card-body p-4">
-                                <div class="row g-4">
-                                    <div class="col-sm-6">
-                                        <div class="info-label">Full Name</div>
-                                        <div class="info-value">{{ $client->name }}</div>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <div class="info-label">Phone Number</div>
-                                        <div class="info-value">
-                                            @if ($client->phone)
-                                                <i class="mdi mdi-phone-outline text-muted me-1"></i>{{ $client->phone }}
-                                            @else
-                                                —
-                                            @endif
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <div class="info-label">Email Address</div>
-                                        <div class="info-value text-primary">
-                                            @if ($client->email)
-                                                <i class="mdi mdi-email-outline me-1"></i>{{ $client->email }}
-                                            @else
-                                                —
-                                            @endif
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <div class="info-label">Account Status</div>
-                                        <span
-                                            class="badge {{ $client->status == 'active' ? 'bg-success' : 'bg-secondary' }} px-3 py-2 mt-1">
-                                            <i
-                                                class="mdi {{ $client->status == 'active' ? 'mdi-check-circle' : 'mdi-close-circle' }} me-1"></i>
-                                            {{ ucfirst($client->status) }}
-                                        </span>
-                                    </div>
+                    <!-- Total Credits (Received) -->
+                    <div class="col-6 col-md-3">
+                        <div class="card ledger-stat-card border-start border-4 border-success p-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="stat-label text-success">Total Credits (Paid / Received)</div>
+                                    <div class="stat-value text-success">PKR {{ number_format($totalCredits, 2) }}</div>
+                                    <small class="text-muted fs-11">Advance & transaction payments</small>
+                                </div>
+                                <div class="icon-box bg-soft-success text-success">
+                                    <i class="mdi mdi-arrow-down-bold fs-22"></i>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="col-lg-5">
-                        <div class="card section-card h-100">
-                            <div class="card-header">
-                                <h5><i class="mdi mdi-calculator me-2 text-primary"></i>Payment Breakdown</h5>
-                            </div>
-                            <div class="card-body p-0">
-                                <table class="table breakdown-table mb-0">
-                                    <tbody>
-                                        <tr>
-                                            <td class="bd-label">
-                                                <i class="mdi mdi-file-document-outline text-primary me-2"></i>
-                                                Total Booking Amount
-                                            </td>
-                                            <td class="bd-value text-dark text-end">PKR
-                                                {{ number_format($totalBooking, 0) }}</td>
-                                        </tr>
-                                        <tr style="background:#f8fffe;">
-                                            <td class="bd-label">
-                                                <i class="mdi mdi-minus-circle text-success me-2"></i>
-                                                Received at Booking
-                                            </td>
-                                            <td class="bd-value text-success text-end">− PKR
-                                                {{ number_format($bookingReceived, 0) }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td class="bd-label">
-                                                <i class="mdi mdi-minus-circle text-success me-2"></i>
-                                                Via Transactions
-                                            </td>
-                                            <td class="bd-value text-success text-end">− PKR
-                                                {{ number_format($transactionsPaid, 0) }}</td>
-                                        </tr>
-                                        <tr
-                                            style="background:{{ $balance > 0 ? '#fff5f5' : '#f0fff4' }}; border-top: 2px solid {{ $balance > 0 ? '#ffcdd2' : '#c8e6c9' }};">
-                                            <td class="fw-bold"
-                                                style="font-size:14px; color:{{ $balance > 0 ? '#c62828' : '#2e7d32' }};">
-                                                <i class="mdi mdi-scale-balance me-2"></i>{{ $balanceLabel }}
-                                            </td>
-                                            <td class="text-end fw-bold"
-                                                style="font-size:14px; color:{{ $balance > 0 ? '#c62828' : '#2e7d32' }};">
-                                                PKR {{ $balanceSign }}{{ number_format($absBalance, 0) }}
-                                                @if ($balance > 0)
-                                                    <span class="badge bg-danger ms-1" style="font-size:10px;">Due</span>
-                                                @elseif ($balance < 0)
-                                                    <span class="badge bg-success ms-1"
-                                                        style="font-size:10px;">Advance</span>
-                                                @else
-                                                    <span class="badge bg-success ms-1" style="font-size:10px;">✓
-                                                        Clear</span>
-                                                @endif
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                    <!-- Net Closing Balance -->
+                    <div class="col-6 col-md-3">
+                        <div class="card ledger-stat-card border-start border-4 {{ $closingBalance > 0 ? 'border-danger' : ($closingBalance < 0 ? 'border-success' : 'border-primary') }} p-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="stat-label {{ $closingBalance > 0 ? 'text-danger' : ($closingBalance < 0 ? 'text-success' : 'text-primary') }}">
+                                        {{ $closingBalance > 0 ? 'Closing Balance (Due Dr)' : ($closingBalance < 0 ? 'Advance Balance (Cr)' : 'Balance Cleared') }}
+                                    </div>
+                                    <div class="stat-value {{ $closingBalance > 0 ? 'text-danger' : ($closingBalance < 0 ? 'text-success' : 'text-primary') }}">
+                                        PKR {{ number_format($absClosing, 2) }}
+                                        <span class="badge {{ $closingBadgeClass }} fs-11 ms-1">{{ $closingTag }}</span>
+                                    </div>
+                                    <small class="text-muted fs-11">{{ $closingBalance > 0 ? 'Payable by Client' : ($closingBalance < 0 ? 'Advance credit with agency' : 'All accounts settled') }}</small>
+                                </div>
+                                <div class="icon-box {{ $closingBalance > 0 ? 'bg-soft-danger text-danger' : 'bg-soft-success text-success' }}">
+                                    <i class="mdi mdi-scale-balance fs-22"></i>
+                                </div>
                             </div>
                         </div>
                     </div>
 
+                    <!-- Records Count -->
+                    <div class="col-6 col-md-3">
+                        <div class="card ledger-stat-card border-start border-4 border-primary p-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="stat-label text-primary">Total Ledger Entries</div>
+                                    <div class="stat-value text-dark">{{ count($statementLines) }}</div>
+                                    <small class="text-muted fs-11">Transactions & Invoices</small>
+                                </div>
+                                <div class="icon-box bg-soft-primary text-primary">
+                                    <i class="mdi mdi-file-document-outline fs-22"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- TRANSACTION HISTORY -->
-                <div class="card section-card mt-3">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5><i class="mdi mdi-history me-2 text-primary"></i>Transaction History</h5>
-                        <span class="badge bg-primary rounded-pill px-3 py-2" style="font-size:12px;">
-                            {{ $transactions->count() + ($bookingReceived > 0 ? 1 : 0) }} Records
+                <!-- CORE ACCOUNTING STATEMENT (DEBIT / CREDIT / RUNNING BALANCE TABLE) -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+                        <h5 class="fs-14 fw-bold m-0 text-dark">
+                            <i class="mdi mdi-bank-transfer text-primary me-2"></i> Statement of Account (Khata / Ledger)
+                        </h5>
+                        <span class="badge bg-soft-primary text-primary px-3 py-2 rounded-pill fs-12">
+                            {{ count($statementLines) + ($openingBalance != 0 ? 1 : 0) }} Rows
                         </span>
                     </div>
+
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table id="datatable" class="table txn-table mb-0">
+                            <table class="table statement-table table-hover align-middle mb-0">
                                 <thead>
                                     <tr>
-                                        <th class="ps-4">#</th>
-                                        <th>Package</th>
-                                        <th>Payment Type</th>
-                                        <th class="text-end">Amount</th>
-                                        <th>Date</th>
-                                        <th>Ref No</th>
-                                        <th>Narration</th>
-                                        <th>Proof</th>
-                                        <th class="text-center">Status</th>
+                                        <th class="ps-3" style="width: 40px;">#</th>
+                                        <th style="width: 105px;">Date</th>
+                                        <th style="width: 110px;">Voucher #</th>
+                                        <th style="width: 130px;">Type</th>
+                                        <th>Particulars / Narration</th>
+                                        <th style="width: 110px;">Method</th>
+                                        <th class="text-end text-danger" style="width: 130px;">Debit (Dr) Charges</th>
+                                        <th class="text-end text-success" style="width: 130px;">Credit (Cr) Received</th>
+                                        <th class="text-end text-primary" style="width: 140px;">Running Balance</th>
+                                        <th class="no-print text-center" style="width: 60px;">Proof</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @if ($transactions->count() > 0 || $bookingReceived > 0)
-                                        @if ($bookingReceived > 0)
-                                            <tr class="booking-row">
-                                                <td class="ps-4 fw-medium text-muted">—</td>
-                                                <td>
-                                                    <span style="font-size:13px;">
-                                                        <i class="mdi mdi-book-open-outline me-1 text-success"></i>
-                                                        <span class="fw-semibold text-dark">Received at Booking</span>
-                                                        <br>
-                                                        <small class="text-muted">Initial advance payment</small>
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <span class="badge bg-success px-2 py-1" style="font-size:11px;">
-                                                        Booking Payment
-                                                    </span>
-                                                </td>
-                                                <td class="text-end fw-bold text-success">
-                                                    PKR {{ number_format($bookingReceived, 0) }}
-                                                </td>
-                                                <td class="text-muted">—</td>
-                                                <td class="text-muted">—</td>
-                                                <td class="text-muted">—</td>
-                                                <td class="text-center">
-                                                    <span class="badge bg-success px-2 py-1" style="font-size:11px;">
-                                                        Confirmed
-                                                    </span>
+                                    {{-- Opening Balance Row if date filter applied and balance exists --}}
+                                    @if($openingBalance != 0)
+                                        <tr class="opening-row">
+                                            <td class="ps-3 text-muted">—</td>
+                                            <td>{{ $fromDate ? \Carbon\Carbon::parse($fromDate)->format('d M, Y') : '—' }}</td>
+                                            <td><span class="badge bg-warning text-dark border">OPENING</span></td>
+                                            <td><span class="badge bg-soft-warning text-dark">B/F Balance</span></td>
+                                            <td><strong>Opening Balance Brought Forward</strong></td>
+                                            <td>—</td>
+                                            <td class="text-end fw-bold text-danger">
+                                                {{ $openingBalance > 0 ? number_format($openingBalance, 2) : '—' }}
+                                            </td>
+                                            <td class="text-end fw-bold text-success">
+                                                {{ $openingBalance < 0 ? number_format(abs($openingBalance), 2) : '—' }}
+                                            </td>
+                                            <td class="text-end fw-bold text-dark">
+                                                {{ number_format(abs($openingBalance), 2) }}
+                                                <small class="badge {{ $openingBalance > 0 ? 'bg-danger' : 'bg-success' }} text-white ms-1" style="font-size: 10px;">
+                                                    {{ $openingBalance > 0 ? 'Dr' : 'Cr' }}
+                                                </small>
+                                            </td>
+                                            <td class="no-print text-center">—</td>
+                                        </tr>
+                                    @endif
+
+                                    @forelse($statementLines as $row)
+                                        <tr>
+                                            <td class="ps-3 text-muted fw-semibold">{{ $loop->iteration }}</td>
+                                            <td class="fw-medium text-nowrap">
+                                                {{ \Carbon\Carbon::parse($row['date'])->format('d M, Y') }}
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-light text-dark fw-bold border">{{ $row['voucher_no'] }}</span>
+                                                @if(!empty($row['ref_no']) && $row['ref_no'] !== $row['voucher_no'])
+                                                    <small class="text-muted d-block">{{ $row['ref_no'] }}</small>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <span class="badge {{ $row['badge_class'] }} px-2 py-1">
+                                                    {{ $row['type_label'] }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                @if($row['booking_id'])
+                                                    <a href="{{ route('booking.show', $row['booking_id']) }}" target="_blank" class="fw-semibold text-primary text-decoration-none">
+                                                        {{ $row['description'] }}
+                                                    </a>
+                                                @else
+                                                    <span class="text-dark fw-medium">{{ $row['description'] }}</span>
+                                                @endif
+                                                @if($client->id === 'all' && !empty($row['client_name']))
+                                                    <small class="text-muted d-block"><i class="mdi mdi-account me-1"></i>{{ $row['client_name'] }}</small>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-light text-secondary border px-2 py-1">
+                                                    {{ $row['payment_method'] }}
+                                                </span>
+                                            </td>
+                                            <!-- Debit Column -->
+                                            <td class="text-end fw-bold {{ $row['debit'] > 0 ? 'text-danger' : 'text-muted' }}">
+                                                {{ $row['debit'] > 0 ? number_format($row['debit'], 2) : '—' }}
+                                            </td>
+                                            <!-- Credit Column -->
+                                            <td class="text-end fw-bold {{ $row['credit'] > 0 ? 'text-success' : 'text-muted' }}">
+                                                {{ $row['credit'] > 0 ? number_format($row['credit'], 2) : '—' }}
+                                            </td>
+                                            <!-- Running Balance Column -->
+                                            <td class="text-end fw-bold text-dark">
+                                                PKR {{ number_format(abs($row['running_balance']), 2) }}
+                                                <span class="badge {{ $row['running_balance'] > 0 ? 'bg-soft-danger text-danger' : ($row['running_balance'] < 0 ? 'bg-soft-success text-success' : 'bg-light text-muted') }} ms-1" style="font-size: 10px;">
+                                                    {{ $row['balance_type'] }}
+                                                </span>
+                                            </td>
+                                            <!-- Proof Column -->
+                                            <td class="no-print text-center">
+                                                @if(!empty($row['proof']))
+                                                    <a href="{{ $row['proof'] }}" target="_blank" class="btn btn-xs btn-outline-info" title="View Proof">
+                                                        <i class="mdi mdi-file-document-outline"></i>
+                                                    </a>
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        @if($openingBalance == 0)
+                                            <tr>
+                                                <td colspan="10" class="text-center py-5 text-muted">
+                                                    <i class="mdi mdi-book-remove-outline fs-36 text-muted d-block mb-2"></i>
+                                                    <h6 class="fw-bold mb-1">No Ledger Records Found</h6>
+                                                    <p class="fs-12 mb-0">No booking charges or payment receipts recorded for this client in the selected date range.</p>
                                                 </td>
                                             </tr>
                                         @endif
-
-                                        {{-- ── Normal Transactions ── --}}
-                                        @foreach ($transactions as $t)
-                                            <tr>
-                                                <td class="ps-4 fw-medium text-muted">{{ $loop->iteration }}</td>
-
-                                                <td>
-                                                    @if ($t->booking)
-                                                        <a href="{{ route('booking.show', $t->booking->id) }}"
-                                                            class="text-decoration-none fw-semibold text-dark">
-                                                            <span
-                                                                class="badge bg-primary bg-opacity-10 text-primary me-1">#{{ $t->booking->id }}</span>
-                                                            <small
-                                                                class="text-muted">{{ ucfirst($t->booking->package_name) }}</small>
-                                                        </a>
-                                                    @else
-                                                        <span class="text-muted">—</span>
-                                                    @endif
-                                                </td>
-
-                                                <td>
-                                                    @php
-                                                        $typeColors = [
-                                                            'cash' => 'bg-success',
-                                                            'bank_transfer' => 'bg-primary',
-                                                            'cheque' => 'bg-warning text-dark',
-                                                            'online' => 'bg-info',
-                                                        ];
-                                                    @endphp
-                                                    <span
-                                                        class="badge {{ $typeColors[$t->payment_type] ?? 'bg-secondary' }} px-2 py-1"
-                                                        style="font-size:11px;">
-                                                        {{ ucfirst(str_replace('_', ' ', $t->payment_type)) }}
-                                                    </span>
-                                                </td>
-
-                                                <td
-                                                    class="text-end fw-bold {{ $t->status == 'confirmed' ? 'text-success' : 'text-muted' }}">
-                                                    PKR {{ number_format($t->amount, 0) }}
-                                                </td>
-
-                                                <td class="text-muted">
-                                                    <i class="mdi mdi-calendar-outline me-1"></i>
-                                                    {{ \Carbon\Carbon::parse($t->payment_date)->format('d M, Y') }}
-                                                </td>
-
-                                                <td class="fw-medium">{{ $t->reference_number ?? '—' }}</td>
-                                                <td class="fw-medium">{{ $t->notes ?? '—' }}</td>
-                                                <td>
-                                                    @if ($t->proof_of_payment)
-                                                        <a href="{{ asset('assets/images/transaction_proofs/' . $t->proof_of_payment) }}"
-                                                            target="_blank"
-                                                            class="btn btn-sm btn-outline-primary px-2 py-1"
-                                                            style="font-size:12px;">
-                                                            <i class="mdi mdi-eye me-1"></i>View
-                                                        </a>
-                                                    @else
-                                                        <span class="text-muted">—</span>
-                                                    @endif
-                                                </td>
-
-                                                <td class="text-center">
-                                                    @php
-                                                        $statusColors = [
-                                                            'confirmed' => 'bg-success',
-                                                            'pending' => 'bg-warning text-dark',
-                                                            'rejected' => 'bg-danger',
-                                                        ];
-                                                    @endphp
-                                                    <span
-                                                        class="badge {{ $statusColors[$t->status] ?? 'bg-secondary' }} px-2 py-1"
-                                                        style="font-size:11px;">
-                                                        {{ ucfirst($t->status) }}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-
-                                        {{-- ── Footer Summary Rows ── --}}
-                                        <tr style="background:#f8f9fc; border-top: 2px solid #e0e4ef;">
-                                            <td colspan="3" class="text-end py-3 fw-semibold text-muted ps-4">
-                                                Confirmed Transactions:
-                                            </td>
-                                            <td class="text-end py-3 fw-bold text-success">
-                                                PKR {{ number_format($transactionsPaid, 0) }}
-                                            </td>
-                                            <td colspan="4"></td>
-                                        </tr>
-                                        <tr style="background:#e8f5e9; border-top: 1px solid #c8e6c9;">
-                                            <td colspan="3" class="text-end py-3 fw-bold ps-4" style="color:#1b5e20;">
-                                                Grand Total Paid (incl. Booking):
-                                            </td>
-                                            <td class="text-end py-3 fw-bold" style="color:#1b5e20; font-size:15px;">
-                                                PKR {{ number_format($totalPaid, 0) }}
-                                            </td>
-                                            <td colspan="4"></td>
-                                        </tr>
-                                    @else
-                                        <tr>
-                                            <td colspan="8" class="text-center py-5 text-muted">
-                                                <i class="mdi mdi-inbox-outline d-block mb-2"
-                                                    style="font-size:42px; opacity:.4;"></i>
-                                                <span style="font-size:14px;">No payment records found for this
-                                                    client.</span>
-                                            </td>
-                                        </tr>
-                                    @endif
+                                    @endforelse
                                 </tbody>
+                                <tfoot class="table-light fw-bold">
+                                    <tr style="border-top: 2px solid #cbd5e1;">
+                                        <td colspan="6" class="text-end text-uppercase fs-12">Period Totals:</td>
+                                        <td class="text-end text-danger fs-14">PKR {{ number_format($periodDebits, 2) }}</td>
+                                        <td class="text-end text-success fs-14">PKR {{ number_format($periodCredits, 2) }}</td>
+                                        <td colspan="2" class="text-end text-dark fs-13"></td>
+                                    </tr>
+                                    <tr style="background: #f1f5f9; border-top: 1px solid #cbd5e1;">
+                                        <td colspan="6" class="text-end text-uppercase fs-13 text-dark">
+                                            Net Closing Balance:
+                                        </td>
+                                        <td colspan="2" class="text-center fs-12 text-muted">
+                                            (Total Billed: PKR {{ number_format($totalDebits, 2) }} | Total Received: PKR {{ number_format($totalCredits, 2) }})
+                                        </td>
+                                        <td class="text-end fs-15 {{ $closingBalance > 0 ? 'text-danger' : ($closingBalance < 0 ? 'text-success' : 'text-dark') }}">
+                                            PKR {{ number_format($absClosing, 2) }} {{ $closingTag }}
+                                        </td>
+                                        <td class="no-print"></td>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
                     </div>
@@ -527,288 +434,174 @@
         </div>
     </div>
 
-
     <script>
-        function exportExcel() {
-
+        function exportExcelStatement() {
             if (typeof XLSX === 'undefined') {
-                alert('Excel export library could not be loaded. Please check your internet connection.');
+                alert('Excel export library could not be loaded.');
                 return;
             }
 
             const wb = XLSX.utils.book_new();
 
-            /* ── Sheet 1: Summary ── */
+            // 1. Summary Sheet
             const summaryData = [
-                ["CLIENT LEDGER REPORT"],
+                ["CLIENT STATEMENT OF ACCOUNT (LEDGER)"],
+                ["Client Name:", "{{ addslashes($client->name) }}"],
+                ["Statement Date:", new Date().toLocaleString()],
+                @if($fromDate || $toDate)
+                ["Period:", "{{ $fromDate ?? 'Start' }} to {{ $toDate ?? 'Today' }}"],
+                @endif
                 [],
-                ["Client Name", "{{ addslashes($client->name) }}"],
-                ["Generated On", new Date().toLocaleString()],
-                [],
-                ["─────────────────────────────", "──────────────────"],
-                ["PAYMENT SUMMARY", ""],
-                ["─────────────────────────────", "──────────────────"],
-                ["Total Booking Amount", {{ (int) $totalBooking }}],
-                ["Received at Booking", {{ (int) $bookingReceived }}],
-                ["Via Transactions", {{ (int) $transactionsPaid }}],
-                ["Total Paid", {{ (int) $totalPaid }}],
-                ["{{ $balanceLabel }}{{ $balance < 0 ? ' (Overpaid)' : '' }}", {{ (int) $absBalance }}],
+                ["FINANCIAL SUMMARY", ""],
+                ["Total Debits (Charges / Billed):", {{ (float) $totalDebits }}],
+                ["Total Credits (Paid / Received):", {{ (float) $totalCredits }}],
+                ["Closing Balance:", {{ (float) $closingBalance }}],
+                ["Balance Status:", "{{ $closingTag }}"],
             ];
-
             const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
-            ws1['!cols'] = [{
-                wch: 30
-            }, {
-                wch: 22
-            }];
             XLSX.utils.book_append_sheet(wb, ws1, "Summary");
 
-            /* ── Sheet 2: Transaction History ── */
-            const headers = [
+            // 2. Ledger Entries Sheet
+            const ledgerHeaders = [
                 "#",
-                "Client",
-                "Package / Booking",
-                "Payment Type",
-                "Amount (PKR)",
                 "Date",
-                "Reference No",
-                "Status"
+                "Voucher #",
+                "Type",
+                "Particulars / Description",
+                "Payment Method",
+                "Debit (Dr) PKR",
+                "Credit (Cr) PKR",
+                "Running Balance PKR",
+                "Balance Type"
             ];
 
-            const rows = [];
+            const ledgerRows = [];
 
-            @if ($bookingReceived > 0)
-                rows.push([
-                    "—",
-                    "{{ addslashes($client->name) }}",
-                    "Received at Booking (Initial Advance)",
-                    "Booking Payment",
-                    {{ (int) $bookingReceived }},
-                    "—",
-                    "—",
-                    "Confirmed"
-                ]);
+            @if($openingBalance != 0)
+            ledgerRows.push([
+                "—",
+                "{{ $fromDate ?? '—' }}",
+                "OPENING",
+                "Opening Balance",
+                "Opening Balance Brought Forward",
+                "—",
+                {{ $openingBalance > 0 ? $openingBalance : 0 }},
+                {{ $openingBalance < 0 ? abs($openingBalance) : 0 }},
+                {{ abs($openingBalance) }},
+                "{{ $openingBalance > 0 ? 'Dr' : 'Cr' }}"
+            ]);
             @endif
 
-            @foreach ($transactions as $t)
-                rows.push([
-                    {{ $loop->iteration }},
-                    "{{ addslashes($client->name) }}",
-                    "{{ $t->booking ? '#' . $t->booking->id . ' - ' . addslashes(ucfirst($t->booking->package_name)) : '—' }}",
-                    "{{ ucfirst(str_replace('_', ' ', $t->payment_type)) }}",
-                    {{ (int) $t->amount }},
-                    "{{ \Carbon\Carbon::parse($t->payment_date)->format('d M, Y') }}",
-                    "{{ addslashes($t->reference_number ?? '—') }}",
-                    "{{ ucfirst($t->status) }}"
-                ]);
+            @foreach($statementLines as $row)
+            ledgerRows.push([
+                {{ $loop->iteration }},
+                "{{ $row['date'] }}",
+                "{{ addslashes($row['voucher_no']) }}",
+                "{{ addslashes($row['type_label']) }}",
+                "{{ addslashes($row['description']) }}",
+                "{{ addslashes($row['payment_method']) }}",
+                {{ (float) $row['debit'] }},
+                {{ (float) $row['credit'] }},
+                {{ (float) abs($row['running_balance']) }},
+                "{{ $row['balance_type'] }}"
+            ]);
             @endforeach
 
-            // Spacer
-            rows.push(["", "", "", "", "", "", "", ""]);
+            ledgerRows.push([]);
+            ledgerRows.push([
+                "TOTALS", "", "", "", "", "Period Totals:",
+                {{ (float) $periodDebits }},
+                {{ (float) $periodCredits }},
+                {{ (float) abs($closingBalance) }},
+                "{{ $closingTag }}"
+            ]);
 
-            // Footer totals
-            rows.push(["", "", "", "Confirmed Transactions (PKR):", {{ (int) $transactionsPaid }}, "", "", ""]);
-            rows.push(["", "", "", "Grand Total Paid (PKR):", {{ (int) $totalPaid }}, "", "", ""]);
-            rows.push(["", "", "", "{{ $balanceLabel }} (PKR):", {{ (int) $absBalance }}, "", "", ""]);
+            const ws2 = XLSX.utils.aoa_to_sheet([ledgerHeaders, ...ledgerRows]);
+            XLSX.utils.book_append_sheet(wb, ws2, "Statement");
 
-            const ws2 = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-            ws2['!cols'] = [{
-                    wch: 5
-                }, // #
-                {
-                    wch: 22
-                }, // Client
-                {
-                    wch: 35
-                }, // Package
-                {
-                    wch: 18
-                }, // Payment Type
-                {
-                    wch: 16
-                }, // Amount
-                {
-                    wch: 14
-                }, // Date
-                {
-                    wch: 18
-                }, // Ref No
-                {
-                    wch: 12
-                }, // Status
-            ];
-
-            XLSX.utils.book_append_sheet(wb, ws2, "Transaction History");
-
-            /* ── Download ── */
-            XLSX.writeFile(wb, "Ledger_{{ Str::slug($client->name) }}_{{ now()->format('Ymd') }}.xlsx");
+            XLSX.writeFile(wb, "Client_Ledger_{{ Str::slug($client->name) }}_{{ date('Ymd_His') }}.xlsx");
         }
 
-        // ══════════════════════════════════════════════
-        //  PDF EXPORT
-        // ══════════════════════════════════════════════
-        function exportPDF() {
-
-            if (typeof window.jspdf === 'undefined') {
-                alert('PDF export library could not be loaded. Please check your internet connection.');
+        function exportPDFStatement() {
+            if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
+                window.print();
                 return;
             }
 
-            const {
-                jsPDF
-            } = window.jspdf;
-            const doc = new jsPDF({
-                orientation: 'landscape',
-                unit: 'mm',
-                format: 'a4'
-            });
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
             const pageW = doc.internal.pageSize.getWidth();
 
-            /* ── Header Banner ── */
-            doc.setFillColor(30, 64, 175);
-            doc.rect(0, 0, pageW, 24, 'F');
+            // Header Banner
+            doc.setFillColor(30, 41, 59);
+            doc.rect(0, 0, pageW, 22, 'F');
             doc.setTextColor(255, 255, 255);
-            doc.setFontSize(17);
+            doc.setFontSize(15);
             doc.setFont(undefined, 'bold');
-            doc.text("Client Ledger Report", 14, 11);
-            doc.setFontSize(9);
+            doc.text("DUA TRAVEL & TOURS — CLIENT STATEMENT OF ACCOUNT (LEDGER)", 14, 10);
+            doc.setFontSize(8.5);
             doc.setFont(undefined, 'normal');
-            doc.text("Client: {{ addslashes($client->name) }}", 14, 19);
-            doc.text("Generated: " + new Date().toLocaleString(), pageW - 14, 19, {
-                align: 'right'
-            });
+            doc.text("Client: {{ addslashes($client->name) }} | Statement Date: " + new Date().toLocaleString(), 14, 17);
 
-            /* ── Summary Table ── */
+            // Summary Info
             doc.setTextColor(30, 30, 30);
-            doc.setFontSize(10);
+            doc.setFontSize(9);
             doc.setFont(undefined, 'bold');
-            doc.text("Payment Summary", 14, 33);
+            doc.text("Total Debits: PKR {{ number_format($totalDebits, 2) }}  |  Total Credits: PKR {{ number_format($totalCredits, 2) }}  |  Net Closing: PKR {{ number_format($absClosing, 2) }} ({{ $closingTag }})", 14, 28);
 
-            doc.autoTable({
-                startY: 36,
-                head: [
-                    ["Description", "Amount (PKR)"]
-                ],
-                body: [
-                    ["Total Booking Amount", "{{ number_format($totalBooking, 0) }}"],
-                    ["Received at Booking", "{{ number_format($bookingReceived, 0) }}"],
-                    ["Via Transactions", "{{ number_format($transactionsPaid, 0) }}"],
-                    ["Total Paid", "{{ number_format($totalPaid, 0) }}"],
-                    ["{{ $balanceLabel }}", "{{ $balanceSign }}{{ number_format($absBalance, 0) }}"],
-                ],
-                theme: 'grid',
-                headStyles: {
-                    fillColor: [30, 64, 175],
-                    textColor: 255,
-                    fontSize: 9,
-                    fontStyle: 'bold'
-                },
-                bodyStyles: {
-                    fontSize: 9
-                },
-                columnStyles: {
-                    1: {
-                        halign: 'right'
-                    }
-                },
-                margin: {
-                    left: 14
-                },
-                tableWidth: 110,
-                didParseCell: (d) => {
-                    if (d.section === 'body' && d.row.index === 4) {
-                        d.cell.styles.fontStyle = 'bold';
-                        d.cell.styles.textColor = {{ $balance > 0 ? '[180,0,0]' : '[0,128,0]' }};
-                    }
-                    if (d.section === 'body' && d.row.index === 3) {
-                        d.cell.styles.fontStyle = 'bold';
-                        d.cell.styles.textColor = [0, 100, 0];
-                    }
-                }
-            });
+            const tableRows = [];
 
-            /* ── Transaction History Table ── */
-            const txnY = doc.lastAutoTable.finalY + 9;
-            doc.setFontSize(10);
-            doc.setFont(undefined, 'bold');
-            doc.setTextColor(30, 30, 30);
-            doc.text("Transaction History", 14, txnY);
-
-            const txnBody = [];
-
-            @if ($bookingReceived > 0)
-                txnBody.push([
-                    "—",
-                    "{{ addslashes($client->name) }}",
-                    "Received at Booking",
-                    "Booking Payment",
-                    "PKR {{ number_format($bookingReceived, 0) }}",
-                    "—",
-                    "—",
-                    "Confirmed"
-                ]);
+            @if($openingBalance != 0)
+            tableRows.push([
+                "—",
+                "{{ $fromDate ?? '—' }}",
+                "OPENING",
+                "Opening Balance",
+                "Opening Balance Brought Forward",
+                "—",
+                "{{ $openingBalance > 0 ? number_format($openingBalance, 2) : '—' }}",
+                "{{ $openingBalance < 0 ? number_format(abs($openingBalance), 2) : '—' }}",
+                "{{ number_format(abs($openingBalance), 2) }} {{ $openingBalance > 0 ? 'Dr' : 'Cr' }}"
+            ]);
             @endif
 
-            @foreach ($transactions as $t)
-                txnBody.push([
-                    "{{ $loop->iteration }}",
-                    "{{ addslashes($client->name) }}",
-                    "{{ $t->booking ? '#' . $t->booking->id . ' ' . addslashes(ucfirst($t->booking->package_name)) : '—' }}",
-                    "{{ ucfirst(str_replace('_', ' ', $t->payment_type)) }}",
-                    "PKR {{ number_format($t->amount, 0) }}",
-                    "{{ \Carbon\Carbon::parse($t->payment_date)->format('d M, Y') }}",
-                    "{{ addslashes($t->reference_number ?? '—') }}",
-                    "{{ ucfirst($t->status) }}"
-                ]);
+            @foreach($statementLines as $row)
+            tableRows.push([
+                "{{ $loop->iteration }}",
+                "{{ \Carbon\Carbon::parse($row['date'])->format('d M, Y') }}",
+                "{{ addslashes($row['voucher_no']) }}",
+                "{{ addslashes($row['type_label']) }}",
+                "{{ addslashes($row['description']) }}",
+                "{{ addslashes($row['payment_method']) }}",
+                "{{ $row['debit'] > 0 ? number_format($row['debit'], 2) : '—' }}",
+                "{{ $row['credit'] > 0 ? number_format($row['credit'], 2) : '—' }}",
+                "{{ number_format(abs($row['running_balance']), 2) }} {{ $row['balance_type'] }}"
+            ]);
             @endforeach
 
-            // Footer totals rows
-            const footerStart = txnBody.length;
-            txnBody.push(["", "", "", "Confirmed Transactions:", "PKR {{ number_format($transactionsPaid, 0) }}", "", "",
-                ""
-            ]);
-            txnBody.push(["", "", "", "Grand Total Paid:", "PKR {{ number_format($totalPaid, 0) }}", "", "", ""]);
-            txnBody.push(["", "", "", "{{ $balanceLabel }}:",
-                "PKR {{ $balanceSign }}{{ number_format($absBalance, 0) }}", "", "", ""
+            tableRows.push([
+                "", "", "", "", "TOTALS:", "",
+                "PKR {{ number_format($periodDebits, 2) }}",
+                "PKR {{ number_format($periodCredits, 2) }}",
+                "PKR {{ number_format($absClosing, 2) }} {{ $closingTag }}"
             ]);
 
             doc.autoTable({
-                startY: txnY + 3,
-                head: [
-                    ["#", "Client", "Package / Booking", "Payment Type", "Amount (PKR)", "Date", "Ref No",
-                        "Status"
-                    ]
-                ],
-                body: txnBody,
+                startY: 32,
+                head: [["#", "Date", "Voucher", "Type", "Particulars / Narration", "Method", "Debit (Dr) PKR", "Credit (Cr) PKR", "Running Balance"]],
+                body: tableRows,
                 theme: 'striped',
-                headStyles: {
-                    fillColor: [30, 64, 175],
-                    textColor: 255,
-                    fontSize: 7.5,
-                    fontStyle: 'bold'
-                },
-                bodyStyles: {
-                    fontSize: 7.5
-                },
+                headStyles: { fillColor: [30, 41, 59], textColor: 255, fontSize: 8, fontStyle: 'bold' },
+                bodyStyles: { fontSize: 7.5 },
                 columnStyles: {
-                    4: {
-                        halign: 'right'
-                    }
+                    6: { halign: 'right', textColor: [180, 0, 0] },
+                    7: { halign: 'right', textColor: [0, 130, 0] },
+                    8: { halign: 'right', fontStyle: 'bold' }
                 },
-                margin: {
-                    left: 14,
-                    right: 14
-                },
-                didParseCell: (d) => {
-                    if (d.section === 'body' && d.row.index >= footerStart) {
-                        d.cell.styles.fontStyle = 'bold';
-                        d.cell.styles.fillColor = [232, 245, 233];
-                        d.cell.styles.textColor = [27, 94, 32];
-                    }
-                }
+                margin: { left: 14, right: 14 }
             });
 
-            doc.save("Ledger_{{ Str::slug($client->name) }}_{{ now()->format('Ymd') }}.pdf");
+            doc.save("Client_Ledger_{{ Str::slug($client->name) }}_{{ date('Ymd') }}.pdf");
         }
     </script>
 @endsection
