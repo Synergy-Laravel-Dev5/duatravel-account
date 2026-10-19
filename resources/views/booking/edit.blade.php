@@ -536,13 +536,25 @@
                                 <div class="col-md-6">
                                     <label class="form-label">Airline</label>
                                     <select name="departure_airline" class="form-select">
-                                        <option value="">-- Select --</option>
-                                        @foreach (['PIA', 'Air Arabia', 'Emirates', 'Qatar Airways', 'FlyDubai', 'Other'] as $air)
-                                            <option
-                                                {{ old('departure_airline', $booking->departure_airline) == $air ? 'selected' : '' }}>
-                                                {{ $air }}
-                                            </option>
-                                        @endforeach
+                                        <option value="">-- Select Airline --</option>
+                                        @php
+                                            $selectedDepAir = old('departure_airline', $booking->departure_airline ?? '');
+                                            $foundDep = false;
+                                        @endphp
+                                        @if(isset($airlines))
+                                            @foreach ($airlines as $air)
+                                                @php
+                                                    $isSel = ($selectedDepAir == $air->name || $selectedDepAir == $air->code || $selectedDepAir == $air->iata_code || (!empty($selectedDepAir) && stripos($air->name, $selectedDepAir) !== false));
+                                                    if ($isSel) $foundDep = true;
+                                                @endphp
+                                                <option value="{{ $air->name }}" {{ $isSel ? 'selected' : '' }}>
+                                                    {{ $air->name }}{{ $air->iata_code ? ' (' . $air->iata_code . ')' : '' }}
+                                                </option>
+                                            @endforeach
+                                        @endif
+                                        @if (!empty($selectedDepAir) && !$foundDep)
+                                            <option value="{{ $selectedDepAir }}" selected>{{ $selectedDepAir }}</option>
+                                        @endif
                                     </select>
                                 </div>
                                 <div class="col-md-6">
@@ -578,13 +590,25 @@
                                 <div class="col-md-6">
                                     <label class="form-label">Airline</label>
                                     <select name="arrival_airline" class="form-select">
-                                        <option value="">-- Select --</option>
-                                        @foreach (['PIA', 'Air Arabia', 'Emirates', 'Qatar Airways', 'FlyDubai', 'Other'] as $air)
-                                            <option
-                                                {{ old('arrival_airline', $booking->arrival_airline) == $air ? 'selected' : '' }}>
-                                                {{ $air }}
-                                            </option>
-                                        @endforeach
+                                        <option value="">-- Select Airline --</option>
+                                        @php
+                                            $selectedArrAir = old('arrival_airline', $booking->arrival_airline ?? '');
+                                            $foundArr = false;
+                                        @endphp
+                                        @if(isset($airlines))
+                                            @foreach ($airlines as $air)
+                                                @php
+                                                    $isSel = ($selectedArrAir == $air->name || $selectedArrAir == $air->code || $selectedArrAir == $air->iata_code || (!empty($selectedArrAir) && stripos($air->name, $selectedArrAir) !== false));
+                                                    if ($isSel) $foundArr = true;
+                                                @endphp
+                                                <option value="{{ $air->name }}" {{ $isSel ? 'selected' : '' }}>
+                                                    {{ $air->name }}{{ $air->iata_code ? ' (' . $air->iata_code . ')' : '' }}
+                                                </option>
+                                            @endforeach
+                                        @endif
+                                        @if (!empty($selectedArrAir) && !$foundArr)
+                                            <option value="{{ $selectedArrAir }}" selected>{{ $selectedArrAir }}</option>
+                                        @endif
                                     </select>
                                 </div>
                                 <div class="col-md-6">
@@ -928,8 +952,28 @@
                                         <div class="row g-3">
                                             <div class="col-md-3">
                                                 <label class="form-label">Route</label>
-                                                <input type="text" name="transports[{{ $i }}][route]"
-                                                    class="form-control" value="{{ $t->route }}">
+                                                <select name="transports[{{ $i }}][route]" class="form-select transport-route-select">
+                                                    <option value="">-- Select Route --</option>
+                                                    @php
+                                                        $selectedRoute = old('transports.'.$i.'.route', $t->route ?? '');
+                                                        $foundRoute = false;
+                                                    @endphp
+                                                    @if(isset($routes))
+                                                        @foreach ($routes as $r)
+                                                            @php
+                                                                $rVal = $r->formatted_route;
+                                                                $isSel = ($selectedRoute == $rVal || $selectedRoute == ($r->start_place . ' → ' . $r->end_place) || $selectedRoute == ($r->start_place . ' to ' . $r->end_place));
+                                                                if ($isSel) $foundRoute = true;
+                                                            @endphp
+                                                            <option value="{{ $rVal }}" {{ $isSel ? 'selected' : '' }}>
+                                                                {{ $r->start_place }} → {{ $r->end_place }}
+                                                            </option>
+                                                        @endforeach
+                                                    @endif
+                                                    @if (!empty($selectedRoute) && !$foundRoute)
+                                                        <option value="{{ $selectedRoute }}" selected>{{ $selectedRoute }}</option>
+                                                    @endif
+                                                </select>
                                             </div>
                                             <div class="col-md-2">
                                                 <label class="form-label">Transport Type</label>
@@ -1038,8 +1082,16 @@
                                         <div class="row g-3">
                                             <div class="col-md-3">
                                                 <label class="form-label">Route</label>
-                                                <input type="text" name="transports[0][route]" class="form-control"
-                                                    placeholder="Karachi → Makkah">
+                                                <select name="transports[0][route]" class="form-select transport-route-select">
+                                                    <option value="">-- Select Route --</option>
+                                                    @if(isset($routes))
+                                                        @foreach ($routes as $r)
+                                                            <option value="{{ $r->formatted_route }}" {{ old('transports.0.route') == $r->formatted_route ? 'selected' : '' }}>
+                                                                {{ $r->start_place }} → {{ $r->end_place }}
+                                                            </option>
+                                                        @endforeach
+                                                    @endif
+                                                </select>
                                             </div>
                                             <div class="col-md-3">
                                                 <label class="form-label">Transport Type</label>
@@ -1685,6 +1737,8 @@
         const clientsData      = @json($clients);
         const hotelsData       = @json($hotels);
         const suppliersData    = @json($suppliers);
+        const airlinesData     = @json($airlines ?? []);
+        const routesData       = @json($routes ?? []);
         const existingVisas    = @json($booking->visas);
         const existingPersons  = @json($booking->persons);
         const existingBooking  = @json($booking);
@@ -1695,6 +1749,16 @@
 
         const hotelsOptions = `<option value="">Select Hotel</option>` +
             (typeof hotelsData !== 'undefined' ? hotelsData.map(h => `<option value="${h.name}">${h.name} (${h.city || h.place || ''})</option>`).join('') : '');
+
+        function buildRoutesOptions() {
+            return `<option value="">-- Select Route --</option>` +
+                (Array.isArray(routesData) ? routesData.map(r => {
+                    const val = (r.start_place && r.end_place) ? `${r.start_place} TO ${r.end_place}` : (r.formatted_route || '');
+                    const txt = (r.start_place && r.end_place) ? `${r.start_place} → ${r.end_place}` : (r.formatted_route || '');
+                    return `<option value="${val}">${txt}</option>`;
+                }).join('') : '');
+        }
+        let routesOptions = buildRoutesOptions();
 
         function updatePersonFullName(idx) {
             const sur   = document.getElementById(`person_surname_${idx}`)?.value || '';
@@ -2873,7 +2937,9 @@
                     </div>
                     <div class="row g-3">
                         <div class="col-md-3"><label class="form-label">Route</label>
-                            <input type="text" name="transports[${routeIdx}][route]" class="form-control" placeholder="Route"></div>
+                            <select name="transports[${routeIdx}][route]" class="form-select transport-route-select">
+                                ${routesOptions}
+                            </select></div>
                         <div class="col-md-2"><label class="form-label">Transport Type</label>
                             <select name="transports[${routeIdx}][transport_type]" class="form-select">
                                 <option value="private_car">Private Car</option><option value="bus">Bus / Coach</option>

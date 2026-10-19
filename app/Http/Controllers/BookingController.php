@@ -45,9 +45,11 @@ class BookingController extends Controller
         $packages  = Package::with(['accommodations.hotel', 'transports', 'transportFlights'])->latest()->get();
         $hotels    = \App\Models\Hotel::all();
         $suppliers = Supplier::where('status', 'active')->orWhereNull('status')->orderBy('name')->get();
+        $airlines  = \App\Models\Airline::where('status', 'active')->orWhereNull('status')->orderBy('name')->get();
+        $routes    = \App\Models\Route::where('status', 'active')->orWhereNull('status')->orderBy('start_place')->get();
         $years     = [date('Y'), date('Y') + 1, date('Y') + 2];
 
-        return view('booking.create', compact('clients', 'companies', 'packages', 'hotels', 'suppliers', 'years'));
+        return view('booking.create', compact('clients', 'companies', 'packages', 'hotels', 'suppliers', 'years', 'airlines', 'routes'));
     }
 
     public function store(Request $request)
@@ -274,13 +276,15 @@ class BookingController extends Controller
         $packages  = Package::with(['accommodations.hotel', 'transports', 'transportFlights'])->latest()->get();
         $hotels    = \App\Models\Hotel::all();
         $suppliers = Supplier::where('status', 'active')->orWhereNull('status')->orderBy('name')->get();
+        $airlines  = \App\Models\Airline::where('status', 'active')->orWhereNull('status')->orderBy('name')->get();
+        $routes    = \App\Models\Route::where('status', 'active')->orWhereNull('status')->orderBy('start_place')->get();
         $years     = [date('Y'), date('Y') + 1, date('Y') + 2];
 
         $transactionsPaid = Transaction::where('client_id', $booking->client_id)
             ->where('status', 'confirmed')
             ->sum('amount');
 
-        return view('booking.edit', compact('booking', 'clients', 'companies', 'packages', 'hotels', 'suppliers', 'years', 'transactionsPaid'));
+        return view('booking.edit', compact('booking', 'clients', 'companies', 'packages', 'hotels', 'suppliers', 'years', 'transactionsPaid', 'airlines', 'routes'));
     }
 
     public function update(Request $request, $id)

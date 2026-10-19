@@ -26,6 +26,8 @@ $filesToUpdate = [
     'resources/views/reports/profit_loss.blade.php',
     'database/migrations/2026_10_19_140000_add_flight_fields_to_booking_persons_table.php',
     'database/migrations/2026_10_19_153000_add_person_rates_to_booking_hotels_table.php',
+    'database/seeders/MasterDataSeeder.php',
+    'database/seeders/seed_airlines_routes.sql',
 ];
 
 $baseDir = realpath(__DIR__ . '/..');

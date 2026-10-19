@@ -402,13 +402,14 @@
                                 <div class="col-md-6">
                                     <label class="form-label">Airline</label>
                                     <select name="departure_airline" class="form-select">
-                                        <option value="">-- Select --</option>
-                                        <option>PIA</option>
-                                        <option>Air Arabia</option>
-                                        <option>Emirates</option>
-                                        <option>Qatar Airways</option>
-                                        <option>FlyDubai</option>
-                                        <option>Other</option>
+                                        <option value="">-- Select Airline --</option>
+                                        @if(isset($airlines))
+                                            @foreach ($airlines as $air)
+                                                <option value="{{ $air->name }}" {{ old('departure_airline') == $air->name ? 'selected' : '' }}>
+                                                    {{ $air->name }}{{ $air->iata_code ? ' (' . $air->iata_code . ')' : '' }}
+                                                </option>
+                                            @endforeach
+                                        @endif
                                     </select>
                                 </div>
                                 <div class="col-md-6">
@@ -441,13 +442,14 @@
                                 <div class="col-md-3">
                                     <label class="form-label">Airline</label>
                                     <select name="arrival_airline" class="form-select">
-                                        <option value="">-- Select --</option>
-                                        <option>PIA</option>
-                                        <option>Air Arabia</option>
-                                        <option>Emirates</option>
-                                        <option>Qatar Airways</option>
-                                        <option>FlyDubai</option>
-                                        <option>Other</option>
+                                        <option value="">-- Select Airline --</option>
+                                        @if(isset($airlines))
+                                            @foreach ($airlines as $air)
+                                                <option value="{{ $air->name }}" {{ old('arrival_airline') == $air->name ? 'selected' : '' }}>
+                                                    {{ $air->name }}{{ $air->iata_code ? ' (' . $air->iata_code . ')' : '' }}
+                                                </option>
+                                            @endforeach
+                                        @endif
                                     </select>
                                 </div>
                                 <div class="col-md-4">
@@ -565,8 +567,16 @@
                                     <div class="row g-3">
                                         <div class="col-md-3">
                                             <label class="form-label">Route</label>
-                                            <input type="text" name="transports[0][route]" class="form-control"
-                                                placeholder="Karachi → Makkah">
+                                            <select name="transports[0][route]" class="form-select transport-route-select">
+                                                <option value="">-- Select Route --</option>
+                                                @if(isset($routes))
+                                                    @foreach ($routes as $r)
+                                                        <option value="{{ $r->formatted_route }}" {{ old('transports.0.route') == $r->formatted_route ? 'selected' : '' }}>
+                                                            {{ $r->start_place }} → {{ $r->end_place }}
+                                                        </option>
+                                                    @endforeach
+                                                @endif
+                                            </select>
                                         </div>
                                         <div class="col-md-3">
                                             <label class="form-label">Transport Type</label>
@@ -957,6 +967,7 @@
         const clientsData   = @json($clients);
         let hotelsData      = @json($hotels);
         let suppliersData   = @json($suppliers);
+        let routesData      = @json($routes ?? []);
 
         function buildSuppliersOptions() {
             return `<option value="">-- Select Supplier --</option>` +
@@ -968,8 +979,14 @@
                 (Array.isArray(hotelsData) ? hotelsData.map(h => `<option value="${h.name}">${h.name} (${h.city || h.place || ''})</option>`).join('') : '');
         }
 
+        function buildRoutesOptions() {
+            return `<option value="">-- Select Route --</option>` +
+                (Array.isArray(routesData) ? routesData.map(r => `<option value="${r.start_place} TO ${r.end_place}">${r.start_place} → ${r.end_place}</option>`).join('') : '');
+        }
+
         let suppliersOptions = buildSuppliersOptions();
         let hotelsOptions    = buildHotelsOptions();
+        let routesOptions    = buildRoutesOptions();
 
         async function refreshMasterData(showNotification = false) {
             try {
@@ -2205,7 +2222,9 @@
                     </div>
                     <div class="row g-3">
                         <div class="col-md-3"><label class="form-label">Route</label>
-                            <input type="text" name="transports[${routeIdx}][route]" class="form-control" placeholder="Route"></div>
+                            <select name="transports[${routeIdx}][route]" class="form-select transport-route-select">
+                                ${routesOptions}
+                            </select></div>
                         <div class="col-md-2"><label class="form-label">Transport Type</label>
                             <select name="transports[${routeIdx}][transport_type]" class="form-select">
                                 <option value="private_car">Private Car</option><option value="bus">Bus / Coach</option>
