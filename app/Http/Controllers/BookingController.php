@@ -159,9 +159,19 @@ class BookingController extends Controller
                     }
                 }
 
+                $flPerson = $request->input("flight_persons.$idx", []);
+                $paxType  = $person['pax_type'] ?? ($flPerson['pax_type'] ?? 'adult');
+                $flTicket = $person['flight_ticket'] ?? ($flPerson['ticket'] ?? ($flPerson['flight_ticket'] ?? null));
+                $flCost   = (float) ($person['flight_cost'] ?? ($flPerson['cost_rate'] ?? ($flPerson['flight_cost'] ?? 0)));
+                $flSell   = (float) ($person['flight_sell'] ?? ($flPerson['sell_rate'] ?? ($flPerson['flight_sell'] ?? 0)));
+
                 $personData = [
                     'full_name'        => $paxName,
                     'haji_id'          => $person['haji_id'] ?? ($idx === 0 ? $hajiId : null),
+                    'pax_type'         => $paxType,
+                    'flight_ticket'    => $flTicket,
+                    'flight_cost'      => $flCost,
+                    'flight_sell'      => $flSell,
                     'surname'          => $surname,
                     'given_name'       => $givenName,
                     'father_name'      => $person['father_name'] ?? null,
@@ -202,6 +212,9 @@ class BookingController extends Controller
                     $hotelData = $hotel;
                     if ($request->hasFile("hotels.$idx.hotel_voucher")) {
                         $hotelData['hotel_voucher'] = $request->file("hotels.$idx.hotel_voucher")->store('bookings/hotels', 'public');
+                    }
+                    if (isset($hotelData['person_rates']) && is_string($hotelData['person_rates'])) {
+                        $hotelData['person_rates'] = json_decode($hotelData['person_rates'], true);
                     }
                     $hotelData = array_intersect_key($hotelData, array_flip($hotelCols));
                     $booking->hotels()->create($hotelData);
@@ -390,9 +403,19 @@ class BookingController extends Controller
                         }
                     }
 
+                    $flPerson = $request->input("flight_persons.$idx", []);
+                    $paxType  = $person['pax_type'] ?? ($flPerson['pax_type'] ?? 'adult');
+                    $flTicket = $person['flight_ticket'] ?? ($flPerson['ticket'] ?? ($flPerson['flight_ticket'] ?? null));
+                    $flCost   = (float) ($person['flight_cost'] ?? ($flPerson['cost_rate'] ?? ($flPerson['flight_cost'] ?? 0)));
+                    $flSell   = (float) ($person['flight_sell'] ?? ($flPerson['sell_rate'] ?? ($flPerson['flight_sell'] ?? 0)));
+
                     $personData = [
                         'full_name'        => $paxName,
                         'haji_id'          => $person['haji_id'] ?? ($idx === 0 ? $hajiId : null),
+                        'pax_type'         => $paxType,
+                        'flight_ticket'    => $flTicket,
+                        'flight_cost'      => $flCost,
+                        'flight_sell'      => $flSell,
                         'surname'          => $surname,
                         'given_name'       => $givenName,
                         'father_name'      => $person['father_name'] ?? null,
@@ -445,6 +468,9 @@ class BookingController extends Controller
                         }
                         if (isset($hotelData['supplier_id']) && empty($hotelData['supplier_id'])) {
                             $hotelData['supplier_id'] = null;
+                        }
+                        if (isset($hotelData['person_rates']) && is_string($hotelData['person_rates'])) {
+                            $hotelData['person_rates'] = json_decode($hotelData['person_rates'], true);
                         }
 
                         $hotelData = array_intersect_key($hotelData, array_flip($hotelCols));

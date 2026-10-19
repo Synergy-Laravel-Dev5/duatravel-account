@@ -106,7 +106,7 @@
             <!-- 6 KPI Stat Summary Cards -->
             <div class="row g-3 mb-4">
                 <!-- 1. Gross Revenue -->
-                <div class="col-xl-2 col-md-4 col-sm-6">
+                <div class="col-xl col-md-4 col-sm-6">
                     <div class="pl-stat-card" style="border-left: 4px solid #0f535e;">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <span class="text-muted fs-11 text-uppercase fw-bold">Total Revenue</span>
@@ -122,7 +122,7 @@
                 </div>
 
                 <!-- 2. Direct Supplier Costs -->
-                <div class="col-xl-2 col-md-4 col-sm-6">
+                <div class="col-xl col-md-4 col-sm-6">
                     <div class="pl-stat-card" style="border-left: 4px solid #ef4444;">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <span class="text-muted fs-11 text-uppercase fw-bold">Direct Costs</span>
@@ -138,7 +138,7 @@
                 </div>
 
                 <!-- 3. Gross Profit -->
-                <div class="col-xl-2 col-md-4 col-sm-6">
+                <div class="col-xl col-md-4 col-sm-6">
                     <div class="pl-stat-card" style="border-left: 4px solid #10b981;">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <span class="text-muted fs-11 text-uppercase fw-bold">Gross Profit</span>
@@ -154,7 +154,7 @@
                 </div>
 
                 <!-- 4. General Overhead Expenses -->
-                <div class="col-xl-2 col-md-4 col-sm-6">
+                <div class="col-xl col-md-4 col-sm-6">
                     <div class="pl-stat-card" style="border-left: 4px solid #f59e0b;">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <span class="text-muted fs-11 text-uppercase fw-bold">Overhead Expenses</span>
@@ -169,26 +169,8 @@
                     </div>
                 </div>
 
-                <!-- 5. Net Operating Profit -->
-                <div class="col-xl-2 col-md-4 col-sm-6">
-                    <div class="pl-stat-card" style="border-left: 4px solid {{ $netOperatingProfitPkr >= 0 ? '#059669' : '#dc2626' }}; background: {{ $netOperatingProfitPkr >= 0 ? '#f0fdf4' : '#fef2f2' }};">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="text-dark fs-11 text-uppercase fw-bold">Net Profit</span>
-                            <div class="pl-icon-box" style="background: {{ $netOperatingProfitPkr >= 0 ? '#059669' : '#dc2626' }}; color: #ffffff;">
-                                <i class="mdi mdi-finance"></i>
-                            </div>
-                        </div>
-                        <h4 class="mb-1 fw-bold {{ $netOperatingProfitPkr >= 0 ? 'text-success' : 'text-danger' }} fs-16">
-                            PKR {{ number_format($netOperatingProfitPkr, 0) }}
-                        </h4>
-                        <div class="fw-bold fs-11 {{ $netOperatingProfitPkr >= 0 ? 'text-success' : 'text-danger' }}">
-                            {{ $overallNetMarginPct }}% Net Margin
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 6. Per Pax Profit -->
-                <div class="col-xl-2 col-md-4 col-sm-6">
+                <!-- 5. Per Pax Profit -->
+                <div class="col-xl col-md-4 col-sm-6">
                     <div class="pl-stat-card" style="border-left: 4px solid #8b5cf6;">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <span class="text-muted fs-11 text-uppercase fw-bold">Avg Profit / Pax</span>
@@ -488,7 +470,6 @@
                                             <th class="text-end">Gross Profit</th>
                                             <th class="text-end">Overhead Expenses</th>
                                             <th class="text-end">Net Operating Profit</th>
-                                            <th class="text-center">Net Margin %</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -536,15 +517,10 @@
                                                 <td class="text-end fw-bold {{ $isMonthProfit ? 'text-success' : 'text-danger' }} fs-13">
                                                     PKR {{ number_format($m['net_profit_pkr'], 0) }}
                                                 </td>
-                                                <td class="text-center">
-                                                    <span class="badge {{ $isMonthProfit ? 'bg-soft-success text-success' : 'bg-soft-danger text-danger' }} fw-bold px-2 py-1 fs-11">
-                                                        {{ $m['net_margin_pct'] }}%
-                                                    </span>
-                                                </td>
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="14" class="text-center py-4 text-muted">
+                                                <td colspan="13" class="text-center py-4 text-muted">
                                                     <i class="mdi mdi-information-outline fs-24 d-block mb-1"></i>
                                                     No financial transaction or booking records found for the period.
                                                 </td>
@@ -563,9 +539,6 @@
                                             <td class="text-end text-warning">PKR {{ number_format($totalOverheadExpensesPkr, 0) }}</td>
                                             <td class="text-end {{ $netOperatingProfitPkr >= 0 ? 'text-success' : 'text-danger' }}">
                                                 PKR {{ number_format($netOperatingProfitPkr, 0) }}
-                                            </td>
-                                            <td class="text-center {{ $netOperatingProfitPkr >= 0 ? 'text-success' : 'text-danger' }}">
-                                                {{ $overallNetMarginPct }}%
                                             </td>
                                         </tr>
                                     </tfoot>

@@ -96,25 +96,7 @@
                                                     placeholder="client@example.com">
                                             </div>
                                         </div>
-                                        <div class="col-lg-6">
-                                            <div class="mb-3">
-                                                <label class="form-label">Type <span class="text-danger">*</span></label>
-                                                <select name="type" class="form-control" required>
-                                                    <option value="client"
-                                                        {{ old('type', $client->type) == 'client' ? 'selected' : '' }}>
-                                                        Client</option>
-                                                    <option value="vendor"
-                                                        {{ old('type', $client->type) == 'vendor' ? 'selected' : '' }}>
-                                                        Vendor</option>
-                                                    <option value="customer"
-                                                        {{ old('type', $client->type) == 'customer' ? 'selected' : '' }}>
-                                                        Customer</option>
-                                                </select>
-                                                @error('type')
-                                                    <div class="text-danger">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
+
                                         <div class="col-lg-6">
                                             <div class="mb-3">
                                                 <label class="form-label">Status</label>

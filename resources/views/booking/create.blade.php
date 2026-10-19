@@ -322,65 +322,25 @@
                                         </div>
                                     </div>
 
-                                    {{-- Passenger Tier Rates Table --}}
-                                    <div class="table-responsive mb-3">
-                                        <table class="table table-bordered table-sm align-middle text-center mb-0">
-                                            <thead class="table-light">
-                                                <tr>
-                                                    <th style="width: 20%;">Pax Category</th>
-                                                    <th style="width: 10%;">Pax Count</th>
-                                                    <th style="width: 18%;" class="text-danger">Cost Rate (<span class="flight-curr-label">SAR</span>)</th>
-                                                    <th style="width: 17%;" class="text-danger">Total Cost (<span class="flight-curr-label">SAR</span>)</th>
-                                                    <th style="width: 18%;" class="text-success">Sell Rate (<span class="flight-curr-label">SAR</span>)</th>
-                                                    <th style="width: 17%;" class="text-success">Total Sell (<span class="flight-curr-label">SAR</span>)</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <td class="text-start fw-semibold"><i class="mdi mdi-account text-primary me-1"></i> Adult (12+ yrs)</td>
-                                                    <td><span class="badge bg-secondary fs-12" id="flight_adult_pax_label">1</span></td>
-                                                    <td>
-                                                        <input type="number" step="0.01" name="flight_adult_cost" id="flight_adult_cost"
-                                                            class="form-control form-control-sm text-end flight-tier-calc" placeholder="0.00" value="0">
-                                                    </td>
-                                                    <td class="text-end fw-bold text-danger"><span id="flight_adult_cost_sar_disp">0.00</span> <span class="flight-curr-label">SAR</span></td>
-                                                    <td>
-                                                        <input type="number" step="0.01" name="flight_adult_sell" id="flight_adult_sell"
-                                                            class="form-control form-control-sm text-end flight-tier-calc" placeholder="0.00" value="0">
-                                                    </td>
-                                                    <td class="text-end fw-bold text-success"><span id="flight_adult_sell_sar_disp">0.00</span> <span class="flight-curr-label">SAR</span></td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="text-start fw-semibold"><i class="mdi mdi-account-child text-info me-1"></i> Child (2-11 yrs)</td>
-                                                    <td><span class="badge bg-secondary fs-12" id="flight_child_pax_label">0</span></td>
-                                                    <td>
-                                                        <input type="number" step="0.01" name="flight_child_cost" id="flight_child_cost"
-                                                            class="form-control form-control-sm text-end flight-tier-calc" placeholder="0.00" value="0">
-                                                    </td>
-                                                    <td class="text-end fw-bold text-danger"><span id="flight_child_cost_sar_disp">0.00</span> <span class="flight-curr-label">SAR</span></td>
-                                                    <td>
-                                                        <input type="number" step="0.01" name="flight_child_sell" id="flight_child_sell"
-                                                            class="form-control form-control-sm text-end flight-tier-calc" placeholder="0.00" value="0">
-                                                    </td>
-                                                    <td class="text-end fw-bold text-success"><span id="flight_child_sell_sar_disp">0.00</span> <span class="flight-curr-label">SAR</span></td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="text-start fw-semibold"><i class="mdi mdi-baby-carriage text-warning me-1"></i> Infant (0-2 yrs)</td>
-                                                    <td><span class="badge bg-secondary fs-12" id="flight_infant_pax_label">0</span></td>
-                                                    <td>
-                                                        <input type="number" step="0.01" name="flight_infant_cost" id="flight_infant_cost"
-                                                            class="form-control form-control-sm text-end flight-tier-calc" placeholder="0.00" value="0">
-                                                    </td>
-                                                    <td class="text-end fw-bold text-danger"><span id="flight_infant_cost_sar_disp">0.00</span> <span class="flight-curr-label">SAR</span></td>
-                                                    <td>
-                                                        <input type="number" step="0.01" name="flight_infant_sell" id="flight_infant_sell"
-                                                            class="form-control form-control-sm text-end flight-tier-calc" placeholder="0.00" value="0">
-                                                    </td>
-                                                    <td class="text-end fw-bold text-success"><span id="flight_infant_sell_sar_disp">0.00</span> <span class="flight-curr-label">SAR</span></td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                    {{-- Hidden fields for Controller compatibility --}}
+                                    <input type="hidden" name="flight_adult_cost" id="flight_adult_cost" value="0">
+                                    <input type="hidden" name="flight_adult_sell" id="flight_adult_sell" value="0">
+                                    <input type="hidden" name="flight_child_cost" id="flight_child_cost" value="0">
+                                    <input type="hidden" name="flight_child_sell" id="flight_child_sell" value="0">
+                                    <input type="hidden" name="flight_infant_cost" id="flight_infant_cost" value="0">
+                                    <input type="hidden" name="flight_infant_sell" id="flight_infant_sell" value="0">
+                                    <span id="flight_adult_pax_label" style="display:none;"></span>
+                                    <span id="flight_child_pax_label" style="display:none;"></span>
+                                    <span id="flight_infant_pax_label" style="display:none;"></span>
+                                    <span id="flight_adult_cost_sar_disp" style="display:none;"></span>
+                                    <span id="flight_adult_sell_sar_disp" style="display:none;"></span>
+                                    <span id="flight_child_cost_sar_disp" style="display:none;"></span>
+                                    <span id="flight_child_sell_sar_disp" style="display:none;"></span>
+                                    <span id="flight_infant_cost_sar_disp" style="display:none;"></span>
+                                    <span id="flight_infant_sell_sar_disp" style="display:none;"></span>
+
+                                    {{-- Individual Passenger Air Ticket Rates & Information --}}
+                                    <div id="flightPersonsList"></div>
 
                                     {{-- Flight Dual Currency Totals Display --}}
                                     <div class="row g-2 p-2 rounded bg-light border">
@@ -501,12 +461,6 @@
                                 </div>
                             </div>
 
-                            {{-- PASSENGER TICKETS --}}
-                            <h6 class="text-muted border-bottom pb-2 mb-3">
-                                Passenger Tickets
-                                <small class="text-info ms-2">(Auto-generated from No. of Pax)</small>
-                            </h6>
-                            <div id="flightPersonsList"></div>
 
                             <div class="d-flex justify-content-between mt-4">
                                 <button type="button" class="btn btn-outline-secondary btn-prev">
@@ -1118,6 +1072,20 @@
             const combined = (sur + ' ' + given).trim();
             const el = document.getElementById(`person_name_${idx}`);
             if (el) el.value = combined;
+
+            // Sync with flight table passenger name
+            const flNameDisp = document.querySelector(`#flight_person_row_${idx} .person-flight-name-disp`);
+            const flNameInput = document.querySelector(`#flight_person_row_${idx} .person-flight-name`);
+            if (flNameDisp && combined) flNameDisp.textContent = combined;
+            if (flNameInput && combined) flNameInput.value = combined;
+
+            // Sync with all hotel tables passenger names
+            document.querySelectorAll(`.hotel-person-row[data-person-idx="${idx}"]`).forEach(pRow => {
+                const hNameDisp = pRow.querySelector('.person-hotel-name-disp');
+                const hNameInput = pRow.querySelector('.person-hotel-name');
+                if (hNameDisp && combined) hNameDisp.textContent = combined;
+                if (hNameInput && combined) hNameInput.value = combined;
+            });
         }
 
         function onPackageSelectChange(sel) {
@@ -1278,6 +1246,7 @@
                 rebuildPersons();
                 syncFlightPersons();
                 syncVisas();
+                syncAllHotelPersons();
             });
         });
 
@@ -1293,38 +1262,135 @@
             rebuildPersons();
             syncFlightPersons();
             syncVisas();
+            syncAllHotelPersons();
         });
 
         function syncFlightPersons() {
             const pax = parseInt(document.getElementById('no_of_pax')?.value) || 1;
             const list = document.getElementById('flightPersonsList');
             if (!list) return;
-            list.innerHTML = '';
+
+            const curr = document.getElementById('flight_currency')?.value || 'SAR';
+            const costRoe = (curr === 'PKR') ? 1 : (parseFloat(document.getElementById('flight_cost_roe')?.value) || parseFloat(document.getElementById('flight_roe')?.value) || 75);
+            const saleRoe = (curr === 'PKR') ? 1 : (parseFloat(document.getElementById('flight_sale_roe')?.value) || costRoe || 75);
+
+            // Preserve any existing DOM input values so user typing is not wiped out
+            const existingRowData = {};
+            list.querySelectorAll('.flight-person-row').forEach(row => {
+                const idx = row.getAttribute('data-idx');
+                if (idx !== null) {
+                    existingRowData[idx] = {
+                        pax_type: row.querySelector('.person-flight-pax-type')?.value,
+                        ticket:   row.querySelector('.person-flight-ticket')?.value,
+                        cost:     row.querySelector('.person-flight-cost')?.value,
+                        sell:     row.querySelector('.person-flight-sell')?.value,
+                    };
+                }
+            });
+
+            let rowsHtml = '';
             for (let i = 0; i < pax; i++) {
                 const personName = document.getElementById(`person_name_${i}`)?.value || `Passenger ${i + 1}`;
                 const personPass = document.getElementById(`person_passport_${i}`)?.value || '';
-                list.insertAdjacentHTML('beforeend', `
-                <div class="border rounded p-3 mb-2">
-                    <strong class="text-primary" style="font-size:13px;">Passenger ${i + 1}: ${personName}</strong>
-                    <div class="row g-2 mt-1">
-                        <div class="col-md-4">
-                            <label class="form-label" style="font-size:12px;">Passenger Name</label>
-                            <input type="text" name="flight_persons[${i}][name]" class="form-control form-control-sm"
-                                   value="${personName}" placeholder="Name on ticket">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label" style="font-size:12px;">Passport #</label>
-                            <input type="text" name="flight_persons[${i}][passport]" class="form-control form-control-sm"
-                                   value="${personPass}" placeholder="Passport #">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label" style="font-size:12px;">Ticket / Seat #</label>
-                            <input type="text" name="flight_persons[${i}][ticket]" class="form-control form-control-sm"
-                                   placeholder="e.g. 24A">
+
+                const inDom = existingRowData[i];
+
+                let pType = 'adult';
+                let pTicket = '';
+                let pCost = '';
+                let pSell = '';
+
+                if (inDom) {
+                    pType   = inDom.pax_type || 'adult';
+                    pTicket = inDom.ticket || '';
+                    pCost   = inDom.cost !== undefined ? inDom.cost : '';
+                    pSell   = inDom.sell !== undefined ? inDom.sell : '';
+                }
+
+                const costVal = parseFloat(pCost) || 0;
+                const sellVal = parseFloat(pSell) || 0;
+
+                rowsHtml += `
+                <tr class="flight-person-row" data-idx="${i}" id="flight_person_row_${i}">
+                    <td class="text-center text-muted fw-bold">${i + 1}</td>
+                    <td>
+                        <strong class="text-primary person-flight-name-disp">${personName}</strong>
+                        <input type="hidden" name="flight_persons[${i}][name]" class="person-flight-name" value="${personName}">
+                    </td>
+                    <td>
+                        <select name="flight_persons[${i}][pax_type]" class="form-select form-select-sm person-flight-pax-type">
+                            <option value="adult" ${pType === 'adult' ? 'selected' : ''}>Adult</option>
+                            <option value="child" ${pType === 'child' ? 'selected' : ''}>Child</option>
+                            <option value="infant" ${pType === 'infant' ? 'selected' : ''}>Infant</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input type="text" name="flight_persons[${i}][passport]" class="form-control form-control-sm person-flight-passport" value="${personPass}" placeholder="Passport #">
+                    </td>
+                    <td>
+                        <input type="text" name="flight_persons[${i}][ticket]" class="form-control form-control-sm person-flight-ticket" value="${pTicket}" placeholder="Seat / Ticket #">
+                    </td>
+                    <td>
+                        <input type="number" step="0.01" name="flight_persons[${i}][flight_cost]" class="form-control form-control-sm text-end person-flight-cost flight-rate-calc" value="${pCost}" placeholder="0.00">
+                        <small class="text-danger d-block text-end person-flight-cost-pkr-disp" style="font-size:11px;">${(costVal * costRoe).toFixed(2)} PKR</small>
+                    </td>
+                    <td>
+                        <input type="number" step="0.01" name="flight_persons[${i}][flight_sell]" class="form-control form-control-sm text-end person-flight-sell flight-rate-calc" value="${pSell}" placeholder="0.00">
+                        <small class="text-success d-block text-end person-flight-sell-pkr-disp" style="font-size:11px;">${(sellVal * saleRoe).toFixed(2)} PKR</small>
+                    </td>
+                </tr>`;
+            }
+
+            list.innerHTML = `
+                <div class="p-2 px-3 mb-2 border rounded bg-light d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <div>
+                        <span class="fw-bold text-dark fs-12"><i class="mdi mdi-account-multiple-check me-1 text-primary"></i> Individual Passenger Air Ticket Rates:</span>
+                        <small class="text-muted d-block" style="font-size:11px;">Enter custom rates for each passenger independently below (e.g. Person 1 and Person 2 can have different rates).</small>
+                    </div>
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <div class="input-group input-group-sm" style="width: auto;">
+                            <span class="input-group-text bg-white fs-11">Adult Rate (<span class="flight-curr-label">${curr}</span>):</span>
+                            <input type="number" step="0.01" id="quick_adult_cost" class="form-control form-control-sm text-end" placeholder="Cost" style="width: 80px;">
+                            <input type="number" step="0.01" id="quick_adult_sell" class="form-control form-control-sm text-end" placeholder="Sell" style="width: 80px;">
+                            <button type="button" class="btn btn-primary btn-sm" id="btnQuickApplyAdults"><i class="mdi mdi-check me-1"></i> Apply to All Adults</button>
                         </div>
                     </div>
-                </div>`);
-            }
+                </div>
+                <div class="table-responsive border rounded bg-white shadow-sm mb-3">
+                    <table class="table table-sm table-hover align-middle mb-0" id="flightPersonsTable">
+                        <thead class="table-light fs-12">
+                            <tr>
+                                <th style="width: 30px;" class="text-center">#</th>
+                                <th style="width: 22%;">Passenger Name</th>
+                                <th style="width: 110px;">Category</th>
+                                <th style="width: 15%;">Passport #</th>
+                                <th style="width: 15%;">Ticket / Seat #</th>
+                                <th style="width: 15%;" class="text-danger text-end">Cost (<span class="flight-curr-label">${curr}</span>)</th>
+                                <th style="width: 15%;" class="text-success text-end">Sell (<span class="flight-curr-label">${curr}</span>)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="flightPersonsTableBody">
+                            ${rowsHtml}
+                        </tbody>
+                        <tfoot class="table-light fw-bold fs-12 border-top">
+                            <tr>
+                                <td colspan="4" class="text-dark">Total Flight Tickets (${pax} Passengers)</td>
+                                <td class="text-end text-muted small">Total:</td>
+                                <td class="text-end text-danger">
+                                    <span id="tbl_flight_cost_curr_total">0.00 ${curr}</span>
+                                    <br><small class="text-danger fw-normal" id="tbl_flight_cost_pkr_total">0.00 PKR</small>
+                                </td>
+                                <td class="text-end text-success">
+                                    <span id="tbl_flight_sell_curr_total">0.00 ${curr}</span>
+                                    <br><small class="text-success fw-normal" id="tbl_flight_sell_pkr_total">0.00 PKR</small>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            `;
+
+            calculateFlight();
         }
 
         function syncVisas() {
@@ -1491,11 +1557,12 @@
             }
         }
 
-        // Flight Calculation (Dynamic Currency & Dual ROE for Adult, Child, Infant)
+        // Flight Calculation (Dynamic Currency & Dual ROE for Individual Passengers and Tiers)
         function calculateFlight() {
             const adults   = parseInt(document.getElementById('pax_adults')?.value) || 0;
             const children = parseInt(document.getElementById('pax_children')?.value) || 0;
             const infants  = parseInt(document.getElementById('pax_infants')?.value) || 0;
+            const pax      = Math.max(1, adults + children + infants);
 
             const curr = document.getElementById('flight_currency')?.value || 'SAR';
             const isPkr = (curr === 'PKR');
@@ -1524,26 +1591,48 @@
             const flightBadge = document.getElementById('flight_currency_badge');
             if (flightBadge) flightBadge.textContent = isPkr ? 'PKR Direct (ROE = 1)' : `Dual Currency (${curr} & PKR)`;
 
-            const adultCostCurr = parseFloat(document.getElementById('flight_adult_cost')?.value) || 0;
-            const adultSellCurr = parseFloat(document.getElementById('flight_adult_sell')?.value) || 0;
+            // Check individual passenger rows in flightPersonsTable
+            const personRows = document.querySelectorAll('.flight-person-row');
+            let totalCostCurr = 0;
+            let totalSellCurr = 0;
+            let hasCustomPersonRates = false;
 
-            const childCostCurr = parseFloat(document.getElementById('flight_child_cost')?.value) || 0;
-            const childSellCurr = parseFloat(document.getElementById('flight_child_sell')?.value) || 0;
+            if (personRows.length > 0) {
+                personRows.forEach(row => {
+                    const costInput = row.querySelector('.person-flight-cost');
+                    const sellInput = row.querySelector('.person-flight-sell');
+                    const costVal = parseFloat(costInput?.value) || 0;
+                    const sellVal = parseFloat(sellInput?.value) || 0;
 
-            const infantCostCurr = parseFloat(document.getElementById('flight_infant_cost')?.value) || 0;
-            const infantSellCurr = parseFloat(document.getElementById('flight_infant_sell')?.value) || 0;
+                    if (costVal > 0 || sellVal > 0) hasCustomPersonRates = true;
 
-            const totalAdultCostCurr = adults * adultCostCurr;
-            const totalAdultSellCurr = adults * adultSellCurr;
+                    totalCostCurr += costVal;
+                    totalSellCurr += sellVal;
 
-            const totalChildCostCurr = children * childCostCurr;
-            const totalChildSellCurr = children * childSellCurr;
+                    const costPkrDisp = row.querySelector('.person-flight-cost-pkr-disp');
+                    const sellPkrDisp = row.querySelector('.person-flight-sell-pkr-disp');
+                    if (costPkrDisp) costPkrDisp.textContent = (costVal * costRoe).toFixed(2) + ' PKR';
+                    if (sellPkrDisp) sellPkrDisp.textContent = (sellVal * saleRoe).toFixed(2) + ' PKR';
+                });
+            }
 
-            const totalInfantCostCurr = infants * infantCostCurr;
-            const totalInfantSellCurr = infants * infantSellCurr;
+            // Fallback: If no custom person rates yet, check Adult/Child/Infant tier rates
+            if (!hasCustomPersonRates) {
+                const adultCostCurr = parseFloat(document.getElementById('flight_adult_cost')?.value) || 0;
+                const adultSellCurr = parseFloat(document.getElementById('flight_adult_sell')?.value) || 0;
+                const childCostCurr = parseFloat(document.getElementById('flight_child_cost')?.value) || 0;
+                const childSellCurr = parseFloat(document.getElementById('flight_child_sell')?.value) || 0;
+                const infantCostCurr = parseFloat(document.getElementById('flight_infant_cost')?.value) || 0;
+                const infantSellCurr = parseFloat(document.getElementById('flight_infant_sell')?.value) || 0;
 
-            const totalCostCurr = totalAdultCostCurr + totalChildCostCurr + totalInfantCostCurr;
-            const totalSellCurr = totalAdultSellCurr + totalChildSellCurr + totalInfantSellCurr;
+                const tierCostCurr = (adults * adultCostCurr) + (children * childCostCurr) + (infants * infantCostCurr);
+                const tierSellCurr = (adults * adultSellCurr) + (children * childSellCurr) + (infants * infantSellCurr);
+
+                if (tierCostCurr > 0 || tierSellCurr > 0) {
+                    totalCostCurr = tierCostCurr;
+                    totalSellCurr = tierSellCurr;
+                }
+            }
 
             // Operational Cost in PKR using Cost ROE
             const totalCostPkr = totalCostCurr * costRoe;
@@ -1558,21 +1647,21 @@
             const infantBadge = document.getElementById('flight_infant_pax_label');
             if (infantBadge) infantBadge.textContent = infants;
 
-            // Row displays
+            // Table footer totals
+            const tblCostCurr = document.getElementById('tbl_flight_cost_curr_total');
+            if (tblCostCurr) tblCostCurr.textContent = totalCostCurr.toFixed(2) + ' ' + curr;
+            const tblCostPkr = document.getElementById('tbl_flight_cost_pkr_total');
+            if (tblCostPkr) tblCostPkr.textContent = totalCostPkr.toFixed(2) + ' PKR';
+            const tblSellCurr = document.getElementById('tbl_flight_sell_curr_total');
+            if (tblSellCurr) tblSellCurr.textContent = totalSellCurr.toFixed(2) + ' ' + curr;
+            const tblSellPkr = document.getElementById('tbl_flight_sell_pkr_total');
+            if (tblSellPkr) tblSellPkr.textContent = totalSellPkr.toFixed(2) + ' PKR';
+
+            // Row displays for tier table
             const elAdultCostDisp = document.getElementById('flight_adult_cost_sar_disp');
-            if (elAdultCostDisp) elAdultCostDisp.textContent = totalAdultCostCurr.toFixed(2);
+            if (elAdultCostDisp) elAdultCostDisp.textContent = totalCostCurr.toFixed(2);
             const elAdultSellDisp = document.getElementById('flight_adult_sell_sar_disp');
-            if (elAdultSellDisp) elAdultSellDisp.textContent = totalAdultSellCurr.toFixed(2);
-
-            const elChildCostDisp = document.getElementById('flight_child_cost_sar_disp');
-            if (elChildCostDisp) elChildCostDisp.textContent = totalChildCostCurr.toFixed(2);
-            const elChildSellDisp = document.getElementById('flight_child_sell_sar_disp');
-            if (elChildSellDisp) elChildSellDisp.textContent = totalChildSellCurr.toFixed(2);
-
-            const elInfantCostDisp = document.getElementById('flight_infant_cost_sar_disp');
-            if (elInfantCostDisp) elInfantCostDisp.textContent = totalInfantCostCurr.toFixed(2);
-            const elInfantSellDisp = document.getElementById('flight_infant_sell_sar_disp');
-            if (elInfantSellDisp) elInfantSellDisp.textContent = totalInfantSellCurr.toFixed(2);
+            if (elAdultSellDisp) elAdultSellDisp.textContent = totalSellCurr.toFixed(2);
 
             // Summary cards
             const elCostCurrTot = document.getElementById('flight_cost_sar_total');
@@ -1644,7 +1733,7 @@
             const isPkr = (flightCurr === 'PKR');
 
             const html = `
-            <div class="hotel-block border rounded p-3 mb-3 bg-white shadow-sm">
+            <div class="hotel-block border rounded p-3 mb-3 bg-white shadow-sm" data-hotel-idx="${hotelIdx}">
                 <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
                     <h6 class="text-primary mb-0 fw-bold"><i class="mdi mdi-hotel me-1"></i> ${locLabel}</h6>
                     <button type="button" class="btn btn-outline-danger btn-sm remove-hotel"><i class="mdi mdi-delete-outline me-1"></i> Remove</button>
@@ -1762,14 +1851,64 @@
                         <label class="form-label">Hotel Voucher / Booking Confirmation</label>
                         <input type="file" name="hotels[${hotelIdx}][hotel_voucher]" class="form-control" accept="image/*,.pdf">
                     </div>
+
+                    {{-- Individual Passenger Hotel Rates Table --}}
+                    <div class="col-12 hotel-persons-wrapper mt-3 pt-3 border-top">
+                        <div class="p-2 px-3 mb-2 border rounded bg-light d-flex flex-wrap align-items-center justify-content-between gap-2">
+                            <div>
+                                <span class="fw-bold text-dark fs-12"><i class="mdi mdi-account-multiple me-1 text-primary"></i> Individual Passenger Hotel Rates:</span>
+                                <small class="text-muted d-block" style="font-size:11px;">Enter custom rates per night for each passenger independently below (e.g. Person 1 and Person 2 can have different rates).</small>
+                            </div>
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <div class="input-group input-group-sm" style="width: auto;">
+                                    <span class="input-group-text bg-white fs-11">Rate / Night (<span class="hotel-curr-label">${flightCurr}</span>):</span>
+                                    <input type="number" step="0.01" class="form-control form-control-sm text-end quick-hotel-cost" placeholder="Cost" style="width: 80px;">
+                                    <input type="number" step="0.01" class="form-control form-control-sm text-end quick-hotel-sell" placeholder="Sell" style="width: 80px;">
+                                    <button type="button" class="btn btn-primary btn-sm btn-quick-hotel-apply"><i class="mdi mdi-check me-1"></i> Apply to All Pax</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive border rounded bg-white shadow-sm mb-2">
+                            <table class="table table-sm table-hover align-middle mb-0 hotel-persons-table">
+                                <thead class="table-light fs-12">
+                                    <tr>
+                                        <th style="width: 35px;" class="text-center">#</th>
+                                        <th style="width: 25%;">Passenger Name</th>
+                                        <th style="width: 12%;" class="text-center">Nights</th>
+                                        <th style="width: 25%;" class="text-danger text-end">Cost / Night (<span class="hotel-curr-label">${flightCurr}</span>)</th>
+                                        <th style="width: 25%;" class="text-success text-end">Sell / Night (<span class="hotel-curr-label">${flightCurr}</span>)</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="hotel-persons-tbody">
+                                </tbody>
+                                <tfoot class="table-light fw-bold fs-12 border-top">
+                                    <tr>
+                                        <td colspan="3" class="text-dark">Hotel Passenger Totals:</td>
+                                        <td class="text-end text-danger">
+                                            <span class="hotel-person-tbl-cost-curr">0.00 ${flightCurr}</span>
+                                            <br><small class="text-danger fw-normal hotel-person-tbl-cost-pkr">0.00 PKR</small>
+                                        </td>
+                                        <td class="text-end text-success">
+                                            <span class="hotel-person-tbl-sell-curr">0.00 ${flightCurr}</span>
+                                            <br><small class="text-success fw-normal hotel-person-tbl-sell-pkr">0.00 PKR</small>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>`;
 
             document.getElementById('hotelsList').insertAdjacentHTML('beforeend', html);
+            const lastRow = document.querySelector('#hotelsList .hotel-block:last-child');
             hotelIdx++;
             syncBookingHotelDates();
-            const lastRow = document.querySelector('#hotelsList .hotel-block:last-child');
-            if (lastRow) calculateHotelRow(lastRow);
+            if (lastRow) {
+                syncHotelPersons(lastRow);
+                calculateHotelRow(lastRow);
+            }
             calcTotal();
         }
 
@@ -1818,10 +1957,120 @@
             }
         });
 
+        function syncHotelPersons(hotelBlock) {
+            if (!hotelBlock) return;
+            const pax = parseInt(document.getElementById('no_of_pax')?.value) || 1;
+            const tbody = hotelBlock.querySelector('.hotel-persons-tbody');
+            if (!tbody) return;
+
+            const hotelIdx = hotelBlock.getAttribute('data-hotel-idx') || 0;
+            const curr = hotelBlock.querySelector('.hotel-currency')?.value || 'SAR';
+            const nights = parseFloat(hotelBlock.querySelector('.hotel-nights')?.value) || 1;
+            const isPkr = (curr === 'PKR');
+            const costRoe = isPkr ? 1 : (parseFloat(hotelBlock.querySelector('.hotel-cost-roe')?.value) || parseFloat(hotelBlock.querySelector('.hotel-roe')?.value) || 75);
+            const saleRoe = isPkr ? 1 : (parseFloat(hotelBlock.querySelector('.hotel-sale-roe')?.value) || costRoe || 75);
+
+            // Preserve any existing DOM input values
+            const existingDomData = {};
+            tbody.querySelectorAll('.hotel-person-row').forEach(row => {
+                const pIdx = row.getAttribute('data-person-idx');
+                if (pIdx !== null) {
+                    existingDomData[pIdx] = {
+                        cost: row.querySelector('.hotel-person-cost')?.value,
+                        sell: row.querySelector('.hotel-person-sell')?.value,
+                    };
+                }
+            });
+
+            // Check if saved rates exist in data-person-rates attribute
+            let savedPersonRates = [];
+            try {
+                const rawSaved = hotelBlock.getAttribute('data-person-rates');
+                if (rawSaved) {
+                    savedPersonRates = typeof rawSaved === 'string' ? JSON.parse(rawSaved) : rawSaved;
+                }
+            } catch(e) {}
+
+            let rowsHtml = '';
+            for (let p = 0; p < pax; p++) {
+                const personName = document.getElementById(`person_name_${p}`)?.value || `Passenger ${p + 1}`;
+                const inDom = existingDomData[p];
+                const inSaved = (savedPersonRates && savedPersonRates[p]) ? savedPersonRates[p] : null;
+
+                let pCost = '';
+                let pSell = '';
+
+                if (inDom) {
+                    pCost = inDom.cost !== undefined ? inDom.cost : '';
+                    pSell = inDom.sell !== undefined ? inDom.sell : '';
+                } else if (inSaved) {
+                    pCost = inSaved.cost_per_night !== undefined ? inSaved.cost_per_night : (inSaved.cost || '');
+                    pSell = inSaved.selling_per_night !== undefined ? inSaved.selling_per_night : (inSaved.sell || '');
+                }
+
+                // If still empty and hotel has cost_per_night / selling_per_night from earlier
+                if (pCost === '') {
+                    const hCostRate = parseFloat(hotelBlock.querySelector('.hotel-cost-rate')?.value) || 0;
+                    if (hCostRate > 0) {
+                        pCost = (pax > 1 ? (hCostRate / pax).toFixed(2) : hCostRate.toFixed(2));
+                    }
+                }
+                if (pSell === '') {
+                    const hSellRate = parseFloat(hotelBlock.querySelector('.hotel-sell-rate')?.value) || 0;
+                    if (hSellRate > 0) {
+                        pSell = (pax > 1 ? (hSellRate / pax).toFixed(2) : hSellRate.toFixed(2));
+                    }
+                }
+
+                const costNum = parseFloat(pCost) || 0;
+                const sellNum = parseFloat(pSell) || 0;
+                const totCostForeign = costNum * nights;
+                const totCostPkr = totCostForeign * costRoe;
+                const totSellForeign = sellNum * nights;
+                const totSellPkr = totSellForeign * saleRoe;
+
+                rowsHtml += `
+                <tr class="hotel-person-row" data-person-idx="${p}">
+                    <td class="text-center text-muted fw-bold">${p + 1}</td>
+                    <td>
+                        <strong class="text-primary person-hotel-name-disp">${personName}</strong>
+                        <input type="hidden" name="hotels[${hotelIdx}][person_rates][${p}][name]" class="person-hotel-name" value="${personName}">
+                    </td>
+                    <td class="text-center fw-semibold hotel-person-nights-disp">${nights}</td>
+                    <td>
+                        <input type="number" step="0.01" name="hotels[${hotelIdx}][person_rates][${p}][cost_per_night]"
+                            class="form-control form-control-sm text-end hotel-person-cost" value="${pCost}" placeholder="0.00">
+                        <small class="text-danger d-block text-end hotel-person-cost-disp" style="font-size:11px;">
+                            ${totCostForeign.toFixed(2)} ${curr} (${totCostPkr.toFixed(2)} PKR)
+                        </small>
+                        <input type="hidden" name="hotels[${hotelIdx}][person_rates][${p}][total_cost]" class="hotel-person-total-cost" value="${totCostPkr.toFixed(2)}">
+                    </td>
+                    <td>
+                        <input type="number" step="0.01" name="hotels[${hotelIdx}][person_rates][${p}][selling_per_night]"
+                            class="form-control form-control-sm text-end hotel-person-sell" value="${pSell}" placeholder="0.00">
+                        <small class="text-success d-block text-end hotel-person-sell-disp" style="font-size:11px;">
+                            ${totSellForeign.toFixed(2)} ${curr} (${totSellPkr.toFixed(2)} PKR)
+                        </small>
+                        <input type="hidden" name="hotels[${hotelIdx}][person_rates][${p}][total_selling]" class="hotel-person-total-sell" value="${totSellPkr.toFixed(2)}">
+                    </td>
+                </tr>`;
+            }
+
+            tbody.innerHTML = rowsHtml;
+        }
+
+        function syncAllHotelPersons() {
+            document.querySelectorAll('.hotel-block').forEach((block, idx) => {
+                block.setAttribute('data-hotel-idx', idx);
+                syncHotelPersons(block);
+                calculateHotelRow(block);
+            });
+        }
+
         function calculateHotelRow(row) {
             if (!row) return;
             const nights = parseFloat(row.querySelector('.hotel-nights')?.value) || 0;
-            const rooms = parseFloat(row.querySelector('.hotel-rooms')?.value) || 0;
+            const rooms = parseFloat(row.querySelector('.hotel-rooms')?.value) || 1;
             const curr = row.querySelector('.hotel-currency')?.value || 'SAR';
             const isPkr = (curr === 'PKR');
 
@@ -1845,13 +2094,62 @@
             row.querySelectorAll('.hotel-curr-label').forEach(el => el.textContent = curr);
             row.querySelectorAll('.hotel-curr-prefix').forEach(el => el.textContent = `1 ${curr} =`);
             row.querySelectorAll('.hotel-curr-name').forEach(el => el.textContent = `${curr}:`);
+            row.querySelectorAll('.hotel-person-nights-disp').forEach(el => el.textContent = nights);
 
-            const costRate = parseFloat(row.querySelector('.hotel-cost-rate')?.value) || 0;
-            const sellRate = parseFloat(row.querySelector('.hotel-sell-rate')?.value) || 0;
+            const personRows = row.querySelectorAll('.hotel-person-row');
+            let sumPersonCostForeign = 0;
+            let sumPersonSellForeign = 0;
+            let hasPersonRates = false;
 
-            const costCurr = nights * rooms * costRate;
+            if (personRows.length > 0) {
+                personRows.forEach(pRow => {
+                    const cInput = pRow.querySelector('.hotel-person-cost');
+                    const sInput = pRow.querySelector('.hotel-person-sell');
+                    const cRate = parseFloat(cInput?.value) || 0;
+                    const sRate = parseFloat(sInput?.value) || 0;
+
+                    if (cRate > 0 || sRate > 0) hasPersonRates = true;
+
+                    const pTotCostCurr = cRate * nights;
+                    const pTotCostPkr = pTotCostCurr * costRoe;
+                    const pTotSellCurr = sRate * nights;
+                    const pTotSellPkr = pTotSellCurr * saleRoe;
+
+                    sumPersonCostForeign += pTotCostCurr;
+                    sumPersonSellForeign += pTotSellCurr;
+
+                    const cDisp = pRow.querySelector('.hotel-person-cost-disp');
+                    const sDisp = pRow.querySelector('.hotel-person-sell-disp');
+                    if (cDisp) cDisp.textContent = `${pTotCostCurr.toFixed(2)} ${curr} (${pTotCostPkr.toFixed(2)} PKR)`;
+                    if (sDisp) sDisp.textContent = `${pTotSellCurr.toFixed(2)} ${curr} (${pTotSellPkr.toFixed(2)} PKR)`;
+
+                    const hidCost = pRow.querySelector('.hotel-person-total-cost');
+                    const hidSell = pRow.querySelector('.hotel-person-total-sell');
+                    if (hidCost) hidCost.value = pTotCostPkr.toFixed(2);
+                    if (hidSell) hidSell.value = pTotSellPkr.toFixed(2);
+                });
+            }
+
+            let costCurr = 0;
+            let sellCurr = 0;
+
+            if (hasPersonRates) {
+                costCurr = sumPersonCostForeign;
+                sellCurr = sumPersonSellForeign;
+                if (nights > 0) {
+                    const crInput = row.querySelector('.hotel-cost-rate');
+                    if (crInput) crInput.value = (costCurr / nights).toFixed(2);
+                    const srInput = row.querySelector('.hotel-sell-rate');
+                    if (srInput) srInput.value = (sellCurr / nights).toFixed(2);
+                }
+            } else {
+                const costRate = parseFloat(row.querySelector('.hotel-cost-rate')?.value) || 0;
+                const sellRate = parseFloat(row.querySelector('.hotel-sell-rate')?.value) || 0;
+                costCurr = nights * rooms * costRate;
+                sellCurr = nights * rooms * sellRate;
+            }
+
             const costPkr = costCurr * costRoe;
-            const sellCurr = nights * rooms * sellRate;
             const sellPkr = sellCurr * saleRoe;
 
             const costSarDisp = row.querySelector('.hotel-cost-sar-disp');
@@ -1869,6 +2167,16 @@
             if (sellSarDisp) sellSarDisp.textContent = sellCurr.toFixed(2) + ' ' + curr;
             if (sellPkrDisp) sellPkrDisp.textContent = sellPkr.toFixed(2) + ' PKR';
             if (sellTotalInput) sellTotalInput.value = sellPkr.toFixed(2);
+
+            const tblCostCurr = row.querySelector('.hotel-person-tbl-cost-curr');
+            const tblCostPkr = row.querySelector('.hotel-person-tbl-cost-pkr');
+            const tblSellCurr = row.querySelector('.hotel-person-tbl-sell-curr');
+            const tblSellPkr = row.querySelector('.hotel-person-tbl-sell-pkr');
+
+            if (tblCostCurr) tblCostCurr.textContent = costCurr.toFixed(2) + ' ' + curr;
+            if (tblCostPkr) tblCostPkr.textContent = costPkr.toFixed(2) + ' PKR';
+            if (tblSellCurr) tblSellCurr.textContent = sellCurr.toFixed(2) + ' ' + curr;
+            if (tblSellPkr) tblSellPkr.textContent = sellPkr.toFixed(2) + ' PKR';
 
             let totalHotelSelling = 0;
             document.querySelectorAll('.hotel-sell-total').forEach(el => {
@@ -2255,6 +2563,13 @@
             const flSellDisp = document.getElementById('flight_sell_sar_total')?.textContent || '';
             flightForeign = parseFloat(flSellDisp) || 0;
             let flightPkr = parseFloat(document.getElementById('flight_charges')?.value) || 0;
+            const flightSaleRoe = (flightCurr === 'PKR') ? 1 : (parseFloat(document.getElementById('flight_sale_roe')?.value) || parseFloat(document.getElementById('flight_cost_roe')?.value) || 75);
+
+            if (flightForeign === 0 && flightPkr > 0 && flightCurr !== 'PKR' && flightSaleRoe > 0) {
+                flightForeign = flightPkr / flightSaleRoe;
+                const elFlDisp = document.getElementById('flight_sell_sar_total');
+                if (elFlDisp) elFlDisp.textContent = flightForeign.toFixed(2) + ' ' + flightCurr;
+            }
 
             // 2. Hotel Foreign & PKR
             let hotelCostForeign = 0;
@@ -2263,22 +2578,21 @@
             let hotelSellPkr = 0;
             let hotelCurrs = new Set();
             document.querySelectorAll('.hotel-block').forEach(row => {
-                const nights   = parseFloat(row.querySelector('.hotel-nights')?.value) || 0;
-                const rooms    = parseFloat(row.querySelector('.hotel-rooms')?.value) || 0;
-                const costRate = parseFloat(row.querySelector('.hotel-cost-rate')?.value) || 0;
-                const sellRate = parseFloat(row.querySelector('.hotel-sell-rate')?.value) || 0;
-                const curr     = row.querySelector('.hotel-currency')?.value || 'SAR';
-                const isPkr    = (curr === 'PKR');
-                const costRoe  = isPkr ? 1 : (parseFloat(row.querySelector('.hotel-cost-roe')?.value) || parseFloat(row.querySelector('.hotel-roe')?.value) || 75);
-                const saleRoe  = isPkr ? 1 : (parseFloat(row.querySelector('.hotel-sale-roe')?.value) || costRoe || 75);
+                const costTotalInput = row.querySelector('.hotel-cost-total');
+                const sellTotalInput = row.querySelector('.hotel-sell-total');
+                const costSarDisp = row.querySelector('.hotel-cost-sar-disp');
+                const sellSarDisp = row.querySelector('.hotel-sell-sar-disp');
+                const curr = row.querySelector('.hotel-currency')?.value || 'SAR';
 
-                const cAmt = nights * rooms * costRate;
-                hotelCostForeign += cAmt;
-                hotelCostPkr += cAmt * costRoe;
+                const cPkr = parseFloat(costTotalInput?.value) || 0;
+                const sPkr = parseFloat(sellTotalInput?.value) || 0;
+                const cForeign = parseFloat(costSarDisp?.textContent) || 0;
+                const sForeign = parseFloat(sellSarDisp?.textContent) || 0;
 
-                const sAmt = nights * rooms * sellRate;
-                hotelSellForeign += sAmt;
-                hotelSellPkr += sAmt * saleRoe;
+                hotelCostForeign += cForeign;
+                hotelCostPkr += cPkr;
+                hotelSellForeign += sForeign;
+                hotelSellPkr += sPkr;
                 hotelCurrs.add(curr);
             });
             const hotelCurrLabel = hotelCurrs.size === 1 ? Array.from(hotelCurrs)[0] : (hotelCurrs.size > 1 ? 'Mix' : 'SAR');
@@ -2426,7 +2740,7 @@
 
         // Global Event Delegation for live calculations
         document.addEventListener('input', function(e) {
-            if (e.target.matches('.hotel-nights, .hotel-rooms, .hotel-roe, .hotel-cost-roe, .hotel-sale-roe, .hotel-cost-rate, .hotel-sell-rate')) {
+            if (e.target.matches('.hotel-nights, .hotel-rooms, .hotel-roe, .hotel-cost-roe, .hotel-sale-roe, .hotel-cost-rate, .hotel-sell-rate, .hotel-person-cost, .hotel-person-sell')) {
                 const row = e.target.closest('.hotel-block');
                 calculateHotelRow(row);
             }
@@ -2438,7 +2752,7 @@
                 const row = e.target.closest('.route-block');
                 calculateTransportRow(row);
             }
-            if (e.target.matches('.flight-tier-calc, #flight_roe, #flight_cost_roe, #flight_sale_roe')) {
+            if (e.target.matches('.flight-rate-calc, .flight-tier-calc, #flight_roe, #flight_cost_roe, #flight_sale_roe, .person-flight-pax-type')) {
                 calculateFlight();
             }
             if (e.target.matches('.calc, #package_cost, #other_charges, #discount, #additional_services_amount, #total_received')) {
@@ -2450,7 +2764,7 @@
         });
 
         document.addEventListener('change', function(e) {
-            if (e.target.matches('.hotel-nights, .hotel-rooms, .hotel-roe, .hotel-cost-roe, .hotel-sale-roe, .hotel-cost-rate, .hotel-sell-rate')) {
+            if (e.target.matches('.hotel-nights, .hotel-rooms, .hotel-roe, .hotel-cost-roe, .hotel-sale-roe, .hotel-cost-rate, .hotel-sell-rate, .hotel-person-cost, .hotel-person-sell')) {
                 const row = e.target.closest('.hotel-block');
                 calculateHotelRow(row);
             }
@@ -2462,7 +2776,7 @@
                 const row = e.target.closest('.route-block');
                 calculateTransportRow(row);
             }
-            if (e.target.matches('.flight-tier-calc, #flight_roe, #flight_cost_roe, #flight_sale_roe')) {
+            if (e.target.matches('.flight-rate-calc, .flight-tier-calc, #flight_roe, #flight_cost_roe, #flight_sale_roe, .person-flight-pax-type')) {
                 calculateFlight();
             }
             if (e.target.matches('.calc, #package_cost, #other_charges, #discount, #additional_services_amount, #total_received')) {
@@ -2473,10 +2787,51 @@
             }
         });
 
+        // Quick Apply Adult Rate Handler
+        document.addEventListener('click', function(e) {
+            if (e.target && (e.target.id === 'btnQuickApplyAdults' || e.target.closest('#btnQuickApplyAdults'))) {
+                e.preventDefault();
+                const costVal = parseFloat(document.getElementById('quick_adult_cost')?.value) || 0;
+                const sellVal = parseFloat(document.getElementById('quick_adult_sell')?.value) || 0;
+
+                document.querySelectorAll('.flight-person-row').forEach(row => {
+                    const type = row.querySelector('.person-flight-pax-type')?.value;
+                    if (type === 'adult' || !type) {
+                        const cInput = row.querySelector('.person-flight-cost');
+                        if (cInput && costVal > 0) cInput.value = costVal.toFixed(2);
+                        const sInput = row.querySelector('.person-flight-sell');
+                        if (sInput && sellVal > 0) sInput.value = sellVal.toFixed(2);
+                    }
+                });
+                calculateFlight();
+            }
+        });
+
+        // Quick Apply Hotel Pax Handler
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.btn-quick-hotel-apply');
+            if (btn) {
+                e.preventDefault();
+                const hotelBlock = btn.closest('.hotel-block');
+                if (!hotelBlock) return;
+                const costVal = hotelBlock.querySelector('.quick-hotel-cost')?.value;
+                const sellVal = hotelBlock.querySelector('.quick-hotel-sell')?.value;
+
+                hotelBlock.querySelectorAll('.hotel-person-cost').forEach(cInput => {
+                    if (costVal !== '' && !isNaN(parseFloat(costVal))) cInput.value = parseFloat(costVal).toFixed(2);
+                });
+                hotelBlock.querySelectorAll('.hotel-person-sell').forEach(sInput => {
+                    if (sellVal !== '' && !isNaN(parseFloat(sellVal))) sInput.value = parseFloat(sellVal).toFixed(2);
+                });
+                calculateHotelRow(hotelBlock);
+            }
+        });
+
         // Initialize on page load
         rebuildPersons();
         syncFlightPersons();
         syncVisas();
+        syncAllHotelPersons();
         syncBookingHotelDates();
         calculateFlight();
         calcTotal();

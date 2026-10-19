@@ -27,7 +27,6 @@
                                         <th>#</th>
                                         <th>Name</th>
                                         <th>Company</th>
-                                        <th>Type</th>
                                         <th>Phone</th>
                                         <th>Deleted At</th>
                                         <th>Action</th>
@@ -39,11 +38,7 @@
                                             <td>{{ $loop->iteration }}</td>
                                             <td><strong>{{ $client->name }}</strong></td>
                                             <td>{{ $client->company_name ?? '—' }}</td>
-                                            <td>
-                                                @php $types=['client'=>'bg-primary','vendor'=>'bg-info','customer'=>'bg-secondary']; @endphp
-                                                <span
-                                                    class="badge {{ $types[$client->type] ?? 'bg-secondary' }}">{{ ucfirst($client->type) }}</span>
-                                            </td>
+
                                             <td>{{ $client->phone ?? '—' }}</td>
                                             <td>{{ $client->deleted_at->format('d M Y, h:i A') }}</td>
                                             <td>

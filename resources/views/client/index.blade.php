@@ -39,7 +39,6 @@
                                         <th>Name</th>
                                         <th>Company</th>
                                         <th>Package</th>
-                                        <th>Type</th>
                                         <th>Passport #</th>
                                         <th>CNIC</th>
                                         <th>Phone</th>
@@ -68,18 +67,7 @@
                                                     <span class="text-muted">—</span>
                                                 @endif
                                             </td>
-                                            <td>
-                                                @php
-                                                    $types = [
-                                                        'client' => 'bg-primary',
-                                                        'vendor' => 'bg-info',
-                                                        'customer' => 'bg-secondary',
-                                                    ];
-                                                @endphp
-                                                <span class="badge {{ $types[$client->type] ?? 'bg-secondary' }}">
-                                                    {{ ucfirst($client->type) }}
-                                                </span>
-                                            </td>
+
                                             <td>{{ $client->passport_number ?? '—' }}</td>
                                             <td>{{ $client->cnic ?? '—' }}</td>
                                             <td>{{ $client->phone ?? '—' }}</td>

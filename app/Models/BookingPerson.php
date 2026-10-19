@@ -37,6 +37,10 @@ class BookingPerson extends Model
         'nominee_relation',
         'nominee_cnic',
         'nominee_mobile',
+        'pax_type',
+        'flight_ticket',
+        'flight_cost',
+        'flight_sell',
     ];
 
     public function booking()

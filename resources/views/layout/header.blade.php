@@ -186,6 +186,13 @@
                                     <span>Banks</span>
                                 </a>
                             </li>
+
+                            <li>
+                                <a href="{{ route('supplier.index') }}">
+                                    <i data-feather="truck"></i>
+                                    <span>Suppliers</span>
+                                </a>
+                            </li>
                             @can('airline_view')
                                 <li>
                                     <a class="tp-link" href="{{ route('airline.index') }}">
@@ -420,14 +427,6 @@
                         <span>Companies</span>
                     </a>
                 </li>
-
-                <li>
-                    <a href="{{ route('supplier.index') }}">
-                        <i data-feather="truck"></i>
-                        <span>Suppliers</span>
-                    </a>
-                </li>
-
             </ul>
         </div>
         <div class="clearfix"></div>

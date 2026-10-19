@@ -42,7 +42,6 @@ class ClientController extends Controller
     {
         $request->validate([
             'name'            => 'required|string|max:255',
-            'type'            => 'required|in:client,vendor,customer',
             'company_name'    => 'nullable|string|max:255',
             'package_id'      => 'nullable|exists:packages,id',
             'lead_id'         => 'nullable|exists:leads,id',
@@ -52,13 +51,12 @@ class ClientController extends Controller
             'passport_number' => 'nullable|string|unique:clients,passport_number',
         ], [
             'name.required'           => 'Client name is required.',
-            'type.required'           => 'Please select a client type.',
             'package_id.exists'       => 'Selected package is invalid.',
             'cnic.unique'             => 'This CNIC is already registered with another client.',
             'passport_number.unique'  => 'This Passport Number is already registered with another client.',
         ]);
 
-        $client = Client::create($request->only([
+        $data = $request->only([
             'lead_id',
             'package_id',
             'name',
@@ -67,11 +65,13 @@ class ClientController extends Controller
             'cnic',
             'phone',
             'email',
-            'type',
             'status'
-        ]));
+        ]);
+        $data['type'] = $request->type ?? 'client';
 
-        logUserActivity('Client Created', 'Name: ' . $client->name . ' | Type: ' . $client->type, $client->id, 'Client');
+        $client = Client::create($data);
+
+        logUserActivity('Client Created', 'Name: ' . $client->name, $client->id, 'Client');
 
         return redirect()->route('client.index')->with('success', 'Client added successfully.');
     }
@@ -89,7 +89,6 @@ class ClientController extends Controller
 
         $request->validate([
             'name'            => 'required|string|max:255',
-            'type'            => 'required|in:client,vendor,customer',
             'package_id'      => 'nullable|exists:packages,id',
             'lead_id'         => 'nullable|exists:leads,id',
             'company_name'    => 'nullable|string|max:255',
@@ -99,13 +98,12 @@ class ClientController extends Controller
             'passport_number' => ['nullable', 'string', Rule::unique('clients', 'passport_number')->ignore($client->id)],
         ], [
             'name.required'           => 'Client name is required.',
-            'type.required'           => 'Please select a client type.',
             'package_id.exists'       => 'Selected package is invalid.',
             'cnic.unique'             => 'This CNIC is already registered with another client.',
             'passport_number.unique'  => 'This Passport Number is already registered with another client.',
         ]);
 
-        $client->update($request->only([
+        $data = $request->only([
             'lead_id',
             'package_id',
             'name',
@@ -114,11 +112,15 @@ class ClientController extends Controller
             'cnic',
             'phone',
             'email',
-            'type',
             'status'
-        ]));
+        ]);
+        if ($request->has('type')) {
+            $data['type'] = $request->type;
+        }
 
-        logUserActivity('Client Updated', 'Name: ' . $client->name . ' | Type: ' . $client->type, $client->id, 'Client');
+        $client->update($data);
+
+        logUserActivity('Client Updated', 'Name: ' . $client->name, $client->id, 'Client');
 
         return redirect()->route('client.index')->with('success', 'Client updated.');
     }
@@ -127,7 +129,7 @@ class ClientController extends Controller
     {
         $client = Client::findOrFail($id);
 
-        logUserActivity('Client Deleted', 'Name: ' . $client->name . ' | Type: ' . $client->type, $client->id, 'Client');
+        logUserActivity('Client Deleted', 'Name: ' . $client->name, $client->id, 'Client');
 
         $client->delete();
 
@@ -145,7 +147,7 @@ class ClientController extends Controller
         $client = Client::onlyTrashed()->findOrFail($id);
         $client->restore();
 
-        logUserActivity('Client Restored', 'Name: ' . $client->name . ' | Type: ' . $client->type, $client->id, 'Client');
+        logUserActivity('Client Restored', 'Name: ' . $client->name, $client->id, 'Client');
 
         return redirect()->route('client.trash')->with('success', 'Client restored.');
     }

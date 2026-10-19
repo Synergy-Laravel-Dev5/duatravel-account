@@ -101,26 +101,44 @@ class ProfitLossReportController extends Controller
             // Direct Costs Breakdown in PKR
             $hotelCostPkr = 0;
             foreach ($b->hotels as $h) {
-                $hRoe = (float) ($h->roe > 0 ? $h->roe : 1);
-                $hCost = (float) ($h->cost_amount > 0 ? $h->cost_amount : ($h->cost_per_night * ($h->no_of_nights ?: 1) * ($h->no_of_rooms ?: 1)));
-                $hotelCostPkr += ($hCost * $hRoe);
+                if ((float) $h->cost_amount > 0) {
+                    $hotelCostPkr += (float) $h->cost_amount;
+                } else {
+                    $hCurr = strtoupper($h->currency ?? 'SAR');
+                    $hRoe = ($hCurr === 'PKR') ? 1 : (float) ($h->cost_roe > 0 ? $h->cost_roe : ($h->roe > 0 ? $h->roe : 75));
+                    $hotelCostPkr += (float) ($h->cost_per_night * ($h->no_of_nights ?: 1) * ($h->no_of_rooms ?: 1)) * $hRoe;
+                }
             }
 
-            $fRoe = (float) ($b->flight_roe > 0 ? $b->flight_roe : 1);
-            $flightCostPkr = (float) ($b->flight_cost > 0 ? $b->flight_cost : ($b->flight_cost_rate * $pax)) * $fRoe;
+            $flightCostPkr = 0;
+            if ((float) $b->flight_cost > 0) {
+                $flightCostPkr = (float) $b->flight_cost;
+            } else {
+                $fCurr = strtoupper($b->flight_currency ?? 'SAR');
+                $fRoe = ($fCurr === 'PKR') ? 1 : (float) ($b->flight_cost_roe > 0 ? $b->flight_cost_roe : ($b->flight_roe > 0 ? $b->flight_roe : 75));
+                $flightCostPkr = (float) ($b->flight_cost_rate > 0 ? ($b->flight_cost_rate * $pax) : 0) * $fRoe;
+            }
 
             $visaCostPkr = 0;
             foreach ($b->visas as $v) {
-                $vRoe = (float) ($v->roe > 0 ? $v->roe : 1);
-                $vCost = (float) ($v->cost_amount > 0 ? $v->cost_amount : $v->cost_rate);
-                $visaCostPkr += ($vCost * $vRoe);
+                if ((float) $v->cost_amount > 0) {
+                    $visaCostPkr += (float) $v->cost_amount;
+                } else {
+                    $vCurr = strtoupper($v->currency ?? 'SAR');
+                    $vRoe = ($vCurr === 'PKR') ? 1 : (float) ($v->cost_roe > 0 ? $v->cost_roe : ($v->roe > 0 ? $v->roe : 75));
+                    $visaCostPkr += (float) $v->cost_rate * $vRoe;
+                }
             }
 
             $transportCostPkr = 0;
             foreach ($b->transports as $t) {
-                $tRoe = (float) ($t->roe > 0 ? $t->roe : 1);
-                $tCost = (float) ($t->cost_amount > 0 ? $t->cost_amount : $t->cost_rate);
-                $transportCostPkr += ($tCost * $tRoe);
+                if ((float) $t->cost_amount > 0) {
+                    $transportCostPkr += (float) $t->cost_amount;
+                } else {
+                    $tCurr = strtoupper($t->currency ?? 'SAR');
+                    $tRoe = ($tCurr === 'PKR') ? 1 : (float) ($t->cost_roe > 0 ? $t->cost_roe : ($t->roe > 0 ? $t->roe : 75));
+                    $transportCostPkr += (float) $t->cost_rate * $tRoe;
+                }
             }
 
             $totalDirectCost = $hotelCostPkr + $flightCostPkr + $visaCostPkr + $transportCostPkr;

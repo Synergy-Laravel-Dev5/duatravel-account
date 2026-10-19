@@ -88,21 +88,7 @@
                                                     class="form-control" placeholder="client@example.com">
                                             </div>
                                         </div>
-                                        <div class="col-lg-6">
-                                            <div class="mb-3">
-                                                <label class="form-label">Type <span class="text-danger">*</span></label>
-                                                <select name="type" class="form-control">
-                                                    <option value="">Select Type</option>
-                                                    <option value="client" {{ old('type') == 'client' ? 'selected' : '' }}>
-                                                        Client</option>
-                                                    <option value="vendor" {{ old('type') == 'vendor' ? 'selected' : '' }}>
-                                                        Vendor</option>
-                                                </select>
-                                                @error('type')
-                                                    <div class="text-danger">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
+
                                         <div class="col-lg-6">
                                             <div class="mb-3">
                                                 <label class="form-label">Status</label>
