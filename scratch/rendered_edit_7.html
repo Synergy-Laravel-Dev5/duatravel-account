@@ -92,7 +92,7 @@
                             </a>
                         
                         <form action="http://localhost/logout" method="POST">
-                            <input type="hidden" name="_token" value="LJvfrBcfBf0npctCZb09oqVD3I58hgjn9ShUTOGk" autocomplete="off">                            <button type="submit" class="dropdown-item notify-item border-0 bg-transparent">
+                            <input type="hidden" name="_token" value="ZMfA9hqLu4MB5ulugKWz8DqJqzy2jHgnlP30qHm3" autocomplete="off">                            <button type="submit" class="dropdown-item notify-item border-0 bg-transparent">
                                 <i class="mdi mdi-location-exit fs-16 align-middle"></i>
                                 <span>Logout</span>
                             </button>
@@ -356,7 +356,7 @@
                             <li>
                                 <a class="tp-link" href="http://localhost/admin/transaction/ledger/filter">
                                     <i data-feather="book"></i>
-                                    <span>Client Ledger (Dr / Cr)</span>
+                                    <span>Ledger Reports</span>
                                 </a>
                             </li>
                             <li>
@@ -461,7 +461,7 @@
                 </div>
 
                 <form action="http://localhost/admin/booking/update/7" method="POST" id="bookingForm" enctype="multipart/form-data" novalidate>
-                    <input type="hidden" name="_token" value="LJvfrBcfBf0npctCZb09oqVD3I58hgjn9ShUTOGk" autocomplete="off">                    <input type="hidden" name="_method" value="PUT">
+                    <input type="hidden" name="_token" value="ZMfA9hqLu4MB5ulugKWz8DqJqzy2jHgnlP30qHm3" autocomplete="off">                    <input type="hidden" name="_method" value="PUT">
                     
                     <ul class="nav nav-tabs booking-tabs mb-0" id="bookingTabs" role="tablist">
                         <li class="nav-item" id="tabNavPackage" style="display:none;">
@@ -1485,16 +1485,34 @@
                                                             </option>
                                                                                                                                                             </select>
                                             </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label">Transport Type</label>
-                                                <select name="transports[0][transport_type]" class="form-select">
-                                                    <option value="private_car">Private Car</option>
-                                                    <option value="bus">Bus / Coach</option>
-                                                    <option value="train">Train</option>
-                                                    <option value="shared_van">Shared Van</option>
-                                                    <option value="taxi">Taxi</option>
-                                                    <option value="flight">Flight</option>
-                                                </select>
+                                            <div class="col-md-2">
+                                                <label class="form-label">Vehicle</label>
+                                                <input type="text" name="transports[0][vehicle]" class="form-control"
+                                                    placeholder="CAR / BUS / GMC" list="vehicleList" value="BUS">
+                                            </div>
+                                            <div class="col-md-1">
+                                                <label class="form-label">Qty</label>
+                                                <input type="number" name="transports[0][quantity]" class="form-control"
+                                                    value="1" min="1">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">Type / Status</label>
+                                                <select name="transports[0][status]" class="form-select">
+                                                                                                            <option value="CONFIRMED" selected>
+                                                            CONFIRMED
+                                                        </option>
+                                                                                                            <option value="PENDING" >
+                                                            PENDING
+                                                        </option>
+                                                                                                            <option value="CANCELLED" >
+                                                            CANCELLED
+                                                        </option>
+                                                                                                    </select>
+                                            </div>
+                                            <div class="col-md-1">
+                                                <label class="form-label">Pax</label>
+                                                <input type="number" name="transports[0][pax]" class="form-control"
+                                                    value="1" min="1">
                                             </div>
                                             <div class="col-md-3">
                                                 <label class="form-label">Transport Supplier / Vendor</label>
@@ -1503,6 +1521,102 @@
                                                                                                             <option value="1">POLANI</option>
                                                                                                             <option value="2">Umair travels</option>
                                                                                                     </select>
+                                            </div>
+
+                                            
+                                            <div class="col-md-2">
+                                                <label class="form-label"><i class="mdi mdi-calendar-range me-1 text-primary"></i> Date</label>
+                                                <input type="date" name="transports[0][travel_date]" class="form-control" value="">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label"><i class="mdi mdi-clock-outline me-1 text-primary"></i> Pickup Time</label>
+                                                <input type="text" name="transports[0][travel_time]" class="form-control" placeholder="e.g. 0045 / 1200" value="">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label"><i class="mdi mdi-airplane me-1 text-info"></i> Flight #</label>
+                                                <input type="text" name="transports[0][flight_no]" class="form-control" placeholder="e.g. PK831" value="">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label"><i class="mdi mdi-map-marker-outline me-1 text-success"></i> Pickup From</label>
+                                                <input type="text" name="transports[0][pickup_from]" class="form-control transport-pickup-from" placeholder="e.g. JED APT" value="">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label"><i class="mdi mdi-map-marker-check me-1 text-danger"></i> Destination</label>
+                                                <input type="text" name="transports[0][destination]" class="form-control transport-destination" placeholder="e.g. MAK HTL" value="">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label fw-bold text-dark"><i class="mdi mdi-barcode me-1 text-secondary"></i> BRN #</label>
+                                                <input type="text" name="transports[0][brn]" class="form-control" placeholder="BRN Number" value="">
+                                            </div>
+
+                                            
+                                            <div class="col-md-4">
+                                                <label class="form-label"><i class="mdi mdi-airplane-takeoff me-1 text-info"></i> Airline</label>
+                                                <select name="transports[0][airline]" class="form-select transport-airline-select">
+                                                    <option value="">-- Select Airline (Optional) --</option>
+                                                                                                                                                                        <option value="Air Arabia" >
+                                                                Air Arabia (G9)
+                                                            </option>
+                                                                                                                    <option value="Airblue" >
+                                                                Airblue (PA)
+                                                            </option>
+                                                                                                                    <option value="Emirates Airline" >
+                                                                Emirates Airline (EK)
+                                                            </option>
+                                                                                                                    <option value="Etihad Airways" >
+                                                                Etihad Airways (EY)
+                                                            </option>
+                                                                                                                    <option value="Fly Jinnah" >
+                                                                Fly Jinnah (9P)
+                                                            </option>
+                                                                                                                    <option value="Flyadeal" >
+                                                                Flyadeal (F3)
+                                                            </option>
+                                                                                                                    <option value="Flydubai" >
+                                                                Flydubai (FZ)
+                                                            </option>
+                                                                                                                    <option value="Flynas" >
+                                                                Flynas (XY)
+                                                            </option>
+                                                                                                                    <option value="Gulf Air" >
+                                                                Gulf Air (GF)
+                                                            </option>
+                                                                                                                    <option value="Jazeera Airways" >
+                                                                Jazeera Airways (J9)
+                                                            </option>
+                                                                                                                    <option value="Kuwait Airways" >
+                                                                Kuwait Airways (KU)
+                                                            </option>
+                                                                                                                    <option value="Oman Air" >
+                                                                Oman Air (WY)
+                                                            </option>
+                                                                                                                    <option value="Pakistan International Airlines" >
+                                                                Pakistan International Airlines (PK)
+                                                            </option>
+                                                                                                                    <option value="Qatar Airways" >
+                                                                Qatar Airways (QR)
+                                                            </option>
+                                                                                                                    <option value="SalamAir" >
+                                                                SalamAir (OV)
+                                                            </option>
+                                                                                                                    <option value="Saudia (Saudi Arabian Airlines)" >
+                                                                Saudia (Saudi Arabian Airlines) (SV)
+                                                            </option>
+                                                                                                                    <option value="Serene Air" >
+                                                                Serene Air (ER)
+                                                            </option>
+                                                                                                                    <option value="Turkish Airlines" >
+                                                                Turkish Airlines (TK)
+                                                            </option>
+                                                                                                                                                            </select>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label text-muted"><i class="mdi mdi-calendar-check me-1"></i> Booking Date</label>
+                                                <input type="date" name="transports[0][booking_date]" class="form-control" value="2026-10-19">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label text-warning fw-bold"><i class="mdi mdi-calendar-clock me-1 text-warning"></i> Option Date</label>
+                                                <input type="date" name="transports[0][option_date]" class="form-control border-warning" value="">
                                             </div>
                                             <div class="col-md-2">
                                                 <label class="form-label text-dark fw-bold">Currency</label>
@@ -1571,6 +1685,16 @@
                                         </div>
                                     </div>
                                                             </div>
+                            <datalist id="vehicleList">
+                                <option value="CAR">CAR (Private)</option>
+                                <option value="BUS">BUS (Coach)</option>
+                                <option value="GMC">GMC (Yukon/Tahoe)</option>
+                                <option value="HIACE">HIACE (Van)</option>
+                                <option value="COASTER">COASTER (Mini Bus)</option>
+                                <option value="SEDAN">SEDAN (Camry/Sonata)</option>
+                                <option value="TRAIN">Haramain Train</option>
+                                <option value="FLIGHT">Internal Flight</option>
+                            </datalist>
                             <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="addRoute">+ Add
                                 Route</button>
 
@@ -1923,6 +2047,12 @@
                 }).join('') : '');
         }
         let routesOptions = buildRoutesOptions();
+
+        function buildAirlinesOptions() {
+            return `<option value="">-- Select Airline (Optional) --</option>` +
+                (Array.isArray(airlinesData) ? airlinesData.map(a => `<option value="${a.name}">${a.name}${a.iata_code ? ' (' + a.iata_code + ')' : ''}</option>`).join('') : '');
+        }
+        let airlinesOptions = buildAirlinesOptions();
 
         function updatePersonFullName(idx) {
             const sur   = document.getElementById(`person_surname_${idx}`)?.value || '';
@@ -3104,21 +3234,57 @@
                             <select name="transports[${routeIdx}][route]" class="form-select transport-route-select">
                                 ${routesOptions}
                             </select></div>
-                        <div class="col-md-2"><label class="form-label">Transport Type</label>
-                            <select name="transports[${routeIdx}][transport_type]" class="form-select">
-                                <option value="private_car">Private Car</option><option value="bus">Bus / Coach</option>
-                                <option value="train">Train</option><option value="shared_van">Shared Van</option>
-                                <option value="taxi">Taxi</option><option value="flight">Flight</option>
+                        <div class="col-md-2"><label class="form-label">Vehicle</label>
+                            <input type="text" name="transports[${routeIdx}][vehicle]" class="form-control" placeholder="CAR / BUS / GMC" list="vehicleList" value="BUS"></div>
+                        <div class="col-md-1"><label class="form-label">Qty</label>
+                            <input type="number" name="transports[${routeIdx}][quantity]" class="form-control" value="1" min="1"></div>
+                        <div class="col-md-2"><label class="form-label">Type / Status</label>
+                            <select name="transports[${routeIdx}][status]" class="form-select">
+                                <option value="CONFIRMED" selected>CONFIRMED</option>
+                                <option value="PENDING">PENDING</option>
+                                <option value="CANCELLED">CANCELLED</option>
                             </select></div>
+                        <div class="col-md-1"><label class="form-label">Pax</label>
+                            <input type="number" name="transports[${routeIdx}][pax]" class="form-control" value="1" min="1"></div>
                         <div class="col-md-3"><label class="form-label">Transport Supplier / Vendor</label>
                             <select name="transports[${routeIdx}][supplier_id]" class="form-select">
                                 ${suppliersOptions}
                             </select></div>
                         <div class="col-md-2">
-                            <label class="form-label"><i class="mdi mdi-calendar me-1 text-primary"></i> Booking Date</label>
-                            <input type="date" name="transports[${routeIdx}][booking_date]" class="form-control" value="2026-10-19">
+                            <label class="form-label"><i class="mdi mdi-calendar-range me-1 text-primary"></i> Date</label>
+                            <input type="date" name="transports[${routeIdx}][travel_date]" class="form-control">
                         </div>
                         <div class="col-md-2">
+                            <label class="form-label"><i class="mdi mdi-clock-outline me-1 text-primary"></i> Pickup Time</label>
+                            <input type="text" name="transports[${routeIdx}][travel_time]" class="form-control" placeholder="e.g. 0045 / 1200">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label"><i class="mdi mdi-airplane me-1 text-info"></i> Flight #</label>
+                            <input type="text" name="transports[${routeIdx}][flight_no]" class="form-control" placeholder="e.g. PK831">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label"><i class="mdi mdi-map-marker-outline me-1 text-success"></i> Pickup From</label>
+                            <input type="text" name="transports[${routeIdx}][pickup_from]" class="form-control transport-pickup-from" placeholder="e.g. JED APT">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label"><i class="mdi mdi-map-marker-check me-1 text-danger"></i> Destination</label>
+                            <input type="text" name="transports[${routeIdx}][destination]" class="form-control transport-destination" placeholder="e.g. MAK HTL">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-bold text-dark"><i class="mdi mdi-barcode me-1 text-secondary"></i> BRN #</label>
+                            <input type="text" name="transports[${routeIdx}][brn]" class="form-control" placeholder="BRN Number">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label"><i class="mdi mdi-airplane-takeoff me-1 text-info"></i> Airline</label>
+                            <select name="transports[${routeIdx}][airline]" class="form-select transport-airline-select">
+                                ${airlinesOptions}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted"><i class="mdi mdi-calendar-check me-1"></i> Booking Date</label>
+                            <input type="date" name="transports[${routeIdx}][booking_date]" class="form-control" value="2026-10-19">
+                        </div>
+                        <div class="col-md-4">
                             <label class="form-label text-warning fw-bold"><i class="mdi mdi-calendar-clock me-1 text-warning"></i> Option Date</label>
                             <input type="date" name="transports[${routeIdx}][option_date]" class="form-control border-warning">
                         </div>
@@ -3179,6 +3345,30 @@
         });
 
         document.getElementById('routesList')?.addEventListener('change', function(e) {
+            if (e.target.classList.contains('transport-route-select')) {
+                const row = e.target.closest('.route-block');
+                const selectedText = e.target.options[e.target.selectedIndex]?.text || e.target.value || '';
+                let pickup = '';
+                let dest = '';
+                if (selectedText.includes('→')) {
+                    const parts = selectedText.split('→');
+                    pickup = parts[0]?.trim();
+                    dest = parts[1]?.trim();
+                } else if (selectedText.toUpperCase().includes(' TO ')) {
+                    const parts = selectedText.split(/ to /i);
+                    pickup = parts[0]?.trim();
+                    dest = parts[1]?.trim();
+                } else if (selectedText.includes('-')) {
+                    const parts = selectedText.split('-');
+                    pickup = parts[0]?.trim();
+                    dest = parts[1]?.trim();
+                }
+                const pickupInput = row?.querySelector('.transport-pickup-from');
+                const destInput = row?.querySelector('.transport-destination');
+                if (pickupInput && pickup) pickupInput.value = pickup;
+                if (destInput && dest) destInput.value = dest;
+            }
+
             if (e.target.classList.contains('transport-currency')) {
                 const row = e.target.closest('.route-block');
                 const val = e.target.value;

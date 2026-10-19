@@ -763,46 +763,107 @@
             </div>
             <div class="app-card-body p-0">
                 @if($booking->transports && $booking->transports->count() > 0)
-                    <table class="voucher-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 35px;" class="text-center">#</th>
-                                <th>Sector / Route</th>
-                                <th>Transport Type</th>
-                                <th>Transport Supplier</th>
-                                <th>Special Notes</th>
-                                <th class="text-center">Ticket / Receipt</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($booking->transports as $t)
+                    <div class="table-responsive">
+                        <table class="voucher-table mb-0">
+                            <thead>
                                 <tr>
-                                    <td class="text-center text-muted fw-bold">{{ $loop->iteration }}</td>
-                                    <td><strong class="text-dark">{{ $t->route }}</strong></td>
-                                    <td>
-                                        <span class="badge bg-light text-dark fw-bold">
-                                            {{ ucfirst(str_replace('_', ' ', $t->transport_type ?? 'Private Car')) }}
-                                        </span>
-                                    </td>
-                                    <td>{{ $t->supplier->name ?? '—' }}</td>
-                                    <td>{{ $t->notes ?? '—' }}</td>
-                                    <td class="text-center">
-                                        @if($t->transport_ticket)
-                                            @php
-                                                $tPath = asset('storage/' . $t->transport_ticket);
-                                                $tPdf = Str::endsWith(strtolower($t->transport_ticket), '.pdf');
-                                            @endphp
-                                            <button type="button" class="doc-thumb-mini" onclick="openDocModal('{{ $tPath }}', '{{ $tPdf ? 'pdf' : 'image' }}', 'Transport Ticket — {{ $t->route }}')">
-                                                <i class="mdi {{ $tPdf ? 'mdi-file-pdf-box text-danger' : 'mdi-ticket-confirmation-outline' }}"></i> View
-                                            </button>
-                                        @else
-                                            <span class="text-muted">—</span>
-                                        @endif
-                                    </td>
+                                    <th style="width: 30px;" class="text-center">#</th>
+                                    <th>Sector / Route</th>
+                                    <th>Vehicle</th>
+                                    <th class="text-center">Quantity</th>
+                                    <th class="text-center">Type</th>
+                                    <th class="text-center">Pax</th>
+                                    <th>Date</th>
+                                    <th>Pickup Time</th>
+                                    <th>Flight #</th>
+                                    <th>Pickup From</th>
+                                    <th>Destination</th>
+                                    <th>BRN</th>
+                                    <th>Supplier</th>
+                                    <th class="text-center">Ticket</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                @foreach($booking->transports as $t)
+                                    <tr>
+                                        <td class="text-center text-muted fw-bold">{{ $loop->iteration }}</td>
+                                        <td>
+                                            <strong class="text-dark">{{ $t->route ?: (($t->pickup_from && $t->destination) ? ($t->pickup_from . ' → ' . $t->destination) : '—') }}</strong>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark fw-bold border">
+                                                {{ strtoupper($t->vehicle ?? 'BUS') }}
+                                            </span>
+                                        </td>
+                                        <td class="text-center fw-semibold">{{ $t->quantity ?? 1 }}</td>
+                                        <td class="text-center">
+                                            <span class="badge {{ ($t->status ?? 'CONFIRMED') === 'CONFIRMED' ? 'bg-success' : (($t->status ?? '') === 'CANCELLED' ? 'bg-danger' : 'bg-warning text-dark') }} fs-10">
+                                                {{ strtoupper($t->status ?? 'CONFIRMED') }}
+                                            </span>
+                                        </td>
+                                        <td class="text-center fw-bold">{{ $t->pax ?? ($booking->total_passengers ?? 1) }}</td>
+                                        <td>
+                                            @if($t->travel_date)
+                                                <i class="mdi mdi-calendar text-primary me-1"></i><strong>{{ \Carbon\Carbon::parse($t->travel_date)->format('d-m-Y') }}</strong>
+                                            @else
+                                                <span class="text-muted">—</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($t->travel_time)
+                                                <i class="mdi mdi-clock-outline text-primary me-1"></i><strong>{{ $t->travel_time }}</strong>
+                                            @else
+                                                <span class="text-muted">—</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($t->flight_no || $t->airline)
+                                                @if($t->flight_no)<span class="badge bg-primary fs-11">{{ $t->flight_no }}</span>@endif
+                                                @if($t->airline)<div class="small text-muted">{{ $t->airline }}</div>@endif
+                                            @else
+                                                <span class="text-muted">—</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($t->pickup_from)
+                                                <span class="fw-semibold text-dark"><i class="mdi mdi-map-marker-outline text-success me-1"></i>{{ $t->pickup_from }}</span>
+                                            @else
+                                                <span class="text-muted">—</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($t->destination)
+                                                <span class="fw-semibold text-dark"><i class="mdi mdi-map-marker-check text-danger me-1"></i>{{ $t->destination }}</span>
+                                            @else
+                                                <span class="text-muted">—</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($t->brn)
+                                                <span class="badge bg-secondary font-monospace">{{ $t->brn }}</span>
+                                            @else
+                                                <span class="text-muted">—</span>
+                                            @endif
+                                        </td>
+                                        <td>{{ $t->supplier->name ?? '—' }}</td>
+                                        <td class="text-center">
+                                            @if($t->transport_ticket)
+                                                @php
+                                                    $tPath = asset('storage/' . $t->transport_ticket);
+                                                    $tPdf = Str::endsWith(strtolower($t->transport_ticket), '.pdf');
+                                                @endphp
+                                                <button type="button" class="doc-thumb-mini" onclick="openDocModal('{{ $tPath }}', '{{ $tPdf ? 'pdf' : 'image' }}', 'Transport Ticket — {{ $t->route }}')">
+                                                    <i class="mdi {{ $tPdf ? 'mdi-file-pdf-box text-danger' : 'mdi-ticket-confirmation-outline' }}"></i> View
+                                                </button>
+                                            @else
+                                                <span class="text-muted">—</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 @else
                     <div class="p-3 text-center text-muted fs-12">No transport routes recorded.</div>
                 @endif

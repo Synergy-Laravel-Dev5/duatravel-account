@@ -47,9 +47,10 @@ class BookingController extends Controller
         $suppliers = Supplier::where('status', 'active')->orWhereNull('status')->orderBy('name')->get();
         $airlines  = \App\Models\Airline::where('status', 'active')->orWhereNull('status')->orderBy('name')->get();
         $routes    = \App\Models\Route::where('status', 'active')->orWhereNull('status')->orderBy('start_place')->get();
+        $vehicles  = \App\Models\Vehicle::where('status', 'active')->orWhereNull('status')->orderBy('vehicle_type')->get();
         $years     = [date('Y'), date('Y') + 1, date('Y') + 2];
 
-        return view('booking.create', compact('clients', 'companies', 'packages', 'hotels', 'suppliers', 'years', 'airlines', 'routes'));
+        return view('booking.create', compact('clients', 'companies', 'packages', 'hotels', 'suppliers', 'years', 'airlines', 'routes', 'vehicles'));
     }
 
     public function store(Request $request)
@@ -218,6 +219,24 @@ class BookingController extends Controller
                     if (isset($hotelData['person_rates']) && is_string($hotelData['person_rates'])) {
                         $hotelData['person_rates'] = json_decode($hotelData['person_rates'], true);
                     }
+                    foreach (['check_in', 'check_out', 'option_date', 'booking_date'] as $dCol) {
+                        if (isset($hotelData[$dCol]) && trim((string)$hotelData[$dCol]) === '') {
+                            $hotelData[$dCol] = null;
+                        }
+                    }
+                    if (isset($hotelData['supplier_id']) && empty($hotelData['supplier_id'])) {
+                        $hotelData['supplier_id'] = null;
+                    }
+                    if (empty($hotelData['no_of_rooms']) || !is_numeric($hotelData['no_of_rooms'])) {
+                        $hotelData['no_of_rooms'] = 1;
+                    }
+                    if (empty($hotelData['no_of_nights']) || !is_numeric($hotelData['no_of_nights'])) {
+                        $hotelData['no_of_nights'] = 1;
+                    }
+                    if (empty($hotelData['room_type'])) {
+                        $hotelData['room_type'] = 'double';
+                    }
+
                     $hotelData = array_intersect_key($hotelData, array_flip($hotelCols));
                     $booking->hotels()->create($hotelData);
                 }
@@ -231,6 +250,37 @@ class BookingController extends Controller
                     $transportData = $transport;
                     if ($request->hasFile("transports.$idx.transport_ticket")) {
                         $transportData['transport_ticket'] = $request->file("transports.$idx.transport_ticket")->store('bookings/transports', 'public');
+                    }
+                    foreach (['booking_date', 'option_date', 'travel_date', 'travel_time'] as $dCol) {
+                        if (isset($transportData[$dCol]) && trim((string)$transportData[$dCol]) === '') {
+                            $transportData[$dCol] = null;
+                        }
+                    }
+                    if (isset($transportData['supplier_id']) && empty($transportData['supplier_id'])) {
+                        $transportData['supplier_id'] = null;
+                    }
+                    if (empty($transportData['quantity']) || !is_numeric($transportData['quantity'])) {
+                        $transportData['quantity'] = 1;
+                    }
+                    if (empty($transportData['pax']) || !is_numeric($transportData['pax'])) {
+                        $transportData['pax'] = 1;
+                    }
+                    if (empty($transportData['status'])) {
+                        $transportData['status'] = 'CONFIRMED';
+                    }
+                    if (empty($transportData['transport_type'])) {
+                        $vStr = strtolower($transportData['vehicle'] ?? '');
+                        if (strpos($vStr, 'bus') !== false || strpos($vStr, 'coach') !== false) {
+                            $transportData['transport_type'] = 'bus';
+                        } elseif (strpos($vStr, 'train') !== false) {
+                            $transportData['transport_type'] = 'train';
+                        } elseif (strpos($vStr, 'flight') !== false) {
+                            $transportData['transport_type'] = 'flight';
+                        } elseif (strpos($vStr, 'van') !== false || strpos($vStr, 'hiace') !== false) {
+                            $transportData['transport_type'] = 'shared_van';
+                        } else {
+                            $transportData['transport_type'] = 'private_car';
+                        }
                     }
                     $transportData = array_intersect_key($transportData, array_flip($transportCols));
                     $booking->transports()->create($transportData);
@@ -278,13 +328,14 @@ class BookingController extends Controller
         $suppliers = Supplier::where('status', 'active')->orWhereNull('status')->orderBy('name')->get();
         $airlines  = \App\Models\Airline::where('status', 'active')->orWhereNull('status')->orderBy('name')->get();
         $routes    = \App\Models\Route::where('status', 'active')->orWhereNull('status')->orderBy('start_place')->get();
+        $vehicles  = \App\Models\Vehicle::where('status', 'active')->orWhereNull('status')->orderBy('vehicle_type')->get();
         $years     = [date('Y'), date('Y') + 1, date('Y') + 2];
 
         $transactionsPaid = Transaction::where('client_id', $booking->client_id)
             ->where('status', 'confirmed')
             ->sum('amount');
 
-        return view('booking.edit', compact('booking', 'clients', 'companies', 'packages', 'hotels', 'suppliers', 'years', 'transactionsPaid', 'airlines', 'routes'));
+        return view('booking.edit', compact('booking', 'clients', 'companies', 'packages', 'hotels', 'suppliers', 'years', 'transactionsPaid', 'airlines', 'routes', 'vehicles'));
     }
 
     public function update(Request $request, $id)
@@ -476,6 +527,15 @@ class BookingController extends Controller
                         if (isset($hotelData['person_rates']) && is_string($hotelData['person_rates'])) {
                             $hotelData['person_rates'] = json_decode($hotelData['person_rates'], true);
                         }
+                        if (empty($hotelData['no_of_rooms']) || !is_numeric($hotelData['no_of_rooms'])) {
+                            $hotelData['no_of_rooms'] = 1;
+                        }
+                        if (empty($hotelData['no_of_nights']) || !is_numeric($hotelData['no_of_nights'])) {
+                            $hotelData['no_of_nights'] = 1;
+                        }
+                        if (empty($hotelData['room_type'])) {
+                            $hotelData['room_type'] = 'double';
+                        }
 
                         $hotelData = array_intersect_key($hotelData, array_flip($hotelCols));
                         $booking->hotels()->create($hotelData);
@@ -496,13 +556,36 @@ class BookingController extends Controller
                         }
                         unset($transportData['old_transport_ticket']);
 
-                        foreach (['booking_date', 'option_date'] as $dCol) {
+                        foreach (['booking_date', 'option_date', 'travel_date', 'travel_time'] as $dCol) {
                             if (isset($transportData[$dCol]) && trim((string)$transportData[$dCol]) === '') {
                                 $transportData[$dCol] = null;
                             }
                         }
                         if (isset($transportData['supplier_id']) && empty($transportData['supplier_id'])) {
                             $transportData['supplier_id'] = null;
+                        }
+                        if (empty($transportData['quantity']) || !is_numeric($transportData['quantity'])) {
+                            $transportData['quantity'] = 1;
+                        }
+                        if (empty($transportData['pax']) || !is_numeric($transportData['pax'])) {
+                            $transportData['pax'] = 1;
+                        }
+                        if (empty($transportData['status'])) {
+                            $transportData['status'] = 'CONFIRMED';
+                        }
+                        if (empty($transportData['transport_type'])) {
+                            $vStr = strtolower($transportData['vehicle'] ?? '');
+                            if (strpos($vStr, 'bus') !== false || strpos($vStr, 'coach') !== false) {
+                                $transportData['transport_type'] = 'bus';
+                            } elseif (strpos($vStr, 'train') !== false) {
+                                $transportData['transport_type'] = 'train';
+                            } elseif (strpos($vStr, 'flight') !== false) {
+                                $transportData['transport_type'] = 'flight';
+                            } elseif (strpos($vStr, 'van') !== false || strpos($vStr, 'hiace') !== false) {
+                                $transportData['transport_type'] = 'shared_van';
+                            } else {
+                                $transportData['transport_type'] = 'private_car';
+                            }
                         }
 
                         $transportData = array_intersect_key($transportData, array_flip($transportCols));

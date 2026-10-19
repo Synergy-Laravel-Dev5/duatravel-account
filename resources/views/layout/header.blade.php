@@ -371,7 +371,7 @@
                             <li>
                                 <a class="tp-link" href="{{ route('transaction.ledger.filter') }}">
                                     <i data-feather="book"></i>
-                                    <span>Client Ledger (Dr / Cr)</span>
+                                    <span>Ledger Reports</span>
                                 </a>
                             </li>
                             <li>

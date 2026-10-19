@@ -14,6 +14,17 @@ class BookingTransport extends Model
         'sale_roe',
         'roe',
         'route',
+        'vehicle',
+        'quantity',
+        'status',
+        'pax',
+        'travel_date',
+        'travel_time',
+        'flight_no',
+        'pickup_from',
+        'destination',
+        'brn',
+        'airline',
         'transport_type',
         'booking_date',
         'option_date',
@@ -23,6 +34,12 @@ class BookingTransport extends Model
         'selling_amount',
         'notes',
         'transport_ticket'
+    ];
+
+    protected $casts = [
+        'travel_date' => 'date',
+        'booking_date' => 'date',
+        'option_date' => 'date',
     ];
 
     public function booking()

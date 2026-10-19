@@ -614,7 +614,9 @@
                 @foreach($booking->transports as $tr)
                     <div style="background:#f8fafc;padding:10px 12px;border-radius:8px;border:1px solid #e2e8f0;margin-bottom:6px;font-size:12.5px;">
                         <strong><i class="mdi mdi-routes me-1 text-primary"></i> {{ $tr->route }}</strong>
-                        @if($tr->transport_type)<br><small class="text-muted">Type: {{ $tr->transport_type }}</small>@endif
+                        @if($tr->transport_type)<br><small class="text-muted">Type: {{ ucfirst(str_replace('_', ' ', $tr->transport_type)) }}</small>@endif
+                        @if($tr->travel_date)<br><small class="text-muted"><i class="mdi mdi-calendar me-1"></i>Date: {{ \Carbon\Carbon::parse($tr->travel_date)->format('d M Y') }} {{ $tr->travel_time ? '@ ' . $tr->travel_time : '' }}</small>@endif
+                        @if($tr->flight_no || $tr->airline)<br><small class="text-primary fw-semibold"><i class="mdi mdi-airplane me-1"></i>Flight: {{ $tr->flight_no ?? '' }} {{ $tr->airline ? '('.$tr->airline.')' : '' }}</small>@endif
                     </div>
                 @endforeach
             </div>

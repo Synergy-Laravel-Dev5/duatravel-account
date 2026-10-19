@@ -289,6 +289,42 @@
                 </tbody>
             </table>
 
+            @if ($booking->transports && $booking->transports->count() > 0)
+                <div class="section-bar" style="margin-top:14px;">Transportation Details</div>
+                <table class="voucher-table">
+                    <thead>
+                        <tr>
+                            <th>Sector / Route</th>
+                            <th>Vehicle</th>
+                            <th class="num">Qty</th>
+                            <th class="num">Pax</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Flight #</th>
+                            <th>Pickup From</th>
+                            <th>Destination</th>
+                            <th>BRN</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($booking->transports as $t)
+                            <tr>
+                                <td>{{ $t->route ?: (($t->pickup_from && $t->destination) ? ($t->pickup_from . ' - ' . $t->destination) : '-') }}</td>
+                                <td>{{ strtoupper($t->vehicle ?? 'BUS') }}</td>
+                                <td class="num">{{ $t->quantity ?? 1 }}</td>
+                                <td class="num">{{ $t->pax ?? ($booking->total_passengers ?? 1) }}</td>
+                                <td>{{ $t->travel_date ? \Carbon\Carbon::parse($t->travel_date)->format('d-m-Y') : '-' }}</td>
+                                <td>{{ $t->travel_time ?? '-' }}</td>
+                                <td>{{ $t->flight_no ?? '-' }}</td>
+                                <td>{{ $t->pickup_from ?? '-' }}</td>
+                                <td>{{ $t->destination ?? '-' }}</td>
+                                <td>{{ $t->brn ?? '-' }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
+
             @php
                 $currency = $booking->currency ?: 'PKR';
             @endphp

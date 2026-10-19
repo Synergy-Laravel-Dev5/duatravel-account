@@ -447,10 +447,6 @@
                                             <label class="form-label"><i class="mdi mdi-calendar me-1 text-primary"></i> Flight Booking Date</label>
                                             <input type="date" name="flight_booking_date" class="form-control" value="{{ old('flight_booking_date', $booking->flight_booking_date ? \Carbon\Carbon::parse($booking->flight_booking_date)->format('Y-m-d') : ($booking->booking_date ? \Carbon\Carbon::parse($booking->booking_date)->format('Y-m-d') : date('Y-m-d'))) }}">
                                         </div>
-                                        <div class="col-md-3">
-                                            <label class="form-label text-warning fw-bold"><i class="mdi mdi-calendar-clock me-1 text-warning"></i> Option Date (Time Limit)</label>
-                                            <input type="date" name="flight_option_date" class="form-control border-warning" value="{{ old('flight_option_date', $booking->flight_option_date ? \Carbon\Carbon::parse($booking->flight_option_date)->format('Y-m-d') : '') }}">
-                                        </div>
                                     </div>
 
                                     {{-- Hidden fields for Controller compatibility --}}
@@ -755,14 +751,14 @@
                                             <div class="col-md-2">
                                                 <label class="form-label">Nights</label>
                                                 <input type="number" name="hotels[{{ $loop->index }}][no_of_nights]"
-                                                    class="form-control hotel-nights" value="{{ old('hotels.'.$loop->index.'.no_of_nights', $hotel->no_of_nights) }}"
-                                                    min="1">
+                                                    class="form-control hotel-nights" value="{{ old('hotels.'.$loop->index.'.no_of_nights', $hotel->no_of_nights ?: 1) }}"
+                                                    min="1" required>
                                             </div>
                                             <div class="col-md-2">
                                                 <label class="form-label">No. of Rooms</label>
                                                 <input type="number" name="hotels[{{ $loop->index }}][no_of_rooms]"
-                                                    class="form-control hotel-rooms" value="{{ old('hotels.'.$loop->index.'.no_of_rooms', $hotel->no_of_rooms ?? 1) }}"
-                                                    min="1">
+                                                    class="form-control hotel-rooms" value="{{ old('hotels.'.$loop->index.'.no_of_rooms', $hotel->no_of_rooms ?: 1) }}"
+                                                    min="1" required>
                                             </div>
                                             <div class="col-md-2">
                                                 <label class="form-label">Hotel Room #</label>
@@ -976,15 +972,50 @@
                                                 </select>
                                             </div>
                                             <div class="col-md-2">
-                                                <label class="form-label">Transport Type</label>
-                                                <select name="transports[{{ $i }}][transport_type]"
-                                                    class="form-select">
-                                                    @foreach (['private_car' => 'Private Car', 'bus' => 'Bus / Coach', 'train' => 'Train', 'shared_van' => 'Shared Van', 'taxi' => 'Taxi', 'flight' => 'Flight'] as $val => $lbl)
-                                                        <option value="{{ $val }}"
-                                                            {{ $t->transport_type == $val ? 'selected' : '' }}>
-                                                            {{ $lbl }}</option>
+                                                <label class="form-label">Vehicle</label>
+                                                @php
+                                                    $selectedVeh = old('transports.'.$i.'.vehicle', $t->vehicle ?? '');
+                                                    $foundVeh = false;
+                                                @endphp
+                                                <select name="transports[{{ $i }}][vehicle]" class="form-select transport-vehicle-select">
+                                                    <option value="">-- Select Vehicle --</option>
+                                                    @if(isset($vehicles))
+                                                        @foreach ($vehicles as $veh)
+                                                            @php
+                                                                $vehLabel = $veh->vehicle_type . ($veh->brand_name ? ' (' . $veh->brand_name . ')' : '');
+                                                                $vehVal = $veh->brand_name ?: $veh->vehicle_type;
+                                                                $isSel = ($selectedVeh == $vehVal || $selectedVeh == $veh->vehicle_type || $selectedVeh == $vehLabel);
+                                                                if ($isSel) $foundVeh = true;
+                                                            @endphp
+                                                            <option value="{{ $vehVal }}" {{ $isSel ? 'selected' : '' }}>
+                                                                {{ $vehLabel }}
+                                                            </option>
+                                                        @endforeach
+                                                    @endif
+                                                    @if(!empty($selectedVeh) && !$foundVeh)
+                                                        <option value="{{ $selectedVeh }}" selected>{{ $selectedVeh }}</option>
+                                                    @endif
+                                                </select>
+                                            </div>
+                                            <div class="col-md-1">
+                                                <label class="form-label">Qty</label>
+                                                <input type="number" name="transports[{{ $i }}][quantity]" class="form-control"
+                                                    value="{{ old('transports.'.$i.'.quantity', $t->quantity ?? 1) }}" min="1">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">Type / Status</label>
+                                                <select name="transports[{{ $i }}][status]" class="form-select">
+                                                    @foreach (['CONFIRMED', 'PENDING', 'CANCELLED'] as $st)
+                                                        <option value="{{ $st }}" {{ old('transports.'.$i.'.status', $t->status ?? 'CONFIRMED') == $st ? 'selected' : '' }}>
+                                                            {{ $st }}
+                                                        </option>
                                                     @endforeach
                                                 </select>
+                                            </div>
+                                            <div class="col-md-1">
+                                                <label class="form-label">Pax</label>
+                                                <input type="number" name="transports[{{ $i }}][pax]" class="form-control"
+                                                    value="{{ old('transports.'.$i.'.pax', $t->pax ?? ($booking->total_passengers ?? 1)) }}" min="1">
                                             </div>
                                             <div class="col-md-3">
                                                 <label class="form-label">Transport Supplier / Vendor</label>
@@ -997,15 +1028,72 @@
                                                     @endforeach
                                                 </select>
                                             </div>
+
+                                            {{-- Row 2: Date, Pickup Time, Flight #, Pickup From, Destination, BRN --}}
                                             <div class="col-md-2">
-                                                <label class="form-label"><i class="mdi mdi-calendar me-1 text-primary"></i> Booking Date</label>
-                                                <input type="date" name="transports[{{ $i }}][booking_date]"
-                                                    class="form-control" value="{{ old('transports.'.$i.'.booking_date', $t->booking_date ? \Carbon\Carbon::parse($t->booking_date)->format('Y-m-d') : date('Y-m-d')) }}">
+                                                <label class="form-label"><i class="mdi mdi-calendar-range me-1 text-primary"></i> Date</label>
+                                                <input type="date" name="transports[{{ $i }}][travel_date]"
+                                                    class="form-control" value="{{ old('transports.'.$i.'.travel_date', $t->travel_date ? \Carbon\Carbon::parse($t->travel_date)->format('Y-m-d') : '') }}">
                                             </div>
                                             <div class="col-md-2">
-                                                <label class="form-label text-warning fw-bold"><i class="mdi mdi-calendar-clock me-1 text-warning"></i> Option Date</label>
-                                                <input type="date" name="transports[{{ $i }}][option_date]"
-                                                    class="form-control border-warning" value="{{ old('transports.'.$i.'.option_date', $t->option_date ? \Carbon\Carbon::parse($t->option_date)->format('Y-m-d') : '') }}">
+                                                <label class="form-label"><i class="mdi mdi-clock-outline me-1 text-primary"></i> Pickup Time</label>
+                                                <input type="text" name="transports[{{ $i }}][travel_time]"
+                                                    class="form-control" placeholder="e.g. 0045 / 1200" value="{{ old('transports.'.$i.'.travel_time', $t->travel_time) }}">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label"><i class="mdi mdi-airplane me-1 text-info"></i> Flight #</label>
+                                                <input type="text" name="transports[{{ $i }}][flight_no]"
+                                                    class="form-control" placeholder="e.g. PK831"
+                                                    value="{{ old('transports.'.$i.'.flight_no', $t->flight_no) }}">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label"><i class="mdi mdi-map-marker-outline me-1 text-success"></i> Pickup From</label>
+                                                <input type="text" name="transports[{{ $i }}][pickup_from]"
+                                                    class="form-control transport-pickup-from" placeholder="e.g. JED APT"
+                                                    value="{{ old('transports.'.$i.'.pickup_from', $t->pickup_from) }}">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label"><i class="mdi mdi-map-marker-check me-1 text-danger"></i> Destination</label>
+                                                <input type="text" name="transports[{{ $i }}][destination]"
+                                                    class="form-control transport-destination" placeholder="e.g. MAK HTL"
+                                                    value="{{ old('transports.'.$i.'.destination', $t->destination) }}">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label fw-bold text-dark"><i class="mdi mdi-barcode me-1 text-secondary"></i> BRN #</label>
+                                                <input type="text" name="transports[{{ $i }}][brn]"
+                                                    class="form-control" placeholder="BRN Number"
+                                                    value="{{ old('transports.'.$i.'.brn', $t->brn) }}">
+                                            </div>
+
+                                            {{-- Row 3: Airline & Booking Date --}}
+                                            <div class="col-md-6">
+                                                <label class="form-label"><i class="mdi mdi-airplane-takeoff me-1 text-info"></i> Airline</label>
+                                                @php
+                                                    $selectedAir = old('transports.'.$i.'.airline', $t->airline);
+                                                    $foundAir = false;
+                                                @endphp
+                                                <select name="transports[{{ $i }}][airline]" class="form-select transport-airline-select">
+                                                    <option value="">-- Select Airline (Optional) --</option>
+                                                    @if(isset($airlines))
+                                                        @foreach ($airlines as $air)
+                                                            @php
+                                                                $isSel = ($selectedAir == $air->name || $selectedAir == $air->iata_code || ($air->iata_code && $selectedAir == $air->name . ' (' . $air->iata_code . ')'));
+                                                                if ($isSel) $foundAir = true;
+                                                            @endphp
+                                                            <option value="{{ $air->name }}" {{ $isSel ? 'selected' : '' }}>
+                                                                {{ $air->name }}{{ $air->iata_code ? ' (' . $air->iata_code . ')' : '' }}
+                                                            </option>
+                                                        @endforeach
+                                                    @endif
+                                                    @if($selectedAir && !$foundAir)
+                                                        <option value="{{ $selectedAir }}" selected>{{ $selectedAir }}</option>
+                                                    @endif
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label text-muted"><i class="mdi mdi-calendar-check me-1"></i> Booking Date</label>
+                                                <input type="date" name="transports[{{ $i }}][booking_date]"
+                                                    class="form-control" value="{{ old('transports.'.$i.'.booking_date', $t->booking_date ? \Carbon\Carbon::parse($t->booking_date)->format('Y-m-d') : date('Y-m-d')) }}">
                                             </div>
                                             <div class="col-md-2">
                                                 <label class="form-label text-dark fw-bold">Currency</label>
@@ -1093,16 +1181,38 @@
                                                     @endif
                                                 </select>
                                             </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label">Transport Type</label>
-                                                <select name="transports[0][transport_type]" class="form-select">
-                                                    <option value="private_car">Private Car</option>
-                                                    <option value="bus">Bus / Coach</option>
-                                                    <option value="train">Train</option>
-                                                    <option value="shared_van">Shared Van</option>
-                                                    <option value="taxi">Taxi</option>
-                                                    <option value="flight">Flight</option>
+                                            <div class="col-md-2">
+                                                <label class="form-label">Vehicle</label>
+                                                <select name="transports[0][vehicle]" class="form-select transport-vehicle-select">
+                                                    <option value="">-- Select Vehicle --</option>
+                                                    @if(isset($vehicles))
+                                                        @foreach ($vehicles as $v)
+                                                            <option value="{{ $v->brand_name ?? $v->vehicle_type }}" {{ old('transports.0.vehicle') == ($v->brand_name ?? $v->vehicle_type) ? 'selected' : '' }}>
+                                                                {{ $v->vehicle_type }}{{ $v->brand_name ? ' (' . $v->brand_name . ')' : '' }}
+                                                            </option>
+                                                        @endforeach
+                                                    @endif
                                                 </select>
+                                            </div>
+                                            <div class="col-md-1">
+                                                <label class="form-label">Qty</label>
+                                                <input type="number" name="transports[0][quantity]" class="form-control"
+                                                    value="{{ old('transports.0.quantity', 1) }}" min="1">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">Type / Status</label>
+                                                <select name="transports[0][status]" class="form-select">
+                                                    @foreach (['CONFIRMED', 'PENDING', 'CANCELLED'] as $st)
+                                                        <option value="{{ $st }}" {{ old('transports.0.status', 'CONFIRMED') == $st ? 'selected' : '' }}>
+                                                            {{ $st }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="col-md-1">
+                                                <label class="form-label">Pax</label>
+                                                <input type="number" name="transports[0][pax]" class="form-control"
+                                                    value="{{ old('transports.0.pax', $booking->total_passengers ?? 1) }}" min="1">
                                             </div>
                                             <div class="col-md-3">
                                                 <label class="form-label">Transport Supplier / Vendor</label>
@@ -1112,6 +1222,51 @@
                                                         <option value="{{ $sup->id }}">{{ $sup->name }}</option>
                                                     @endforeach
                                                 </select>
+                                            </div>
+
+                                            {{-- Row 2: Date, Pickup Time, Flight #, Pickup From, Destination, BRN --}}
+                                            <div class="col-md-2">
+                                                <label class="form-label"><i class="mdi mdi-calendar-range me-1 text-primary"></i> Date</label>
+                                                <input type="date" name="transports[0][travel_date]" class="form-control" value="{{ old('transports.0.travel_date') }}">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label"><i class="mdi mdi-clock-outline me-1 text-primary"></i> Pickup Time</label>
+                                                <input type="text" name="transports[0][travel_time]" class="form-control" placeholder="e.g. 0045 / 1200" value="{{ old('transports.0.travel_time') }}">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label"><i class="mdi mdi-airplane me-1 text-info"></i> Flight #</label>
+                                                <input type="text" name="transports[0][flight_no]" class="form-control" placeholder="e.g. PK831" value="{{ old('transports.0.flight_no') }}">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label"><i class="mdi mdi-map-marker-outline me-1 text-success"></i> Pickup From</label>
+                                                <input type="text" name="transports[0][pickup_from]" class="form-control transport-pickup-from" placeholder="e.g. JED APT" value="{{ old('transports.0.pickup_from') }}">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label"><i class="mdi mdi-map-marker-check me-1 text-danger"></i> Destination</label>
+                                                <input type="text" name="transports[0][destination]" class="form-control transport-destination" placeholder="e.g. MAK HTL" value="{{ old('transports.0.destination') }}">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label fw-bold text-dark"><i class="mdi mdi-barcode me-1 text-secondary"></i> BRN #</label>
+                                                <input type="text" name="transports[0][brn]" class="form-control" placeholder="BRN Number" value="{{ old('transports.0.brn') }}">
+                                            </div>
+
+                                            {{-- Row 3: Airline & Booking Date --}}
+                                            <div class="col-md-6">
+                                                <label class="form-label"><i class="mdi mdi-airplane-takeoff me-1 text-info"></i> Airline</label>
+                                                <select name="transports[0][airline]" class="form-select transport-airline-select">
+                                                    <option value="">-- Select Airline (Optional) --</option>
+                                                    @if(isset($airlines))
+                                                        @foreach ($airlines as $air)
+                                                            <option value="{{ $air->name }}" {{ old('transports.0.airline') == $air->name ? 'selected' : '' }}>
+                                                                {{ $air->name }}{{ $air->iata_code ? ' (' . $air->iata_code . ')' : '' }}
+                                                            </option>
+                                                        @endforeach
+                                                    @endif
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label text-muted"><i class="mdi mdi-calendar-check me-1"></i> Booking Date</label>
+                                                <input type="date" name="transports[0][booking_date]" class="form-control" value="{{ old('transports.0.booking_date', date('Y-m-d')) }}">
                                             </div>
                                             <div class="col-md-2">
                                                 <label class="form-label text-dark fw-bold">Currency</label>
@@ -1181,6 +1336,7 @@
                                     </div>
                                 @endforelse
                             </div>
+
                             <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="addRoute">+ Add
                                 Route</button>
 
@@ -1354,12 +1510,7 @@
                                                     class="form-control form-control-sm"
                                                     value="{{ old('visas.'.$i.'.booking_date', $visa->booking_date ? \Carbon\Carbon::parse($visa->booking_date)->format('Y-m-d') : date('Y-m-d')) }}">
                                             </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label text-warning fw-bold" style="font-size:12px;"><i class="mdi mdi-calendar-clock me-1 text-warning"></i> Option Date</label>
-                                                <input type="date" name="visas[{{ $i }}][option_date]"
-                                                    class="form-control form-control-sm border-warning"
-                                                    value="{{ old('visas.'.$i.'.option_date', $visa->option_date ? \Carbon\Carbon::parse($visa->option_date)->format('Y-m-d') : '') }}">
-                                            </div>
+
                                             <div class="col-md-3">
                                                 <label class="form-label" style="font-size:12px;">Status</label>
                                                 <select name="visas[{{ $i }}][status]"
@@ -1739,6 +1890,7 @@
         const suppliersData    = @json($suppliers);
         const airlinesData     = @json($airlines ?? []);
         const routesData       = @json($routes ?? []);
+        const vehiclesData     = @json($vehicles ?? []);
         const existingVisas    = @json($booking->visas);
         const existingPersons  = @json($booking->persons);
         const existingBooking  = @json($booking);
@@ -1759,6 +1911,22 @@
                 }).join('') : '');
         }
         let routesOptions = buildRoutesOptions();
+
+        function buildAirlinesOptions() {
+            return `<option value="">-- Select Airline (Optional) --</option>` +
+                (Array.isArray(airlinesData) ? airlinesData.map(a => `<option value="${a.name}">${a.name}${a.iata_code ? ' (' + a.iata_code + ')' : ''}</option>`).join('') : '');
+        }
+        let airlinesOptions = buildAirlinesOptions();
+
+        function buildVehiclesOptions() {
+            return `<option value="">-- Select Vehicle --</option>` +
+                (Array.isArray(vehiclesData) ? vehiclesData.map(v => {
+                    const val = v.brand_name || v.vehicle_type || '';
+                    const label = v.vehicle_type + (v.brand_name ? ` (${v.brand_name})` : '');
+                    return `<option value="${val}">${label}</option>`;
+                }).join('') : '');
+        }
+        let vehiclesOptions  = buildVehiclesOptions();
 
         function updatePersonFullName(idx) {
             const sur   = document.getElementById(`person_surname_${idx}`)?.value || '';
@@ -2186,7 +2354,6 @@
                 const sellAmt = parseFloat(v.selling_amount) || (sellRate * parseFloat(saleRoe));
 
                 const vBookingDate = v.booking_date || '{{ date('Y-m-d') }}';
-                const vOptionDate = v.option_date || '';
 
                 let supOptions = `<option value="">-- Select Supplier --</option>` +
                     (typeof suppliersData !== 'undefined' ? suppliersData.map(s => `<option value="${s.id}" ${s.id == v.supplier_id ? 'selected' : ''}>${s.name}</option>`).join('') : '');
@@ -2262,8 +2429,7 @@
                                 <input type="hidden" name="visas[${i}][selling_amount]" class="visa-sell-amount" value="${sellAmt.toFixed(2)}"></div>
                             <div class="col-md-3"><label class="form-label" style="font-size:12px;"><i class="mdi mdi-calendar me-1 text-primary"></i> Booking Date</label>
                                 <input type="date" name="visas[${i}][booking_date]" class="form-control form-control-sm" value="${vBookingDate}"></div>
-                            <div class="col-md-3"><label class="form-label text-warning fw-bold" style="font-size:12px;"><i class="mdi mdi-calendar-clock me-1 text-warning"></i> Option Date</label>
-                                <input type="date" name="visas[${i}][option_date]" class="form-control form-control-sm border-warning" value="${vOptionDate}"></div>
+
                             <div class="col-md-3"><label class="form-label" style="font-size:12px;">Status</label>
                                 <select name="visas[${i}][status]" class="form-select form-select-sm">
                                     <option value="pending" ${(v.status || 'pending') === 'pending' ? 'selected' : ''}>Pending</option>
@@ -2940,23 +3106,57 @@
                             <select name="transports[${routeIdx}][route]" class="form-select transport-route-select">
                                 ${routesOptions}
                             </select></div>
-                        <div class="col-md-2"><label class="form-label">Transport Type</label>
-                            <select name="transports[${routeIdx}][transport_type]" class="form-select">
-                                <option value="private_car">Private Car</option><option value="bus">Bus / Coach</option>
-                                <option value="train">Train</option><option value="shared_van">Shared Van</option>
-                                <option value="taxi">Taxi</option><option value="flight">Flight</option>
+                        <div class="col-md-2"><label class="form-label">Vehicle</label>
+                            <select name="transports[${routeIdx}][vehicle]" class="form-select transport-vehicle-select">
+                                ${vehiclesOptions}
                             </select></div>
+                        <div class="col-md-1"><label class="form-label">Qty</label>
+                            <input type="number" name="transports[${routeIdx}][quantity]" class="form-control" value="1" min="1"></div>
+                        <div class="col-md-2"><label class="form-label">Type / Status</label>
+                            <select name="transports[${routeIdx}][status]" class="form-select">
+                                <option value="CONFIRMED" selected>CONFIRMED</option>
+                                <option value="PENDING">PENDING</option>
+                                <option value="CANCELLED">CANCELLED</option>
+                            </select></div>
+                        <div class="col-md-1"><label class="form-label">Pax</label>
+                            <input type="number" name="transports[${routeIdx}][pax]" class="form-control" value="1" min="1"></div>
                         <div class="col-md-3"><label class="form-label">Transport Supplier / Vendor</label>
                             <select name="transports[${routeIdx}][supplier_id]" class="form-select">
                                 ${suppliersOptions}
                             </select></div>
                         <div class="col-md-2">
-                            <label class="form-label"><i class="mdi mdi-calendar me-1 text-primary"></i> Booking Date</label>
-                            <input type="date" name="transports[${routeIdx}][booking_date]" class="form-control" value="{{ date('Y-m-d') }}">
+                            <label class="form-label"><i class="mdi mdi-calendar-range me-1 text-primary"></i> Date</label>
+                            <input type="date" name="transports[${routeIdx}][travel_date]" class="form-control">
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label text-warning fw-bold"><i class="mdi mdi-calendar-clock me-1 text-warning"></i> Option Date</label>
-                            <input type="date" name="transports[${routeIdx}][option_date]" class="form-control border-warning">
+                            <label class="form-label"><i class="mdi mdi-clock-outline me-1 text-primary"></i> Pickup Time</label>
+                            <input type="text" name="transports[${routeIdx}][travel_time]" class="form-control" placeholder="e.g. 0045 / 1200">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label"><i class="mdi mdi-airplane me-1 text-info"></i> Flight #</label>
+                            <input type="text" name="transports[${routeIdx}][flight_no]" class="form-control" placeholder="e.g. PK831">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label"><i class="mdi mdi-map-marker-outline me-1 text-success"></i> Pickup From</label>
+                            <input type="text" name="transports[${routeIdx}][pickup_from]" class="form-control transport-pickup-from" placeholder="e.g. JED APT">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label"><i class="mdi mdi-map-marker-check me-1 text-danger"></i> Destination</label>
+                            <input type="text" name="transports[${routeIdx}][destination]" class="form-control transport-destination" placeholder="e.g. MAK HTL">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-bold text-dark"><i class="mdi mdi-barcode me-1 text-secondary"></i> BRN #</label>
+                            <input type="text" name="transports[${routeIdx}][brn]" class="form-control" placeholder="BRN Number">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label"><i class="mdi mdi-airplane-takeoff me-1 text-info"></i> Airline</label>
+                            <select name="transports[${routeIdx}][airline]" class="form-select transport-airline-select">
+                                ${airlinesOptions}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted"><i class="mdi mdi-calendar-check me-1"></i> Booking Date</label>
+                            <input type="date" name="transports[${routeIdx}][booking_date]" class="form-control" value="{{ date('Y-m-d') }}">
                         </div>
                         <div class="col-md-2">
                             <label class="form-label text-dark fw-bold">Currency</label>
@@ -3015,6 +3215,30 @@
         });
 
         document.getElementById('routesList')?.addEventListener('change', function(e) {
+            if (e.target.classList.contains('transport-route-select')) {
+                const row = e.target.closest('.route-block');
+                const selectedText = e.target.options[e.target.selectedIndex]?.text || e.target.value || '';
+                let pickup = '';
+                let dest = '';
+                if (selectedText.includes('→')) {
+                    const parts = selectedText.split('→');
+                    pickup = parts[0]?.trim();
+                    dest = parts[1]?.trim();
+                } else if (selectedText.toUpperCase().includes(' TO ')) {
+                    const parts = selectedText.split(/ to /i);
+                    pickup = parts[0]?.trim();
+                    dest = parts[1]?.trim();
+                } else if (selectedText.includes('-')) {
+                    const parts = selectedText.split('-');
+                    pickup = parts[0]?.trim();
+                    dest = parts[1]?.trim();
+                }
+                const pickupInput = row?.querySelector('.transport-pickup-from');
+                const destInput = row?.querySelector('.transport-destination');
+                if (pickupInput && pickup) pickupInput.value = pickup;
+                if (destInput && dest) destInput.value = dest;
+            }
+
             if (e.target.classList.contains('transport-currency')) {
                 const row = e.target.closest('.route-block');
                 const val = e.target.value;
