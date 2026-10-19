@@ -270,30 +270,28 @@ class TransactionController extends Controller
 
     public function ledgerView(Request $request)
     {
-        $request->validate([
-            'client_id' => 'required',
-        ]);
-
-        $clientId = $request->client_id;
+        $clientId = $request->input('client_id', 'all');
         $fromDate = $request->from_date;
         $toDate   = $request->to_date;
 
-        if ($clientId === 'all') {
+        if ($clientId === 'all' || empty($clientId)) {
+            $clientId = 'all';
             $client = (object)[
-                'id'     => 'all',
-                'name'   => 'All Clients (Consolidated)',
-                'company_name' => 'All Associated Companies / Walk-ins',
-                'phone'  => null,
-                'email'  => null,
-                'status' => 'active',
+                'id'              => 'all',
+                'name'            => 'All Clients (Consolidated)',
+                'company_name'    => 'All Associated Companies / Walk-ins',
+                'phone'           => null,
+                'email'           => null,
+                'status'          => 'active',
                 'passport_number' => null,
-                'cnic'   => null,
+                'cnic'            => null,
             ];
         } else {
-            if (!Client::where('id', $clientId)->exists()) {
-                abort(404);
+            $client = Client::find($clientId);
+            if (!$client) {
+                return redirect()->route('transaction.ledger.filter')
+                    ->with('error', 'Selected client was not found. Showing filter page.');
             }
-            $client = Client::findOrFail($clientId);
         }
 
         // 1. Calculate Opening Balance prior to from_date

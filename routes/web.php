@@ -156,8 +156,10 @@ Route::middleware(['auth:web,company'])->group(function () {
                 Route::post('store', 'store')->name('transaction.store');
                 Route::get('trash', 'trash')->name('transaction.trash');
                 Route::post('restore/{id}', 'restore')->name('transaction.restore');
+                Route::get('ledger', 'ledgerFilter');
                 Route::get('ledger/filter', 'ledgerFilter')->name('transaction.ledger.filter');
                 Route::match(['get', 'post'], 'ledger/view', 'ledgerView')->name('transaction.ledger.view');
+                Route::get('company-ledger', 'companyLedgerFilter');
                 Route::get('company-ledger/filter', 'companyLedgerFilter')->name('transaction.company-ledger.filter');
                 Route::get('company-ledger/view', 'companyLedgerView')->name('transaction.company-ledger.view');
                 Route::get('show/{id}', 'show')->name('transaction.show');
@@ -167,6 +169,9 @@ Route::middleware(['auth:web,company'])->group(function () {
                 Route::get('invoice/filter', 'invoiceFilter')->name('transaction.invoice.filter');
                 Route::get('invoice/{id}', 'invoice')->name('transaction.invoice');
             });
+
+        Route::get('transactions', fn() => redirect()->route('expense.transaction.index'));
+        Route::get('expense-transactions', fn() => redirect()->route('expense.transaction.index'));
 
         Route::controller(CompanyController::class)->prefix('company')->group(function () {
             Route::get('/', 'index')->name('company.index');
