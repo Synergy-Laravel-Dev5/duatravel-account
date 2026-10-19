@@ -232,7 +232,18 @@
                                 <div>
                                     <div class="stat-label text-success">Total Credits (Paid / Received)</div>
                                     <div class="stat-value text-success">PKR {{ number_format($totalCredits, 2) }}</div>
-                                    <small class="text-muted fs-11">Advance & transaction payments</small>
+                                    <div class="d-flex flex-wrap gap-1 mt-1">
+                                        @if(($currencySummary['SAR']['received_original'] ?? 0) > 0)
+                                            <span class="badge bg-warning text-dark fs-10" title="SAR Received">
+                                                SAR {{ number_format($currencySummary['SAR']['received_original'], 2) }}
+                                            </span>
+                                        @endif
+                                        @if(($currencySummary['PKR']['received_original'] ?? 0) > 0)
+                                            <span class="badge bg-soft-success text-success fs-10" title="PKR Received">
+                                                PKR {{ number_format($currencySummary['PKR']['received_original'], 2) }}
+                                            </span>
+                                        @endif
+                                    </div>
                                 </div>
                                 <div class="icon-box bg-soft-success text-success">
                                     <i class="mdi mdi-arrow-down-bold fs-22"></i>
@@ -262,17 +273,30 @@
                         </div>
                     </div>
 
-                    <!-- Records Count -->
+                    <!-- Multi-Currency Summary Card -->
                     <div class="col-6 col-md-3">
-                        <div class="card ledger-stat-card border-start border-4 border-primary p-3">
+                        <div class="card ledger-stat-card border-start border-4 border-info p-3">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <div class="stat-label text-primary">Total Ledger Entries</div>
-                                    <div class="stat-value text-dark">{{ count($statementLines) }}</div>
-                                    <small class="text-muted fs-11">Transactions & Invoices</small>
+                                    <div class="stat-label text-info">Currencies Breakdown</div>
+                                    <div class="d-flex flex-wrap gap-1 mt-1">
+                                        @php $hasCurrencies = false; @endphp
+                                        @foreach($currencySummary as $currCode => $currData)
+                                            @if(($currData['count'] ?? 0) > 0)
+                                                @php $hasCurrencies = true; @endphp
+                                                <span class="badge {{ $currCode === 'SAR' ? 'bg-warning text-dark' : ($currCode === 'PKR' ? 'bg-success text-white' : 'bg-primary text-white') }} fs-11">
+                                                    {{ $currCode }}: {{ number_format($currData['received_original'], 2) }}
+                                                </span>
+                                            @endif
+                                        @endforeach
+                                        @if(!$hasCurrencies)
+                                            <span class="text-muted fs-12">No receipts yet</span>
+                                        @endif
+                                    </div>
+                                    <small class="text-muted fs-11 d-block mt-1">{{ count($statementLines) }} Ledger Entries Recorded</small>
                                 </div>
-                                <div class="icon-box bg-soft-primary text-primary">
-                                    <i class="mdi mdi-file-document-outline fs-22"></i>
+                                <div class="icon-box bg-soft-info text-info">
+                                    <i class="mdi mdi-cash-multiple fs-22"></i>
                                 </div>
                             </div>
                         </div>
@@ -285,9 +309,16 @@
                         <h5 class="fs-14 fw-bold m-0 text-dark">
                             <i class="mdi mdi-bank-transfer text-primary me-2"></i> Statement of Account (Khata / Ledger)
                         </h5>
-                        <span class="badge bg-soft-primary text-primary px-3 py-2 rounded-pill fs-12">
-                            {{ count($statementLines) + ($openingBalance != 0 ? 1 : 0) }} Rows
-                        </span>
+                        <div class="d-flex align-items-center gap-2">
+                            @if(($currencySummary['SAR']['received_original'] ?? 0) > 0)
+                                <span class="badge bg-warning text-dark px-2 py-1 fs-12">
+                                    <i class="mdi mdi-cash-multiple me-1"></i>SAR Total: {{ number_format($currencySummary['SAR']['received_original'], 2) }}
+                                </span>
+                            @endif
+                            <span class="badge bg-soft-primary text-primary px-3 py-2 rounded-pill fs-12">
+                                {{ count($statementLines) + ($openingBalance != 0 ? 1 : 0) }} Rows
+                            </span>
+                        </div>
                     </div>
 
                     <div class="card-body p-0">
@@ -295,16 +326,17 @@
                             <table class="table statement-table table-hover align-middle mb-0">
                                 <thead>
                                     <tr>
-                                        <th class="ps-3" style="width: 40px;">#</th>
-                                        <th style="width: 105px;">Date</th>
-                                        <th style="width: 110px;">Voucher #</th>
-                                        <th style="width: 130px;">Type</th>
+                                        <th class="ps-3" style="width: 35px;">#</th>
+                                        <th style="width: 100px;">Date</th>
+                                        <th style="width: 105px;">Voucher #</th>
+                                        <th style="width: 120px;">Type</th>
+                                        <th style="width: 130px;">Contra A/C</th>
                                         <th>Particulars / Narration</th>
-                                        <th style="width: 110px;">Method</th>
+                                        <th style="width: 95px;">Method</th>
                                         <th class="text-end text-danger" style="width: 130px;">Debit (Dr) Charges</th>
-                                        <th class="text-end text-success" style="width: 130px;">Credit (Cr) Received</th>
+                                        <th class="text-end text-success" style="width: 140px;">Credit (Cr) Received</th>
                                         <th class="text-end text-primary" style="width: 140px;">Running Balance</th>
-                                        <th class="no-print text-center" style="width: 60px;">Proof</th>
+                                        <th class="no-print text-center" style="width: 50px;">Proof</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -315,6 +347,7 @@
                                             <td>{{ $fromDate ? \Carbon\Carbon::parse($fromDate)->format('d M, Y') : '—' }}</td>
                                             <td><span class="badge bg-warning text-dark border">OPENING</span></td>
                                             <td><span class="badge bg-soft-warning text-dark">B/F Balance</span></td>
+                                            <td><span class="badge bg-light text-dark border">Opening Balance</span></td>
                                             <td><strong>Opening Balance Brought Forward</strong></td>
                                             <td>—</td>
                                             <td class="text-end fw-bold text-danger">
@@ -350,6 +383,16 @@
                                                     {{ $row['type_label'] }}
                                                 </span>
                                             </td>
+                                            <!-- Contra Account Column -->
+                                            <td>
+                                                @if(!empty($row['contra_account']) && $row['contra_account'] !== '—')
+                                                    <span class="badge bg-soft-primary text-primary border border-primary border-opacity-25 px-2 py-1 text-wrap" style="max-width: 140px; font-size: 11px;">
+                                                        <i class="mdi mdi-bank me-1"></i>{{ $row['contra_account'] }}
+                                                    </span>
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
+                                            </td>
                                             <td>
                                                 @if($row['booking_id'])
                                                     <a href="{{ route('booking.show', $row['booking_id']) }}" target="_blank" class="fw-semibold text-primary text-decoration-none">
@@ -369,11 +412,35 @@
                                             </td>
                                             <!-- Debit Column -->
                                             <td class="text-end fw-bold {{ $row['debit'] > 0 ? 'text-danger' : 'text-muted' }}">
-                                                {{ $row['debit'] > 0 ? number_format($row['debit'], 2) : '—' }}
+                                                @if($row['debit'] > 0)
+                                                    <div>PKR {{ number_format($row['debit'], 2) }}</div>
+                                                    @if(!empty($row['currency']) && $row['currency'] !== 'PKR')
+                                                        <div class="mt-1">
+                                                            <span class="badge bg-soft-warning text-dark border px-1" style="font-size: 10px;">
+                                                                {{ $row['currency'] }} {{ number_format($row['original_amount'], 2) }}
+                                                            </span>
+                                                            <small class="text-muted d-block fw-normal" style="font-size: 9px;">@ ROE {{ number_format($row['exchange_rate'], 2) }}</small>
+                                                        </div>
+                                                    @endif
+                                                @else
+                                                    —
+                                                @endif
                                             </td>
-                                            <!-- Credit Column -->
+                                            <!-- Credit Column (with foreign currency & ROE badge) -->
                                             <td class="text-end fw-bold {{ $row['credit'] > 0 ? 'text-success' : 'text-muted' }}">
-                                                {{ $row['credit'] > 0 ? number_format($row['credit'], 2) : '—' }}
+                                                @if($row['credit'] > 0)
+                                                    <div>PKR {{ number_format($row['credit'], 2) }}</div>
+                                                    @if(!empty($row['currency']) && $row['currency'] !== 'PKR')
+                                                        <div class="mt-1">
+                                                            <span class="badge bg-soft-warning text-dark border px-1" style="font-size: 10px;">
+                                                                <i class="mdi mdi-cash-multiple me-1"></i>{{ $row['currency'] }} {{ number_format($row['original_amount'], 2) }}
+                                                            </span>
+                                                            <small class="text-muted d-block fw-normal" style="font-size: 9px;">@ ROE {{ number_format($row['exchange_rate'], 2) }}</small>
+                                                        </div>
+                                                    @endif
+                                                @else
+                                                    —
+                                                @endif
                                             </td>
                                             <!-- Running Balance Column -->
                                             <td class="text-end fw-bold text-dark">
@@ -396,7 +463,7 @@
                                     @empty
                                         @if($openingBalance == 0)
                                             <tr>
-                                                <td colspan="10" class="text-center py-5 text-muted">
+                                                <td colspan="11" class="text-center py-5 text-muted">
                                                     <i class="mdi mdi-book-remove-outline fs-36 text-muted d-block mb-2"></i>
                                                     <h6 class="fw-bold mb-1">No Ledger Records Found</h6>
                                                     <p class="fs-12 mb-0">No booking charges or payment receipts recorded for this client in the selected date range.</p>
@@ -407,13 +474,33 @@
                                 </tbody>
                                 <tfoot class="table-light fw-bold">
                                     <tr style="border-top: 2px solid #cbd5e1;">
-                                        <td colspan="6" class="text-end text-uppercase fs-12">Period Totals:</td>
+                                        <td colspan="7" class="text-end text-uppercase fs-12">Period Totals:</td>
                                         <td class="text-end text-danger fs-14">PKR {{ number_format($periodDebits, 2) }}</td>
                                         <td class="text-end text-success fs-14">PKR {{ number_format($periodCredits, 2) }}</td>
                                         <td colspan="2" class="text-end text-dark fs-13"></td>
                                     </tr>
+                                    @if(($currencySummary['SAR']['received_original'] ?? 0) > 0 || ($currencySummary['PKR']['received_original'] ?? 0) > 0)
+                                        <tr style="background: #fdfefe; border-top: 1px dashed #cbd5e1;">
+                                            <td colspan="7" class="text-end text-uppercase fs-11 text-muted">
+                                                <i class="mdi mdi-cash-multiple me-1"></i> Received Currency Breakdown:
+                                            </td>
+                                            <td colspan="3" class="fs-12 text-end">
+                                                @foreach($currencySummary as $currCode => $currData)
+                                                    @if(($currData['count'] ?? 0) > 0)
+                                                        <span class="badge {{ $currCode === 'SAR' ? 'bg-warning text-dark' : 'bg-light text-dark border' }} ms-1 px-2 py-1">
+                                                            {{ $currCode }}: {{ number_format($currData['received_original'], 2) }}
+                                                            @if($currCode !== 'PKR')
+                                                                <small class="text-muted">(Eq. PKR {{ number_format($currData['received_pkr'], 2) }})</small>
+                                                            @endif
+                                                        </span>
+                                                    @endif
+                                                @endforeach
+                                                </td>
+                                            <td class="no-print"></td>
+                                        </tr>
+                                    @endif
                                     <tr style="background: #f1f5f9; border-top: 1px solid #cbd5e1;">
-                                        <td colspan="6" class="text-end text-uppercase fs-13 text-dark">
+                                        <td colspan="7" class="text-end text-uppercase fs-13 text-dark">
                                             Net Closing Balance:
                                         </td>
                                         <td colspan="2" class="text-center fs-12 text-muted">
@@ -467,8 +554,12 @@
                 "Date",
                 "Voucher #",
                 "Type",
+                "Contra A/C",
                 "Particulars / Description",
                 "Payment Method",
+                "Currency",
+                "Original Amount",
+                "ROE",
                 "Debit (Dr) PKR",
                 "Credit (Cr) PKR",
                 "Running Balance PKR",
@@ -483,8 +574,12 @@
                 "{{ $fromDate ?? '—' }}",
                 "OPENING",
                 "Opening Balance",
+                "—",
                 "Opening Balance Brought Forward",
                 "—",
+                "PKR",
+                {{ abs($openingBalance) }},
+                1.00,
                 {{ $openingBalance > 0 ? $openingBalance : 0 }},
                 {{ $openingBalance < 0 ? abs($openingBalance) : 0 }},
                 {{ abs($openingBalance) }},
@@ -498,8 +593,12 @@
                 "{{ $row['date'] }}",
                 "{{ addslashes($row['voucher_no']) }}",
                 "{{ addslashes($row['type_label']) }}",
+                "{{ addslashes($row['contra_account'] ?? '—') }}",
                 "{{ addslashes($row['description']) }}",
                 "{{ addslashes($row['payment_method']) }}",
+                "{{ $row['currency'] ?? 'PKR' }}",
+                {{ (float) ($row['original_amount'] ?? ($row['credit'] > 0 ? $row['credit'] : $row['debit'])) }},
+                {{ (float) ($row['exchange_rate'] ?? 1) }},
                 {{ (float) $row['debit'] }},
                 {{ (float) $row['credit'] }},
                 {{ (float) abs($row['running_balance']) }},
@@ -509,7 +608,7 @@
 
             ledgerRows.push([]);
             ledgerRows.push([
-                "TOTALS", "", "", "", "", "Period Totals:",
+                "TOTALS", "", "", "", "", "", "Period Totals:", "", "", "",
                 {{ (float) $periodDebits }},
                 {{ (float) $periodCredits }},
                 {{ (float) abs($closingBalance) }},
@@ -557,6 +656,7 @@
                 "{{ $fromDate ?? '—' }}",
                 "OPENING",
                 "Opening Balance",
+                "—",
                 "Opening Balance Brought Forward",
                 "—",
                 "{{ $openingBalance > 0 ? number_format($openingBalance, 2) : '—' }}",
@@ -571,16 +671,17 @@
                 "{{ \Carbon\Carbon::parse($row['date'])->format('d M, Y') }}",
                 "{{ addslashes($row['voucher_no']) }}",
                 "{{ addslashes($row['type_label']) }}",
+                "{{ addslashes($row['contra_account'] ?? '—') }}",
                 "{{ addslashes($row['description']) }}",
                 "{{ addslashes($row['payment_method']) }}",
-                "{{ $row['debit'] > 0 ? number_format($row['debit'], 2) : '—' }}",
-                "{{ $row['credit'] > 0 ? number_format($row['credit'], 2) : '—' }}",
+                "{{ $row['debit'] > 0 ? (number_format($row['debit'], 2) . (!empty($row['currency']) && $row['currency'] !== 'PKR' ? ' [' . $row['currency'] . ' ' . number_format($row['original_amount'], 2) . ']' : '')) : '—' }}",
+                "{{ $row['credit'] > 0 ? (number_format($row['credit'], 2) . (!empty($row['currency']) && $row['currency'] !== 'PKR' ? ' [' . $row['currency'] . ' ' . number_format($row['original_amount'], 2) . ' @ ' . number_format($row['exchange_rate'], 2) . ']' : '')) : '—' }}",
                 "{{ number_format(abs($row['running_balance']), 2) }} {{ $row['balance_type'] }}"
             ]);
             @endforeach
 
             tableRows.push([
-                "", "", "", "", "TOTALS:", "",
+                "", "", "", "", "", "TOTALS:", "",
                 "PKR {{ number_format($periodDebits, 2) }}",
                 "PKR {{ number_format($periodCredits, 2) }}",
                 "PKR {{ number_format($absClosing, 2) }} {{ $closingTag }}"
@@ -588,15 +689,15 @@
 
             doc.autoTable({
                 startY: 32,
-                head: [["#", "Date", "Voucher", "Type", "Particulars / Narration", "Method", "Debit (Dr) PKR", "Credit (Cr) PKR", "Running Balance"]],
+                head: [["#", "Date", "Voucher", "Type", "Contra A/C", "Particulars / Narration", "Method", "Debit (Dr) PKR", "Credit (Cr) PKR", "Running Balance"]],
                 body: tableRows,
                 theme: 'striped',
                 headStyles: { fillColor: [30, 41, 59], textColor: 255, fontSize: 8, fontStyle: 'bold' },
                 bodyStyles: { fontSize: 7.5 },
                 columnStyles: {
-                    6: { halign: 'right', textColor: [180, 0, 0] },
-                    7: { halign: 'right', textColor: [0, 130, 0] },
-                    8: { halign: 'right', fontStyle: 'bold' }
+                    7: { halign: 'right', textColor: [180, 0, 0] },
+                    8: { halign: 'right', textColor: [0, 130, 0] },
+                    9: { halign: 'right', fontStyle: 'bold' }
                 },
                 margin: { left: 14, right: 14 }
             });

@@ -278,12 +278,12 @@
                                     <span>Room Inventory</span>
                                 </a>
                             </li>
-                            {{-- <li>
+                            <li>
                                 <a class="tp-link" href="{{ route('report.rooming-list') }}">
                                     <i data-feather="clipboard"></i>
                                     <span>Room Allocation Manifest</span>
                                 </a>
-                            </li> --}}
+                            </li>
 
                             <li>
                                 <a class="tp-link" href="{{ route('training-session.index') }}">
@@ -349,12 +349,12 @@
                                     <span>Check-In Report</span>
                                 </a>
                             </li>
-                            {{-- <li>
+                            <li>
                                 <a class="tp-link" href="{{ route('report.rooming-list') }}">
                                     <i data-feather="clipboard"></i>
                                     <span>Room Allocation Manifest</span>
                                 </a>
-                            </li> --}}
+                            </li>
                             <li>
                                 <a class="tp-link" href="{{ route('reports.transactions') }}">
                                     <i data-feather="file-text"></i>

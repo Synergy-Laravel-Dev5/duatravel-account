@@ -286,11 +286,15 @@ class TransactionReportController extends Controller
         foreach ($etList as $et) {
             $d = Carbon::parse($et->date)->format('Y-m-d');
             $ts = Carbon::parse($et->date)->startOfDay()->timestamp + 2;
-            $amt = (float) $et->amount;
+            $rawAmt = (float) $et->amount;
+            $rate = (float) ($et->exchange_rate > 0 ? $et->exchange_rate : 1);
+            $cur = strtoupper($et->currency ?: 'PKR');
+            $amtPkr = ($cur === 'PKR') ? $rawAmt : round($rawAmt * $rate, 2);
 
-            // Classify by payee_type
+            // Classify by payee_type & transaction_type
             $pType = $et->payee_type ?: 'expense';
-            $isClientInflow = ($pType === 'client');
+            $isDebit = ($et->transaction_type === 'debit');
+            $isClientInflow = ($pType === 'client' && !$isDebit);
 
             $currentFlow = $isClientInflow ? 'inflow' : 'outflow';
 
@@ -313,8 +317,8 @@ class TransactionReportController extends Controller
                 $partyType = 'Supplier';
                 $partyLink = $et->supplier_id ? route('supplier.ledger.show', $et->supplier_id) : null;
             } elseif ($pType === 'client') {
-                $catKey = 'client_receipt';
-                $catLabel = 'Client Receipt';
+                $catKey = $isDebit ? 'client_debit' : 'client_receipt';
+                $catLabel = $isDebit ? 'Client Debit / Refund' : 'Client Receipt';
                 $partyName = $et->client ? $et->client->name : 'Client';
                 $partyType = 'Client';
                 $partyLink = $et->client_id ? route('client.edit', $et->client_id) : null;
@@ -341,8 +345,8 @@ class TransactionReportController extends Controller
             }
 
             $desc = $et->description ?: ($catLabel . ' via ' . ucfirst($et->payment_type));
-            if ($et->currency && $et->currency !== 'PKR') {
-                $desc .= ' [' . $et->currency . ' @ ROE ' . ($et->exchange_rate ?: '1') . ']';
+            if ($cur !== 'PKR') {
+                $desc .= ' [' . $cur . ' ' . number_format($rawAmt, 2) . ' @ ROE ' . number_format($rate, 2) . ']';
             }
 
             $allRecords[] = [
@@ -361,8 +365,8 @@ class TransactionReportController extends Controller
                 'party_link'     => $partyLink,
                 'booking_id'     => null,
                 'payment_method' => ucwords(str_replace('_', ' ', $et->payment_type)),
-                'inflow'         => $isClientInflow ? $amt : 0.00,
-                'outflow'        => !$isClientInflow ? $amt : 0.00,
+                'inflow'         => $isClientInflow ? $amtPkr : 0.00,
+                'outflow'        => !$isClientInflow ? $amtPkr : 0.00,
                 'status'         => 'confirmed',
                 'description'    => $desc,
                 'proof'          => $et->proof ? asset('assets/images/expense_proofs/' . $et->proof) : null,

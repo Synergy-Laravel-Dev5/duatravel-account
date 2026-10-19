@@ -312,12 +312,26 @@ class TransactionController extends Controller
                     if ($clientId !== 'all') $q->where('client_id', $clientId);
                 })->whereDate('payment_date', '<', $fromDate)->sum('amount');
 
-            $priorEtCredits = (float) ExpenseTransaction::where('payee_type', 'client')
+            $priorEtList = ExpenseTransaction::where('payee_type', 'client')
                 ->where(function ($q) use ($clientId) {
                     if ($clientId !== 'all') $q->where('client_id', $clientId);
-                })->whereDate('date', '<', $fromDate)->sum('amount');
+                })->whereDate('date', '<', $fromDate)->get();
 
-            $openingBalance = $priorBookingDebits - ($priorBookingCredits + $priorTxnCredits + $priorEtCredits);
+            $priorEtDebits = 0;
+            $priorEtCredits = 0;
+            foreach ($priorEtList as $pet) {
+                $cur = strtoupper($pet->currency ?: 'PKR');
+                $rate = (float) ($pet->exchange_rate > 0 ? $pet->exchange_rate : 1);
+                $pkrVal = ($cur === 'PKR') ? (float) $pet->amount : round((float) $pet->amount * $rate, 2);
+
+                if ($pet->transaction_type === 'debit') {
+                    $priorEtDebits += $pkrVal;
+                } else {
+                    $priorEtCredits += $pkrVal;
+                }
+            }
+
+            $openingBalance = ($priorBookingDebits + $priorEtDebits) - ($priorBookingCredits + $priorTxnCredits + $priorEtCredits);
         }
 
         // 2. Retrieve Bookings in Date Range (Debit = Charges, Credit = Initial Advance)
@@ -348,43 +362,51 @@ class TransactionController extends Controller
 
             // Debit Entry: Booking Invoice / Charges
             $rawEntries[] = [
-                'date'           => $bDate,
-                'timestamp'      => $bTimestamp,
-                'entry_type'     => 'invoice',
-                'badge_class'    => 'bg-soft-primary text-primary',
-                'type_label'     => 'Booking Charges',
-                'voucher_no'     => 'BK-' . $b->id,
-                'ref_no'         => $b->voucher_number ?: ('#BK-' . $b->id),
-                'description'    => 'Booking #' . $b->id . ' — ' . ($b->package_name ?: ($b->package->name ?? 'Package')) . ' (' . ($b->no_of_pax ?: 1) . ' Pax)' . ($b->voucher_number ? ' [Voucher: ' . $b->voucher_number . ']' : ''),
-                'client_id'      => $b->client_id,
-                'client_name'    => $b->client->name ?? '—',
-                'booking_id'     => $b->id,
-                'debit'          => $totalAmount,
-                'credit'         => 0.00,
-                'payment_method' => 'Invoice Bill',
-                'status'         => 'confirmed',
-                'proof'          => null,
+                'date'             => $bDate,
+                'timestamp'        => $bTimestamp,
+                'entry_type'       => 'invoice',
+                'badge_class'      => 'bg-soft-primary text-primary',
+                'type_label'       => 'Booking Charges',
+                'voucher_no'       => 'BK-' . $b->id,
+                'ref_no'           => $b->voucher_number ?: ('#BK-' . $b->id),
+                'description'      => 'Booking #' . $b->id . ' — ' . ($b->package_name ?: ($b->package->name ?? 'Package')) . ' (' . ($b->no_of_pax ?: 1) . ' Pax)' . ($b->voucher_number ? ' [Voucher: ' . $b->voucher_number . ']' : ''),
+                'contra_account'   => 'Package Sales / Revenue',
+                'client_id'        => $b->client_id,
+                'client_name'      => $b->client->name ?? '—',
+                'booking_id'       => $b->id,
+                'currency'         => strtoupper($b->currency ?: 'PKR'),
+                'exchange_rate'    => 1.00,
+                'original_amount'  => $totalAmount,
+                'debit'            => $totalAmount,
+                'credit'           => 0.00,
+                'payment_method'   => 'Invoice Bill',
+                'status'           => 'confirmed',
+                'proof'            => null,
             ];
 
             // Credit Entry: Initial Advance Received at Booking
             if ($advanceAmount > 0) {
                 $rawEntries[] = [
-                    'date'           => $bDate,
-                    'timestamp'      => $bTimestamp + 1,
-                    'entry_type'     => 'receipt',
-                    'badge_class'    => 'bg-soft-success text-success',
-                    'type_label'     => 'Advance at Booking',
-                    'voucher_no'     => 'ADV-' . $b->id,
-                    'ref_no'         => '#ADV-' . $b->id,
-                    'description'    => 'Initial Advance Payment received at Booking #' . $b->id,
-                    'client_id'      => $b->client_id,
-                    'client_name'    => $b->client->name ?? '—',
-                    'booking_id'     => $b->id,
-                    'debit'          => 0.00,
-                    'credit'         => $advanceAmount,
-                    'payment_method' => 'Advance / Cash',
-                    'status'         => 'confirmed',
-                    'proof'          => null,
+                    'date'             => $bDate,
+                    'timestamp'        => $bTimestamp + 1,
+                    'entry_type'       => 'receipt',
+                    'badge_class'      => 'bg-soft-success text-success',
+                    'type_label'       => 'Advance at Booking',
+                    'voucher_no'       => 'ADV-' . $b->id,
+                    'ref_no'           => '#ADV-' . $b->id,
+                    'description'      => 'Initial Advance Payment received at Booking #' . $b->id,
+                    'contra_account'   => 'Cash / Bank (Advance)',
+                    'client_id'        => $b->client_id,
+                    'client_name'      => $b->client->name ?? '—',
+                    'booking_id'       => $b->id,
+                    'currency'         => strtoupper($b->currency ?: 'PKR'),
+                    'exchange_rate'    => 1.00,
+                    'original_amount'  => $advanceAmount,
+                    'debit'            => 0.00,
+                    'credit'           => $advanceAmount,
+                    'payment_method'   => 'Advance / Cash',
+                    'status'           => 'confirmed',
+                    'proof'            => null,
                 ];
             }
         }
@@ -413,28 +435,40 @@ class TransactionController extends Controller
                 $transactionsPaid += $amt;
             }
 
+            $contra = match(strtolower($t->payment_type)) {
+                'cash' => 'Cash in Hand',
+                'bank', 'bank_transfer' => 'Bank Account',
+                'cheque' => 'Cheque Clearance',
+                'online' => 'Online Banking',
+                default => ucwords(str_replace('_', ' ', $t->payment_type ?? 'Cash in Hand'))
+            };
+
             $rawEntries[] = [
-                'date'           => $tDate,
-                'timestamp'      => $tTimestamp,
-                'entry_type'     => 'receipt',
-                'badge_class'    => $t->status === 'confirmed' ? 'bg-soft-success text-success' : 'bg-soft-warning text-warning',
-                'type_label'     => 'Payment Received',
-                'voucher_no'     => 'TXN-' . $t->id,
-                'ref_no'         => $t->reference_number ?: ('#TXN-' . $t->id),
-                'description'    => 'Payment Received via ' . ucwords(str_replace('_', ' ', $t->payment_type)) . ($t->notes ? ' — ' . $t->notes : '') . ($t->booking_id ? ' [For Booking #' . $t->booking_id . ']' : ''),
-                'client_id'      => $t->client_id,
-                'client_name'    => $t->client->name ?? '—',
-                'booking_id'     => $t->booking_id,
-                'debit'          => 0.00,
-                'credit'         => $t->status === 'confirmed' ? $amt : 0.00,
-                'payment_method' => ucwords(str_replace('_', ' ', $t->payment_type)),
-                'status'         => $t->status,
-                'proof'          => $t->proof_of_payment ? asset('assets/images/transaction_proofs/' . $t->proof_of_payment) : null,
+                'date'             => $tDate,
+                'timestamp'        => $tTimestamp,
+                'entry_type'       => 'receipt',
+                'badge_class'      => $t->status === 'confirmed' ? 'bg-soft-success text-success' : 'bg-soft-warning text-warning',
+                'type_label'       => 'Payment Received',
+                'voucher_no'       => 'TXN-' . $t->id,
+                'ref_no'           => $t->reference_number ?: ('#TXN-' . $t->id),
+                'description'      => 'Payment Received via ' . ucwords(str_replace('_', ' ', $t->payment_type)) . ($t->notes ? ' — ' . $t->notes : '') . ($t->booking_id ? ' [For Booking #' . $t->booking_id . ']' : ''),
+                'contra_account'   => $contra,
+                'client_id'        => $t->client_id,
+                'client_name'      => $t->client->name ?? '—',
+                'booking_id'       => $t->booking_id,
+                'currency'         => 'PKR',
+                'exchange_rate'    => 1.00,
+                'original_amount'  => $amt,
+                'debit'            => 0.00,
+                'credit'           => $t->status === 'confirmed' ? $amt : 0.00,
+                'payment_method'   => ucwords(str_replace('_', ' ', $t->payment_type)),
+                'status'           => $t->status,
+                'proof'            => $t->proof_of_payment ? asset('assets/images/transaction_proofs/' . $t->proof_of_payment) : null,
             ];
         }
 
-        // 4. Retrieve Client ExpenseTransactions (if any recorded in expense_transactions with payee_type=client)
-        $etQuery = ExpenseTransaction::with(['client'])->where('payee_type', 'client');
+        // 4. Retrieve Client ExpenseTransactions (Receipts & Debits from expense_transactions)
+        $etQuery = ExpenseTransaction::with(['client', 'bank', 'account'])->where('payee_type', 'client');
         if ($clientId !== 'all') {
             $etQuery->where('client_id', $clientId);
         }
@@ -449,26 +483,60 @@ class TransactionController extends Controller
         foreach ($etList as $et) {
             $etDate = Carbon::parse($et->date)->format('Y-m-d');
             $etTimestamp = Carbon::parse($et->date)->startOfDay()->timestamp + 3;
-            $amt = (float) $et->amount;
-            $transactionsPaid += $amt;
+
+            $currency = strtoupper($et->currency ?: 'PKR');
+            $exchangeRate = (float) ($et->exchange_rate > 0 ? $et->exchange_rate : 1);
+            $rawAmount = (float) $et->amount;
+            $pkrAmount = ($currency === 'PKR') ? $rawAmount : round($rawAmount * $exchangeRate, 2);
+
+            $isDebit = ($et->transaction_type === 'debit');
+
+            if ($isDebit) {
+                $debitPkr = $pkrAmount;
+                $creditPkr = 0.00;
+            } else {
+                $debitPkr = 0.00;
+                $creditPkr = $pkrAmount;
+                $transactionsPaid += $pkrAmount;
+            }
+
+            // Determine Contra Account (Bank name, Account name, or Cash)
+            $contraAccount = '—';
+            if ($et->bank) {
+                $contraAccount = $et->bank->name . ($et->bank->account_name ? ' (' . $et->bank->account_name . ')' : '');
+            } elseif ($et->account) {
+                $contraAccount = $et->account->account_name;
+            } else {
+                $contraAccount = match(strtolower($et->payment_type)) {
+                    'cash' => 'Cash in Hand',
+                    'bank', 'bank_transfer' => 'Bank Account',
+                    'cheque' => 'Cheque Clearance',
+                    'online' => 'Online Banking',
+                    default => ucwords(str_replace('_', ' ', $et->payment_type ?? 'Cash in Hand'))
+                };
+            }
 
             $rawEntries[] = [
-                'date'           => $etDate,
-                'timestamp'      => $etTimestamp,
-                'entry_type'     => 'receipt',
-                'badge_class'    => 'bg-soft-info text-info',
-                'type_label'     => 'Client Receipt',
-                'voucher_no'     => 'REC-' . $et->id,
-                'ref_no'         => $et->reference_no ?: ('#REC-' . $et->id),
-                'description'    => 'Payment Received via ' . ucwords(str_replace('_', ' ', $et->payment_type)) . ($et->description ? ' — ' . $et->description : ''),
-                'client_id'      => $et->client_id,
-                'client_name'    => $et->client->name ?? '—',
-                'booking_id'     => null,
-                'debit'          => 0.00,
-                'credit'         => $amt,
-                'payment_method' => ucwords(str_replace('_', ' ', $et->payment_type)),
-                'status'         => 'confirmed',
-                'proof'          => $et->proof ? asset('assets/images/expense_proofs/' . $et->proof) : null,
+                'date'             => $etDate,
+                'timestamp'        => $etTimestamp,
+                'entry_type'       => $isDebit ? 'charge' : 'receipt',
+                'badge_class'      => $isDebit ? 'bg-soft-danger text-danger' : 'bg-soft-info text-info',
+                'type_label'       => $isDebit ? 'Client Debit / Charge' : 'Client Receipt',
+                'voucher_no'       => 'REC-' . $et->id,
+                'ref_no'           => $et->reference_no ?: ('#REC-' . $et->id),
+                'description'      => ($isDebit ? 'Charge / Payment to Client via ' : 'Payment Received via ') . ucwords(str_replace('_', ' ', $et->payment_type)) . ($et->description ? ' — ' . $et->description : ''),
+                'contra_account'   => $contraAccount,
+                'client_id'        => $et->client_id,
+                'client_name'      => $et->client->name ?? '—',
+                'booking_id'       => null,
+                'currency'         => $currency,
+                'exchange_rate'    => $exchangeRate,
+                'original_amount'  => $rawAmount,
+                'debit'            => $debitPkr,
+                'credit'           => $creditPkr,
+                'payment_method'   => ucwords(str_replace('_', ' ', $et->payment_type)),
+                'status'           => 'confirmed',
+                'proof'            => $et->proof ? asset('assets/images/expense_proofs/' . $et->proof) : null,
             ];
         }
 
@@ -505,6 +573,42 @@ class TransactionController extends Controller
         $balance        = $closingBalance;
         $totalPaid      = $bookingReceived + $transactionsPaid;
 
+        // 7. Multi-Currency Summary Breakdown
+        $currencySummary = [
+            'PKR' => [
+                'received_original' => 0.0,
+                'received_pkr'      => 0.0,
+                'charges_original'  => 0.0,
+                'count'             => 0,
+            ],
+            'SAR' => [
+                'received_original' => 0.0,
+                'received_pkr'      => 0.0,
+                'charges_original'  => 0.0,
+                'count'             => 0,
+            ],
+        ];
+
+        foreach ($statementLines as $line) {
+            $cur = strtoupper($line['currency'] ?? 'PKR');
+            if (!isset($currencySummary[$cur])) {
+                $currencySummary[$cur] = [
+                    'received_original' => 0.0,
+                    'received_pkr'      => 0.0,
+                    'charges_original'  => 0.0,
+                    'count'             => 0,
+                ];
+            }
+            if ($line['credit'] > 0) {
+                $currencySummary[$cur]['received_original'] += (float) ($line['original_amount'] ?? $line['credit']);
+                $currencySummary[$cur]['received_pkr']      += (float) $line['credit'];
+                $currencySummary[$cur]['count']             += 1;
+            }
+            if ($line['debit'] > 0) {
+                $currencySummary[$cur]['charges_original']  += (float) ($line['original_amount'] ?? $line['debit']);
+            }
+        }
+
         $clients = Client::where('status', 'active')->orderBy('name')->get();
         $bookingsCount = $bookings->count();
         $transactionsCount = count($statementLines);
@@ -523,6 +627,7 @@ class TransactionController extends Controller
             'clients',
             'bookingsCount',
             'transactionsCount',
+            'currencySummary',
             // Legacy / backward-compat variables:
             'transactions',
             'totalPaid',
