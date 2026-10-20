@@ -337,7 +337,10 @@
                                                             {{ $b->haji_id }}
                                                         </span>
                                                     @endif
-                                                    <br><small class="text-muted">{{ $b->booking_date ? date('d M Y', strtotime($b->booking_date)) : '—' }}</small>
+                                                    @php
+                                                        $dispDate = $b->booking_date ?: ($b->flight_booking_date ?: $b->hotels->first()?->booking_date);
+                                                    @endphp
+                                                    <br><small class="text-muted">{{ $dispDate ? date('d M Y', strtotime($dispDate)) : '—' }}</small>
                                                 </td>
                                                 <td>
                                                     <strong class="text-dark">{{ $b->client->name ?? ($b->company->name ?? 'Client') }}</strong>

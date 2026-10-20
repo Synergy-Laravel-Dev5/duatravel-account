@@ -106,7 +106,7 @@
                 <!-- TOP BAR -->
                 <div class="py-3 d-flex flex-wrap align-items-center justify-content-between border-bottom mb-3 no-print">
                     <div>
-                        <p class="text-muted mb-0 fs-12 text-uppercase fw-semibold">ACCOUNT STATEMENT / KHATA</p>
+                        <p class="text-muted mb-0 fs-12 text-uppercase fw-semibold">ACCOUNT STATEMENT</p>
                         <h4 class="fw-bold text-dark mb-0 fs-20">
                             <i class="mdi mdi-book-open-page-variant text-primary me-1"></i> Client Ledger (Debit / Credit)
                         </h4>
@@ -216,7 +216,14 @@
                                 <div>
                                     <div class="stat-label text-danger">Total Debits (Charges / Billed)</div>
                                     <div class="stat-value text-danger">PKR {{ number_format($totalDebits, 2) }}</div>
-                                    <small class="text-muted fs-11">{{ $bookingsCount }} Bookings billed</small>
+                                    <div class="d-flex flex-wrap gap-1 mt-1">
+                                        @if(($totalDebitsSar ?? 0) > 0)
+                                            <span class="badge bg-soft-danger text-danger border fs-10" title="SAR Charges">
+                                                SAR {{ number_format($totalDebitsSar, 2) }}
+                                            </span>
+                                        @endif
+                                        <small class="text-muted fs-11">{{ $bookingsCount }} Bookings billed</small>
+                                    </div>
                                 </div>
                                 <div class="icon-box bg-soft-danger text-danger">
                                     <i class="mdi mdi-arrow-up-bold fs-22"></i>
@@ -233,9 +240,9 @@
                                     <div class="stat-label text-success">Total Credits (Paid / Received)</div>
                                     <div class="stat-value text-success">PKR {{ number_format($totalCredits, 2) }}</div>
                                     <div class="d-flex flex-wrap gap-1 mt-1">
-                                        @if(($currencySummary['SAR']['received_original'] ?? 0) > 0)
+                                        @if(($totalCreditsSar ?? 0) > 0)
                                             <span class="badge bg-warning text-dark fs-10" title="SAR Received">
-                                                SAR {{ number_format($currencySummary['SAR']['received_original'], 2) }}
+                                                SAR {{ number_format($totalCreditsSar, 2) }}
                                             </span>
                                         @endif
                                         @if(($currencySummary['PKR']['received_original'] ?? 0) > 0)
@@ -264,7 +271,14 @@
                                         PKR {{ number_format($absClosing, 2) }}
                                         <span class="badge {{ $closingBadgeClass }} fs-11 ms-1">{{ $closingTag }}</span>
                                     </div>
-                                    <small class="text-muted fs-11">{{ $closingBalance > 0 ? 'Payable by Client' : ($closingBalance < 0 ? 'Advance credit with agency' : 'All accounts settled') }}</small>
+                                    @if(isset($closingBalanceSar) && abs($closingBalanceSar) > 0)
+                                        <div class="mt-1">
+                                            <span class="badge {{ $closingBalanceSar > 0 ? 'bg-soft-danger text-danger' : 'bg-soft-success text-success' }} border fs-10">
+                                                SAR {{ number_format(abs($closingBalanceSar), 2) }} {{ $closingBalanceSar > 0 ? 'Dr (Due)' : 'Cr (Advance)' }}
+                                            </span>
+                                        </div>
+                                    @endif
+                                    <small class="text-muted fs-11 d-block mt-1">{{ $closingBalance > 0 ? 'Payable by Client' : ($closingBalance < 0 ? 'Advance credit with agency' : 'All accounts settled') }}</small>
                                 </div>
                                 <div class="icon-box {{ $closingBalance > 0 ? 'bg-soft-danger text-danger' : 'bg-soft-success text-success' }}">
                                     <i class="mdi mdi-scale-balance fs-22"></i>
@@ -307,7 +321,7 @@
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
                         <h5 class="fs-14 fw-bold m-0 text-dark">
-                            <i class="mdi mdi-bank-transfer text-primary me-2"></i> Statement of Account (Khata / Ledger)
+                            <i class="mdi mdi-bank-transfer text-primary me-2"></i> Statement of Account (Ledger)
                         </h5>
                         <div class="d-flex align-items-center gap-2">
                             @if(($currencySummary['SAR']['received_original'] ?? 0) > 0)
@@ -326,22 +340,30 @@
                             <table class="table statement-table table-hover align-middle mb-0">
                                 <thead>
                                     <tr>
-                                        <th class="ps-3" style="width: 35px;">#</th>
-                                        <th style="width: 100px;">Date</th>
-                                        <th style="width: 105px;">Voucher #</th>
-                                        <th style="width: 120px;">Type</th>
-                                        <th style="width: 130px;">Contra A/C</th>
-                                        <th>Particulars / Narration</th>
-                                        <th style="width: 95px;">Method</th>
-                                        <th class="text-end text-danger" style="width: 130px;">Debit (Dr) Charges</th>
-                                        <th class="text-end text-success" style="width: 140px;">Credit (Cr) Received</th>
-                                        <th class="text-end text-primary" style="width: 140px;">Running Balance</th>
-                                        <th class="no-print text-center" style="width: 50px;">Proof</th>
+                                        <th rowspan="2" class="ps-3 align-middle" style="width: 35px;">#</th>
+                                        <th rowspan="2" class="align-middle" style="width: 95px;">Date</th>
+                                        <th rowspan="2" class="align-middle" style="width: 100px;">Voucher #</th>
+                                        <th rowspan="2" class="align-middle" style="width: 110px;">Type</th>
+                                        <th rowspan="2" class="align-middle" style="width: 120px;">Contra A/C</th>
+                                        <th rowspan="2" class="align-middle">Particulars / Narration</th>
+                                        <th rowspan="2" class="align-middle" style="width: 90px;">Method</th>
+                                        <th colspan="2" class="text-center bg-soft-success text-success border-bottom-0 py-1">PKR (Pakistani Rupee)</th>
+                                        <th colspan="2" class="text-center bg-soft-warning text-dark border-bottom-0 py-1">SAR (Saudi Riyal)</th>
+                                        <th colspan="2" class="text-center bg-light border-bottom-0 py-1">Running Balance</th>
+                                        <th rowspan="2" class="no-print text-center align-middle" style="width: 45px;">Proof</th>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-end text-danger py-1" style="min-width: 95px;">Debit (Dr)</th>
+                                        <th class="text-end text-success py-1" style="min-width: 95px;">Credit (Cr)</th>
+                                        <th class="text-end text-danger py-1" style="min-width: 85px;">Debit (Dr)</th>
+                                        <th class="text-end text-success py-1" style="min-width: 85px;">Credit (Cr)</th>
+                                        <th class="text-end py-1 text-dark" style="min-width: 95px;">PKR</th>
+                                        <th class="text-end py-1 text-dark" style="min-width: 85px;">SAR</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {{-- Opening Balance Row if date filter applied and balance exists --}}
-                                    @if($openingBalance != 0)
+                                    @if(($openingBalancePkr ?? $openingBalance) != 0 || ($openingBalanceSar ?? 0) != 0)
                                         <tr class="opening-row">
                                             <td class="ps-3 text-muted">—</td>
                                             <td>{{ $fromDate ? \Carbon\Carbon::parse($fromDate)->format('d M, Y') : '—' }}</td>
@@ -350,17 +372,34 @@
                                             <td><span class="badge bg-light text-dark border">Opening Balance</span></td>
                                             <td><strong>Opening Balance Brought Forward</strong></td>
                                             <td>—</td>
+                                            {{-- PKR Columns --}}
                                             <td class="text-end fw-bold text-danger">
-                                                {{ $openingBalance > 0 ? number_format($openingBalance, 2) : '—' }}
+                                                {{ ($openingBalancePkr ?? $openingBalance) > 0 ? number_format($openingBalancePkr ?? $openingBalance, 2) : '—' }}
                                             </td>
                                             <td class="text-end fw-bold text-success">
-                                                {{ $openingBalance < 0 ? number_format(abs($openingBalance), 2) : '—' }}
+                                                {{ ($openingBalancePkr ?? $openingBalance) < 0 ? number_format(abs($openingBalancePkr ?? $openingBalance), 2) : '—' }}
+                                            </td>
+                                            {{-- SAR Columns --}}
+                                            <td class="text-end fw-bold text-danger">
+                                                {{ ($openingBalanceSar ?? 0) > 0 ? number_format($openingBalanceSar, 2) : '—' }}
+                                            </td>
+                                            <td class="text-end fw-bold text-success">
+                                                {{ ($openingBalanceSar ?? 0) < 0 ? number_format(abs($openingBalanceSar), 2) : '—' }}
+                                            </td>
+                                            {{-- Running Balances --}}
+                                            <td class="text-end fw-bold text-dark">
+                                                {{ number_format(abs($openingBalancePkr ?? $openingBalance), 2) }}
+                                                <small class="badge {{ ($openingBalancePkr ?? $openingBalance) > 0 ? 'bg-danger' : 'bg-success' }} text-white ms-1" style="font-size: 9px;">
+                                                    {{ ($openingBalancePkr ?? $openingBalance) > 0 ? 'Dr' : 'Cr' }}
+                                                </small>
                                             </td>
                                             <td class="text-end fw-bold text-dark">
-                                                {{ number_format(abs($openingBalance), 2) }}
-                                                <small class="badge {{ $openingBalance > 0 ? 'bg-danger' : 'bg-success' }} text-white ms-1" style="font-size: 10px;">
-                                                    {{ $openingBalance > 0 ? 'Dr' : 'Cr' }}
-                                                </small>
+                                                {{ number_format(abs($openingBalanceSar ?? 0), 2) }}
+                                                @if(($openingBalanceSar ?? 0) != 0)
+                                                    <small class="badge {{ ($openingBalanceSar ?? 0) > 0 ? 'bg-danger' : 'bg-success' }} text-white ms-1" style="font-size: 9px;">
+                                                        {{ ($openingBalanceSar ?? 0) > 0 ? 'Dr' : 'Cr' }}
+                                                    </small>
+                                                @endif
                                             </td>
                                             <td class="no-print text-center">—</td>
                                         </tr>
@@ -410,44 +449,51 @@
                                                     {{ $row['payment_method'] }}
                                                 </span>
                                             </td>
-                                            <!-- Debit Column -->
-                                            <td class="text-end fw-bold {{ $row['debit'] > 0 ? 'text-danger' : 'text-muted' }}">
-                                                @if($row['debit'] > 0)
-                                                    <div>PKR {{ number_format($row['debit'], 2) }}</div>
-                                                    @if(!empty($row['currency']) && $row['currency'] !== 'PKR')
-                                                        <div class="mt-1">
-                                                            <span class="badge bg-soft-warning text-dark border px-1" style="font-size: 10px;">
-                                                                {{ $row['currency'] }} {{ number_format($row['original_amount'], 2) }}
-                                                            </span>
-                                                            <small class="text-muted d-block fw-normal" style="font-size: 9px;">@ ROE {{ number_format($row['exchange_rate'], 2) }}</small>
-                                                        </div>
+                                            <!-- PKR Debit Column -->
+                                            <td class="text-end fw-bold {{ ($row['debit_pkr'] ?? $row['debit']) > 0 ? 'text-danger' : 'text-muted' }}">
+                                                {{ ($row['debit_pkr'] ?? $row['debit']) > 0 ? number_format($row['debit_pkr'] ?? $row['debit'], 2) : '—' }}
+                                            </td>
+                                            <!-- PKR Credit Column -->
+                                            <td class="text-end fw-bold {{ ($row['credit_pkr'] ?? $row['credit']) > 0 ? 'text-success' : 'text-muted' }}">
+                                                {{ ($row['credit_pkr'] ?? $row['credit']) > 0 ? number_format($row['credit_pkr'] ?? $row['credit'], 2) : '—' }}
+                                            </td>
+                                            <!-- SAR Debit Column -->
+                                            <td class="text-end fw-bold {{ ($row['debit_sar'] ?? 0) > 0 ? 'text-danger' : 'text-muted' }}">
+                                                @if(($row['debit_sar'] ?? 0) > 0)
+                                                    <div>{{ number_format($row['debit_sar'], 2) }}</div>
+                                                    @if(!empty($row['exchange_rate']) && $row['exchange_rate'] > 1)
+                                                        <small class="text-muted d-block fw-normal" style="font-size: 9px;">@ ROE {{ number_format($row['exchange_rate'], 2) }}</small>
                                                     @endif
                                                 @else
                                                     —
                                                 @endif
                                             </td>
-                                            <!-- Credit Column (with foreign currency & ROE badge) -->
-                                            <td class="text-end fw-bold {{ $row['credit'] > 0 ? 'text-success' : 'text-muted' }}">
-                                                @if($row['credit'] > 0)
-                                                    <div>PKR {{ number_format($row['credit'], 2) }}</div>
-                                                    @if(!empty($row['currency']) && $row['currency'] !== 'PKR')
-                                                        <div class="mt-1">
-                                                            <span class="badge bg-soft-warning text-dark border px-1" style="font-size: 10px;">
-                                                                <i class="mdi mdi-cash-multiple me-1"></i>{{ $row['currency'] }} {{ number_format($row['original_amount'], 2) }}
-                                                            </span>
-                                                            <small class="text-muted d-block fw-normal" style="font-size: 9px;">@ ROE {{ number_format($row['exchange_rate'], 2) }}</small>
-                                                        </div>
+                                            <!-- SAR Credit Column -->
+                                            <td class="text-end fw-bold {{ ($row['credit_sar'] ?? 0) > 0 ? 'text-success' : 'text-muted' }}">
+                                                @if(($row['credit_sar'] ?? 0) > 0)
+                                                    <div>{{ number_format($row['credit_sar'], 2) }}</div>
+                                                    @if(!empty($row['exchange_rate']) && $row['exchange_rate'] > 1)
+                                                        <small class="text-muted d-block fw-normal" style="font-size: 9px;">@ ROE {{ number_format($row['exchange_rate'], 2) }}</small>
                                                     @endif
                                                 @else
                                                     —
                                                 @endif
                                             </td>
-                                            <!-- Running Balance Column -->
+                                            <!-- Running Balance PKR Column -->
                                             <td class="text-end fw-bold text-dark">
-                                                PKR {{ number_format(abs($row['running_balance']), 2) }}
-                                                <span class="badge {{ $row['running_balance'] > 0 ? 'bg-soft-danger text-danger' : ($row['running_balance'] < 0 ? 'bg-soft-success text-success' : 'bg-light text-muted') }} ms-1" style="font-size: 10px;">
+                                                {{ number_format(abs($row['running_balance_pkr'] ?? $row['running_balance']), 2) }}
+                                                <span class="badge {{ ($row['running_balance_pkr'] ?? $row['running_balance']) > 0 ? 'bg-soft-danger text-danger' : (($row['running_balance_pkr'] ?? $row['running_balance']) < 0 ? 'bg-soft-success text-success' : 'bg-light text-muted') }} ms-1" style="font-size: 9px;">
                                                     {{ $row['balance_type'] }}
                                                 </span>
+                                            </td>
+                                            <!-- Running Balance SAR Column -->
+                                            <td class="text-end fw-bold text-dark">
+                                                {{ number_format(abs($row['running_balance_sar'] ?? 0), 2) }}
+                                                @if(($row['running_balance_sar'] ?? 0) != 0)
+                                                    <span class="badge {{ ($row['running_balance_sar'] ?? 0) > 0 ? 'bg-soft-danger text-danger' : 'bg-soft-success text-success' }} ms-1" style="font-size: 9px;">
+                                                        {{ $row['balance_type_sar'] ?? (($row['running_balance_sar'] ?? 0) > 0 ? 'Dr' : 'Cr') }}
+                                                    </span>
+                                                @endif
                                             </td>
                                             <!-- Proof Column -->
                                             <td class="no-print text-center">
@@ -461,9 +507,9 @@
                                             </td>
                                         </tr>
                                     @empty
-                                        @if($openingBalance == 0)
+                                        @if(($openingBalancePkr ?? $openingBalance) == 0 && ($openingBalanceSar ?? 0) == 0)
                                             <tr>
-                                                <td colspan="11" class="text-center py-5 text-muted">
+                                                <td colspan="14" class="text-center py-5 text-muted">
                                                     <i class="mdi mdi-book-remove-outline fs-36 text-muted d-block mb-2"></i>
                                                     <h6 class="fw-bold mb-1">No Ledger Records Found</h6>
                                                     <p class="fs-12 mb-0">No booking charges or payment receipts recorded for this client in the selected date range.</p>
@@ -475,16 +521,20 @@
                                 <tfoot class="table-light fw-bold">
                                     <tr style="border-top: 2px solid #cbd5e1;">
                                         <td colspan="7" class="text-end text-uppercase fs-12">Period Totals:</td>
-                                        <td class="text-end text-danger fs-14">PKR {{ number_format($periodDebits, 2) }}</td>
-                                        <td class="text-end text-success fs-14">PKR {{ number_format($periodCredits, 2) }}</td>
-                                        <td colspan="2" class="text-end text-dark fs-13"></td>
+                                        <td class="text-end text-danger fs-13">PKR {{ number_format($periodDebitsPkr ?? $periodDebits, 2) }}</td>
+                                        <td class="text-end text-success fs-13">PKR {{ number_format($periodCreditsPkr ?? $periodCredits, 2) }}</td>
+                                        <td class="text-end text-danger fs-13">SAR {{ number_format($periodDebitsSar ?? 0, 2) }}</td>
+                                        <td class="text-end text-success fs-13">SAR {{ number_format($periodCreditsSar ?? 0, 2) }}</td>
+                                        <td class="text-end text-dark fs-13">PKR {{ number_format(abs($closingBalancePkr ?? $closingBalance), 2) }}</td>
+                                        <td class="text-end text-dark fs-13">SAR {{ number_format(abs($closingBalanceSar ?? 0), 2) }}</td>
+                                        <td class="no-print"></td>
                                     </tr>
                                     @if(($currencySummary['SAR']['received_original'] ?? 0) > 0 || ($currencySummary['PKR']['received_original'] ?? 0) > 0)
                                         <tr style="background: #fdfefe; border-top: 1px dashed #cbd5e1;">
                                             <td colspan="7" class="text-end text-uppercase fs-11 text-muted">
                                                 <i class="mdi mdi-cash-multiple me-1"></i> Received Currency Breakdown:
                                             </td>
-                                            <td colspan="3" class="fs-12 text-end">
+                                            <td colspan="6" class="fs-12 text-end">
                                                 @foreach($currencySummary as $currCode => $currData)
                                                     @if(($currData['count'] ?? 0) > 0)
                                                         <span class="badge {{ $currCode === 'SAR' ? 'bg-warning text-dark' : 'bg-light text-dark border' }} ms-1 px-2 py-1">
@@ -495,7 +545,7 @@
                                                         </span>
                                                     @endif
                                                 @endforeach
-                                                </td>
+                                            </td>
                                             <td class="no-print"></td>
                                         </tr>
                                     @endif
@@ -503,11 +553,18 @@
                                         <td colspan="7" class="text-end text-uppercase fs-13 text-dark">
                                             Net Closing Balance:
                                         </td>
-                                        <td colspan="2" class="text-center fs-12 text-muted">
-                                            (Total Billed: PKR {{ number_format($totalDebits, 2) }} | Total Received: PKR {{ number_format($totalCredits, 2) }})
+                                        <td colspan="4" class="text-center fs-12 text-muted">
+                                            (PKR Billed: {{ number_format($totalDebits, 2) }} | PKR Received: {{ number_format($totalCredits, 2) }} | SAR Received: {{ number_format($totalCreditsSar ?? 0, 2) }})
                                         </td>
-                                        <td class="text-end fs-15 {{ $closingBalance > 0 ? 'text-danger' : ($closingBalance < 0 ? 'text-success' : 'text-dark') }}">
+                                        <td class="text-end fs-14 {{ $closingBalance > 0 ? 'text-danger' : ($closingBalance < 0 ? 'text-success' : 'text-dark') }}">
                                             PKR {{ number_format($absClosing, 2) }} {{ $closingTag }}
+                                        </td>
+                                        <td class="text-end fs-14 {{ ($closingBalanceSar ?? 0) > 0 ? 'text-danger' : (($closingBalanceSar ?? 0) < 0 ? 'text-success' : 'text-dark') }}">
+                                            @if(($closingBalanceSar ?? 0) != 0)
+                                                SAR {{ number_format(abs($closingBalanceSar), 2) }} {{ $closingBalanceSar > 0 ? 'Dr' : 'Cr' }}
+                                            @else
+                                                —
+                                            @endif
                                         </td>
                                         <td class="no-print"></td>
                                     </tr>
@@ -540,10 +597,15 @@
                 @endif
                 [],
                 ["FINANCIAL SUMMARY", ""],
-                ["Total Debits (Charges / Billed):", {{ (float) $totalDebits }}],
-                ["Total Credits (Paid / Received):", {{ (float) $totalCredits }}],
-                ["Closing Balance:", {{ (float) $closingBalance }}],
+                ["Total Debits (PKR):", {{ (float) $totalDebits }}],
+                ["Total Credits (PKR):", {{ (float) $totalCredits }}],
+                ["Closing Balance (PKR):", {{ (float) $closingBalance }}],
                 ["Balance Status:", "{{ $closingTag }}"],
+                @if(($totalDebitsSar ?? 0) > 0 || ($totalCreditsSar ?? 0) > 0)
+                ["Total Debits (SAR):", {{ (float) ($totalDebitsSar ?? 0) }}],
+                ["Total Credits (SAR):", {{ (float) ($totalCreditsSar ?? 0) }}],
+                ["Closing Balance (SAR):", {{ (float) ($closingBalanceSar ?? 0) }}],
+                @endif
             ];
             const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
             XLSX.utils.book_append_sheet(wb, ws1, "Summary");
@@ -562,13 +624,15 @@
                 "ROE",
                 "Debit (Dr) PKR",
                 "Credit (Cr) PKR",
+                "Debit (Dr) SAR",
+                "Credit (Cr) SAR",
                 "Running Balance PKR",
-                "Balance Type"
+                "Running Balance SAR"
             ];
 
             const ledgerRows = [];
 
-            @if($openingBalance != 0)
+            @if(($openingBalancePkr ?? $openingBalance) != 0 || ($openingBalanceSar ?? 0) != 0)
             ledgerRows.push([
                 "—",
                 "{{ $fromDate ?? '—' }}",
@@ -578,12 +642,14 @@
                 "Opening Balance Brought Forward",
                 "—",
                 "PKR",
-                {{ abs($openingBalance) }},
+                {{ abs($openingBalancePkr ?? $openingBalance) }},
                 1.00,
-                {{ $openingBalance > 0 ? $openingBalance : 0 }},
-                {{ $openingBalance < 0 ? abs($openingBalance) : 0 }},
-                {{ abs($openingBalance) }},
-                "{{ $openingBalance > 0 ? 'Dr' : 'Cr' }}"
+                {{ ($openingBalancePkr ?? $openingBalance) > 0 ? ($openingBalancePkr ?? $openingBalance) : 0 }},
+                {{ ($openingBalancePkr ?? $openingBalance) < 0 ? abs($openingBalancePkr ?? $openingBalance) : 0 }},
+                {{ ($openingBalanceSar ?? 0) > 0 ? ($openingBalanceSar ?? 0) : 0 }},
+                {{ ($openingBalanceSar ?? 0) < 0 ? abs($openingBalanceSar ?? 0) : 0 }},
+                {{ abs($openingBalancePkr ?? $openingBalance) }},
+                {{ abs($openingBalanceSar ?? 0) }}
             ]);
             @endif
 
@@ -597,22 +663,26 @@
                 "{{ addslashes($row['description']) }}",
                 "{{ addslashes($row['payment_method']) }}",
                 "{{ $row['currency'] ?? 'PKR' }}",
-                {{ (float) ($row['original_amount'] ?? ($row['credit'] > 0 ? $row['credit'] : $row['debit'])) }},
+                {{ (float) ($row['original_amount'] ?? ($row['credit_pkr'] > 0 ? $row['credit_pkr'] : $row['debit_pkr'])) }},
                 {{ (float) ($row['exchange_rate'] ?? 1) }},
-                {{ (float) $row['debit'] }},
-                {{ (float) $row['credit'] }},
-                {{ (float) abs($row['running_balance']) }},
-                "{{ $row['balance_type'] }}"
+                {{ (float) ($row['debit_pkr'] ?? $row['debit']) }},
+                {{ (float) ($row['credit_pkr'] ?? $row['credit']) }},
+                {{ (float) ($row['debit_sar'] ?? 0) }},
+                {{ (float) ($row['credit_sar'] ?? 0) }},
+                {{ (float) abs($row['running_balance_pkr'] ?? $row['running_balance']) }},
+                {{ (float) abs($row['running_balance_sar'] ?? 0) }}
             ]);
             @endforeach
 
             ledgerRows.push([]);
             ledgerRows.push([
                 "TOTALS", "", "", "", "", "", "Period Totals:", "", "", "",
-                {{ (float) $periodDebits }},
-                {{ (float) $periodCredits }},
-                {{ (float) abs($closingBalance) }},
-                "{{ $closingTag }}"
+                {{ (float) ($periodDebitsPkr ?? $periodDebits) }},
+                {{ (float) ($periodCreditsPkr ?? $periodCredits) }},
+                {{ (float) ($periodDebitsSar ?? 0) }},
+                {{ (float) ($periodCreditsSar ?? 0) }},
+                {{ (float) abs($closingBalancePkr ?? $closingBalance) }},
+                {{ (float) abs($closingBalanceSar ?? 0) }}
             ]);
 
             const ws2 = XLSX.utils.aoa_to_sheet([ledgerHeaders, ...ledgerRows]);
@@ -644,13 +714,19 @@
 
             // Summary Info
             doc.setTextColor(30, 30, 30);
-            doc.setFontSize(9);
+            doc.setFontSize(8.5);
             doc.setFont(undefined, 'bold');
-            doc.text("Total Debits: PKR {{ number_format($totalDebits, 2) }}  |  Total Credits: PKR {{ number_format($totalCredits, 2) }}  |  Net Closing: PKR {{ number_format($absClosing, 2) }} ({{ $closingTag }})", 14, 28);
+            doc.text("PKR — Debits: {{ number_format($totalDebits, 2) }} | Credits: {{ number_format($totalCredits, 2) }} | Net: {{ number_format($absClosing, 2) }} ({{ $closingTag }})" +
+                     @if(($totalCreditsSar ?? 0) > 0 || ($totalDebitsSar ?? 0) > 0)
+                     "   |   SAR — Debits: {{ number_format($totalDebitsSar ?? 0, 2) }} | Credits: {{ number_format($totalCreditsSar ?? 0, 2) }} | Net: {{ number_format(abs($closingBalanceSar ?? 0), 2) }}"
+                     @else
+                     ""
+                     @endif
+                     , 14, 28);
 
             const tableRows = [];
 
-            @if($openingBalance != 0)
+            @if(($openingBalancePkr ?? $openingBalance) != 0 || ($openingBalanceSar ?? 0) != 0)
             tableRows.push([
                 "—",
                 "{{ $fromDate ?? '—' }}",
@@ -659,9 +735,12 @@
                 "—",
                 "Opening Balance Brought Forward",
                 "—",
-                "{{ $openingBalance > 0 ? number_format($openingBalance, 2) : '—' }}",
-                "{{ $openingBalance < 0 ? number_format(abs($openingBalance), 2) : '—' }}",
-                "{{ number_format(abs($openingBalance), 2) }} {{ $openingBalance > 0 ? 'Dr' : 'Cr' }}"
+                "{{ ($openingBalancePkr ?? $openingBalance) > 0 ? number_format($openingBalancePkr ?? $openingBalance, 2) : '—' }}",
+                "{{ ($openingBalancePkr ?? $openingBalance) < 0 ? number_format(abs($openingBalancePkr ?? $openingBalance), 2) : '—' }}",
+                "{{ ($openingBalanceSar ?? 0) > 0 ? number_format($openingBalanceSar, 2) : '—' }}",
+                "{{ ($openingBalanceSar ?? 0) < 0 ? number_format(abs($openingBalanceSar), 2) : '—' }}",
+                "{{ number_format(abs($openingBalancePkr ?? $openingBalance), 2) }}",
+                "{{ number_format(abs($openingBalanceSar ?? 0), 2) }}"
             ]);
             @endif
 
@@ -674,32 +753,41 @@
                 "{{ addslashes($row['contra_account'] ?? '—') }}",
                 "{{ addslashes($row['description']) }}",
                 "{{ addslashes($row['payment_method']) }}",
-                "{{ $row['debit'] > 0 ? (number_format($row['debit'], 2) . (!empty($row['currency']) && $row['currency'] !== 'PKR' ? ' [' . $row['currency'] . ' ' . number_format($row['original_amount'], 2) . ']' : '')) : '—' }}",
-                "{{ $row['credit'] > 0 ? (number_format($row['credit'], 2) . (!empty($row['currency']) && $row['currency'] !== 'PKR' ? ' [' . $row['currency'] . ' ' . number_format($row['original_amount'], 2) . ' @ ' . number_format($row['exchange_rate'], 2) . ']' : '')) : '—' }}",
-                "{{ number_format(abs($row['running_balance']), 2) }} {{ $row['balance_type'] }}"
+                "{{ ($row['debit_pkr'] ?? $row['debit']) > 0 ? number_format($row['debit_pkr'] ?? $row['debit'], 2) : '—' }}",
+                "{{ ($row['credit_pkr'] ?? $row['credit']) > 0 ? number_format($row['credit_pkr'] ?? $row['credit'], 2) : '—' }}",
+                "{{ ($row['debit_sar'] ?? 0) > 0 ? number_format($row['debit_sar'], 2) : '—' }}",
+                "{{ ($row['credit_sar'] ?? 0) > 0 ? number_format($row['credit_sar'], 2) : '—' }}",
+                "{{ number_format(abs($row['running_balance_pkr'] ?? $row['running_balance']), 2) }} {{ $row['balance_type'] }}",
+                "{{ number_format(abs($row['running_balance_sar'] ?? 0), 2) }} {{ ($row['running_balance_sar'] ?? 0) != 0 ? ($row['balance_type_sar'] ?? '') : '' }}"
             ]);
             @endforeach
 
             tableRows.push([
                 "", "", "", "", "", "TOTALS:", "",
-                "PKR {{ number_format($periodDebits, 2) }}",
-                "PKR {{ number_format($periodCredits, 2) }}",
-                "PKR {{ number_format($absClosing, 2) }} {{ $closingTag }}"
+                "PKR {{ number_format($periodDebitsPkr ?? $periodDebits, 2) }}",
+                "PKR {{ number_format($periodCreditsPkr ?? $periodCredits, 2) }}",
+                "SAR {{ number_format($periodDebitsSar ?? 0, 2) }}",
+                "SAR {{ number_format($periodCreditsSar ?? 0, 2) }}",
+                "PKR {{ number_format(abs($closingBalancePkr ?? $closingBalance), 2) }}",
+                "SAR {{ number_format(abs($closingBalanceSar ?? 0), 2) }}"
             ]);
 
             doc.autoTable({
                 startY: 32,
-                head: [["#", "Date", "Voucher", "Type", "Contra A/C", "Particulars / Narration", "Method", "Debit (Dr) PKR", "Credit (Cr) PKR", "Running Balance"]],
+                head: [["#", "Date", "Voucher", "Type", "Contra A/C", "Description", "Method", "Dr (PKR)", "Cr (PKR)", "Dr (SAR)", "Cr (SAR)", "Bal (PKR)", "Bal (SAR)"]],
                 body: tableRows,
                 theme: 'striped',
-                headStyles: { fillColor: [30, 41, 59], textColor: 255, fontSize: 8, fontStyle: 'bold' },
-                bodyStyles: { fontSize: 7.5 },
+                headStyles: { fillColor: [30, 41, 59], textColor: 255, fontSize: 7.5, fontStyle: 'bold' },
+                bodyStyles: { fontSize: 7 },
                 columnStyles: {
                     7: { halign: 'right', textColor: [180, 0, 0] },
                     8: { halign: 'right', textColor: [0, 130, 0] },
-                    9: { halign: 'right', fontStyle: 'bold' }
+                    9: { halign: 'right', textColor: [180, 0, 0] },
+                    10: { halign: 'right', textColor: [0, 130, 0] },
+                    11: { halign: 'right', fontStyle: 'bold' },
+                    12: { halign: 'right', fontStyle: 'bold' }
                 },
-                margin: { left: 14, right: 14 }
+                margin: { left: 10, right: 10 }
             });
 
             doc.save("Client_Ledger_{{ Str::slug($client->name) }}_{{ date('Ymd') }}.pdf");

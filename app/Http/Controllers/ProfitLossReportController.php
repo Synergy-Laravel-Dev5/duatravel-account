@@ -43,20 +43,20 @@ class ProfitLossReportController extends Controller
         if ($year !== 'all' && !empty($year)) {
             $bookingQuery->where(function ($q) use ($year) {
                 $q->where('package_year', $year)
-                  ->orWhereRaw("YEAR(COALESCE(booking_date, DATE(created_at))) = ?", [$year]);
+                  ->orWhereRaw("YEAR(COALESCE(booking_date, flight_booking_date, DATE(created_at))) = ?", [$year]);
             });
         }
 
         if ($month !== 'all' && !empty($month)) {
-            $bookingQuery->whereRaw("MONTH(COALESCE(booking_date, DATE(created_at))) = ?", [$month]);
+            $bookingQuery->whereRaw("MONTH(COALESCE(booking_date, flight_booking_date, DATE(created_at))) = ?", [$month]);
         }
 
         if (!empty($dateFrom)) {
-            $bookingQuery->whereRaw("DATE(COALESCE(booking_date, DATE(created_at))) >= ?", [$dateFrom]);
+            $bookingQuery->whereRaw("DATE(COALESCE(booking_date, flight_booking_date, DATE(created_at))) >= ?", [$dateFrom]);
         }
 
         if (!empty($dateTo)) {
-            $bookingQuery->whereRaw("DATE(COALESCE(booking_date, DATE(created_at))) <= ?", [$dateTo]);
+            $bookingQuery->whereRaw("DATE(COALESCE(booking_date, flight_booking_date, DATE(created_at))) <= ?", [$dateTo]);
         }
 
         if (!empty($clientId)) {
@@ -80,7 +80,7 @@ class ProfitLossReportController extends Controller
             });
         }
 
-        $bookings = $bookingQuery->orderByRaw("COALESCE(booking_date, DATE(created_at)) DESC")->get();
+        $bookings = $bookingQuery->orderByRaw("COALESCE(booking_date, flight_booking_date, DATE(created_at)) DESC")->get();
 
         // Process Costing & Profit per Booking
         $processedBookings = [];
@@ -164,7 +164,11 @@ class ProfitLossReportController extends Controller
             $totalReceivedPkr += $receivedPkr;
             $totalBalancePkr += $balancePkr;
 
-            $effectiveBookingDate = !empty($b->booking_date) ? $b->booking_date : ($b->hotels->first()?->booking_date ?: ($b->created_at ? $b->created_at->toDateString() : date('Y-m-d')));
+            $effectiveBookingDate = !empty($b->booking_date) 
+                ? $b->booking_date 
+                : (!empty($b->flight_booking_date) 
+                    ? $b->flight_booking_date 
+                    : ($b->hotels->first()?->booking_date ?: ($b->created_at ? $b->created_at->toDateString() : date('Y-m-d'))));
             $bDate = Carbon::parse($effectiveBookingDate);
             $monthKey = $bDate->format('Y-m');
             $monthLabel = $bDate->format('M Y');

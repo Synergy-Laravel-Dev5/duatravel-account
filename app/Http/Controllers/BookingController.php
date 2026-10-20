@@ -83,14 +83,27 @@ class BookingController extends Controller
         $hajiId    = $request->haji_id ?? ($request->persons[0]['haji_id'] ?? null);
         $roomNumber = $request->room_number ?? ($request->persons[0]['room_number'] ?? null);
 
+        $flightCharges = (float) ($request->flight_charges ?: ($request->flight_charges_disp ?: 0));
+        if ($flightCharges <= 0 && (float) $request->flight_selling_rate > 0) {
+            $flightRoe = (float) ($request->flight_sale_roe ?: ($request->flight_roe ?: 75));
+            $flightCharges = (float) $request->flight_selling_rate * ($request->flight_currency === 'PKR' ? 1 : $flightRoe);
+        }
+
         $total = (($request->package_cost ?? 0) * ($request->no_of_pax ?? 1))
             + ($request->hotel_charges ?? 0)
             + ($request->visa_charges ?? 0)
             + ($request->transport_charges ?? 0)
-            + ($request->flight_charges ?? 0)
+            + $flightCharges
             + ($request->other_charges ?? 0)
             + ($request->additional_services_amount ?? 0)
             - ($request->discount ?? 0);
+
+        $resolvedBookingDate = $request->booking_date 
+            ?: ($request->flight_booking_date 
+            ?: ($request->input('hotels.0.booking_date') 
+            ?: ($request->input('transports.0.booking_date') 
+            ?: ($request->input('visas.0.booking_date') 
+            ?: now()->toDateString()))));
 
         $bookingData = array_merge(
             $request->except(['persons', 'hotels', 'transports', 'visas', 'flight_persons', '_token', 'cnic_front', 'cnic_back', 'passport_photo', 'photo', 'medical_certificate', 'flight_attachment']),
@@ -98,11 +111,8 @@ class BookingController extends Controller
                 'booking_for'         => $bookingFor,
                 'client_id'           => $clientId,
                 'company_id'          => $companyId,
-                'booking_date'        => $request->booking_date 
-                    ? date('Y-m-d', strtotime($request->booking_date)) 
-                    : ($request->input('hotels.0.booking_date') 
-                        ? date('Y-m-d', strtotime($request->input('hotels.0.booking_date'))) 
-                        : now()->toDateString()),
+                'booking_date'        => date('Y-m-d', strtotime($resolvedBookingDate)),
+                'flight_booking_date' => !empty($request->flight_booking_date) ? date('Y-m-d', strtotime($request->flight_booking_date)) : date('Y-m-d', strtotime($resolvedBookingDate)),
                 'currency'            => $request->currency ?? 'PKR',
                 'haji_id'             => $hajiId,
                 'room_number'         => $roomNumber,
@@ -127,7 +137,7 @@ class BookingController extends Controller
                 'hotel_charges'       => $request->hotel_charges ?? 0,
                 'visa_charges'        => $request->visa_charges ?? 0,
                 'transport_charges'   => $request->transport_charges ?? 0,
-                'flight_charges'      => $request->flight_charges ?? 0,
+                'flight_charges'      => $flightCharges,
                 'other_charges'       => $request->other_charges ?? 0,
                 'discount'            => $request->discount ?? 0,
                 'additional_services_amount' => $request->additional_services_amount ?? 0,
@@ -364,11 +374,17 @@ class BookingController extends Controller
             $hajiId     = $request->haji_id ?? ($request->persons[0]['haji_id'] ?? null);
             $roomNumber = $request->room_number ?? ($request->persons[0]['room_number'] ?? null);
 
+            $flightCharges = (float) ($request->flight_charges ?: ($request->flight_charges_disp ?: 0));
+            if ($flightCharges <= 0 && (float) $request->flight_selling_rate > 0) {
+                $flightRoe = (float) ($request->flight_sale_roe ?: ($request->flight_roe ?: ($booking->flight_sale_roe ?: 75)));
+                $flightCharges = (float) $request->flight_selling_rate * ($request->flight_currency === 'PKR' ? 1 : $flightRoe);
+            }
+
             $total = (($request->package_cost ?? 0) * ($request->no_of_pax ?? 1))
                 + ($request->hotel_charges ?? 0)
                 + ($request->visa_charges ?? 0)
                 + ($request->transport_charges ?? 0)
-                + ($request->flight_charges ?? 0)
+                + $flightCharges
                 + ($request->other_charges ?? 0)
                 + ($request->additional_services_amount ?? 0)
                 - ($request->discount ?? 0);
@@ -378,17 +394,27 @@ class BookingController extends Controller
                 $additionalServicesDetail = null;
             }
 
+            // Date Resolution:
+            $resolvedBookingDate = $request->booking_date;
+            if (!empty($request->flight_booking_date) && ($request->flight_booking_date !== $booking->flight_booking_date)) {
+                $resolvedBookingDate = $request->flight_booking_date;
+            } elseif (!empty($request->input('hotels.0.booking_date')) && ($request->input('hotels.0.booking_date') !== $booking->hotels->first()?->booking_date)) {
+                $resolvedBookingDate = $request->input('hotels.0.booking_date');
+            }
+            if (empty($resolvedBookingDate)) {
+                $resolvedBookingDate = $request->flight_booking_date 
+                    ?: ($request->input('hotels.0.booking_date') 
+                    ?: ($booking->booking_date ?: now()->toDateString()));
+            }
+
             $bookingData = array_merge(
                 $request->except(['persons', 'hotels', 'transports', 'visas', 'flight_persons', '_token', '_method', 'cnic_front', 'cnic_back', 'passport_photo', 'photo', 'medical_certificate', 'flight_attachment']),
                 [
                     'booking_for'         => $bookingFor,
                     'client_id'           => $clientId,
                     'company_id'          => $companyId,
-                    'booking_date'        => $request->booking_date 
-                        ? date('Y-m-d', strtotime($request->booking_date)) 
-                        : ($request->input('hotels.0.booking_date') 
-                            ? date('Y-m-d', strtotime($request->input('hotels.0.booking_date'))) 
-                            : ($booking->booking_date ?: now()->toDateString())),
+                    'booking_date'        => date('Y-m-d', strtotime($resolvedBookingDate)),
+                    'flight_booking_date' => !empty($request->flight_booking_date) ? date('Y-m-d', strtotime($request->flight_booking_date)) : date('Y-m-d', strtotime($resolvedBookingDate)),
                     'currency'            => $request->currency ?? ($booking->currency ?? 'PKR'),
                     'haji_id'             => $hajiId,
                     'room_number'         => $roomNumber,
@@ -413,7 +439,7 @@ class BookingController extends Controller
                     'hotel_charges'       => $request->hotel_charges ?? 0,
                     'visa_charges'        => $request->visa_charges ?? 0,
                     'transport_charges'   => $request->transport_charges ?? 0,
-                    'flight_charges'      => $request->flight_charges ?? 0,
+                    'flight_charges'      => $flightCharges,
                     'other_charges'       => $request->other_charges ?? 0,
                     'discount'            => $request->discount ?? 0,
                     'additional_services_amount' => $request->additional_services_amount ?? 0,

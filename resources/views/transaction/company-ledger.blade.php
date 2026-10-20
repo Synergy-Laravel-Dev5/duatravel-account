@@ -86,6 +86,9 @@
                                                 <div class="fs-5 fw-bold text-primary">
                                                     PKR {{ number_format($totalBooking, 0) }}
                                                 </div>
+                                                @if(($totalBookingSar ?? 0) > 0)
+                                                    <div class="badge bg-warning text-dark fs-11 mt-1">SAR {{ number_format($totalBookingSar, 2) }}</div>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
@@ -96,6 +99,9 @@
                                                 <div class="fs-5 fw-bold text-success">
                                                     PKR {{ number_format($totalPaid, 0) }}
                                                 </div>
+                                                @if(($totalPaidSar ?? 0) > 0)
+                                                    <div class="badge bg-soft-success text-success border fs-11 mt-1">SAR {{ number_format($totalPaidSar, 2) }}</div>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
@@ -109,6 +115,11 @@
                                                     class="fs-5 fw-bold {{ $balance > 0 ? 'text-danger' : ($balance < 0 ? 'text-info' : 'text-success') }}">
                                                     PKR {{ number_format(abs($balance), 0) }}
                                                 </div>
+                                                @if(isset($balanceSar) && abs($balanceSar) > 0)
+                                                    <div class="badge {{ $balanceSar > 0 ? 'bg-danger text-white' : 'bg-success text-white' }} fs-11 mt-1">
+                                                        SAR {{ number_format(abs($balanceSar), 2) }} {{ $balanceSar > 0 ? 'Due' : 'Advance' }}
+                                                    </div>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
@@ -126,9 +137,12 @@
                                                 <th>Booking Date</th>
                                                 <th>Package</th>
                                                 <th>Pax</th>
-                                                <th>Total Amount</th>
-                                                <th>Received</th>
-                                                <th>Balance</th>
+                                                <th>Total (PKR)</th>
+                                                <th>Total (SAR)</th>
+                                                <th>Received (PKR)</th>
+                                                <th>Received (SAR)</th>
+                                                <th>Balance (PKR)</th>
+                                                <th>Balance (SAR)</th>
                                                 <th class="no-pdf text-center">Action</th>
                                             </tr>
                                         </thead>
@@ -140,13 +154,21 @@
                                                     <td>{{ ucfirst($b->package_type ?? '-') }}
                                                         {{ $b->package_name ? '- ' . $b->package_name : '' }}</td>
                                                     <td>{{ $b->no_of_pax ?? '-' }}</td>
-                                                    <td>PKR {{ number_format($b->total_amount, 2) }}</td>
+                                                    <td>PKR {{ number_format($b->currency === 'SAR' ? $b->total_amount * ($b->flight_roe ?: 75) : $b->total_amount, 2) }}</td>
+                                                    <td>{{ $b->currency === 'SAR' ? ('SAR ' . number_format($b->total_amount, 2)) : '—' }}</td>
                                                     <td class="text-success fw-semibold">
-                                                        PKR {{ number_format($b->total_received, 2) }}
+                                                        PKR {{ number_format($b->currency === 'SAR' ? $b->total_received * ($b->flight_roe ?: 75) : $b->total_received, 2) }}
+                                                    </td>
+                                                    <td class="text-success fw-semibold">
+                                                        {{ $b->currency === 'SAR' ? ('SAR ' . number_format($b->total_received, 2)) : '—' }}
                                                     </td>
                                                     <td
-                                                        class="fw-semibold {{ $b->balance > 0 ? 'text-danger' : 'text-success' }}">
-                                                        PKR {{ number_format($b->balance, 2) }}
+                                                        class="fw-semibold {{ ($b->currency === 'SAR' ? ($b->total_amount - $b->total_received) : $b->balance) > 0 ? 'text-danger' : 'text-success' }}">
+                                                        PKR {{ number_format($b->currency === 'SAR' ? ($b->total_amount - $b->total_received) * ($b->flight_roe ?: 75) : $b->balance, 2) }}
+                                                    </td>
+                                                    <td
+                                                        class="fw-semibold {{ ($b->total_amount - $b->total_received) > 0 ? 'text-danger' : 'text-success' }}">
+                                                        {{ $b->currency === 'SAR' ? ('SAR ' . number_format($b->total_amount - $b->total_received, 2)) : '—' }}
                                                     </td>
                                                     @can('booking_show')
                                                         <td class="text-center no-pdf">
@@ -159,7 +181,7 @@
                                                 </tr>
                                             @empty
                                                 <tr>
-                                                    <td colspan="8" class="text-center text-muted py-4">
+                                                    <td colspan="11" class="text-center text-muted py-4">
                                                         No bookings found for this company.
                                                     </td>
                                                 </tr>
@@ -169,10 +191,12 @@
                                             <tfoot class="table-light fw-bold">
                                                 <tr>
                                                     <td colspan="4">Totals</td>
-                                                    <td>PKR {{ number_format($totalBooking, 2) }}</td>
-                                                    <td class="text-success">PKR {{ number_format($bookingReceived, 2) }}
-                                                    </td>
-                                                    <td>PKR {{ number_format($totalBooking - $bookingReceived, 2) }}</td>
+                                                    <td>PKR {{ number_format($totalBookingPkr ?? $totalBooking, 2) }}</td>
+                                                    <td>{{ ($totalBookingSar ?? 0) > 0 ? ('SAR ' . number_format($totalBookingSar, 2)) : '—' }}</td>
+                                                    <td class="text-success">PKR {{ number_format($bookingReceivedPkr ?? $bookingReceived, 2) }}</td>
+                                                    <td class="text-success">{{ ($bookingReceivedSar ?? 0) > 0 ? ('SAR ' . number_format($bookingReceivedSar, 2)) : '—' }}</td>
+                                                    <td>PKR {{ number_format(($totalBookingPkr ?? $totalBooking) - ($bookingReceivedPkr ?? $bookingReceived), 2) }}</td>
+                                                    <td>{{ ($totalBookingSar ?? 0) > 0 ? ('SAR ' . number_format(($totalBookingSar ?? 0) - ($bookingReceivedSar ?? 0), 2)) : '—' }}</td>
                                                     <td class="no-pdf"></td>
                                                 </tr>
                                             </tfoot>
@@ -239,38 +263,58 @@
 
                                 {{-- Final Summary --}}
                                 <div class="row justify-content-end">
-                                    <div class="col-md-6">
+                                    <div class="col-md-7">
                                         <div class="border rounded-3 p-4 bg-light shadow-sm">
                                             <h6 class="fw-bold text-secondary mb-3">
-                                                <i class="fas fa-calculator me-2"></i> Final Summary
+                                                <i class="fas fa-calculator me-2"></i> Final Summary (PKR & SAR)
                                             </h6>
-                                            <table class="table table-sm table-borderless mb-0">
-                                                <tr>
-                                                    <td>Total Booking Amount</td>
-                                                    <td class="text-end fw-semibold">PKR
-                                                        {{ number_format($totalBooking, 2) }}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Total Received (Bookings)</td>
-                                                    <td class="text-end">PKR {{ number_format($bookingReceived, 2) }}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Total Received (Confirmed Transactions)</td>
-                                                    <td class="text-end">PKR {{ number_format($transactionsPaid, 2) }}</td>
-                                                </tr>
-                                                <tr class="fw-bold border-top">
-                                                    <td>Grand Total Received</td>
-                                                    <td class="text-end">PKR {{ number_format($totalPaid, 2) }}</td>
-                                                </tr>
-                                                <tr class="fw-bold border-top">
-                                                    <td>
-                                                        {{ $balance > 0 ? 'Balance Due' : ($balance < 0 ? 'Advance Balance' : 'Balance') }}
-                                                    </td>
-                                                    <td
-                                                        class="text-end {{ $balance > 0 ? 'text-danger' : ($balance < 0 ? 'text-info' : 'text-success') }}">
-                                                        PKR {{ number_format(abs($balance), 2) }}
-                                                    </td>
-                                                </tr>
+                                            <table class="table table-sm table-borderless mb-0 fs-13">
+                                                <thead>
+                                                    <tr class="border-bottom">
+                                                        <th>Description</th>
+                                                        <th class="text-end text-dark">PKR</th>
+                                                        <th class="text-end text-dark">SAR</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>Total Booking Amount</td>
+                                                        <td class="text-end fw-semibold">PKR {{ number_format($totalBooking, 2) }}</td>
+                                                        <td class="text-end fw-semibold">{{ ($totalBookingSar ?? 0) > 0 ? ('SAR ' . number_format($totalBookingSar, 2)) : '—' }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Total Received (Bookings)</td>
+                                                        <td class="text-end">PKR {{ number_format($bookingReceived, 2) }}</td>
+                                                        <td class="text-end">{{ ($bookingReceivedSar ?? 0) > 0 ? ('SAR ' . number_format($bookingReceivedSar, 2)) : '—' }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Total Received (Confirmed Transactions)</td>
+                                                        <td class="text-end">PKR {{ number_format($transactionsPaid, 2) }}</td>
+                                                        <td class="text-end">{{ ($transactionsPaidSar ?? 0) > 0 ? ('SAR ' . number_format($transactionsPaidSar, 2)) : '—' }}</td>
+                                                    </tr>
+                                                    <tr class="fw-bold border-top">
+                                                        <td>Grand Total Received</td>
+                                                        <td class="text-end text-success">PKR {{ number_format($totalPaid, 2) }}</td>
+                                                        <td class="text-end text-success">{{ ($totalPaidSar ?? 0) > 0 ? ('SAR ' . number_format($totalPaidSar, 2)) : '—' }}</td>
+                                                    </tr>
+                                                    <tr class="fw-bold border-top">
+                                                        <td>
+                                                            {{ $balance > 0 ? 'Balance Due' : ($balance < 0 ? 'Advance Balance' : 'Balance') }}
+                                                        </td>
+                                                        <td
+                                                            class="text-end {{ $balance > 0 ? 'text-danger' : ($balance < 0 ? 'text-info' : 'text-success') }}">
+                                                            PKR {{ number_format(abs($balance), 2) }}
+                                                        </td>
+                                                        <td
+                                                            class="text-end {{ ($balanceSar ?? 0) > 0 ? 'text-danger' : (($balanceSar ?? 0) < 0 ? 'text-info' : 'text-success') }}">
+                                                            @if(isset($balanceSar) && abs($balanceSar) > 0)
+                                                                SAR {{ number_format(abs($balanceSar), 2) }} {{ $balanceSar > 0 ? 'Due' : 'Adv' }}
+                                                            @else
+                                                                —
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
                                             </table>
                                         </div>
                                     </div>

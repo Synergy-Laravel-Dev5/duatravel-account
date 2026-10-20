@@ -445,7 +445,7 @@
                                         </div>
                                         <div class="col-md-3">
                                             <label class="form-label"><i class="mdi mdi-calendar me-1 text-primary"></i> Flight Booking Date</label>
-                                            <input type="date" name="flight_booking_date" class="form-control" value="{{ old('flight_booking_date', $booking->flight_booking_date ? \Carbon\Carbon::parse($booking->flight_booking_date)->format('Y-m-d') : ($booking->booking_date ? \Carbon\Carbon::parse($booking->booking_date)->format('Y-m-d') : date('Y-m-d'))) }}">
+                                            <input type="date" name="flight_booking_date" id="flight_booking_date" class="form-control flight-booking-date" value="{{ old('flight_booking_date', $booking->flight_booking_date ? \Carbon\Carbon::parse($booking->flight_booking_date)->format('Y-m-d') : ($booking->booking_date ? \Carbon\Carbon::parse($booking->booking_date)->format('Y-m-d') : date('Y-m-d'))) }}">
                                         </div>
                                     </div>
 
@@ -501,8 +501,6 @@
                                     <input type="hidden" name="flight_cost_rate" id="flight_cost_rate" value="{{ $booking->flight_cost_rate ?? 0 }}">
                                     <input type="hidden" name="flight_cost" id="flight_cost" value="{{ $booking->flight_cost ?? 0 }}">
                                     <input type="hidden" name="flight_selling_rate" id="flight_selling_rate" value="{{ $booking->flight_selling_rate ?? 0 }}">
-                                    <input type="hidden" name="flight_charges" id="flight_charges" value="{{ $booking->flight_charges ?? 0 }}">
-                                    <input type="hidden" name="flight_charges_disp" id="flight_charges_disp" value="{{ $booking->flight_charges ?? 0 }}">
                                 </div>
                             </div>
 
@@ -1568,9 +1566,9 @@
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Flight Charges </label>
-                                    <input type="number" name="flight_charges_disp" id="flight_charges_disp"
+                                    <input type="number" name="flight_charges" id="flight_charges"
                                         class="form-control calc bg-light"
-                                        value="{{ old('flight_charges', $booking->flight_charges ?: '') }}"
+                                        value="{{ old('flight_charges', $booking->flight_charges ?? 0) }}"
                                         placeholder="0.00" step="0.01" readonly>
                                 </div>
                                 <div class="col-md-3">
@@ -1654,27 +1652,47 @@
                                     @endphp
                                     <div class="row g-3 mb-3">
                                         <div class="col-md-6">
-                                            <div class="card border-primary border-opacity-25 bg-light mb-0">
+                                            <div class="card border-primary border-opacity-25 bg-light mb-0 shadow-sm">
                                                 <div class="card-body p-3">
                                                     <h6 class="text-primary fw-bold mb-2"><i class="mdi mdi-cash-multiple me-1"></i> Foreign Currency (<span id="cost_foreign_curr_title">{{ $mainForeignUnit }}</span>) Total</h6>
                                                     <div class="d-flex justify-content-between mb-1">
                                                         <span>Flight:</span>
-                                                        <strong id="cost_sar_flight">{{ number_format($bFlightForeign, 2) }} {{ $fCurr }}</strong>
+                                                        <span>
+                                                            <small class="text-danger me-1">Cost: <span id="cost_sar_flight_cost">0.00 {{ $fCurr }}</span></small>
+                                                            <span class="text-muted">|</span>
+                                                            <strong class="text-success ms-1">Sell: <span id="cost_sar_flight">{{ number_format($bFlightForeign, 2) }} {{ $fCurr }}</span></strong>
+                                                        </span>
                                                     </div>
                                                     <div class="d-flex justify-content-between mb-1">
                                                         <span>Hotel:</span>
-                                                        <strong id="cost_sar_hotel">{{ number_format($bHotelForeign, 2) }} {{ $hotelCurrTag }}</strong>
+                                                        <span>
+                                                            <small class="text-danger me-1">Cost: <span id="cost_sar_hotel_cost">0.00 {{ $hotelCurrTag }}</span></small>
+                                                            <span class="text-muted">|</span>
+                                                            <strong class="text-success ms-1">Sell: <span id="cost_sar_hotel">{{ number_format($bHotelForeign, 2) }} {{ $hotelCurrTag }}</span></strong>
+                                                        </span>
                                                     </div>
                                                     <div class="d-flex justify-content-between mb-1">
                                                         <span>Transport:</span>
-                                                        <strong id="cost_sar_transport">{{ number_format($bTransportForeign, 2) }} {{ $transportCurrTag }}</strong>
+                                                        <span>
+                                                            <small class="text-danger me-1">Cost: <span id="cost_sar_transport_cost">0.00 {{ $transportCurrTag }}</span></small>
+                                                            <span class="text-muted">|</span>
+                                                            <strong class="text-success ms-1">Sell: <span id="cost_sar_transport">{{ number_format($bTransportForeign, 2) }} {{ $transportCurrTag }}</span></strong>
+                                                        </span>
                                                     </div>
                                                     <div class="d-flex justify-content-between mb-1">
                                                         <span>Visa:</span>
-                                                        <strong id="cost_sar_visa">{{ number_format($bVisaForeign, 2) }} {{ $visaCurrTag }}</strong>
+                                                        <span>
+                                                            <small class="text-danger me-1">Cost: <span id="cost_sar_visa_cost">0.00 {{ $visaCurrTag }}</span></small>
+                                                            <span class="text-muted">|</span>
+                                                            <strong class="text-success ms-1">Sell: <span id="cost_sar_visa">{{ number_format($bVisaForeign, 2) }} {{ $visaCurrTag }}</span></strong>
+                                                        </span>
                                                     </div>
                                                     <hr class="my-2">
-                                                    <div class="d-flex justify-content-between text-primary fs-15 fw-bold">
+                                                    <div class="d-flex justify-content-between text-danger mb-1">
+                                                        <span>Total Direct Cost:</span>
+                                                        <strong id="cost_sar_total_cost">0.00 {{ $mainForeignUnit }}</strong>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between text-primary fs-15 fw-bold mb-1">
                                                         <span>Total Selling:</span>
                                                         <span id="cost_sar_total">{{ number_format($bTotalForeign, 2) }} {{ $mainForeignUnit }}</span>
                                                     </div>
@@ -1686,27 +1704,47 @@
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <div class="card border-success border-opacity-25 bg-light mb-0">
+                                            <div class="card border-success border-opacity-25 bg-light mb-0 shadow-sm">
                                                 <div class="card-body p-3">
                                                     <h6 class="text-success fw-bold mb-2"><i class="mdi mdi-currency-usd me-1"></i> PKR (Pakistani Rupee) Total</h6>
                                                     <div class="d-flex justify-content-between mb-1">
                                                         <span>Flight PKR:</span>
-                                                        <strong id="cost_pkr_flight">{{ number_format($booking->flight_charges ?? 0, 2) }} PKR</strong>
+                                                        <span>
+                                                            <small class="text-danger me-1">Cost: <span id="cost_pkr_flight_cost">{{ number_format($booking->flight_cost ?? 0, 2) }} PKR</span></small>
+                                                            <span class="text-muted">|</span>
+                                                            <strong class="text-success ms-1">Sell: <span id="cost_pkr_flight">{{ number_format($booking->flight_charges ?? 0, 2) }} PKR</span></strong>
+                                                        </span>
                                                     </div>
                                                     <div class="d-flex justify-content-between mb-1">
                                                         <span>Hotel PKR:</span>
-                                                        <strong id="cost_pkr_hotel">{{ number_format($booking->hotel_charges ?? 0, 2) }} PKR</strong>
+                                                        <span>
+                                                            <small class="text-danger me-1">Cost: <span id="cost_pkr_hotel_cost">0.00 PKR</span></small>
+                                                            <span class="text-muted">|</span>
+                                                            <strong class="text-success ms-1">Sell: <span id="cost_pkr_hotel">{{ number_format($booking->hotel_charges ?? 0, 2) }} PKR</span></strong>
+                                                        </span>
                                                     </div>
                                                     <div class="d-flex justify-content-between mb-1">
                                                         <span>Transport PKR:</span>
-                                                        <strong id="cost_pkr_transport">{{ number_format($booking->transport_charges ?? 0, 2) }} PKR</strong>
+                                                        <span>
+                                                            <small class="text-danger me-1">Cost: <span id="cost_pkr_transport_cost">0.00 PKR</span></small>
+                                                            <span class="text-muted">|</span>
+                                                            <strong class="text-success ms-1">Sell: <span id="cost_pkr_transport">{{ number_format($booking->transport_charges ?? 0, 2) }} PKR</span></strong>
+                                                        </span>
                                                     </div>
                                                     <div class="d-flex justify-content-between mb-1">
                                                         <span>Visa PKR:</span>
-                                                        <strong id="cost_pkr_visa">{{ number_format($booking->visa_charges ?? 0, 2) }} PKR</strong>
+                                                        <span>
+                                                            <small class="text-danger me-1">Cost: <span id="cost_pkr_visa_cost">0.00 PKR</span></small>
+                                                            <span class="text-muted">|</span>
+                                                            <strong class="text-success ms-1">Sell: <span id="cost_pkr_visa">{{ number_format($booking->visa_charges ?? 0, 2) }} PKR</span></strong>
+                                                        </span>
                                                     </div>
                                                     <hr class="my-2">
-                                                    <div class="d-flex justify-content-between text-success fs-15 fw-bold">
+                                                    <div class="d-flex justify-content-between text-danger mb-1">
+                                                        <span>Total Direct Cost (PKR):</span>
+                                                        <strong id="cost_pkr_total_cost">0.00 PKR</strong>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between text-success fs-15 fw-bold mb-1">
                                                         <span>Total Selling (PKR):</span>
                                                         <span id="cost_pkr_total">{{ number_format($booking->total_amount ?? 0, 2) }} PKR</span>
                                                     </div>
@@ -1720,35 +1758,47 @@
                                     </div>
 
                                     <div class="table-responsive">
-                                        <table class="table table-bordered table-sm bg-light">
+                                        <table class="table table-bordered table-sm bg-white shadow-sm text-center align-middle mb-3">
                                             <thead class="table-primary">
                                                 <tr>
-                                                    <th>Persons</th>
+                                                    <th style="width: 150px;" class="text-start">Breakdown</th>
                                                     <th style="{{ $isUmrah ? 'display:none;' : '' }}">Pkg Cost × Pax</th>
                                                     <th>Hotel (PKR)</th>
                                                     <th>Visa (PKR)</th>
                                                     <th>Flight (PKR)</th>
                                                     <th>Transport (PKR)</th>
-                                                    <th>Other & Services (PKR)</th>
-                                                    <th>Discount (PKR)</th>
-                                                    <th class="text-success">Total (PKR)</th>
+                                                    <th>Other & Services</th>
+                                                    <th>Discount</th>
+                                                    <th>Total (PKR)</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
+                                                <tr class="table-light">
+                                                    <td class="fw-bold text-danger text-start"><i class="mdi mdi-arrow-down-bold text-danger me-1"></i> Cost (Purchase)</td>
+                                                    <td id="cost_sum_pkg" style="{{ $isUmrah ? 'display:none;' : '' }}">0.00</td>
+                                                    <td id="cost_sum_hotel" class="text-danger fw-semibold">0.00</td>
+                                                    <td id="cost_sum_visa" class="text-danger fw-semibold">0.00</td>
+                                                    <td id="cost_sum_flight" class="text-danger fw-semibold">0.00</td>
+                                                    <td id="cost_sum_transport" class="text-danger fw-semibold">0.00</td>
+                                                    <td class="text-muted">—</td>
+                                                    <td class="text-muted">—</td>
+                                                    <td class="text-danger fw-bold" id="cost_sum_total">0.00</td>
+                                                </tr>
                                                 <tr>
-                                                    <td><strong id="sum_pax">{{ $booking->no_of_pax }}</strong></td>
+                                                    <td class="fw-bold text-success text-start"><i class="mdi mdi-arrow-up-bold text-success me-1"></i> Selling (Client)</td>
                                                     <td id="sum_pkg" style="{{ $isUmrah ? 'display:none;' : '' }}">
                                                         {{ number_format(($booking->package_cost ?? 0) * ($booking->no_of_pax ?? 0), 2) }}
                                                     </td>
-                                                    <td id="sum_hotel">{{ number_format($booking->hotel_charges ?? 0, 2) }}</td>
-                                                    <td id="sum_visa">{{ number_format($booking->visa_charges ?? 0, 2) }}</td>
-                                                    <td id="sum_flight">{{ number_format($booking->flight_charges ?? 0, 2) }}</td>
-                                                    <td id="sum_transport">{{ number_format($booking->transport_charges ?? 0, 2) }}</td>
+                                                    <td id="sum_hotel" class="text-success fw-semibold">{{ number_format($booking->hotel_charges ?? 0, 2) }}</td>
+                                                    <td id="sum_visa" class="text-success fw-semibold">{{ number_format($booking->visa_charges ?? 0, 2) }}</td>
+                                                    <td id="sum_flight" class="text-success fw-semibold">{{ number_format($booking->flight_charges ?? 0, 2) }}</td>
+                                                    <td id="sum_transport" class="text-success fw-semibold">{{ number_format($booking->transport_charges ?? 0, 2) }}</td>
                                                     <td id="sum_other">{{ number_format(($booking->other_charges ?? 0) + ($booking->additional_services_amount ?? 0), 2) }}</td>
                                                     <td id="sum_discount" class="text-danger">{{ number_format($booking->discount ?? 0, 2) }}</td>
                                                     <td class="text-success fw-bold" id="sum_total">
                                                         {{ number_format($booking->total_amount ?? 0, 2) }}</td>
                                                 </tr>
+
                                             </tbody>
                                         </table>
                                     </div>
@@ -2039,6 +2089,7 @@
                 if (container && container.children.length === 0) rebuildPersonsList(pax);
             }
             if (href === '#tab-costing') {
+                calculateFlight();
                 calcTotal();
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2058,6 +2109,7 @@
                     if (container && container.children.length === 0) rebuildPersonsList(pax);
                 }
                 if (target === '#tab-costing') {
+                    calculateFlight();
                     calcTotal();
                 }
             });
@@ -3515,19 +3567,45 @@
             const infants  = parseInt(document.getElementById('pax_infants')?.value) || 0;
             const pax      = Math.max(1, adults + children + infants);
 
-            // 1. Flight Foreign & PKR
+            // 1. Flight Foreign & PKR (Cost & Selling)
             const flightCurr = document.getElementById('flight_currency')?.value || 'SAR';
             let flightForeign = 0;
             const flSellDisp = document.getElementById('flight_sell_sar_total')?.textContent || '';
             flightForeign = parseFloat(flSellDisp) || 0;
-            let flightPkr = parseFloat(document.getElementById('flight_charges')?.value) || 0;
             const flightSaleRoe = (flightCurr === 'PKR') ? 1 : (parseFloat(document.getElementById('flight_sale_roe')?.value) || parseFloat(document.getElementById('flight_cost_roe')?.value) || 75);
+            const flightCostRoe = (flightCurr === 'PKR') ? 1 : (parseFloat(document.getElementById('flight_cost_roe')?.value) || 75);
+
+            let flightCostForeign = 0;
+            const flCostDisp = document.getElementById('flight_cost_sar_total')?.textContent || '';
+            flightCostForeign = parseFloat(flCostDisp) || 0;
+            let flightCostPkr = parseFloat(document.getElementById('flight_cost')?.value) || 0;
+            if (flightCostPkr === 0 && flightCostForeign > 0) {
+                flightCostPkr = (flightCurr === 'PKR') ? flightCostForeign : (flightCostForeign * flightCostRoe);
+            }
+
+            let flightPkr = 0;
+            const flSellPkrDisp = document.getElementById('flight_sell_pkr_total')?.textContent || '';
+            if (flSellPkrDisp) {
+                flightPkr = parseFloat(flSellPkrDisp) || 0;
+            }
+            if (flightPkr === 0) {
+                flightPkr = parseFloat(document.getElementById('flight_charges')?.value) || 0;
+            }
+            if (flightPkr === 0 && flightForeign > 0) {
+                flightPkr = (flightCurr === 'PKR') ? flightForeign : (flightForeign * flightSaleRoe);
+            }
 
             if (flightForeign === 0 && flightPkr > 0 && flightCurr !== 'PKR' && flightSaleRoe > 0) {
                 flightForeign = flightPkr / flightSaleRoe;
                 const elFlDisp = document.getElementById('flight_sell_sar_total');
                 if (elFlDisp) elFlDisp.textContent = flightForeign.toFixed(2) + ' ' + flightCurr;
             }
+
+            // Always synchronize flight_charges input so it never stays 0
+            const elCharges = document.getElementById('flight_charges');
+            if (elCharges) elCharges.value = flightPkr.toFixed(2);
+            const elChargesDisp = document.getElementById('flight_charges_disp');
+            if (elChargesDisp) elChargesDisp.value = flightPkr.toFixed(2);
 
             // 2. Hotel Foreign & PKR
             let hotelCostForeign = 0;
@@ -3668,23 +3746,52 @@
             if (document.getElementById('bar_total')) document.getElementById('bar_total').textContent = (activeCurrs.size === 0 && flightCurr === 'PKR') ? `PKR ${totalPkr.toFixed(2)}` : `${foreignUnit} ${totalForeign.toFixed(2)} / PKR ${totalPkr.toFixed(2)}`;
             if (document.getElementById('bar_balance')) document.getElementById('bar_balance').textContent = (activeCurrs.size === 0 && flightCurr === 'PKR') ? `PKR ${balancePkr.toFixed(2)}` : `${foreignUnit} ${balanceForeign.toFixed(2)} / PKR ${balancePkr.toFixed(2)}`;
 
-            // Costing Dual Currency Cards
+            // Total Direct Costs PKR & Gross Profit
+            const totalDirectCostPkr = hotelCostPkr + flightCostPkr + visaCostPkr + transportCostPkr;
+            const grossProfitPkr = totalPkr - totalDirectCostPkr;
+
+            // Total Direct Costs Foreign & Gross Profit
+            const totalCostForeign = (flightCurr === foreignUnit ? flightCostForeign : 0)
+                                   + (hotelCurrLabel === foreignUnit ? hotelCostForeign : 0)
+                                   + (transportCurrLabel === foreignUnit ? transportCostForeign : 0)
+                                   + (visaCurrLabel === foreignUnit ? visaCostForeign : 0);
+            const grossProfitForeign = totalForeign - totalCostForeign;
+
+            // Costing Dual Currency Cards - Foreign Currency Card
             if (document.getElementById('cost_foreign_curr_title')) document.getElementById('cost_foreign_curr_title').textContent = (activeCurrs.size === 1) ? Array.from(activeCurrs)[0] : (activeCurrs.size > 1 ? 'Multi-Curr' : flightCurr);
+            if (document.getElementById('cost_sar_flight_cost')) document.getElementById('cost_sar_flight_cost').textContent = `${flightCostForeign.toFixed(2)} ${flightCurr}`;
             if (document.getElementById('cost_sar_flight')) document.getElementById('cost_sar_flight').textContent = `${flightForeign.toFixed(2)} ${flightCurr}`;
+            if (document.getElementById('cost_sar_hotel_cost')) document.getElementById('cost_sar_hotel_cost').textContent = `${hotelCostForeign.toFixed(2)} ${hotelCurrLabel}`;
             if (document.getElementById('cost_sar_hotel')) document.getElementById('cost_sar_hotel').textContent = `${hotelSellForeign.toFixed(2)} ${hotelCurrLabel}`;
+            if (document.getElementById('cost_sar_transport_cost')) document.getElementById('cost_sar_transport_cost').textContent = `${transportCostForeign.toFixed(2)} ${transportCurrLabel}`;
             if (document.getElementById('cost_sar_transport')) document.getElementById('cost_sar_transport').textContent = `${transportSellForeign.toFixed(2)} ${transportCurrLabel}`;
+            if (document.getElementById('cost_sar_visa_cost')) document.getElementById('cost_sar_visa_cost').textContent = `${visaCostForeign.toFixed(2)} ${visaCurrLabel}`;
             if (document.getElementById('cost_sar_visa')) document.getElementById('cost_sar_visa').textContent = `${visaSellForeign.toFixed(2)} ${visaCurrLabel}`;
+            if (document.getElementById('cost_sar_total_cost')) document.getElementById('cost_sar_total_cost').textContent = `${totalCostForeign.toFixed(2)} ${foreignUnit}`;
             if (document.getElementById('cost_sar_total')) document.getElementById('cost_sar_total').textContent = `${totalForeign.toFixed(2)} ${foreignUnit}`;
             if (document.getElementById('cost_sar_balance')) document.getElementById('cost_sar_balance').textContent = `${balanceForeign.toFixed(2)} ${foreignUnit}`;
 
+            // Costing Dual Currency Cards - PKR Card
+            if (document.getElementById('cost_pkr_flight_cost')) document.getElementById('cost_pkr_flight_cost').textContent = `${flightCostPkr.toFixed(2)} PKR`;
             if (document.getElementById('cost_pkr_flight')) document.getElementById('cost_pkr_flight').textContent = `${flightPkr.toFixed(2)} PKR`;
+            if (document.getElementById('cost_pkr_hotel_cost')) document.getElementById('cost_pkr_hotel_cost').textContent = `${hotelCostPkr.toFixed(2)} PKR`;
             if (document.getElementById('cost_pkr_hotel')) document.getElementById('cost_pkr_hotel').textContent = `${hotelSellPkr.toFixed(2)} PKR`;
+            if (document.getElementById('cost_pkr_transport_cost')) document.getElementById('cost_pkr_transport_cost').textContent = `${transportCostPkr.toFixed(2)} PKR`;
             if (document.getElementById('cost_pkr_transport')) document.getElementById('cost_pkr_transport').textContent = `${transportSellPkr.toFixed(2)} PKR`;
+            if (document.getElementById('cost_pkr_visa_cost')) document.getElementById('cost_pkr_visa_cost').textContent = `${visaCostPkr.toFixed(2)} PKR`;
             if (document.getElementById('cost_pkr_visa')) document.getElementById('cost_pkr_visa').textContent = `${visaSellPkr.toFixed(2)} PKR`;
+            if (document.getElementById('cost_pkr_total_cost')) document.getElementById('cost_pkr_total_cost').textContent = `${totalDirectCostPkr.toFixed(2)} PKR`;
             if (document.getElementById('cost_pkr_total')) document.getElementById('cost_pkr_total').textContent = `${totalPkr.toFixed(2)} PKR`;
             if (document.getElementById('cost_pkr_balance')) document.getElementById('cost_pkr_balance').textContent = `${balancePkr.toFixed(2)} PKR`;
 
-            // Costing Table Breakdown
+            // Costing Table Breakdown - Cost Row
+            if (document.getElementById('cost_sum_hotel')) document.getElementById('cost_sum_hotel').textContent = hotelCostPkr.toFixed(2);
+            if (document.getElementById('cost_sum_visa')) document.getElementById('cost_sum_visa').textContent = visaCostPkr.toFixed(2);
+            if (document.getElementById('cost_sum_flight')) document.getElementById('cost_sum_flight').textContent = flightCostPkr.toFixed(2);
+            if (document.getElementById('cost_sum_transport')) document.getElementById('cost_sum_transport').textContent = transportCostPkr.toFixed(2);
+            if (document.getElementById('cost_sum_total')) document.getElementById('cost_sum_total').textContent = totalDirectCostPkr.toFixed(2);
+
+            // Costing Table Breakdown - Selling Row
             if (document.getElementById('sum_pax')) document.getElementById('sum_pax').textContent = pax;
             if (document.getElementById('sum_pkg')) document.getElementById('sum_pkg').textContent = pkgTotalPkr.toFixed(2);
             if (document.getElementById('sum_hotel')) document.getElementById('sum_hotel').textContent = hotelSellPkr.toFixed(2);
@@ -3794,6 +3901,43 @@
         syncBookingHotelDates();
         calculateFlight();
         calcTotal();
+
+        // Two-way Date Synchronization Across Tabs
+        const mainBookingDateEl = document.getElementById('booking_date');
+        if (mainBookingDateEl) {
+            mainBookingDateEl.addEventListener('change', function() {
+                const val = this.value;
+                if (!val) return;
+                const flDateEl = document.getElementById('flight_booking_date');
+                if (flDateEl) flDateEl.value = val;
+                document.querySelectorAll('.hotel-booking-date').forEach(el => el.value = val);
+                document.querySelectorAll('.transport-booking-date').forEach(el => el.value = val);
+                document.querySelectorAll('.visa-booking-date').forEach(el => el.value = val);
+            });
+        }
+
+        document.addEventListener('change', function(e) {
+            if (e.target && (e.target.id === 'flight_booking_date' || e.target.name === 'flight_booking_date')) {
+                const val = e.target.value;
+                if (!val) return;
+                if (mainBookingDateEl) mainBookingDateEl.value = val;
+            }
+            if (e.target && e.target.classList.contains('hotel-booking-date')) {
+                const val = e.target.value;
+                if (!val) return;
+                if (mainBookingDateEl) mainBookingDateEl.value = val;
+            }
+            if (e.target && e.target.classList.contains('transport-booking-date')) {
+                const val = e.target.value;
+                if (!val) return;
+                if (mainBookingDateEl) mainBookingDateEl.value = val;
+            }
+            if (e.target && e.target.classList.contains('visa-booking-date')) {
+                const val = e.target.value;
+                if (!val) return;
+                if (mainBookingDateEl) mainBookingDateEl.value = val;
+            }
+        });
 
         $(document).ready(function() {
             if (typeof $ !== 'undefined' && $.fn.summernote) {

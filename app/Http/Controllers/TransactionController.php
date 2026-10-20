@@ -294,18 +294,37 @@ class TransactionController extends Controller
             }
         }
 
-        // 1. Calculate Opening Balance prior to from_date
-        $openingBalance = 0;
+        // 1. Calculate Opening Balance prior to from_date (Dual Currency: PKR & SAR)
+        $openingBalancePkr = 0;
+        $openingBalanceSar = 0;
         if ($fromDate) {
-            $priorBookingDebits = (float) Booking::where(function ($q) use ($clientId) {
+            $priorBookings = Booking::where(function ($q) use ($clientId) {
                 if ($clientId !== 'all') $q->where('client_id', $clientId);
-            })->whereDate('booking_date', '<', $fromDate)->sum('total_amount');
+            })->whereDate('booking_date', '<', $fromDate)->get();
 
-            $priorBookingCredits = (float) Booking::where(function ($q) use ($clientId) {
-                if ($clientId !== 'all') $q->where('client_id', $clientId);
-            })->whereDate('booking_date', '<', $fromDate)->sum('total_received');
+            $priorBookingDebitsPkr = 0;
+            $priorBookingCreditsPkr = 0;
+            $priorBookingDebitsSar = 0;
+            $priorBookingCreditsSar = 0;
 
-            $priorTxnCredits = (float) Transaction::where('status', 'confirmed')
+            foreach ($priorBookings as $pb) {
+                $cur = strtoupper($pb->currency ?: 'PKR');
+                $roe = (float) ($pb->flight_roe > 1 ? $pb->flight_roe : 75);
+                $totAmt = (float) $pb->total_amount;
+                $recAmt = (float) $pb->total_received;
+
+                if ($cur === 'SAR') {
+                    $priorBookingDebitsSar += $totAmt;
+                    $priorBookingDebitsPkr += round($totAmt * $roe, 2);
+                    $priorBookingCreditsSar += $recAmt;
+                    $priorBookingCreditsPkr += round($recAmt * $roe, 2);
+                } else {
+                    $priorBookingDebitsPkr += $totAmt;
+                    $priorBookingCreditsPkr += $recAmt;
+                }
+            }
+
+            $priorTxnCreditsPkr = (float) Transaction::where('status', 'confirmed')
                 ->where(function ($q) use ($clientId) {
                     if ($clientId !== 'all') $q->where('client_id', $clientId);
                 })->whereDate('payment_date', '<', $fromDate)->sum('amount');
@@ -315,22 +334,31 @@ class TransactionController extends Controller
                     if ($clientId !== 'all') $q->where('client_id', $clientId);
                 })->whereDate('date', '<', $fromDate)->get();
 
-            $priorEtDebits = 0;
-            $priorEtCredits = 0;
+            $priorEtDebitsPkr = 0;
+            $priorEtCreditsPkr = 0;
+            $priorEtDebitsSar = 0;
+            $priorEtCreditsSar = 0;
+
             foreach ($priorEtList as $pet) {
                 $cur = strtoupper($pet->currency ?: 'PKR');
                 $rate = (float) ($pet->exchange_rate > 0 ? $pet->exchange_rate : 1);
-                $pkrVal = ($cur === 'PKR') ? (float) $pet->amount : round((float) $pet->amount * $rate, 2);
+                $raw = (float) $pet->amount;
+                $pkrVal = ($cur === 'PKR') ? $raw : round($raw * $rate, 2);
+                $sarVal = ($cur === 'SAR') ? $raw : 0.00;
 
                 if ($pet->transaction_type === 'debit') {
-                    $priorEtDebits += $pkrVal;
+                    $priorEtDebitsPkr += $pkrVal;
+                    $priorEtDebitsSar += $sarVal;
                 } else {
-                    $priorEtCredits += $pkrVal;
+                    $priorEtCreditsPkr += $pkrVal;
+                    $priorEtCreditsSar += $sarVal;
                 }
             }
 
-            $openingBalance = ($priorBookingDebits + $priorEtDebits) - ($priorBookingCredits + $priorTxnCredits + $priorEtCredits);
+            $openingBalancePkr = ($priorBookingDebitsPkr + $priorEtDebitsPkr) - ($priorBookingCreditsPkr + $priorTxnCreditsPkr + $priorEtCreditsPkr);
+            $openingBalanceSar = ($priorBookingDebitsSar + $priorEtDebitsSar) - ($priorBookingCreditsSar + $priorEtCreditsSar);
         }
+        $openingBalance = $openingBalancePkr;
 
         // 2. Retrieve Bookings in Date Range (Debit = Charges, Credit = Initial Advance)
         $bookingsQuery = Booking::with(['package', 'client', 'company']);
@@ -353,10 +381,25 @@ class TransactionController extends Controller
             $bDate = $b->booking_date ? Carbon::parse($b->booking_date)->format('Y-m-d') : Carbon::parse($b->created_at)->format('Y-m-d');
             $bTimestamp = $b->booking_date ? Carbon::parse($b->booking_date)->startOfDay()->timestamp : Carbon::parse($b->created_at)->timestamp;
 
+            $bCurrency = strtoupper($b->currency ?: 'PKR');
+            $bRoe = (float) ($b->flight_roe > 1 ? $b->flight_roe : 75);
             $totalAmount = (float) $b->total_amount;
             $advanceAmount = (float) $b->total_received;
-            $totalBooking += $totalAmount;
-            $bookingReceived += $advanceAmount;
+
+            if ($bCurrency === 'SAR') {
+                $bDebPkr = round($totalAmount * $bRoe, 2);
+                $bDebSar = $totalAmount;
+                $bCrdPkr = round($advanceAmount * $bRoe, 2);
+                $bCrdSar = $advanceAmount;
+            } else {
+                $bDebPkr = $totalAmount;
+                $bDebSar = 0.00;
+                $bCrdPkr = $advanceAmount;
+                $bCrdSar = 0.00;
+            }
+
+            $totalBooking += $bDebPkr;
+            $bookingReceived += $bCrdPkr;
 
             // Debit Entry: Booking Invoice / Charges
             $rawEntries[] = [
@@ -372,11 +415,15 @@ class TransactionController extends Controller
                 'client_id'        => $b->client_id,
                 'client_name'      => $b->client->name ?? '—',
                 'booking_id'       => $b->id,
-                'currency'         => strtoupper($b->currency ?: 'PKR'),
-                'exchange_rate'    => 1.00,
+                'currency'         => $bCurrency,
+                'exchange_rate'    => $bCurrency === 'SAR' ? $bRoe : 1.00,
                 'original_amount'  => $totalAmount,
-                'debit'            => $totalAmount,
+                'debit'            => $bDebPkr,
                 'credit'           => 0.00,
+                'debit_pkr'        => $bDebPkr,
+                'credit_pkr'       => 0.00,
+                'debit_sar'        => $bDebSar,
+                'credit_sar'       => 0.00,
                 'payment_method'   => 'Invoice Bill',
                 'status'           => 'confirmed',
                 'proof'            => null,
@@ -397,11 +444,15 @@ class TransactionController extends Controller
                     'client_id'        => $b->client_id,
                     'client_name'      => $b->client->name ?? '—',
                     'booking_id'       => $b->id,
-                    'currency'         => strtoupper($b->currency ?: 'PKR'),
-                    'exchange_rate'    => 1.00,
+                    'currency'         => $bCurrency,
+                    'exchange_rate'    => $bCurrency === 'SAR' ? $bRoe : 1.00,
                     'original_amount'  => $advanceAmount,
                     'debit'            => 0.00,
-                    'credit'           => $advanceAmount,
+                    'credit'           => $bCrdPkr,
+                    'debit_pkr'        => 0.00,
+                    'credit_pkr'       => $bCrdPkr,
+                    'debit_sar'        => 0.00,
+                    'credit_sar'       => $bCrdSar,
                     'payment_method'   => 'Advance / Cash',
                     'status'           => 'confirmed',
                     'proof'            => null,
@@ -459,6 +510,10 @@ class TransactionController extends Controller
                 'original_amount'  => $amt,
                 'debit'            => 0.00,
                 'credit'           => $t->status === 'confirmed' ? $amt : 0.00,
+                'debit_pkr'        => 0.00,
+                'credit_pkr'       => $t->status === 'confirmed' ? $amt : 0.00,
+                'debit_sar'        => 0.00,
+                'credit_sar'       => 0.00,
                 'payment_method'   => ucwords(str_replace('_', ' ', $t->payment_type)),
                 'status'           => $t->status,
                 'proof'            => $t->proof_of_payment ? asset('assets/images/transaction_proofs/' . $t->proof_of_payment) : null,
@@ -488,13 +543,18 @@ class TransactionController extends Controller
             $pkrAmount = ($currency === 'PKR') ? $rawAmount : round($rawAmount * $exchangeRate, 2);
 
             $isDebit = ($et->transaction_type === 'debit');
+            $sarAmount = ($currency === 'SAR') ? $rawAmount : 0.00;
 
             if ($isDebit) {
                 $debitPkr = $pkrAmount;
                 $creditPkr = 0.00;
+                $debitSar = $sarAmount;
+                $creditSar = 0.00;
             } else {
                 $debitPkr = 0.00;
                 $creditPkr = $pkrAmount;
+                $debitSar = 0.00;
+                $creditSar = $sarAmount;
                 $transactionsPaid += $pkrAmount;
             }
 
@@ -532,6 +592,10 @@ class TransactionController extends Controller
                 'original_amount'  => $rawAmount,
                 'debit'            => $debitPkr,
                 'credit'           => $creditPkr,
+                'debit_pkr'        => $debitPkr,
+                'credit_pkr'       => $creditPkr,
+                'debit_sar'        => $debitSar,
+                'credit_sar'       => $creditSar,
                 'payment_method'   => ucwords(str_replace('_', ' ', $et->payment_type)),
                 'status'           => 'confirmed',
                 'proof'            => $et->proof ? asset('assets/images/expense_proofs/' . $et->proof) : null,
@@ -546,29 +610,61 @@ class TransactionController extends Controller
             return strcmp($a['date'], $b['date']);
         });
 
-        // 6. Running Balance Line by Line
-        $runningBalance = $openingBalance;
-        $periodDebits = 0;
-        $periodCredits = 0;
+        // 6. Dual-Currency Running Balance Line by Line (PKR & SAR)
+        $runningBalancePkr = $openingBalancePkr;
+        $runningBalanceSar = $openingBalanceSar;
+        $periodDebitsPkr = 0;
+        $periodCreditsPkr = 0;
+        $periodDebitsSar = 0;
+        $periodCreditsSar = 0;
         $statementLines = [];
 
         foreach ($rawEntries as $row) {
-            $deb = (float) $row['debit'];
-            $crd = (float) $row['credit'];
+            $debPkr = (float) ($row['debit_pkr'] ?? $row['debit']);
+            $crdPkr = (float) ($row['credit_pkr'] ?? $row['credit']);
+            $debSar = (float) ($row['debit_sar'] ?? 0);
+            $crdSar = (float) ($row['credit_sar'] ?? 0);
 
-            $periodDebits += $deb;
-            $periodCredits += $crd;
-            $runningBalance += ($deb - $crd);
+            $periodDebitsPkr += $debPkr;
+            $periodCreditsPkr += $crdPkr;
+            $runningBalancePkr += ($debPkr - $crdPkr);
 
-            $row['running_balance'] = $runningBalance;
-            $row['balance_type']    = $runningBalance > 0 ? 'Dr' : ($runningBalance < 0 ? 'Cr' : 'Nil');
-            $statementLines[]       = $row;
+            $periodDebitsSar += $debSar;
+            $periodCreditsSar += $crdSar;
+            $runningBalanceSar += ($debSar - $crdSar);
+
+            $row['debit_pkr']            = $debPkr;
+            $row['credit_pkr']           = $crdPkr;
+            $row['debit_sar']            = $debSar;
+            $row['credit_sar']           = $crdSar;
+            $row['running_balance_pkr']  = $runningBalancePkr;
+            $row['running_balance_sar']  = $runningBalanceSar;
+
+            // Backward compatibility aliases:
+            $row['debit']                = $debPkr;
+            $row['credit']               = $crdPkr;
+            $row['running_balance']      = $runningBalancePkr;
+            $row['balance_type']         = $runningBalancePkr > 0 ? 'Dr' : ($runningBalancePkr < 0 ? 'Cr' : 'Nil');
+            $row['balance_type_sar']     = $runningBalanceSar > 0 ? 'Dr' : ($runningBalanceSar < 0 ? 'Cr' : 'Nil');
+
+            $statementLines[]            = $row;
         }
 
-        $closingBalance = $runningBalance;
-        $totalDebits    = ($openingBalance > 0 ? $openingBalance : 0) + $periodDebits;
-        $totalCredits   = ($openingBalance < 0 ? abs($openingBalance) : 0) + $periodCredits;
-        $balance        = $closingBalance;
+        $closingBalancePkr = $runningBalancePkr;
+        $closingBalanceSar = $runningBalanceSar;
+        $totalDebitsPkr    = ($openingBalancePkr > 0 ? $openingBalancePkr : 0) + $periodDebitsPkr;
+        $totalCreditsPkr   = ($openingBalancePkr < 0 ? abs($openingBalancePkr) : 0) + $periodCreditsPkr;
+        $totalDebitsSar    = ($openingBalanceSar > 0 ? $openingBalanceSar : 0) + $periodDebitsSar;
+        $totalCreditsSar   = ($openingBalanceSar < 0 ? abs($openingBalanceSar) : 0) + $periodCreditsSar;
+
+        // Legacy / backward-compat aliases:
+        $openingBalance = $openingBalancePkr;
+        $periodDebits   = $periodDebitsPkr;
+        $periodCredits  = $periodCreditsPkr;
+        $totalDebits    = $totalDebitsPkr;
+        $totalCredits   = $totalCreditsPkr;
+        $closingBalance = $closingBalancePkr;
+        $balance        = $closingBalancePkr;
         $totalPaid      = $bookingReceived + $transactionsPaid;
 
         // 7. Multi-Currency Summary Breakdown
@@ -597,13 +693,13 @@ class TransactionController extends Controller
                     'count'             => 0,
                 ];
             }
-            if ($line['credit'] > 0) {
-                $currencySummary[$cur]['received_original'] += (float) ($line['original_amount'] ?? $line['credit']);
-                $currencySummary[$cur]['received_pkr']      += (float) $line['credit'];
+            if ($line['credit_pkr'] > 0 || ($line['credit_sar'] ?? 0) > 0) {
+                $currencySummary[$cur]['received_original'] += (float) ($line['original_amount'] ?? $line['credit_pkr']);
+                $currencySummary[$cur]['received_pkr']      += (float) $line['credit_pkr'];
                 $currencySummary[$cur]['count']             += 1;
             }
-            if ($line['debit'] > 0) {
-                $currencySummary[$cur]['charges_original']  += (float) ($line['original_amount'] ?? $line['debit']);
+            if ($line['debit_pkr'] > 0 || ($line['debit_sar'] ?? 0) > 0) {
+                $currencySummary[$cur]['charges_original']  += (float) ($line['original_amount'] ?? $line['debit_pkr']);
             }
         }
 
@@ -620,6 +716,18 @@ class TransactionController extends Controller
             'totalDebits',
             'totalCredits',
             'closingBalance',
+            'openingBalancePkr',
+            'periodDebitsPkr',
+            'periodCreditsPkr',
+            'totalDebitsPkr',
+            'totalCreditsPkr',
+            'closingBalancePkr',
+            'openingBalanceSar',
+            'periodDebitsSar',
+            'periodCreditsSar',
+            'totalDebitsSar',
+            'totalCreditsSar',
+            'closingBalanceSar',
             'fromDate',
             'toDate',
             'clients',
@@ -667,10 +775,29 @@ class TransactionController extends Controller
 
         $bookings = Booking::where('company_id', $companyId)->latest()->get();
 
-        $totalBooking    = $bookings->sum('total_amount');
-        $bookingReceived = $bookings->sum('total_received');
         $totalPax        = $bookings->sum('no_of_pax');
         $bookingsCount   = $bookings->count();
+
+        $totalBookingPkr    = 0;
+        $totalBookingSar    = 0;
+        $bookingReceivedPkr = 0;
+        $bookingReceivedSar = 0;
+
+        foreach ($bookings as $b) {
+            $cur = strtoupper($b->currency ?: 'PKR');
+            $roe = (float) ($b->flight_roe > 1 ? $b->flight_roe : 75);
+            $totAmt = (float) $b->total_amount;
+            $recAmt = (float) $b->total_received;
+            if ($cur === 'SAR') {
+                $totalBookingSar += $totAmt;
+                $totalBookingPkr += round($totAmt * $roe, 2);
+                $bookingReceivedSar += $recAmt;
+                $bookingReceivedPkr += round($recAmt * $roe, 2);
+            } else {
+                $totalBookingPkr += $totAmt;
+                $bookingReceivedPkr += $recAmt;
+            }
+        }
 
         $transactionsQuery = Transaction::with('booking')->where('company_id', $companyId);
 
@@ -681,11 +808,41 @@ class TransactionController extends Controller
             ]);
         }
 
-        $transactions     = $transactionsQuery->latest()->get();
-        $transactionsPaid = $transactions->where('status', 'confirmed')->sum('amount');
+        $transactions        = $transactionsQuery->latest()->get();
+        $transactionsPaidPkr = (float) $transactions->where('status', 'confirmed')->sum('amount');
+        $transactionsPaidSar = 0.00;
 
-        $totalPaid = $bookingReceived + $transactionsPaid;
-        $balance   = $totalBooking - $totalPaid;
+        // Also check ExpenseTransaction for company if any
+        $companyEtQuery = ExpenseTransaction::where('company_id', $companyId);
+        if ($request->from_date && $request->to_date) {
+            $companyEtQuery->whereBetween('date', [$request->from_date, $request->to_date]);
+        }
+        $companyEtList = $companyEtQuery->get();
+        foreach ($companyEtList as $cet) {
+            $cur = strtoupper($cet->currency ?: 'PKR');
+            $rate = (float) ($cet->exchange_rate > 0 ? $cet->exchange_rate : 1);
+            $raw = (float) $cet->amount;
+            if ($cet->transaction_type === 'credit') {
+                if ($cur === 'SAR') {
+                    $transactionsPaidSar += $raw;
+                    $transactionsPaidPkr += round($raw * $rate, 2);
+                } else {
+                    $transactionsPaidPkr += $raw;
+                }
+            }
+        }
+
+        $totalPaidPkr = $bookingReceivedPkr + $transactionsPaidPkr;
+        $totalPaidSar = $bookingReceivedSar + $transactionsPaidSar;
+        $balancePkr   = $totalBookingPkr - $totalPaidPkr;
+        $balanceSar   = $totalBookingSar - $totalPaidSar;
+
+        // Backward-compatibility:
+        $totalBooking     = $totalBookingPkr;
+        $bookingReceived  = $bookingReceivedPkr;
+        $transactionsPaid = $transactionsPaidPkr;
+        $totalPaid        = $totalPaidPkr;
+        $balance          = $balancePkr;
 
         return view('transaction.company-ledger', compact(
             'company',
@@ -696,6 +853,16 @@ class TransactionController extends Controller
             'transactionsPaid',
             'totalPaid',
             'balance',
+            'totalBookingPkr',
+            'bookingReceivedPkr',
+            'transactionsPaidPkr',
+            'totalPaidPkr',
+            'balancePkr',
+            'totalBookingSar',
+            'bookingReceivedSar',
+            'transactionsPaidSar',
+            'totalPaidSar',
+            'balanceSar',
             'totalPax',
             'bookingsCount'
         ));
