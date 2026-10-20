@@ -76,10 +76,15 @@
                     <div class="card shadow-sm trans-stat-card border-start border-4 border-success bg-white">
                         <div class="card-body p-3">
                             <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <span class="text-muted fs-11 fw-bold text-uppercase d-block">Total Inflows (Receipts)</span>
-                                    <h4 class="fw-bold text-success mt-1 mb-0 fs-18">PKR {{ number_format($totalInflow, 2) }}</h4>
-                                    <small class="text-muted fs-11"><i class="mdi mdi-arrow-down-bold text-success"></i> {{ $inflowCount }} incoming receipts</small>
+                                <div class="flex-grow-1">
+                                    <span class="text-muted fs-11 fw-bold text-uppercase d-block">Total Inflows (Receipts / Cr)</span>
+                                    <h4 class="fw-bold text-success mt-1 mb-0 fs-17">PKR {{ number_format($totalInflowPkr, 2) }}</h4>
+                                    <div class="mt-1 d-flex align-items-center gap-2">
+                                        <span class="badge bg-soft-success text-success border border-success border-opacity-25 fs-11">
+                                            SAR {{ number_format($totalInflowSar, 2) }}
+                                        </span>
+                                        <small class="text-muted fs-11">{{ $inflowCount }} receipts</small>
+                                    </div>
                                 </div>
                                 <div class="bg-soft-success text-success p-2 rounded-3">
                                     <i class="mdi mdi-cash-plus fs-22"></i>
@@ -94,10 +99,15 @@
                     <div class="card shadow-sm trans-stat-card border-start border-4 border-danger bg-white">
                         <div class="card-body p-3">
                             <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <span class="text-muted fs-11 fw-bold text-uppercase d-block">Total Outflows (Payments)</span>
-                                    <h4 class="fw-bold text-danger mt-1 mb-0 fs-18">PKR {{ number_format($totalOutflow, 2) }}</h4>
-                                    <small class="text-muted fs-11"><i class="mdi mdi-arrow-up-bold text-danger"></i> {{ $outflowCount }} outgoing payments</small>
+                                <div class="flex-grow-1">
+                                    <span class="text-muted fs-11 fw-bold text-uppercase d-block">Total Outflows (Payments / Dr)</span>
+                                    <h4 class="fw-bold text-danger mt-1 mb-0 fs-17">PKR {{ number_format($totalOutflowPkr, 2) }}</h4>
+                                    <div class="mt-1 d-flex align-items-center gap-2">
+                                        <span class="badge bg-soft-danger text-danger border border-danger border-opacity-25 fs-11">
+                                            SAR {{ number_format($totalOutflowSar, 2) }}
+                                        </span>
+                                        <small class="text-muted fs-11">{{ $outflowCount }} payments</small>
+                                    </div>
                                 </div>
                                 <div class="bg-soft-danger text-danger p-2 rounded-3">
                                     <i class="mdi mdi-cash-minus fs-22"></i>
@@ -109,17 +119,21 @@
 
                 <!-- Net Cash Position -->
                 <div class="col-6 col-md-3">
-                    <div class="card shadow-sm trans-stat-card border-start border-4 {{ $netCashFlow >= 0 ? 'border-primary' : 'border-warning' }} bg-white">
+                    <div class="card shadow-sm trans-stat-card border-start border-4 {{ $netCashFlowPkr >= 0 ? 'border-primary' : 'border-warning' }} bg-white">
                         <div class="card-body p-3">
                             <div class="d-flex justify-content-between align-items-start">
-                                <div>
+                                <div class="flex-grow-1">
                                     <span class="text-muted fs-11 fw-bold text-uppercase d-block">Net Cash Flow (Surplus)</span>
-                                    <h4 class="fw-bold {{ $netCashFlow >= 0 ? 'text-primary' : 'text-danger' }} mt-1 mb-0 fs-18">
-                                        PKR {{ number_format($netCashFlow, 2) }}
+                                    <h4 class="fw-bold {{ $netCashFlowPkr >= 0 ? 'text-primary' : 'text-danger' }} mt-1 mb-0 fs-17">
+                                        {{ $netCashFlowPkr >= 0 ? '+' : '' }} PKR {{ number_format($netCashFlowPkr, 2) }}
                                     </h4>
-                                    <small class="text-muted fs-11">{{ $netCashFlow >= 0 ? 'Cash Surplus / Net Positive' : 'Deficit / Net Outflow' }}</small>
+                                    <div class="mt-1">
+                                        <span class="badge {{ $netCashFlowSar >= 0 ? 'bg-soft-primary text-primary border border-primary border-opacity-25' : 'bg-soft-danger text-danger border border-danger border-opacity-25' }} fs-11">
+                                            {{ $netCashFlowSar >= 0 ? '+' : '' }} SAR {{ number_format($netCashFlowSar, 2) }}
+                                        </span>
+                                    </div>
                                 </div>
-                                <div class="{{ $netCashFlow >= 0 ? 'bg-soft-primary text-primary' : 'bg-soft-warning text-warning' }} p-2 rounded-3">
+                                <div class="{{ $netCashFlowPkr >= 0 ? 'bg-soft-primary text-primary' : 'bg-soft-warning text-warning' }} p-2 rounded-3">
                                     <i class="mdi mdi-scale-balance fs-22"></i>
                                 </div>
                             </div>
@@ -278,20 +292,26 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0 fs-13">
+                        <table class="table table-hover align-middle mb-0 fs-12">
                             <thead class="table-light">
                                 <tr>
-                                    <th class="ps-3" style="width: 40px;">#</th>
-                                    <th>Date</th>
-                                    <th>Voucher / Ref #</th>
-                                    <th>Flow</th>
-                                    <th>Category</th>
-                                    <th>Party / Payee</th>
-                                    <th>Method</th>
-                                    <th class="text-end text-success">Inflow (Cr) PKR</th>
-                                    <th class="text-end text-danger">Outflow (Dr) PKR</th>
-                                    <th>Status</th>
-                                    <th class="no-print text-center" style="width: 70px;">Proof</th>
+                                    <th rowspan="2" class="ps-3 align-middle" style="width: 38px;">#</th>
+                                    <th rowspan="2" class="align-middle">Date</th>
+                                    <th rowspan="2" class="align-middle">Voucher / Ref #</th>
+                                    <th rowspan="2" class="align-middle">Flow</th>
+                                    <th rowspan="2" class="align-middle">Category</th>
+                                    <th rowspan="2" class="align-middle">Party / Payee</th>
+                                    <th rowspan="2" class="align-middle">Method</th>
+                                    <th colspan="2" class="text-center bg-soft-success text-success border-bottom-0 py-1">PKR (Pakistani Rupee)</th>
+                                    <th colspan="2" class="text-center bg-soft-warning text-dark border-bottom-0 py-1">SAR (Saudi Riyal)</th>
+                                    <th rowspan="2" class="align-middle">Status</th>
+                                    <th rowspan="2" class="no-print text-center align-middle" style="width: 60px;">Proof</th>
+                                </tr>
+                                <tr>
+                                    <th class="text-end text-success py-1">Inflow (Cr)</th>
+                                    <th class="text-end text-danger py-1">Outflow (Dr)</th>
+                                    <th class="text-end text-success py-1">Inflow (Cr)</th>
+                                    <th class="text-end text-danger py-1">Outflow (Dr)</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -306,6 +326,9 @@
                                             @if($t['ref_no'] && $t['ref_no'] !== $t['voucher_no'])
                                                 <small class="text-muted d-block">{{ $t['ref_no'] }}</small>
                                             @endif
+                                            @if(!empty($t['currency']) && $t['currency'] === 'SAR')
+                                                <small class="badge bg-soft-warning text-dark border border-warning border-opacity-25 mt-1">SAR @ ROE {{ number_format($t['exchange_rate'], 2) }}</small>
+                                            @endif
                                         </td>
                                         <td>
                                             <span class="badge {{ $t['flow_badge'] }} px-2 py-1">
@@ -314,7 +337,7 @@
                                         </td>
                                         <td>
                                             <span class="fw-semibold text-dark">{{ $t['category_label'] }}</span>
-                                            <small class="text-muted d-block text-truncate" style="max-width: 280px;" title="{{ $t['description'] }}">
+                                            <small class="text-muted d-block text-truncate" style="max-width: 250px;" title="{{ $t['description'] }}">
                                                 {{ $t['description'] }}
                                             </small>
                                         </td>
@@ -333,11 +356,21 @@
                                                 {{ $t['payment_method'] }}
                                             </span>
                                         </td>
-                                        <td class="text-end fw-bold {{ $t['inflow'] > 0 ? 'text-success' : 'text-muted' }}">
-                                            {{ $t['inflow'] > 0 ? number_format($t['inflow'], 2) : '—' }}
+                                        {{-- PKR Inflow --}}
+                                        <td class="text-end fw-bold {{ $t['inflow_pkr'] > 0 ? 'text-success' : 'text-muted' }}">
+                                            {{ $t['inflow_pkr'] > 0 ? number_format($t['inflow_pkr'], 2) : '—' }}
                                         </td>
-                                        <td class="text-end fw-bold {{ $t['outflow'] > 0 ? 'text-danger' : 'text-muted' }}">
-                                            {{ $t['outflow'] > 0 ? number_format($t['outflow'], 2) : '—' }}
+                                        {{-- PKR Outflow --}}
+                                        <td class="text-end fw-bold {{ $t['outflow_pkr'] > 0 ? 'text-danger' : 'text-muted' }}">
+                                            {{ $t['outflow_pkr'] > 0 ? number_format($t['outflow_pkr'], 2) : '—' }}
+                                        </td>
+                                        {{-- SAR Inflow --}}
+                                        <td class="text-end fw-bold {{ $t['inflow_sar'] > 0 ? 'text-success' : 'text-muted' }}">
+                                            {{ $t['inflow_sar'] > 0 ? number_format($t['inflow_sar'], 2) : '—' }}
+                                        </td>
+                                        {{-- SAR Outflow --}}
+                                        <td class="text-end fw-bold {{ $t['outflow_sar'] > 0 ? 'text-danger' : 'text-muted' }}">
+                                            {{ $t['outflow_sar'] > 0 ? number_format($t['outflow_sar'], 2) : '—' }}
                                         </td>
                                         <td>
                                             <span class="badge {{ $t['status'] === 'confirmed' ? 'bg-soft-success text-success' : 'bg-soft-warning text-warning' }} px-2 py-1">
@@ -356,7 +389,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="11" class="text-center py-5 text-muted">
+                                        <td colspan="13" class="text-center py-5 text-muted">
                                             <i class="mdi mdi-cash-remove fs-36 text-muted d-block mb-2"></i>
                                             <h6 class="fw-bold mb-1">No Transactions Found</h6>
                                             <p class="fs-12 mb-0">Try adjusting your filters or date range.</p>
@@ -367,10 +400,17 @@
                             <tfoot class="table-light fw-bold">
                                 <tr>
                                     <td colspan="7" class="text-end text-uppercase fs-12">Grand Totals:</td>
-                                    <td class="text-end text-success fs-14">PKR {{ number_format($totalInflow, 2) }}</td>
-                                    <td class="text-end text-danger fs-14">PKR {{ number_format($totalOutflow, 2) }}</td>
-                                    <td colspan="2" class="text-end {{ $netCashFlow >= 0 ? 'text-primary' : 'text-danger' }} fs-13">
-                                        Net: PKR {{ number_format($netCashFlow, 2) }}
+                                    <td class="text-end text-success fs-13">+ PKR {{ number_format($totalInflowPkr, 2) }}</td>
+                                    <td class="text-end text-danger fs-13">- PKR {{ number_format($totalOutflowPkr, 2) }}</td>
+                                    <td class="text-end text-success fs-13">+ SAR {{ number_format($totalInflowSar, 2) }}</td>
+                                    <td class="text-end text-danger fs-13">- SAR {{ number_format($totalOutflowSar, 2) }}</td>
+                                    <td colspan="2" class="text-end fs-12">
+                                        <span class="{{ $netCashFlowPkr >= 0 ? 'text-success' : 'text-danger' }} d-block">
+                                            Net PKR: {{ number_format($netCashFlowPkr, 2) }}
+                                        </span>
+                                        <span class="{{ $netCashFlowSar >= 0 ? 'text-success' : 'text-danger' }} d-block">
+                                            Net SAR: {{ number_format($netCashFlowSar, 2) }}
+                                        </span>
                                     </td>
                                 </tr>
                             </tfoot>

@@ -1,6 +1,6 @@
 @extends('layout.master')
 
-@section('title', 'Bank Transfer Report')
+@section('title', 'Bank Transaction & Statement Report')
 
 @section('content')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css">
@@ -31,20 +31,43 @@
     .bank-pill {
         display: inline-flex;
         align-items: center;
-        padding: 4px 10px;
-        border-radius: 20px;
-        font-size: 12px;
+        padding: 3px 8px;
+        border-radius: 16px;
+        font-size: 11px;
         font-weight: 600;
     }
-    .bank-pill-from {
+    .bank-pill-deposit {
+        background-color: #dcfce7;
+        color: #166534;
+        border: 1px solid #86efac;
+    }
+    .bank-pill-withdrawal {
         background-color: #fee2e2;
         color: #991b1b;
         border: 1px solid #fca5a5;
     }
-    .bank-pill-to {
-        background-color: #dcfce7;
-        color: #166534;
-        border: 1px solid #86efac;
+    .bank-pill-transfer {
+        background-color: #e0f2fe;
+        color: #0369a1;
+        border: 1px solid #bae6fd;
+    }
+    .curr-pill-pkr {
+        background-color: #f1f5f9;
+        color: #334155;
+        border: 1px solid #cbd5e1;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 2px 6px;
+        border-radius: 4px;
+    }
+    .curr-pill-sar {
+        background-color: #fef3c7;
+        color: #92400e;
+        border: 1px solid #fde68a;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 2px 6px;
+        border-radius: 4px;
     }
     @media print {
         .no-print, .app-sidebar-menu, .topbar-custom, footer {
@@ -69,37 +92,40 @@
             <div class="py-3 d-flex flex-wrap align-items-center justify-content-between gap-2 border-bottom mb-3 no-print">
                 <div>
                     <h4 class="fs-18 fw-bold m-0 text-dark">
-                        <i class="mdi mdi-repeat text-primary me-1"></i> Bank Transfer Movement Report
+                        <i class="mdi mdi-bank text-primary me-1"></i> Bank Transaction & Statement Report
                     </h4>
-                    <span class="text-muted fs-12">Comprehensive audit log of internal bank-to-bank balance transfers.</span>
+                    <span class="text-muted fs-12">Dual-Currency (PKR & SAR) Bank statement tracking Client Receipts, Supplier Payments, Expenses, and Transfers.</span>
                 </div>
                 <div class="d-flex flex-wrap gap-2">
                     <a href="{{ route('bank-transfer.report.filter') }}" class="btn btn-outline-primary btn-sm">
                         <i class="mdi mdi-filter-variant me-1"></i> Modify Filter
                     </a>
-                    <a href="{{ route('bank-transfer.create') }}" class="btn btn-primary btn-sm">
-                        <i class="mdi mdi-plus-circle me-1"></i> New Transfer
+                    <a href="{{ route('bank-transfer.create') }}" class="btn btn-outline-info btn-sm">
+                        <i class="mdi mdi-repeat me-1"></i> New Transfer
+                    </a>
+                    <a href="{{ route('expense.transaction.create') }}" class="btn btn-primary btn-sm">
+                        <i class="mdi mdi-plus-circle me-1"></i> New Transaction
                     </a>
                     <a href="{{ route('bank-transfer.report.pdf', request()->query()) }}" class="btn btn-outline-danger btn-sm" target="_blank">
                         <i class="mdi mdi-file-pdf-box me-1"></i> Download PDF
                     </a>
                     <button type="button" class="btn btn-outline-dark btn-sm" onclick="window.print()">
-                        <i class="mdi mdi-printer me-1"></i> Print Report
+                        <i class="mdi mdi-printer me-1"></i> Print Statement
                     </button>
-                    <button type="button" class="btn btn-outline-success btn-sm" onclick="exportTableToCSV('bank_transfers_report.csv')">
+                    <button type="button" class="btn btn-outline-success btn-sm" onclick="exportTableToCSV('bank_transactions_report.csv')">
                         <i class="mdi mdi-file-excel me-1"></i> Export Excel
                     </button>
                 </div>
             </div>
 
-            {{-- Active Filter Bar (Collapsible / Summary) --}}
+            {{-- Active Filter Bar --}}
             <div class="card mb-3 border-0 shadow-sm no-print">
                 <div class="card-body p-3 bg-light rounded-3">
                     <form action="{{ route('bank-transfer.report') }}" method="GET" class="row g-2 align-items-end">
                         <div class="col-md-3">
-                            <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Bank (All Activity)</label>
+                            <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Bank Account</label>
                             <select name="bank_id" class="form-select form-select-sm">
-                                <option value="">-- All Banks --</option>
+                                <option value="">-- All Banks (Consolidated) --</option>
                                 @foreach ($banks as $b)
                                     <option value="{{ $b->id }}" {{ request('bank_id') == $b->id ? 'selected' : '' }}>
                                         {{ $b->name }} {{ !empty($b->account_number) ? '(' . $b->account_number . ')' : '' }}
@@ -109,26 +135,12 @@
                         </div>
 
                         <div class="col-md-2">
-                            <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">From Bank</label>
-                            <select name="from_bank_id" class="form-select form-select-sm">
-                                <option value="">-- Source --</option>
-                                @foreach ($banks as $b)
-                                    <option value="{{ $b->id }}" {{ request('from_bank_id') == $b->id ? 'selected' : '' }}>
-                                        {{ $b->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="col-md-2">
-                            <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">To Bank</label>
-                            <select name="to_bank_id" class="form-select form-select-sm">
-                                <option value="">-- Destination --</option>
-                                @foreach ($banks as $b)
-                                    <option value="{{ $b->id }}" {{ request('to_bank_id') == $b->id ? 'selected' : '' }}>
-                                        {{ $b->name }}
-                                    </option>
-                                @endforeach
+                            <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Activity Type</label>
+                            <select name="activity_type" class="form-select form-select-sm">
+                                <option value="all" {{ request('activity_type') == 'all' ? 'selected' : '' }}>All Activity</option>
+                                <option value="deposit" {{ request('activity_type') == 'deposit' ? 'selected' : '' }}>Deposits (Credits / Cr)</option>
+                                <option value="withdrawal" {{ request('activity_type') == 'withdrawal' ? 'selected' : '' }}>Withdrawals (Debits / Dr)</option>
+                                <option value="transfer" {{ request('activity_type') == 'transfer' ? 'selected' : '' }}>Internal Transfers</option>
                             </select>
                         </div>
 
@@ -140,6 +152,11 @@
                         <div class="col-md-2">
                             <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">To Date</label>
                             <input type="date" name="to_date" class="form-control form-control-sm" value="{{ request('to_date') }}">
+                        </div>
+
+                        <div class="col-md-2">
+                            <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Search Keyword</label>
+                            <input type="text" name="search" class="form-control form-control-sm" placeholder="Voucher, party, note..." value="{{ request('search') }}">
                         </div>
 
                         <div class="col-md-1 d-flex gap-1">
@@ -154,103 +171,152 @@
                 </div>
             </div>
 
-            {{-- 4 Metric Summary Cards --}}
+            {{-- 4 Metric Summary Cards with Dual Currency (PKR & SAR) --}}
             <div class="row g-3 mb-4">
+                {{-- Total Deposits / Credits --}}
                 <div class="col-md-3">
-                    <div class="bt-stat-card">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="bt-icon-box bg-soft-primary text-primary">
-                                <i class="ri-repeat-line"></i>
-                            </div>
-                            <div>
-                                <div class="text-muted fs-11 fw-bold text-uppercase">Total Transfers</div>
-                                <div class="fs-20 fw-bold text-dark">{{ number_format($totalCount) }}</div>
-                                <div class="fs-11 text-muted">Transactions logged</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <div class="bt-stat-card">
+                    <div class="bt-stat-card border-start border-4 border-success">
                         <div class="d-flex align-items-center gap-3">
                             <div class="bt-icon-box bg-soft-success text-success">
-                                <i class="ri-money-dollar-circle-line"></i>
+                                <i class="ri-arrow-down-circle-line"></i>
                             </div>
-                            <div>
-                                <div class="text-muted fs-11 fw-bold text-uppercase">Total Amount Transferred</div>
-                                <div class="fs-20 fw-bold text-success">PKR {{ number_format($totalAmount, 2) }}</div>
-                                <div class="fs-11 text-muted">Total balance shifted</div>
+                            <div class="flex-grow-1">
+                                <div class="text-muted fs-11 fw-bold text-uppercase">Total Deposits (Cr / Inflow)</div>
+                                <div class="fs-17 fw-bold text-success mt-1">
+                                    PKR {{ number_format($totalDepositsPkr, 2) }}
+                                </div>
+                                <div class="mt-1 d-flex align-items-center gap-2">
+                                    <span class="badge bg-soft-success text-success border border-success border-opacity-25 fs-11">
+                                        SAR {{ number_format($totalDepositsSar, 2) }}
+                                    </span>
+                                    <span class="fs-10 text-muted">{{ number_format($depositCount) }} deposits</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-md-5">
-                    <div class="bt-stat-card">
+                {{-- Total Withdrawals / Debits --}}
+                <div class="col-md-3">
+                    <div class="bt-stat-card border-start border-4 border-danger">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="bt-icon-box bg-soft-danger text-danger">
+                                <i class="ri-arrow-up-circle-line"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="text-muted fs-11 fw-bold text-uppercase">Total Withdrawals (Dr / Outflow)</div>
+                                <div class="fs-17 fw-bold text-danger mt-1">
+                                    PKR {{ number_format($totalWithdrawalsPkr, 2) }}
+                                </div>
+                                <div class="mt-1 d-flex align-items-center gap-2">
+                                    <span class="badge bg-soft-danger text-danger border border-danger border-opacity-25 fs-11">
+                                        SAR {{ number_format($totalWithdrawalsSar, 2) }}
+                                    </span>
+                                    <span class="fs-10 text-muted">{{ number_format($withdrawalCount) }} withdrawals</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Net Bank Movement --}}
+                <div class="col-md-3">
+                    <div class="bt-stat-card border-start border-4 {{ $netMovementPkr >= 0 ? 'border-primary' : 'border-warning' }}">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="bt-icon-box {{ $netMovementPkr >= 0 ? 'bg-soft-primary text-primary' : 'bg-soft-warning text-warning' }}">
+                                <i class="ri-wallet-3-line"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="text-muted fs-11 fw-bold text-uppercase">Net Bank Balance Movement</div>
+                                <div class="fs-17 fw-bold {{ $netMovementPkr >= 0 ? 'text-primary' : 'text-danger' }} mt-1">
+                                    {{ $netMovementPkr >= 0 ? '+' : '' }} PKR {{ number_format($netMovementPkr, 2) }}
+                                </div>
+                                <div class="mt-1">
+                                    <span class="badge {{ $netMovementSar >= 0 ? 'bg-soft-primary text-primary border border-primary border-opacity-25' : 'bg-soft-danger text-danger border border-danger border-opacity-25' }} fs-11">
+                                        {{ $netMovementSar >= 0 ? '+' : '' }} SAR {{ number_format($netMovementSar, 2) }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Total Records --}}
+                <div class="col-md-3">
+                    <div class="bt-stat-card border-start border-4 border-info">
                         <div class="d-flex align-items-center gap-3">
                             <div class="bt-icon-box bg-soft-info text-info">
                                 <i class="ri-bank-line"></i>
                             </div>
-                            <div>
-                                <div class="text-muted fs-11 fw-bold text-uppercase">Active Participating Banks</div>
-                                <div class="fs-20 fw-bold text-dark">{{ count($bankBreakdown) }} Bank(s)</div>
-                                <div class="fs-11 text-muted">Involved in current filter period</div>
+                            <div class="flex-grow-1">
+                                <div class="text-muted fs-11 fw-bold text-uppercase">Active Bank Accounts</div>
+                                <div class="fs-17 fw-bold text-dark mt-1">{{ count($bankBreakdown) }} Bank(s)</div>
+                                <div class="fs-11 text-muted mt-1">{{ number_format($totalCount) }} Total Transactions logged</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {{-- Bank Movement Summary Matrix --}}
+            {{-- Bank Movement Summary Matrix (Dual Currency) --}}
             @if(count($bankBreakdown) > 0)
                 <div class="card mb-4 border-0 shadow-sm">
                     <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
                         <h5 class="fs-14 fw-bold m-0 text-dark">
-                            <i class="mdi mdi-swap-horizontal text-primary me-1"></i> Bank-Wise Net Movement Summary
+                            <i class="mdi mdi-swap-horizontal text-primary me-1"></i> Bank-Wise Balance & Currency Activity Matrix
                         </h5>
-                        <span class="badge bg-soft-info text-info fs-11">Breakdown by Bank Account</span>
+                        <span class="badge bg-soft-info text-info fs-11">Dual Currency: PKR & SAR</span>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-bordered table-sm table-hover align-middle mb-0">
-                                <thead class="table-light fs-12">
+                                <thead class="table-light fs-12 text-uppercase">
                                     <tr>
-                                        <th>Bank Account</th>
-                                        <th class="text-end text-danger">Total Outgoing (Debit)</th>
-                                        <th class="text-end text-success">Total Incoming (Credit)</th>
-                                        <th class="text-end">Net Movement</th>
-                                        <th class="text-center">Activity Status</th>
+                                        <th rowspan="2" class="align-middle">Bank Account</th>
+                                        <th colspan="2" class="text-center text-success bg-soft-success py-1 border-bottom-0">Incoming (Cr / Deposits)</th>
+                                        <th colspan="2" class="text-center text-danger bg-soft-danger py-1 border-bottom-0">Outgoing (Dr / Withdrawals)</th>
+                                        <th colspan="2" class="text-center text-dark bg-light py-1 border-bottom-0">Net Position</th>
+                                        <th rowspan="2" class="text-center align-middle" style="width: 80px;">Activity</th>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-end text-success py-1">PKR</th>
+                                        <th class="text-end text-success py-1">SAR</th>
+                                        <th class="text-end text-danger py-1">PKR</th>
+                                        <th class="text-end text-danger py-1">SAR</th>
+                                        <th class="text-end py-1">PKR</th>
+                                        <th class="text-end py-1">SAR</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($bankBreakdown as $bData)
                                         <tr>
                                             <td>
+                                                <i class="mdi mdi-bank text-primary me-1"></i>
                                                 <strong>{{ $bData['bank']->name }}</strong>
                                                 @if(!empty($bData['bank']->account_number))
                                                     <span class="text-muted fs-11 ms-1">({{ $bData['bank']->account_number }})</span>
                                                 @endif
                                             </td>
-                                            <td class="text-end text-danger fw-semibold">
-                                                - PKR {{ number_format($bData['outgoing'], 2) }}
-                                                <small class="text-muted d-block fs-10">({{ $bData['out_count'] }} transfers out)</small>
+                                            <td class="text-end text-success fw-semibold">
+                                                + {{ number_format($bData['incoming_pkr'], 2) }}
                                             </td>
                                             <td class="text-end text-success fw-semibold">
-                                                + PKR {{ number_format($bData['incoming'], 2) }}
-                                                <small class="text-muted d-block fs-10">({{ $bData['in_count'] }} transfers in)</small>
+                                                + {{ number_format($bData['incoming_sar'], 2) }}
                                             </td>
-                                            <td class="text-end fw-bold {{ $bData['net'] >= 0 ? 'text-success' : 'text-danger' }}">
-                                                {{ $bData['net'] >= 0 ? '+' : '' }} PKR {{ number_format($bData['net'], 2) }}
+                                            <td class="text-end text-danger fw-semibold">
+                                                - {{ number_format($bData['outgoing_pkr'], 2) }}
+                                            </td>
+                                            <td class="text-end text-danger fw-semibold">
+                                                - {{ number_format($bData['outgoing_sar'], 2) }}
+                                            </td>
+                                            <td class="text-end fw-bold {{ $bData['net_pkr'] >= 0 ? 'text-success' : 'text-danger' }}">
+                                                {{ $bData['net_pkr'] >= 0 ? '+' : '' }} {{ number_format($bData['net_pkr'], 2) }}
+                                            </td>
+                                            <td class="text-end fw-bold {{ $bData['net_sar'] >= 0 ? 'text-success' : 'text-danger' }}">
+                                                {{ $bData['net_sar'] >= 0 ? '+' : '' }} {{ number_format($bData['net_sar'], 2) }}
                                             </td>
                                             <td class="text-center">
-                                                @if($bData['net'] > 0)
-                                                    <span class="badge bg-soft-success text-success fs-10">Net Receiver</span>
-                                                @elseif($bData['net'] < 0)
-                                                    <span class="badge bg-soft-danger text-danger fs-10">Net Sender</span>
-                                                @else
-                                                    <span class="badge bg-soft-secondary text-secondary fs-10">Balanced</span>
-                                                @endif
+                                                <span class="badge bg-soft-primary text-primary fs-11">{{ $bData['total_tx'] }} txns</span>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -261,11 +327,11 @@
                 </div>
             @endif
 
-            {{-- Full Detail Transfers Table --}}
+            {{-- Full Detail Bank Statement Table with Dual Currency --}}
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
                     <h5 class="fs-14 fw-bold m-0 text-dark">
-                        <i class="mdi mdi-format-list-bulleted text-primary me-1"></i> Detailed Transfer Transactions ({{ $transfers->count() }})
+                        <i class="mdi mdi-format-list-bulleted text-primary me-1"></i> Bank Statement Ledger ({{ count($transactions) }})
                     </h5>
                     <div class="fs-12 text-muted">
                         @if(request('from_date') || request('to_date'))
@@ -278,80 +344,130 @@
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-bordered table-hover align-middle mb-0" id="transfersTable">
-                            <thead class="table-light fs-12 text-uppercase">
+                            <thead class="table-light fs-11 text-uppercase">
                                 <tr>
-                                    <th style="width: 50px;">S#</th>
-                                    <th>Transfer Date</th>
-                                    <th>Source (From Bank)</th>
-                                    <th class="text-center" style="width: 40px;"><i class="mdi mdi-arrow-right"></i></th>
-                                    <th>Destination (To Bank)</th>
-                                    <th class="text-end">Transferred Amount</th>
-                                    <th>Description / Notes</th>
-                                    <th class="text-center no-print" style="width: 80px;">Action</th>
+                                    <th rowspan="2" style="width: 38px;" class="align-middle text-center">S#</th>
+                                    <th rowspan="2" class="align-middle">Date</th>
+                                    <th rowspan="2" class="align-middle">Voucher #</th>
+                                    <th rowspan="2" class="align-middle">Bank Account</th>
+                                    <th rowspan="2" class="align-middle">Party / Narration</th>
+                                    <th rowspan="2" class="align-middle">Mode</th>
+                                    <th colspan="2" class="text-center bg-soft-success text-success border-bottom-0 py-1">PKR (Pakistani Rupee)</th>
+                                    <th colspan="2" class="text-center bg-soft-warning text-dark border-bottom-0 py-1">SAR (Saudi Riyal)</th>
+                                    <th colspan="2" class="text-center bg-light border-bottom-0 py-1">Running Balance</th>
+                                    <th rowspan="2" class="text-center no-print align-middle" style="width: 55px;">Action</th>
+                                </tr>
+                                <tr>
+                                    <th class="text-end text-success py-1">Deposit (Cr)</th>
+                                    <th class="text-end text-danger py-1">Withdrawal (Dr)</th>
+                                    <th class="text-end text-success py-1">Deposit (Cr)</th>
+                                    <th class="text-end text-danger py-1">Withdrawal (Dr)</th>
+                                    <th class="text-end py-1">PKR</th>
+                                    <th class="text-end py-1">SAR</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($transfers as $t)
+                                @forelse($transactions as $t)
                                     <tr>
-                                        <td>{{ $loop->iteration }}</td>
+                                        <td class="text-center text-muted fs-11">{{ $loop->iteration }}</td>
                                         <td>
-                                            <span class="fw-semibold text-dark">
-                                                {{ \Carbon\Carbon::parse($t->transfer_date)->format('d M Y') }}
+                                            <span class="fw-semibold text-dark text-nowrap">
+                                                {{ \Carbon\Carbon::parse($t['date'])->format('d M Y') }}
                                             </span>
-                                            <small class="text-muted d-block fs-10">{{ \Carbon\Carbon::parse($t->transfer_date)->diffForHumans() }}</small>
                                         </td>
                                         <td>
-                                            <span class="bank-pill bank-pill-from">
-                                                <i class="mdi mdi-arrow-up-circle me-1"></i>
-                                                {{ $t->fromBank->name ?? 'Deleted Bank' }}
+                                            <span class="badge bg-light text-dark border font-monospace fs-11">
+                                                {{ $t['voucher_no'] }}
                                             </span>
-                                            @if(!empty($t->fromBank->account_number))
-                                                <div class="fs-11 text-muted ms-2 mt-1">{{ $t->fromBank->account_number }}</div>
+                                            @if($t['currency'] === 'SAR')
+                                                <div class="mt-1">
+                                                    <span class="curr-pill-sar">SAR @ ROE {{ number_format($t['exchange_rate'], 2) }}</span>
+                                                </div>
                                             @endif
                                         </td>
-                                        <td class="text-center text-primary fs-16">
-                                            <i class="mdi mdi-arrow-right-thick"></i>
-                                        </td>
                                         <td>
-                                            <span class="bank-pill bank-pill-to">
-                                                <i class="mdi mdi-arrow-down-circle me-1"></i>
-                                                {{ $t->toBank->name ?? 'Deleted Bank' }}
+                                            <span class="fw-semibold text-primary">
+                                                <i class="mdi mdi-bank me-1"></i>{{ $t['bank_name'] }}
                                             </span>
-                                            @if(!empty($t->toBank->account_number))
-                                                <div class="fs-11 text-muted ms-2 mt-1">{{ $t->toBank->account_number }}</div>
+                                            @if(!empty($t['bank_account']))
+                                                <div class="fs-10 text-muted">{{ $t['bank_account'] }}</div>
                                             @endif
                                         </td>
-                                        <td class="text-end fw-bold fs-14 text-dark">
-                                            PKR {{ number_format($t->amount, 2) }}
+                                        <td>
+                                            <strong>{{ $t['party_name'] }}</strong>
+                                            @if(!empty($t['description']))
+                                                <div class="text-muted fs-11 mt-1 text-truncate" style="max-width: 250px;" title="{{ $t['description'] }}">
+                                                    {{ $t['description'] }}
+                                                </div>
+                                            @endif
                                         </td>
                                         <td>
-                                            {{ $t->description ?: '-' }}
+                                            <span class="badge bg-soft-secondary text-dark">{{ $t['payment_mode'] }}</span>
+                                        </td>
+                                        {{-- PKR Deposit (Cr) --}}
+                                        <td class="text-end fw-bold text-success fs-13">
+                                            {{ $t['deposit_pkr'] > 0 ? '+ ' . number_format($t['deposit_pkr'], 2) : '-' }}
+                                        </td>
+                                        {{-- PKR Withdrawal (Dr) --}}
+                                        <td class="text-end fw-bold text-danger fs-13">
+                                            {{ $t['withdrawal_pkr'] > 0 ? '- ' . number_format($t['withdrawal_pkr'], 2) : '-' }}
+                                        </td>
+                                        {{-- SAR Deposit (Cr) --}}
+                                        <td class="text-end fw-bold text-success fs-13">
+                                            {{ $t['deposit_sar'] > 0 ? '+ ' . number_format($t['deposit_sar'], 2) : '-' }}
+                                        </td>
+                                        {{-- SAR Withdrawal (Dr) --}}
+                                        <td class="text-end fw-bold text-danger fs-13">
+                                            {{ $t['withdrawal_sar'] > 0 ? '- ' . number_format($t['withdrawal_sar'], 2) : '-' }}
+                                        </td>
+                                        {{-- Running Balance PKR --}}
+                                        <td class="text-end fw-semibold fs-12 {{ $t['running_balance_pkr'] >= 0 ? 'text-dark' : 'text-danger' }}">
+                                            {{ number_format($t['running_balance_pkr'], 2) }}
+                                        </td>
+                                        {{-- Running Balance SAR --}}
+                                        <td class="text-end fw-semibold fs-12 {{ $t['running_balance_sar'] >= 0 ? 'text-dark' : 'text-danger' }}">
+                                            {{ number_format($t['running_balance_sar'], 2) }}
                                         </td>
                                         <td class="text-center no-print">
-                                            <form action="{{ route('bank-transfer.destroy', $t->id) }}" method="POST" class="d-inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-outline-danger btn-xs" onclick="return confirm('Delete this transfer record?')" title="Delete Transfer">
-                                                    <i class="mdi mdi-trash-can-outline"></i>
-                                                </button>
-                                            </form>
+                                            @if($t['source'] === 'expense_transaction')
+                                                <a href="{{ route('expense.transaction.edit', $t['id']) }}" class="btn btn-outline-info btn-xs" title="Edit Transaction">
+                                                    <i class="mdi mdi-pencil"></i>
+                                                </a>
+                                            @elseif($t['source'] === 'bank_transfer')
+                                                <form action="{{ route('bank-transfer.destroy', $t['id']) }}" method="POST" class="d-inline">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-outline-danger btn-xs" onclick="return confirm('Delete this transfer record?')" title="Delete Transfer">
+                                                        <i class="mdi mdi-trash-can-outline"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="text-center py-4 text-muted">
+                                        <td colspan="13" class="text-center py-4 text-muted">
                                             <i class="mdi mdi-alert-circle-outline fs-24 d-block mb-1"></i>
-                                            No bank transfer records found matching the specified filter criteria.
+                                            No bank transactions or transfers found matching the specified filter criteria.
                                         </td>
                                     </tr>
                                 @endforelse
                             </tbody>
-                            @if($transfers->count() > 0)
-                                <tfoot class="table-light fw-bold fs-13">
+                            @if(count($transactions) > 0)
+                                <tfoot class="table-light fw-bold fs-12">
                                     <tr>
-                                        <td colspan="5" class="text-end">Total Amount Transferred:</td>
-                                        <td class="text-end text-success fs-15">PKR {{ number_format($totalAmount, 2) }}</td>
-                                        <td colspan="2"></td>
+                                        <td colspan="6" class="text-end">STATEMENT TOTALS:</td>
+                                        <td class="text-end text-success fs-13">+ {{ number_format($totalDepositsPkr, 2) }}</td>
+                                        <td class="text-end text-danger fs-13">- {{ number_format($totalWithdrawalsPkr, 2) }}</td>
+                                        <td class="text-end text-success fs-13">+ {{ number_format($totalDepositsSar, 2) }}</td>
+                                        <td class="text-end text-danger fs-13">- {{ number_format($totalWithdrawalsSar, 2) }}</td>
+                                        <td class="text-end fs-13 {{ $netMovementPkr >= 0 ? 'text-success' : 'text-danger' }}">
+                                            {{ $netMovementPkr >= 0 ? '+' : '' }} {{ number_format($netMovementPkr, 2) }}
+                                        </td>
+                                        <td class="text-end fs-13 {{ $netMovementSar >= 0 ? 'text-success' : 'text-danger' }}">
+                                            {{ $netMovementSar >= 0 ? '+' : '' }} {{ number_format($netMovementSar, 2) }}
+                                        </td>
+                                        <td class="no-print"></td>
                                     </tr>
                                 </tfoot>
                             @endif
@@ -372,7 +488,6 @@
         for (let i = 0; i < rows.length; i++) {
             let row = [], cols = rows[i].querySelectorAll("td, th");
             for (let j = 0; j < cols.length - 1; j++) {
-                if (j === 3) continue; // skip arrow icon col
                 let text = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, " ").trim();
                 text = text.replace(/"/g, '""');
                 row.push('"' + text + '"');
@@ -380,7 +495,7 @@
             if (row.length > 0) csv.push(row.join(","));
         }
 
-        const csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
+        const csvFile = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
         const downloadLink = document.createElement("a");
         downloadLink.download = filename;
         downloadLink.href = window.URL.createObjectURL(csvFile);

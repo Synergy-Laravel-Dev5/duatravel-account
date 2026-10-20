@@ -436,6 +436,11 @@ Route::middleware(['auth:web,company'])->group(function () {
         Route::get('reports/transactions', [\App\Http\Controllers\TransactionReportController::class, 'index'])->name('reports.transactions');
         Route::get('reports/transactions/export-excel', [\App\Http\Controllers\TransactionReportController::class, 'exportExcel'])->name('reports.transactions.export-excel');
 
+        // Cash Book & Cash Report
+        Route::get('reports/cash', [\App\Http\Controllers\CashReportController::class, 'index'])->name('reports.cash');
+        Route::get('reports/cash/pdf', [\App\Http\Controllers\CashReportController::class, 'exportPdf'])->name('reports.cash.pdf');
+        Route::get('reports/cash/export-excel', [\App\Http\Controllers\CashReportController::class, 'exportExcel'])->name('reports.cash.export-excel');
+
         Route::post('/leads/{lead}/follow-ups', [FollowUpController::class, 'store'])->name('followUp.store');
         Route::post('/follow-ups/{followUp}/take', [FollowUpController::class, 'take'])->name('followUp.take');
     });

@@ -15,9 +15,9 @@
                             <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
                                 <div>
                                     <h4 class="fw-bold m-0 text-dark">
-                                        <i class="mdi mdi-repeat text-primary me-2"></i> Bank Transfer Reports Filter
+                                        <i class="mdi mdi-bank text-primary me-2"></i> Bank Transaction & Statement Reports Filter
                                     </h4>
-                                    <p class="text-muted fs-13 mb-0 mt-1">Filter and generate comprehensive reports for inter-bank balance transfers.</p>
+                                    <p class="text-muted fs-13 mb-0 mt-1">Filter and generate comprehensive bank statements, deposits, payments, and inter-bank transfers.</p>
                                 </div>
                                 <div class="d-flex gap-2">
                                     <a href="{{ route('bank-transfer.index') }}" class="btn btn-secondary btn-sm">
@@ -105,11 +105,24 @@
                                             placeholder="Max PKR" value="{{ request('max_amount') }}">
                                     </div>
 
+                                    {{-- Activity Type Filter --}}
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold fs-13">
+                                            <i class="mdi mdi-swap-vertical text-info me-1"></i> Activity Type
+                                        </label>
+                                        <select name="activity_type" class="form-select form-select-sm">
+                                            <option value="all" {{ request('activity_type') == 'all' ? 'selected' : '' }}>-- All Activity (Deposits, Withdrawals, Transfers) --</option>
+                                            <option value="deposit" {{ request('activity_type') == 'deposit' ? 'selected' : '' }}>Deposits Only (Client Receipts / Cr)</option>
+                                            <option value="withdrawal" {{ request('activity_type') == 'withdrawal' ? 'selected' : '' }}>Withdrawals Only (Supplier/Expense Payments / Dr)</option>
+                                            <option value="transfer" {{ request('activity_type') == 'transfer' ? 'selected' : '' }}>Internal Bank Transfers Only</option>
+                                        </select>
+                                    </div>
+
                                     {{-- Search Description --}}
-                                    <div class="col-md-12">
+                                    <div class="col-md-6">
                                         <label class="form-label fw-semibold fs-13">Search Description / Reference Keyword</label>
                                         <input type="text" name="search" class="form-control form-control-sm"
-                                            placeholder="Search by transfer note, cheque number, reference, etc." value="{{ request('search') }}">
+                                            placeholder="Search by note, cheque number, payee, reference, etc." value="{{ request('search') }}">
                                     </div>
 
                                     {{-- Quick Date Presets --}}

@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\BankTransfer;
 use App\Models\Bank;
+use App\Models\ExpenseTransaction;
+use App\Models\Client;
+use App\Models\Supplier;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 
@@ -54,166 +57,373 @@ class BankTransferController extends Controller
         return view('bank_transfer.report_filter', compact('banks'));
     }
 
+    /**
+     * Comprehensive Bank Transaction & Movement Report with Dual PKR & SAR Tracking.
+     */
     public function report(Request $request)
     {
-        $fromBankId = $request->get('from_bank_id');
-        $toBankId   = $request->get('to_bank_id');
-        $bankId     = $request->get('bank_id');
-        $fromDate   = $request->get('from_date');
-        $toDate     = $request->get('to_date');
-        $minAmount  = $request->get('min_amount');
-        $maxAmount  = $request->get('max_amount');
-        $search     = $request->get('search');
+        $data = $this->gatherBankReportData($request);
+        return view('bank_transfer.report', $data);
+    }
 
-        $query = BankTransfer::with(['fromBank', 'toBank']);
+    /**
+     * PDF Export of Bank Transactions & Movement Report.
+     */
+    public function reportPdf(Request $request)
+    {
+        $data = $this->gatherBankReportData($request);
 
-        if ($fromBankId) {
-            $query->where('from_bank_id', $fromBankId);
-        }
+        $pdf = Pdf::loadView('bank_transfer.report_pdf', $data)->setPaper('a4', 'landscape');
+        return $pdf->download('bank_statement_report_' . date('Ymd_His') . '.pdf');
+    }
 
-        if ($toBankId) {
-            $query->where('to_bank_id', $toBankId);
-        }
+    /**
+     * Shared logic to gather and process bank transactions and transfers with both PKR & SAR amounts.
+     */
+    private function gatherBankReportData(Request $request): array
+    {
+        $fromBankId   = $request->get('from_bank_id');
+        $toBankId     = $request->get('to_bank_id');
+        $bankId       = $request->get('bank_id');
+        $fromDate     = $request->get('from_date');
+        $toDate       = $request->get('to_date');
+        $minAmount    = $request->get('min_amount');
+        $maxAmount    = $request->get('max_amount');
+        $search       = trim((string) $request->get('search'));
+        $activityType = $request->get('activity_type', 'all'); // 'all', 'deposit', 'withdrawal', 'transfer'
 
-        if ($bankId) {
-            $query->where(function ($q) use ($bankId) {
-                $q->where('from_bank_id', $bankId)
-                  ->orWhere('to_bank_id', $bankId);
-            });
-        }
-
-        if ($fromDate && $toDate) {
-            $query->whereBetween('transfer_date', [$fromDate, $toDate]);
-        } elseif ($fromDate) {
-            $query->where('transfer_date', '>=', $fromDate);
-        } elseif ($toDate) {
-            $query->where('transfer_date', '<=', $toDate);
-        }
-
-        if ($minAmount) {
-            $query->where('amount', '>=', $minAmount);
-        }
-
-        if ($maxAmount) {
-            $query->where('amount', '<=', $maxAmount);
-        }
-
-        if ($search) {
-            $query->where('description', 'LIKE', "%{$search}%");
-        }
-
-        $transfers = $query->orderBy('transfer_date', 'desc')->orderBy('id', 'desc')->get();
-
-        $totalAmount = $transfers->sum('amount');
-        $totalCount  = $transfers->count();
-
-        // Bank-wise summary matrix
         $allBanks = Bank::where('status', 'active')->orderBy('name')->get();
-        $bankBreakdown = [];
-        foreach ($allBanks as $b) {
-            $outAmt = $transfers->where('from_bank_id', $b->id)->sum('amount');
-            $inAmt  = $transfers->where('to_bank_id', $b->id)->sum('amount');
-            $outCount = $transfers->where('from_bank_id', $b->id)->count();
-            $inCount  = $transfers->where('to_bank_id', $b->id)->count();
+        $allRecords = [];
 
-            if ($outAmt > 0 || $inAmt > 0) {
-                $bankBreakdown[] = [
-                    'bank'      => $b,
-                    'outgoing'  => $outAmt,
-                    'out_count' => $outCount,
-                    'incoming'  => $inAmt,
-                    'in_count'  => $inCount,
-                    'net'       => $inAmt - $outAmt,
+        // 1. Gather ExpenseTransactions associated with bank accounts
+        if ($activityType !== 'transfer') {
+            $etQ = ExpenseTransaction::with(['bank', 'supplier', 'client', 'staff', 'expense'])
+                ->whereNotNull('bank_id')
+                ->whereNull('deleted_at');
+
+            if ($bankId) {
+                $etQ->where('bank_id', $bankId);
+            } elseif ($fromBankId) {
+                $etQ->where('bank_id', $fromBankId)->where('transaction_type', 'debit');
+            } elseif ($toBankId) {
+                $etQ->where('bank_id', $toBankId)->where('transaction_type', 'credit');
+            }
+
+            if ($fromDate) {
+                $etQ->whereDate('date', '>=', $fromDate);
+            }
+            if ($toDate) {
+                $etQ->whereDate('date', '<=', $toDate);
+            }
+
+            $etList = $etQ->get();
+
+            foreach ($etList as $et) {
+                $cur = strtoupper($et->currency ?: 'PKR');
+                $rate = (float) ($et->exchange_rate > 0 ? $et->exchange_rate : 1);
+                $rawAmt = (float) $et->amount;
+                $pkrAmt = ($cur === 'PKR') ? $rawAmt : round($rawAmt * $rate, 2);
+                $sarAmt = ($cur === 'SAR') ? $rawAmt : 0.00;
+
+                if ($minAmount && $pkrAmt < (float) $minAmount) continue;
+                if ($maxAmount && $pkrAmt > (float) $maxAmount) continue;
+
+                $isCredit = ($et->transaction_type === 'credit');
+                $flow = $isCredit ? 'deposit' : 'withdrawal';
+
+                if ($activityType === 'deposit' && !$isCredit) continue;
+                if ($activityType === 'withdrawal' && $isCredit) continue;
+
+                $depositPkr    = $isCredit ? $pkrAmt : 0.00;
+                $withdrawalPkr = !$isCredit ? $pkrAmt : 0.00;
+                $depositSar    = $isCredit ? $sarAmt : 0.00;
+                $withdrawalSar = !$isCredit ? $sarAmt : 0.00;
+
+                $pType = $et->payee_type ?: 'expense';
+                $partyName = '—';
+                $partyType = 'General';
+                $categoryLabel = 'Office Expense';
+
+                if ($pType === 'supplier') {
+                    $partyName = $et->supplier ? $et->supplier->name : 'Supplier';
+                    $partyType = 'Supplier';
+                    $categoryLabel = 'Supplier Payment';
+                } elseif ($pType === 'client') {
+                    $partyName = $et->client ? $et->client->name : 'Client';
+                    $partyType = 'Client';
+                    $categoryLabel = $isCredit ? 'Client Receipt (Bank Deposit)' : 'Client Refund (Bank Outflow)';
+                } elseif ($pType === 'staff') {
+                    $partyName = $et->staff ? ($et->staff->first_name . ' ' . $et->staff->last_name) : 'Staff';
+                    $partyType = 'Staff';
+                    $categoryLabel = 'Staff Salary / Advance';
+                } elseif ($pType === 'expense') {
+                    $partyName = $et->expense ? $et->expense->name : 'Expense Head';
+                    $partyType = 'Expense';
+                    $categoryLabel = 'Office Expense (' . $partyName . ')';
+                }
+
+                $dStr = $et->date ? Carbon::parse($et->date)->format('Y-m-d') : Carbon::parse($et->created_at)->format('Y-m-d');
+                $dTs = $et->date ? Carbon::parse($et->date)->startOfDay()->timestamp : Carbon::parse($et->created_at)->timestamp;
+
+                $desc = $et->description ?: ($categoryLabel . ' via ' . ucfirst($et->payment_type));
+                if ($cur !== 'PKR') {
+                    $desc .= ' [' . $cur . ' ' . number_format($rawAmt, 2) . ' @ ROE ' . number_format($rate, 2) . ']';
+                }
+
+                $allRecords[] = [
+                    'source'         => 'expense_transaction',
+                    'id'             => $et->id,
+                    'date'           => $dStr,
+                    'timestamp'      => $dTs,
+                    'voucher_no'     => $et->reference_no ?: ('#ETXN-' . $et->id),
+                    'bank_id'        => $et->bank_id,
+                    'bank_name'      => $et->bank ? $et->bank->name : 'Bank',
+                    'bank_account'   => $et->bank?->account_number,
+                    'flow'           => $flow,
+                    'type'           => $isCredit ? 'credit' : 'debit',
+                    'type_badge'     => $isCredit ? 'bg-soft-success text-success' : 'bg-soft-danger text-danger',
+                    'category_label' => $categoryLabel,
+                    'party_name'     => $partyName,
+                    'party_type'     => $partyType,
+                    'payment_mode'   => ucwords(str_replace('_', ' ', $et->payment_type ?: 'bank')),
+                    'currency'       => $cur,
+                    'raw_amount'     => $rawAmt,
+                    'exchange_rate'  => $rate,
+                    'deposit_pkr'    => $depositPkr,
+                    'withdrawal_pkr' => $withdrawalPkr,
+                    'deposit_sar'    => $depositSar,
+                    'withdrawal_sar' => $withdrawalSar,
+                    'deposit'        => $depositPkr, // backward compatibility
+                    'withdrawal'     => $withdrawalPkr,
+                    'description'    => $desc,
+                    'proof'          => $et->proof ? asset('assets/images/expense_proofs/' . $et->proof) : null,
                 ];
             }
         }
 
-        $banks = $allBanks;
+        // 2. Gather BankTransfers (Inter-Bank Transfers - Always PKR)
+        if ($activityType === 'all' || $activityType === 'transfer') {
+            $btQ = BankTransfer::with(['fromBank', 'toBank']);
 
-        return view('bank_transfer.report', compact(
-            'transfers',
-            'banks',
-            'totalAmount',
-            'totalCount',
-            'bankBreakdown',
-            'fromBankId',
-            'toBankId',
-            'bankId',
-            'fromDate',
-            'toDate',
-            'minAmount',
-            'maxAmount',
-            'search'
-        ));
-    }
+            if ($fromBankId) {
+                $btQ->where('from_bank_id', $fromBankId);
+            }
+            if ($toBankId) {
+                $btQ->where('to_bank_id', $toBankId);
+            }
+            if ($bankId) {
+                $btQ->where(function ($q) use ($bankId) {
+                    $q->where('from_bank_id', $bankId)
+                      ->orWhere('to_bank_id', $bankId);
+                });
+            }
+            if ($fromDate) {
+                $btQ->whereDate('transfer_date', '>=', $fromDate);
+            }
+            if ($toDate) {
+                $btQ->whereDate('transfer_date', '<=', $toDate);
+            }
+            if ($minAmount) {
+                $btQ->where('amount', '>=', $minAmount);
+            }
+            if ($maxAmount) {
+                $btQ->where('amount', '<=', $maxAmount);
+            }
 
-    public function reportPdf(Request $request)
-    {
-        $fromBankId = $request->get('from_bank_id');
-        $toBankId   = $request->get('to_bank_id');
-        $bankId     = $request->get('bank_id');
-        $fromDate   = $request->get('from_date');
-        $toDate     = $request->get('to_date');
-        $minAmount  = $request->get('min_amount');
-        $maxAmount  = $request->get('max_amount');
-        $search     = $request->get('search');
+            $btList = $btQ->get();
 
-        $query = BankTransfer::with(['fromBank', 'toBank']);
+            foreach ($btList as $bt) {
+                $pkrAmt = (float) $bt->amount;
+                $dStr = Carbon::parse($bt->transfer_date)->format('Y-m-d');
+                $dTs = Carbon::parse($bt->transfer_date)->startOfDay()->timestamp + 1;
 
-        if ($fromBankId) {
-            $query->where('from_bank_id', $fromBankId);
+                $fromName = $bt->fromBank ? $bt->fromBank->name : 'Source Bank';
+                $toName   = $bt->toBank ? $bt->toBank->name : 'Destination Bank';
+
+                $depositPkr = 0.00;
+                $withdrawalPkr = 0.00;
+                $bankNameDisplay = $fromName . ' ➔ ' . $toName;
+
+                if ($bankId) {
+                    if ($bt->to_bank_id == $bankId) {
+                        $depositPkr = $pkrAmt;
+                        $bankNameDisplay = $toName;
+                    }
+                    if ($bt->from_bank_id == $bankId) {
+                        $withdrawalPkr = $pkrAmt;
+                        $bankNameDisplay = $fromName;
+                    }
+                } else {
+                    $withdrawalPkr = $pkrAmt;
+                    $depositPkr = $pkrAmt;
+                }
+
+                $allRecords[] = [
+                    'source'         => 'bank_transfer',
+                    'id'             => $bt->id,
+                    'date'           => $dStr,
+                    'timestamp'      => $dTs,
+                    'voucher_no'     => 'TRF-' . $bt->id,
+                    'bank_id'        => $bankId ?: $bt->from_bank_id,
+                    'bank_name'      => $bankNameDisplay,
+                    'bank_account'   => $bt->fromBank?->account_number,
+                    'flow'           => 'transfer',
+                    'type'           => 'transfer',
+                    'type_badge'     => 'bg-soft-primary text-primary',
+                    'category_label' => 'Inter-Bank Transfer',
+                    'party_name'     => "From: {$fromName} ➔ To: {$toName}",
+                    'party_type'     => 'Bank Transfer',
+                    'payment_mode'   => 'Bank Transfer',
+                    'currency'       => 'PKR',
+                    'raw_amount'     => $pkrAmt,
+                    'exchange_rate'  => 1,
+                    'deposit_pkr'    => $depositPkr,
+                    'withdrawal_pkr' => $withdrawalPkr,
+                    'deposit_sar'    => 0.00,
+                    'withdrawal_sar' => 0.00,
+                    'deposit'        => $depositPkr,
+                    'withdrawal'     => $withdrawalPkr,
+                    'description'    => $bt->description ?: ("Transferred from {$fromName} to {$toName}"),
+                    'proof'          => null,
+                ];
+            }
         }
 
-        if ($toBankId) {
-            $query->where('to_bank_id', $toBankId);
-        }
-
-        if ($bankId) {
-            $query->where(function ($q) use ($bankId) {
-                $q->where('from_bank_id', $bankId)
-                  ->orWhere('to_bank_id', $bankId);
+        // Apply Keyword Search
+        if (!empty($search)) {
+            $sLower = strtolower($search);
+            $allRecords = array_filter($allRecords, function ($item) use ($sLower) {
+                return (
+                    str_contains(strtolower($item['voucher_no']), $sLower) ||
+                    str_contains(strtolower($item['bank_name']), $sLower) ||
+                    str_contains(strtolower($item['party_name']), $sLower) ||
+                    str_contains(strtolower($item['category_label']), $sLower) ||
+                    str_contains(strtolower($item['payment_mode']), $sLower) ||
+                    str_contains(strtolower($item['description']), $sLower) ||
+                    str_contains((string) $item['deposit_pkr'], $sLower) ||
+                    str_contains((string) $item['withdrawal_pkr'], $sLower) ||
+                    str_contains((string) $item['deposit_sar'], $sLower) ||
+                    str_contains((string) $item['withdrawal_sar'], $sLower)
+                );
             });
         }
 
-        if ($fromDate && $toDate) {
-            $query->whereBetween('transfer_date', [$fromDate, $toDate]);
-        } elseif ($fromDate) {
-            $query->where('transfer_date', '>=', $fromDate);
-        } elseif ($toDate) {
-            $query->where('transfer_date', '<=', $toDate);
+        // Sort chronologically ascending to compute Running Balances for both PKR and SAR
+        usort($allRecords, function ($a, $b) {
+            if ($a['date'] === $b['date']) {
+                return $a['timestamp'] <=> $b['timestamp'];
+            }
+            return strcmp($a['date'], $b['date']);
+        });
+
+        $runningPkr = 0;
+        $runningSar = 0;
+        foreach ($allRecords as &$r) {
+            $runningPkr += ($r['deposit_pkr'] - $r['withdrawal_pkr']);
+            $runningSar += ($r['deposit_sar'] - $r['withdrawal_sar']);
+            $r['running_balance_pkr'] = $runningPkr;
+            $r['running_balance_sar'] = $runningSar;
+            $r['running_balance']     = $runningPkr; // backward compatibility
+        }
+        unset($r);
+
+        // Compute Bank-wise Summary Matrix (Dual Currency)
+        $bankBreakdown = [];
+        foreach ($allBanks as $b) {
+            $bTxns = array_filter($allRecords, function ($it) use ($b) {
+                return (isset($it['bank_id']) && $it['bank_id'] == $b->id) ||
+                       (isset($it['bank_name']) && str_contains($it['bank_name'], $b->name));
+            });
+
+            $inPkr = 0;  $outPkr = 0;
+            $inSar = 0;  $outSar = 0;
+            $inCount = 0; $outCount = 0;
+
+            foreach ($bTxns as $tx) {
+                if ($tx['deposit_pkr'] > 0 || $tx['deposit_sar'] > 0) {
+                    $inPkr += $tx['deposit_pkr'];
+                    $inSar += $tx['deposit_sar'];
+                    $inCount++;
+                }
+                if ($tx['withdrawal_pkr'] > 0 || $tx['withdrawal_sar'] > 0) {
+                    $outPkr += $tx['withdrawal_pkr'];
+                    $outSar += $tx['withdrawal_sar'];
+                    $outCount++;
+                }
+            }
+
+            if ($inPkr > 0 || $outPkr > 0 || $inSar > 0 || $outSar > 0) {
+                $bankBreakdown[] = [
+                    'bank'         => $b,
+                    'incoming_pkr' => $inPkr,
+                    'outgoing_pkr' => $outPkr,
+                    'net_pkr'      => $inPkr - $outPkr,
+                    'incoming_sar' => $inSar,
+                    'outgoing_sar' => $outSar,
+                    'net_sar'      => $inSar - $outSar,
+                    'in_count'     => $inCount,
+                    'out_count'    => $outCount,
+                    'total_tx'     => count($bTxns),
+                ];
+            }
         }
 
-        if ($minAmount) {
-            $query->where('amount', '>=', $minAmount);
+        // Compute Grand Totals for both PKR and SAR
+        $totalDepositsPkr    = 0;
+        $totalWithdrawalsPkr = 0;
+        $totalDepositsSar    = 0;
+        $totalWithdrawalsSar = 0;
+        $depositCount        = 0;
+        $withdrawalCount     = 0;
+
+        foreach ($allRecords as $r) {
+            $totalDepositsPkr    += $r['deposit_pkr'];
+            $totalWithdrawalsPkr += $r['withdrawal_pkr'];
+            $totalDepositsSar    += $r['deposit_sar'];
+            $totalWithdrawalsSar += $r['withdrawal_sar'];
+            if ($r['deposit_pkr'] > 0 || $r['deposit_sar'] > 0) $depositCount++;
+            if ($r['withdrawal_pkr'] > 0 || $r['withdrawal_sar'] > 0) $withdrawalCount++;
         }
 
-        if ($maxAmount) {
-            $query->where('amount', '<=', $maxAmount);
-        }
+        $netMovementPkr = $totalDepositsPkr - $totalWithdrawalsPkr;
+        $netMovementSar = $totalDepositsSar - $totalWithdrawalsSar;
 
-        if ($search) {
-            $query->where('description', 'LIKE', "%{$search}%");
-        }
+        // Reverse for display (newest first)
+        $displayRecords = array_reverse($allRecords);
 
-        $transfers = $query->orderBy('transfer_date', 'desc')->orderBy('id', 'desc')->get();
-        $totalAmount = $transfers->sum('amount');
-        $totalCount  = $transfers->count();
-
+        $selectedBank     = $bankId ? Bank::find($bankId) : null;
         $selectedFromBank = $fromBankId ? Bank::find($fromBankId) : null;
         $selectedToBank   = $toBankId ? Bank::find($toBankId) : null;
-        $selectedBank     = $bankId ? Bank::find($bankId) : null;
 
-        $pdf = Pdf::loadView('bank_transfer.report_pdf', compact(
-            'transfers',
-            'totalAmount',
-            'totalCount',
-            'selectedFromBank',
-            'selectedToBank',
-            'selectedBank',
-            'fromDate',
-            'toDate'
-        ))->setPaper('a4', 'landscape');
-
-        return $pdf->download('bank_transfers_report_' . date('Ymd_His') . '.pdf');
+        return [
+            'transactions'        => $displayRecords,
+            'allBanks'            => $allBanks,
+            'banks'               => $allBanks,
+            'bankBreakdown'       => $bankBreakdown,
+            'totalDepositsPkr'    => $totalDepositsPkr,
+            'totalWithdrawalsPkr' => $totalWithdrawalsPkr,
+            'netMovementPkr'      => $netMovementPkr,
+            'totalDepositsSar'    => $totalDepositsSar,
+            'totalWithdrawalsSar' => $totalWithdrawalsSar,
+            'netMovementSar'      => $netMovementSar,
+            'totalDeposits'       => $totalDepositsPkr, // backward compatibility
+            'totalWithdrawals'    => $totalWithdrawalsPkr,
+            'netMovement'         => $netMovementPkr,
+            'depositCount'        => $depositCount,
+            'withdrawalCount'     => $withdrawalCount,
+            'totalCount'          => count($allRecords),
+            'selectedBank'        => $selectedBank,
+            'selectedFromBank'    => $selectedFromBank,
+            'selectedToBank'      => $selectedToBank,
+            'fromBankId'          => $fromBankId,
+            'toBankId'            => $toBankId,
+            'bankId'              => $bankId,
+            'fromDate'            => $fromDate,
+            'toDate'              => $toDate,
+            'minAmount'           => $minAmount,
+            'maxAmount'           => $maxAmount,
+            'search'              => $search,
+            'activityType'        => $activityType,
+        ];
     }
 }

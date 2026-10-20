@@ -2,55 +2,55 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Bank Transfer Movement Report</title>
+    <title>Bank Statement Report</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 11px;
+            font-size: 9px;
             color: #333;
             margin: 0;
-            padding: 10px;
+            padding: 8px;
         }
         .header {
             text-align: center;
             border-bottom: 2px solid #2563eb;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
         }
         .header h2 {
-            margin: 0 0 5px 0;
+            margin: 0 0 3px 0;
             color: #1e3a8a;
-            font-size: 18px;
+            font-size: 15px;
             text-transform: uppercase;
         }
         .header p {
             margin: 0;
-            font-size: 11px;
+            font-size: 9px;
             color: #64748b;
         }
         .meta-table {
             width: 100%;
-            margin-bottom: 15px;
-            font-size: 11px;
+            margin-bottom: 10px;
+            font-size: 9px;
         }
         .meta-table td {
-            padding: 4px 0;
+            padding: 2px 0;
         }
         table.data-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
+            margin-top: 6px;
         }
         table.data-table th, table.data-table td {
             border: 1px solid #cbd5e1;
-            padding: 6px 8px;
+            padding: 4px 5px;
             text-align: left;
         }
         table.data-table th {
             background-color: #f1f5f9;
             color: #1e293b;
             font-weight: bold;
-            font-size: 10px;
+            font-size: 8.5px;
             text-transform: uppercase;
         }
         .text-end {
@@ -62,19 +62,17 @@
         .fw-bold {
             font-weight: bold;
         }
-        .from-bank {
-            color: #991b1b;
-            font-weight: bold;
-        }
-        .to-bank {
+        .text-success {
             color: #166534;
-            font-weight: bold;
+        }
+        .text-danger {
+            color: #991b1b;
         }
         .footer {
-            margin-top: 25px;
+            margin-top: 15px;
             border-top: 1px solid #cbd5e1;
-            padding-top: 8px;
-            font-size: 9px;
+            padding-top: 5px;
+            font-size: 8px;
             color: #64748b;
             text-align: center;
         }
@@ -83,19 +81,20 @@
 <body>
 
     <div class="header">
-        <h2>Bank Transfer Movement Report</h2>
-        <p>Internal Inter-Bank Balance Transfer Audit Log</p>
+        <h2>Bank Statement & Activity Report (Dual Currency: PKR & SAR)</h2>
+        <p>Comprehensive Audit Log of Bank Deposits, Withdrawals & Transfers</p>
     </div>
 
     <table class="meta-table">
         <tr>
             <td style="width: 50%;">
                 <strong>Generated On:</strong> {{ date('d M Y, h:i A') }}<br>
-                <strong>Filtered Bank:</strong> {{ $selectedBank ? $selectedBank->name : ($selectedFromBank ? 'From: ' . $selectedFromBank->name : ($selectedToBank ? 'To: ' . $selectedToBank->name : 'All Banks')) }}
+                <strong>Bank Account:</strong> {{ $selectedBank ? $selectedBank->name : 'All Bank Accounts (Consolidated)' }}
             </td>
             <td style="width: 50%; text-align: right;">
                 <strong>Date Range:</strong> {{ $fromDate ? date('d M Y', strtotime($fromDate)) : 'Start' }} to {{ $toDate ? date('d M Y', strtotime($toDate)) : 'Present' }}<br>
-                <strong>Total Transfers:</strong> {{ number_format($totalCount) }} &nbsp;|&nbsp; <strong>Total Amount:</strong> PKR {{ number_format($totalAmount, 2) }}
+                <strong>PKR:</strong> Cr {{ number_format($totalDepositsPkr, 2) }} | Dr {{ number_format($totalWithdrawalsPkr, 2) }} | Net {{ number_format($netMovementPkr, 2) }}<br>
+                <strong>SAR:</strong> Cr {{ number_format($totalDepositsSar, 2) }} | Dr {{ number_format($totalWithdrawalsSar, 2) }} | Net {{ number_format($netMovementSar, 2) }}
             </td>
         </tr>
     </table>
@@ -103,55 +102,66 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th style="width: 5%;" class="text-center">#</th>
-                <th style="width: 15%;">Date</th>
-                <th style="width: 25%;">Source (From Bank)</th>
-                <th style="width: 25%;">Destination (To Bank)</th>
-                <th style="width: 15%;" class="text-end">Amount (PKR)</th>
-                <th style="width: 15%;">Reference / Description</th>
+                <th style="width: 3%;" class="text-center">#</th>
+                <th style="width: 9%;">Date</th>
+                <th style="width: 12%;">Voucher #</th>
+                <th style="width: 13%;">Bank</th>
+                <th style="width: 17%;">Party / Payee</th>
+                <th style="width: 7%;">Mode</th>
+                <th style="width: 9%;" class="text-end">Cr (PKR)</th>
+                <th style="width: 9%;" class="text-end">Dr (PKR)</th>
+                <th style="width: 7%;" class="text-end">Cr (SAR)</th>
+                <th style="width: 7%;" class="text-end">Dr (SAR)</th>
+                <th style="width: 7%;" class="text-end">Bal (PKR)</th>
             </tr>
         </thead>
         <tbody>
-            @forelse($transfers as $t)
+            @forelse($transactions as $t)
                 <tr>
                     <td class="text-center">{{ $loop->iteration }}</td>
-                    <td>{{ \Carbon\Carbon::parse($t->transfer_date)->format('d M Y') }}</td>
-                    <td>
-                        <span class="from-bank">{{ $t->fromBank->name ?? 'Deleted Bank' }}</span>
-                        @if(!empty($t->fromBank->account_number))
-                            <br><small style="color:#64748b;">A/C: {{ $t->fromBank->account_number }}</small>
-                        @endif
+                    <td>{{ \Carbon\Carbon::parse($t['date'])->format('d M Y') }}</td>
+                    <td>{{ $t['voucher_no'] }}</td>
+                    <td><strong>{{ $t['bank_name'] }}</strong></td>
+                    <td>{{ $t['party_name'] }}</td>
+                    <td>{{ $t['payment_mode'] }}</td>
+                    <td class="text-end text-success fw-bold">
+                        {{ $t['deposit_pkr'] > 0 ? number_format($t['deposit_pkr'], 2) : '-' }}
                     </td>
-                    <td>
-                        <span class="to-bank">{{ $t->toBank->name ?? 'Deleted Bank' }}</span>
-                        @if(!empty($t->toBank->account_number))
-                            <br><small style="color:#64748b;">A/C: {{ $t->toBank->account_number }}</small>
-                        @endif
+                    <td class="text-end text-danger fw-bold">
+                        {{ $t['withdrawal_pkr'] > 0 ? number_format($t['withdrawal_pkr'], 2) : '-' }}
+                    </td>
+                    <td class="text-end text-success fw-bold">
+                        {{ $t['deposit_sar'] > 0 ? number_format($t['deposit_sar'], 2) : '-' }}
+                    </td>
+                    <td class="text-end text-danger fw-bold">
+                        {{ $t['withdrawal_sar'] > 0 ? number_format($t['withdrawal_sar'], 2) : '-' }}
                     </td>
                     <td class="text-end fw-bold">
-                        {{ number_format($t->amount, 2) }}
+                        {{ number_format($t['running_balance_pkr'], 2) }}
                     </td>
-                    <td>{{ $t->description ?: '-' }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6" class="text-center" style="padding: 20px;">No bank transfers recorded for this period.</td>
+                    <td colspan="11" class="text-center" style="padding: 15px;">No bank transactions recorded for this period.</td>
                 </tr>
             @endforelse
         </tbody>
-        @if($transfers->count() > 0)
+        @if(count($transactions) > 0)
             <tfoot>
                 <tr style="background-color: #f8fafc;">
-                    <td colspan="4" class="text-end fw-bold">Total Transferred:</td>
-                    <td class="text-end fw-bold" style="color: #166534; font-size: 12px;">PKR {{ number_format($totalAmount, 2) }}</td>
-                    <td></td>
+                    <td colspan="6" class="text-end fw-bold">TOTALS:</td>
+                    <td class="text-end text-success fw-bold">{{ number_format($totalDepositsPkr, 2) }}</td>
+                    <td class="text-end text-danger fw-bold">{{ number_format($totalWithdrawalsPkr, 2) }}</td>
+                    <td class="text-end text-success fw-bold">{{ number_format($totalDepositsSar, 2) }}</td>
+                    <td class="text-end text-danger fw-bold">{{ number_format($totalWithdrawalsSar, 2) }}</td>
+                    <td class="text-end fw-bold">{{ number_format($netMovementPkr, 2) }}</td>
                 </tr>
             </tfoot>
         @endif
     </table>
 
     <div class="footer">
-        Dua Travels & Account Management System &bull; Confidential Financial Document &bull; Page 1 of 1
+        Dua Travels & Account Management System &bull; Confidential Financial Statement &bull; Page 1 of 1
     </div>
 
 </body>

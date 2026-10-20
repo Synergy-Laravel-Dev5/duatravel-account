@@ -346,8 +346,14 @@
                             </li>
                             <li>
                                 <a class="tp-link" href="{{ route('bank-transfer.report.filter') }}">
-                                    <i data-feather="trending-up"></i>
-                                    <span>Bank Transfer Report</span>
+                                    <i data-feather="credit-card"></i>
+                                    <span>Bank Transaction Report</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="tp-link" href="{{ route('reports.cash') }}">
+                                    <i data-feather="dollar-sign"></i>
+                                    <span>Cash Report (Cash Book)</span>
                                 </a>
                             </li>
                             <li>

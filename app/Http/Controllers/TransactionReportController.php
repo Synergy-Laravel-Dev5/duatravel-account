@@ -202,8 +202,15 @@ class TransactionReportController extends Controller
                         'party_link'     => $tx->client_id ? route('client.edit', $tx->client_id) : null,
                         'booking_id'     => $tx->booking_id,
                         'payment_method' => ucwords(str_replace('_', ' ', $tx->payment_type)),
+                        'inflow_pkr'     => (float) $tx->amount,
+                        'outflow_pkr'    => 0.00,
+                        'inflow_sar'     => 0.00,
+                        'outflow_sar'    => 0.00,
                         'inflow'         => (float) $tx->amount,
                         'outflow'        => 0.00,
+                        'currency'       => 'PKR',
+                        'raw_amount'     => (float) $tx->amount,
+                        'exchange_rate'  => 1,
                         'status'         => $tx->status,
                         'description'    => $desc,
                         'proof'          => $tx->proof_of_payment ? asset('assets/images/transaction_proofs/' . $tx->proof_of_payment) : null,
@@ -252,8 +259,15 @@ class TransactionReportController extends Controller
                         'party_link'     => $bk->client_id ? route('client.edit', $bk->client_id) : null,
                         'booking_id'     => $bk->id,
                         'payment_method' => 'Advance / Cash',
+                        'inflow_pkr'     => (float) $bk->total_received,
+                        'outflow_pkr'    => 0.00,
+                        'inflow_sar'     => 0.00,
+                        'outflow_sar'    => 0.00,
                         'inflow'         => (float) $bk->total_received,
                         'outflow'        => 0.00,
+                        'currency'       => 'PKR',
+                        'raw_amount'     => (float) $bk->total_received,
+                        'exchange_rate'  => 1,
                         'status'         => 'confirmed',
                         'description'    => $desc,
                         'proof'          => null,
@@ -349,6 +363,12 @@ class TransactionReportController extends Controller
                 $desc .= ' [' . $cur . ' ' . number_format($rawAmt, 2) . ' @ ROE ' . number_format($rate, 2) . ']';
             }
 
+            $sarAmt = ($cur === 'SAR') ? $rawAmt : 0.00;
+            $inflowPkr  = $isClientInflow ? $amtPkr : 0.00;
+            $outflowPkr = !$isClientInflow ? $amtPkr : 0.00;
+            $inflowSar  = $isClientInflow ? $sarAmt : 0.00;
+            $outflowSar = !$isClientInflow ? $sarAmt : 0.00;
+
             $allRecords[] = [
                 'source'         => 'expense_transaction',
                 'id'             => $et->id,
@@ -365,8 +385,15 @@ class TransactionReportController extends Controller
                 'party_link'     => $partyLink,
                 'booking_id'     => null,
                 'payment_method' => ucwords(str_replace('_', ' ', $et->payment_type)),
-                'inflow'         => $isClientInflow ? $amtPkr : 0.00,
-                'outflow'        => !$isClientInflow ? $amtPkr : 0.00,
+                'currency'       => $cur,
+                'raw_amount'     => $rawAmt,
+                'exchange_rate'  => $rate,
+                'inflow_pkr'     => $inflowPkr,
+                'outflow_pkr'    => $outflowPkr,
+                'inflow_sar'     => $inflowSar,
+                'outflow_sar'    => $outflowSar,
+                'inflow'         => $inflowPkr,
+                'outflow'        => $outflowPkr,
                 'status'         => 'confirmed',
                 'description'    => $desc,
                 'proof'          => $et->proof ? asset('assets/images/expense_proofs/' . $et->proof) : null,
@@ -399,30 +426,44 @@ class TransactionReportController extends Controller
         });
 
         // Compute KPI Totals
-        $totalInflow   = 0;
-        $totalOutflow  = 0;
-        $inflowCount   = 0;
-        $outflowCount  = 0;
+        $totalInflowPkr  = 0;
+        $totalOutflowPkr = 0;
+        $totalInflowSar  = 0;
+        $totalOutflowSar = 0;
+        $inflowCount     = 0;
+        $outflowCount    = 0;
 
         foreach ($allRecords as $r) {
-            $totalInflow  += $r['inflow'];
-            $totalOutflow += $r['outflow'];
+            $totalInflowPkr  += $r['inflow_pkr'];
+            $totalOutflowPkr += $r['outflow_pkr'];
+            $totalInflowSar  += $r['inflow_sar'];
+            $totalOutflowSar += $r['outflow_sar'];
             if ($r['flow'] === 'inflow') $inflowCount++;
             if ($r['flow'] === 'outflow') $outflowCount++;
         }
 
-        $netCashFlow = $totalInflow - $totalOutflow;
+        $netCashFlowPkr = $totalInflowPkr - $totalOutflowPkr;
+        $netCashFlowSar = $totalInflowSar - $totalOutflowSar;
+        $totalInflow    = $totalInflowPkr;
+        $totalOutflow   = $totalOutflowPkr;
+        $netCashFlow    = $netCashFlowPkr;
 
         $clients = Client::where('status', 'active')->orderBy('name')->get();
 
         return [
-            'transactions' => $allRecords,
-            'totalInflow'  => $totalInflow,
-            'totalOutflow' => $totalOutflow,
-            'netCashFlow'  => $netCashFlow,
-            'inflowCount'  => $inflowCount,
-            'outflowCount' => $outflowCount,
-            'totalCount'   => count($allRecords),
+            'transactions'     => $allRecords,
+            'totalInflowPkr'   => $totalInflowPkr,
+            'totalOutflowPkr'  => $totalOutflowPkr,
+            'netCashFlowPkr'   => $netCashFlowPkr,
+            'totalInflowSar'   => $totalInflowSar,
+            'totalOutflowSar'  => $totalOutflowSar,
+            'netCashFlowSar'   => $netCashFlowSar,
+            'totalInflow'      => $totalInflowPkr,
+            'totalOutflow'     => $totalOutflowPkr,
+            'netCashFlow'      => $netCashFlowPkr,
+            'inflowCount'      => $inflowCount,
+            'outflowCount'     => $outflowCount,
+            'totalCount'       => count($allRecords),
             'flow'         => $flow,
             'category'     => $category,
             'paymentMethod'=> $paymentMethod,

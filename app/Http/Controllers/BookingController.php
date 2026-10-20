@@ -98,7 +98,11 @@ class BookingController extends Controller
                 'booking_for'         => $bookingFor,
                 'client_id'           => $clientId,
                 'company_id'          => $companyId,
-                'booking_date'        => $request->booking_date ? date('Y-m-d', strtotime($request->booking_date)) : now()->toDateString(),
+                'booking_date'        => $request->booking_date 
+                    ? date('Y-m-d', strtotime($request->booking_date)) 
+                    : ($request->input('hotels.0.booking_date') 
+                        ? date('Y-m-d', strtotime($request->input('hotels.0.booking_date'))) 
+                        : now()->toDateString()),
                 'currency'            => $request->currency ?? 'PKR',
                 'haji_id'             => $hajiId,
                 'room_number'         => $roomNumber,
@@ -380,7 +384,11 @@ class BookingController extends Controller
                     'booking_for'         => $bookingFor,
                     'client_id'           => $clientId,
                     'company_id'          => $companyId,
-                    'booking_date'        => $request->booking_date ? date('Y-m-d', strtotime($request->booking_date)) : $booking->booking_date,
+                    'booking_date'        => $request->booking_date 
+                        ? date('Y-m-d', strtotime($request->booking_date)) 
+                        : ($request->input('hotels.0.booking_date') 
+                            ? date('Y-m-d', strtotime($request->input('hotels.0.booking_date'))) 
+                            : ($booking->booking_date ?: now()->toDateString())),
                     'currency'            => $request->currency ?? ($booking->currency ?? 'PKR'),
                     'haji_id'             => $hajiId,
                     'room_number'         => $roomNumber,
