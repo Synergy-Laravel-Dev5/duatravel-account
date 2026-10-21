@@ -1505,7 +1505,7 @@
                                             <div class="col-md-3">
                                                 <label class="form-label" style="font-size:12px;"><i class="mdi mdi-calendar me-1 text-primary"></i> Booking Date</label>
                                                 <input type="date" name="visas[{{ $i }}][booking_date]"
-                                                    class="form-control form-control-sm"
+                                                    class="form-control form-control-sm visa-booking-date"
                                                     value="{{ old('visas.'.$i.'.booking_date', $visa->booking_date ? \Carbon\Carbon::parse($visa->booking_date)->format('Y-m-d') : date('Y-m-d')) }}">
                                             </div>
 
@@ -2480,7 +2480,7 @@
                                 </div>
                                 <input type="hidden" name="visas[${i}][selling_amount]" class="visa-sell-amount" value="${sellAmt.toFixed(2)}"></div>
                             <div class="col-md-3"><label class="form-label" style="font-size:12px;"><i class="mdi mdi-calendar me-1 text-primary"></i> Booking Date</label>
-                                <input type="date" name="visas[${i}][booking_date]" class="form-control form-control-sm" value="${vBookingDate}"></div>
+                                <input type="date" name="visas[${i}][booking_date]" class="form-control form-control-sm visa-booking-date" value="${vBookingDate}"></div>
 
                             <div class="col-md-3"><label class="form-label" style="font-size:12px;">Status</label>
                                 <select name="visas[${i}][status]" class="form-select form-select-sm">

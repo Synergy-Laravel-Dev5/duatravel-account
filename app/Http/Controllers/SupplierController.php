@@ -300,6 +300,149 @@ class SupplierController extends Controller
         $balanceDuePkr = $totalPayablePkr - $totalPaidPkr;
         $balanceDueSar = $totalPayableSar - $totalPaidSar;
 
+        // 6. Build Chronological Statement Lines for Debit / Credit / Running Balance View
+        $statementRows = [];
+
+        foreach ($hotelBookings as $h) {
+            $hDate = $h->booking_date 
+                ?: ($h->booking->booking_date 
+                    ?? ($h->booking->created_at ? $h->booking->created_at->format('Y-m-d') : ($h->check_in ?: date('Y-m-d'))));
+            $statementRows[] = [
+                'date'           => $hDate,
+                'voucher_no'     => 'BK-' . ($h->booking_id ?: $h->id),
+                'ref_no'         => $h->booking->voucher_number ?? ('#BK-' . ($h->booking_id ?: $h->id)),
+                'type_label'     => 'Hotel Booking',
+                'badge_class'    => 'bg-soft-primary text-primary border border-primary border-opacity-25',
+                'contra_account' => 'Hotel Cost Payable',
+                'description'    => 'Hotel: ' . ($h->hotel_name ?? 'Hotel') . ' (' . ($h->no_of_nights ?: 1) . 'N, ' . ($h->no_of_rooms ?: 1) . 'R) - ' . ($h->booking->client->name ?? ($h->booking->company->name ?? 'Guest')),
+                'payment_method' => 'Credit Booking',
+                'debit_pkr'      => 0,
+                'credit_pkr'     => (float) $h->cost_pkr,
+                'debit_sar'      => 0,
+                'credit_sar'     => (float) $h->cost_sar,
+                'booking_id'     => $h->booking_id,
+                'proof'          => null,
+            ];
+        }
+
+        foreach ($flightBookings as $fb) {
+            $fDate = $fb->flight_booking_date 
+                ?: ($fb->booking_date 
+                    ?? ($fb->created_at ? $fb->created_at->format('Y-m-d') : ($fb->departure_date ?: date('Y-m-d'))));
+            $statementRows[] = [
+                'date'           => $fDate,
+                'voucher_no'     => 'BK-' . $fb->id,
+                'ref_no'         => $fb->voucher_number ?? ('#BK-' . $fb->id),
+                'type_label'     => 'Flight Booking',
+                'badge_class'    => 'bg-soft-info text-info border border-info border-opacity-25',
+                'contra_account' => 'Flight Cost Payable',
+                'description'    => 'Flight: ' . ($fb->departure_airline ?: 'Airline') . ' ' . ($fb->departure_flight ?: '') . ' (' . ($fb->no_of_pax ?: 1) . ' Pax) - ' . ($fb->client->name ?? ($fb->company->name ?? 'Guest')),
+                'payment_method' => 'Credit Booking',
+                'debit_pkr'      => 0,
+                'credit_pkr'     => (float) $fb->cost_pkr,
+                'debit_sar'      => 0,
+                'credit_sar'     => (float) $fb->cost_sar,
+                'booking_id'     => $fb->id,
+                'proof'          => null,
+            ];
+        }
+
+        foreach ($visaBookings as $vb) {
+            $vDate = $vb->booking_date 
+                ?: ($vb->booking->booking_date 
+                    ?? ($vb->booking->created_at ? $vb->booking->created_at->format('Y-m-d') : ($vb->created_at ? $vb->created_at->format('Y-m-d') : date('Y-m-d'))));
+            $statementRows[] = [
+                'date'           => $vDate,
+                'voucher_no'     => 'BK-' . ($vb->booking_id ?: $vb->id),
+                'ref_no'         => $vb->booking->voucher_number ?? ('#BK-' . ($vb->booking_id ?: $vb->id)),
+                'type_label'     => 'Visa Booking',
+                'badge_class'    => 'bg-soft-success text-success border border-success border-opacity-25',
+                'contra_account' => 'Visa Cost Payable',
+                'description'    => 'Visa: ' . ($vb->given_name ?: 'Pilgrim') . ' (Pass: ' . ($vb->passport_number ?: '-') . ') - ' . ($vb->booking->client->name ?? ($vb->booking->company->name ?? 'Guest')),
+                'payment_method' => 'Credit Booking',
+                'debit_pkr'      => 0,
+                'credit_pkr'     => (float) $vb->cost_pkr,
+                'debit_sar'      => 0,
+                'credit_sar'     => (float) $vb->cost_sar,
+                'booking_id'     => $vb->booking_id,
+                'proof'          => null,
+            ];
+        }
+
+        foreach ($transportBookings as $tb) {
+            $tDate = $tb->booking_date 
+                ?: ($tb->booking->booking_date 
+                    ?? ($tb->booking->created_at ? $tb->booking->created_at->format('Y-m-d') : ($tb->created_at ? $tb->created_at->format('Y-m-d') : date('Y-m-d'))));
+            $statementRows[] = [
+                'date'           => $tDate,
+                'voucher_no'     => 'BK-' . ($tb->booking_id ?: $tb->id),
+                'ref_no'         => $tb->booking->voucher_number ?? ('#BK-' . ($tb->booking_id ?: $tb->id)),
+                'type_label'     => 'Transport Booking',
+                'badge_class'    => 'bg-soft-warning text-dark border border-warning border-opacity-25',
+                'contra_account' => 'Transport Cost Payable',
+                'description'    => 'Transport: ' . ($tb->route ?: 'Route') . ' (' . ($tb->transport_type ?: 'Vehicle') . ') - ' . ($tb->booking->client->name ?? ($tb->booking->company->name ?? 'Guest')),
+                'payment_method' => 'Credit Booking',
+                'debit_pkr'      => 0,
+                'credit_pkr'     => (float) $tb->cost_pkr,
+                'debit_sar'      => 0,
+                'credit_sar'     => (float) $tb->cost_sar,
+                'booking_id'     => $tb->booking_id,
+                'proof'          => null,
+            ];
+        }
+
+        foreach ($transactions as $t) {
+            $tDate = $t->date ? \Carbon\Carbon::parse($t->date)->format('Y-m-d') : ($t->created_at ? $t->created_at->format('Y-m-d') : date('Y-m-d'));
+            $contra = $t->bank ? ($t->bank->name . ($t->bank->account_name ? ' (' . $t->bank->account_name . ')' : '')) : 'Cash in Hand';
+            $statementRows[] = [
+                'date'           => $tDate,
+                'voucher_no'     => $t->reference_no ?: ('EXP-' . $t->id),
+                'ref_no'         => $t->reference_no ?: ('#EXP-' . $t->id),
+                'type_label'     => 'Payment Paid',
+                'badge_class'    => 'bg-soft-danger text-danger border border-danger border-opacity-25',
+                'contra_account' => $contra,
+                'description'    => 'Disbursed / Paid: ' . ($t->description ?: ucwords(str_replace('_', ' ', $t->payment_type))),
+                'payment_method' => ucwords(str_replace('_', ' ', $t->payment_type ?: 'Cash')),
+                'debit_pkr'      => (float) $t->amount_pkr,
+                'credit_pkr'     => 0,
+                'debit_sar'      => (float) $t->amount_sar,
+                'credit_sar'     => 0,
+                'booking_id'     => null,
+                'proof'          => $t->proof ? asset('assets/images/expense_proofs/' . $t->proof) : null,
+            ];
+        }
+
+        // Sort chronologically ascending
+        usort($statementRows, function ($a, $b) {
+            return strcmp($a['date'], $b['date']);
+        });
+
+        // Compute running balance
+        $runningPkr = $openingBalancePkr;
+        $runningSar = $openingBalanceSar;
+        $periodDebitsPkr = 0;
+        $periodCreditsPkr = 0;
+        $periodDebitsSar = 0;
+        $periodCreditsSar = 0;
+
+        foreach ($statementRows as &$sRow) {
+            $periodDebitsPkr += $sRow['debit_pkr'];
+            $periodCreditsPkr += $sRow['credit_pkr'];
+            $periodDebitsSar += $sRow['debit_sar'];
+            $periodCreditsSar += $sRow['credit_sar'];
+
+            $runningPkr += ($sRow['credit_pkr'] - $sRow['debit_pkr']);
+            $runningSar += ($sRow['credit_sar'] - $sRow['debit_sar']);
+
+            $sRow['running_balance_pkr'] = $runningPkr;
+            $sRow['running_balance_sar'] = $runningSar;
+            $sRow['balance_type'] = $runningPkr >= 0 ? 'Cr' : 'Dr';
+            $sRow['balance_type_sar'] = $runningSar >= 0 ? 'Cr' : 'Dr';
+        }
+        unset($sRow);
+
+        $statementLines = collect($statementRows);
+
         // Backward compatibility:
         $hotelTotal     = $hotelTotalPkr;
         $flightTotal    = $flightTotalPkr;
@@ -346,7 +489,12 @@ class SupplierController extends Controller
             'totalPaidSar',
             'balanceDueSar',
             'fromDate',
-            'toDate'
+            'toDate',
+            'statementLines',
+            'periodDebitsPkr',
+            'periodCreditsPkr',
+            'periodDebitsSar',
+            'periodCreditsSar'
         ));
     }
 

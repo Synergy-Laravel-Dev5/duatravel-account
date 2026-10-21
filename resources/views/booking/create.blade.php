@@ -1690,7 +1690,7 @@
 
                         <div class="col-md-3">
                             <label class="form-label" style="font-size:12px;"><i class="mdi mdi-calendar me-1 text-primary"></i> Booking Date</label>
-                            <input type="date" name="visas[${i}][booking_date]" class="form-control form-control-sm" value="${vBookingDate}">
+                            <input type="date" name="visas[${i}][booking_date]" class="form-control form-control-sm visa-booking-date" value="${vBookingDate}">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label" style="font-size:12px;">Visa Status</label>

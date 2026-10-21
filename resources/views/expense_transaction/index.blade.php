@@ -49,7 +49,7 @@
                                         <th>Date</th>
                                         <th>Reference #</th>
                                         <th>Category / Payee</th>
-                                        <th>Bank</th>
+                                        <th>Bank / Contra A/C</th>
                                         <th>Amount</th>
                                         <th>Type & Payment</th>
                                         <th>Proof</th>
@@ -112,7 +112,7 @@
                                                     @endif
                                                 </td>
 
-                                                <!-- Bank -->
+                                                <!-- Bank / Contra A/C -->
                                                 <td>
                                                     @if($t->bank)
                                                         <strong class="text-dark">{{ $t->bank->name }}</strong>
@@ -128,8 +128,18 @@
                                                         @endif
                                                     @elseif($t->account)
                                                         <strong class="text-dark">{{ $t->account->account_name }}</strong>
+                                                    @elseif(empty($t->payment_type) || strtolower($t->payment_type) === 'cash' || empty($t->bank_id))
+                                                        <span class="badge bg-soft-success text-success border border-success border-opacity-25 px-2 py-1">
+                                                            <i class="mdi mdi-cash me-1"></i> Cash in Hand
+                                                        </span>
+                                                    @elseif(strtolower($t->payment_type) === 'cheque')
+                                                        <span class="badge bg-soft-warning text-dark border">
+                                                            <i class="mdi mdi-checkbook me-1"></i> Cheque Clearance
+                                                        </span>
                                                     @else
-                                                        <span class="text-muted">—</span>
+                                                        <span class="badge bg-soft-secondary text-secondary">
+                                                            {{ ucwords(str_replace('_', ' ', $t->payment_type)) }}
+                                                        </span>
                                                     @endif
                                                 </td>
 

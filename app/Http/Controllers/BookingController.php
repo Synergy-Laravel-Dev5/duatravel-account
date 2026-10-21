@@ -98,12 +98,16 @@ class BookingController extends Controller
             + ($request->additional_services_amount ?? 0)
             - ($request->discount ?? 0);
 
-        $resolvedBookingDate = $request->booking_date 
-            ?: ($request->flight_booking_date 
-            ?: ($request->input('hotels.0.booking_date') 
-            ?: ($request->input('transports.0.booking_date') 
+        $resolvedBookingDate = $request->booking_date;
+        $specificServiceDate = $request->flight_booking_date 
             ?: ($request->input('visas.0.booking_date') 
-            ?: now()->toDateString()))));
+            ?: ($request->input('hotels.0.booking_date') 
+            ?: ($request->input('transports.0.booking_date'))));
+        if (!empty($specificServiceDate) && ($specificServiceDate !== date('Y-m-d') || empty($resolvedBookingDate))) {
+            $resolvedBookingDate = $specificServiceDate;
+        } elseif (empty($resolvedBookingDate)) {
+            $resolvedBookingDate = $specificServiceDate ?: now()->toDateString();
+        }
 
         $bookingData = array_merge(
             $request->except(['persons', 'hotels', 'transports', 'visas', 'flight_persons', '_token', 'cnic_front', 'cnic_back', 'passport_photo', 'photo', 'medical_certificate', 'flight_attachment']),
@@ -398,13 +402,19 @@ class BookingController extends Controller
             $resolvedBookingDate = $request->booking_date;
             if (!empty($request->flight_booking_date) && ($request->flight_booking_date !== $booking->flight_booking_date)) {
                 $resolvedBookingDate = $request->flight_booking_date;
+            } elseif (!empty($request->input('visas.0.booking_date')) && ($request->input('visas.0.booking_date') !== $booking->visas->first()?->booking_date)) {
+                $resolvedBookingDate = $request->input('visas.0.booking_date');
             } elseif (!empty($request->input('hotels.0.booking_date')) && ($request->input('hotels.0.booking_date') !== $booking->hotels->first()?->booking_date)) {
                 $resolvedBookingDate = $request->input('hotels.0.booking_date');
+            } elseif (!empty($request->input('transports.0.booking_date')) && ($request->input('transports.0.booking_date') !== $booking->transports->first()?->booking_date)) {
+                $resolvedBookingDate = $request->input('transports.0.booking_date');
             }
             if (empty($resolvedBookingDate)) {
                 $resolvedBookingDate = $request->flight_booking_date 
+                    ?: ($request->input('visas.0.booking_date') 
                     ?: ($request->input('hotels.0.booking_date') 
-                    ?: ($booking->booking_date ?: now()->toDateString()));
+                    ?: ($request->input('transports.0.booking_date') 
+                    ?: ($booking->booking_date ?: now()->toDateString()))));
             }
 
             $bookingData = array_merge(

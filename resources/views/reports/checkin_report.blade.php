@@ -557,6 +557,7 @@
                                             <th>Room Details</th>
                                             <th>Check-In</th>
                                             <th>Check-Out</th>
+                                            <th>Option Date</th>
                                             <th>Nights</th>
                                             <th>Supplier</th>
                                             @if(($viewMode ?? 'full') !== 'sale_only')
@@ -603,6 +604,15 @@
                                                 <td>
                                                     <span class="fw-semibold text-dark">{{ $hr->check_out ? date('d M Y', strtotime($hr->check_out)) : '—' }}</span>
                                                 </td>
+                                                <td>
+                                                    @if($hr->option_date)
+                                                        <span class="badge bg-soft-warning text-dark border border-warning border-opacity-50">
+                                                            <i class="mdi mdi-calendar-clock me-1 text-warning"></i>{{ date('d M Y', strtotime($hr->option_date)) }}
+                                                        </span>
+                                                    @else
+                                                        <span class="text-muted">—</span>
+                                                    @endif
+                                                </td>
                                                 <td class="text-center fw-bold">{{ $hr->no_of_nights }}</td>
                                                 <td>
                                                     <small class="text-secondary"><i class="mdi mdi-domain me-1"></i>{{ $hr->supplier_name }}</small>
@@ -642,7 +652,7 @@
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="12" class="text-center py-4 text-muted">No hotel accommodation records found.</td>
+                                                <td colspan="13" class="text-center py-4 text-muted">No hotel accommodation records found.</td>
                                             </tr>
                                         @endforelse
                                     </tbody>

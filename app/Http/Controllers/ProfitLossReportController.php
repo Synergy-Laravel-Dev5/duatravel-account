@@ -40,23 +40,25 @@ class ProfitLossReportController extends Controller
             $bookingQuery->where('package_type', $packageType);
         }
 
+        $dateExpr = "COALESCE((SELECT booking_date FROM booking_visas WHERE booking_visas.booking_id = bookings.id AND booking_date IS NOT NULL LIMIT 1), (SELECT booking_date FROM booking_hotels WHERE booking_hotels.booking_id = bookings.id AND booking_date IS NOT NULL LIMIT 1), (SELECT booking_date FROM booking_transports WHERE booking_transports.booking_id = bookings.id AND booking_date IS NOT NULL LIMIT 1), booking_date, flight_booking_date, DATE(created_at))";
+
         if ($year !== 'all' && !empty($year)) {
-            $bookingQuery->where(function ($q) use ($year) {
+            $bookingQuery->where(function ($q) use ($year, $dateExpr) {
                 $q->where('package_year', $year)
-                  ->orWhereRaw("YEAR(COALESCE(booking_date, flight_booking_date, DATE(created_at))) = ?", [$year]);
+                  ->orWhereRaw("YEAR({$dateExpr}) = ?", [$year]);
             });
         }
 
         if ($month !== 'all' && !empty($month)) {
-            $bookingQuery->whereRaw("MONTH(COALESCE(booking_date, flight_booking_date, DATE(created_at))) = ?", [$month]);
+            $bookingQuery->whereRaw("MONTH({$dateExpr}) = ?", [$month]);
         }
 
         if (!empty($dateFrom)) {
-            $bookingQuery->whereRaw("DATE(COALESCE(booking_date, flight_booking_date, DATE(created_at))) >= ?", [$dateFrom]);
+            $bookingQuery->whereRaw("DATE({$dateExpr}) >= ?", [$dateFrom]);
         }
 
         if (!empty($dateTo)) {
-            $bookingQuery->whereRaw("DATE(COALESCE(booking_date, flight_booking_date, DATE(created_at))) <= ?", [$dateTo]);
+            $bookingQuery->whereRaw("DATE({$dateExpr}) <= ?", [$dateTo]);
         }
 
         if (!empty($clientId)) {
@@ -164,11 +166,14 @@ class ProfitLossReportController extends Controller
             $totalReceivedPkr += $receivedPkr;
             $totalBalancePkr += $balancePkr;
 
-            $effectiveBookingDate = !empty($b->booking_date) 
-                ? $b->booking_date 
-                : (!empty($b->flight_booking_date) 
-                    ? $b->flight_booking_date 
-                    : ($b->hotels->first()?->booking_date ?: ($b->created_at ? $b->created_at->toDateString() : date('Y-m-d'))));
+            $effectiveBookingDate = $b->visas->whereNotNull('booking_date')->first()?->booking_date 
+                ?: ($b->hotels->whereNotNull('booking_date')->first()?->booking_date 
+                    ?: ($b->transports->whereNotNull('booking_date')->first()?->booking_date 
+                        ?: (!empty($b->booking_date) 
+                            ? $b->booking_date 
+                            : (!empty($b->flight_booking_date) 
+                                ? $b->flight_booking_date 
+                                : ($b->created_at ? $b->created_at->toDateString() : date('Y-m-d'))))));
             $bDate = Carbon::parse($effectiveBookingDate);
             $monthKey = $bDate->format('Y-m');
             $monthLabel = $bDate->format('M Y');

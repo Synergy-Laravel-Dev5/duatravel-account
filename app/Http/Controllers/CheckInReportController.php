@@ -18,7 +18,7 @@ class CheckInReportController extends Controller
         $hotelName      = $request->get('hotel_name');
         $city           = $request->get('city');
         $packageType    = $request->get('package_type');
-        $checkInFrom    = $request->get('check_in_from');
+        $checkInFrom    = $request->has('check_in_from') ? $request->get('check_in_from') : date('Y-m-d');
         $checkInTo      = $request->get('check_in_to');
         $search         = $request->get('search');
         $status         = $request->get('status');
@@ -173,6 +173,7 @@ class CheckInReportController extends Controller
                         'no_of_nights'   => $bh->no_of_nights ?: 1,
                         'check_in'       => $bh->check_in ? date('Y-m-d', strtotime($bh->check_in)) : null,
                         'check_out'      => $bh->check_out ? date('Y-m-d', strtotime($bh->check_out)) : null,
+                        'option_date'    => $bh->option_date ? date('Y-m-d', strtotime($bh->option_date)) : null,
                         'supplier_name'  => $bh->supplier->name ?? '-',
                         'roe'            => $hRoe,
                         'cost_pkr'       => $hCostPKR,
@@ -364,6 +365,7 @@ class CheckInReportController extends Controller
                         'no_of_rooms'          => $bh->no_of_rooms ?: 1,
                         'check_in'             => $bh->check_in ? date('Y-m-d', strtotime($bh->check_in)) : null,
                         'check_out'            => $bh->check_out ? date('Y-m-d', strtotime($bh->check_out)) : null,
+                        'option_date'          => $bh->option_date ? date('Y-m-d', strtotime($bh->option_date)) : null,
                         'nights'               => $bh->no_of_nights ?: 0,
                         'hotel_supplier'       => $bh->supplier->name ?? '-',
                         'hotel_cost'           => $hCost,

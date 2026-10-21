@@ -317,23 +317,54 @@
                     </div>
                 </div>
 
-                <!-- CORE ACCOUNTING STATEMENT (DEBIT / CREDIT / RUNNING BALANCE TABLE) -->
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
-                        <h5 class="fs-14 fw-bold m-0 text-dark">
-                            <i class="mdi mdi-bank-transfer text-primary me-2"></i> Statement of Account (Ledger)
-                        </h5>
+                <!-- VIEW SWITCHER TABS (TWO TYPES OF VIEWS) -->
+                <div class="card border-0 shadow-sm mb-3 no-print">
+                    <div class="card-body p-2 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <ul class="nav nav-pills" id="customerLedgerTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active fw-bold fs-13 px-3 py-1-5" id="c-statement-tab" data-bs-toggle="pill" data-bs-target="#c-view-statement" type="button" role="tab" aria-controls="c-view-statement" aria-selected="true">
+                                    <i class="mdi mdi-scale-balance me-1"></i> View 1: Statement of Account (Debit / Credit / Balance View)
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link fw-bold fs-13 px-3 py-1-5" id="c-breakdown-tab" data-bs-toggle="pill" data-bs-target="#c-view-breakdown" type="button" role="tab" aria-controls="c-view-breakdown" aria-selected="false">
+                                    <i class="mdi mdi-format-list-bulleted-type me-1"></i> View 2: Bookings & Services Breakdown View
+                                </button>
+                            </li>
+                        </ul>
                         <div class="d-flex align-items-center gap-2">
+                            <div class="form-check form-switch d-inline-flex align-items-center gap-1 bg-light px-2 py-1 rounded border">
+                                <input class="form-check-input" type="checkbox" id="toggleSarCols" checked onchange="toggleSarVisibility(this.checked)">
+                                <label class="form-check-label fs-12 fw-bold text-dark cursor-pointer mb-0" for="toggleSarCols">
+                                    <i class="mdi mdi-cash-multiple text-warning me-1"></i> Show SAR
+                                </label>
+                            </div>
                             @if(($currencySummary['SAR']['received_original'] ?? 0) > 0)
-                                <span class="badge bg-warning text-dark px-2 py-1 fs-12">
+                                <span class="badge bg-warning text-dark px-2 py-1 fs-12 col-sar">
                                     <i class="mdi mdi-cash-multiple me-1"></i>SAR Total: {{ number_format($currencySummary['SAR']['received_original'], 2) }}
                                 </span>
                             @endif
-                            <span class="badge bg-soft-primary text-primary px-3 py-2 rounded-pill fs-12">
-                                {{ count($statementLines) + ($openingBalance != 0 ? 1 : 0) }} Rows
-                            </span>
                         </div>
                     </div>
+                </div>
+
+                <div class="tab-content" id="customerLedgerTabContent">
+
+                    <!-- VIEW 1: STATEMENT OF ACCOUNT (DEBIT / CREDIT / BALANCE) -->
+                    <div class="tab-pane fade show active" id="c-view-statement" role="tabpanel" aria-labelledby="c-statement-tab">
+
+                        <!-- CORE ACCOUNTING STATEMENT (DEBIT / CREDIT / RUNNING BALANCE TABLE) -->
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+                                <h5 class="fs-14 fw-bold m-0 text-dark">
+                                    <i class="mdi mdi-bank-transfer text-primary me-2"></i> Statement of Account (Ledger)
+                                </h5>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-soft-primary text-primary px-3 py-2 rounded-pill fs-12">
+                                        {{ count($statementLines) + ($openingBalance != 0 ? 1 : 0) }} Rows
+                                    </span>
+                                </div>
+                            </div>
 
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -347,18 +378,17 @@
                                         <th rowspan="2" class="align-middle" style="width: 120px;">Contra A/C</th>
                                         <th rowspan="2" class="align-middle">Particulars / Narration</th>
                                         <th rowspan="2" class="align-middle" style="width: 90px;">Method</th>
-                                        <th colspan="2" class="text-center bg-soft-success text-success border-bottom-0 py-1">PKR (Pakistani Rupee)</th>
-                                        <th colspan="2" class="text-center bg-soft-warning text-dark border-bottom-0 py-1">SAR (Saudi Riyal)</th>
-                                        <th colspan="2" class="text-center bg-light border-bottom-0 py-1">Running Balance</th>
+                                        <th colspan="3" class="text-center bg-soft-success text-success border-bottom-0 py-1">PKR (Pakistani Rupee)</th>
+                                        <th colspan="3" class="text-center bg-soft-warning text-dark border-bottom-0 py-1 col-sar">SAR (Saudi Riyal)</th>
                                         <th rowspan="2" class="no-print text-center align-middle" style="width: 45px;">Proof</th>
                                     </tr>
                                     <tr>
                                         <th class="text-end text-danger py-1" style="min-width: 95px;">Debit (Dr)</th>
                                         <th class="text-end text-success py-1" style="min-width: 95px;">Credit (Cr)</th>
-                                        <th class="text-end text-danger py-1" style="min-width: 85px;">Debit (Dr)</th>
-                                        <th class="text-end text-success py-1" style="min-width: 85px;">Credit (Cr)</th>
-                                        <th class="text-end py-1 text-dark" style="min-width: 95px;">PKR</th>
-                                        <th class="text-end py-1 text-dark" style="min-width: 85px;">SAR</th>
+                                        <th class="text-end py-1 text-dark" style="min-width: 95px;">Balance PKR</th>
+                                        <th class="text-end text-danger py-1 col-sar" style="min-width: 85px;">Debit (Dr)</th>
+                                        <th class="text-end text-success py-1 col-sar" style="min-width: 85px;">Credit (Cr)</th>
+                                        <th class="text-end py-1 text-dark col-sar" style="min-width: 85px;">Balance SAR</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -372,28 +402,27 @@
                                             <td><span class="badge bg-light text-dark border">Opening Balance</span></td>
                                             <td><strong>Opening Balance Brought Forward</strong></td>
                                             <td>—</td>
-                                            {{-- PKR Columns --}}
+                                            {{-- PKR Columns: Debit, Credit, Balance --}}
                                             <td class="text-end fw-bold text-danger">
                                                 {{ ($openingBalancePkr ?? $openingBalance) > 0 ? number_format($openingBalancePkr ?? $openingBalance, 2) : '—' }}
                                             </td>
                                             <td class="text-end fw-bold text-success">
                                                 {{ ($openingBalancePkr ?? $openingBalance) < 0 ? number_format(abs($openingBalancePkr ?? $openingBalance), 2) : '—' }}
                                             </td>
-                                            {{-- SAR Columns --}}
-                                            <td class="text-end fw-bold text-danger">
-                                                {{ ($openingBalanceSar ?? 0) > 0 ? number_format($openingBalanceSar, 2) : '—' }}
-                                            </td>
-                                            <td class="text-end fw-bold text-success">
-                                                {{ ($openingBalanceSar ?? 0) < 0 ? number_format(abs($openingBalanceSar), 2) : '—' }}
-                                            </td>
-                                            {{-- Running Balances --}}
                                             <td class="text-end fw-bold text-dark">
                                                 {{ number_format(abs($openingBalancePkr ?? $openingBalance), 2) }}
                                                 <small class="badge {{ ($openingBalancePkr ?? $openingBalance) > 0 ? 'bg-danger' : 'bg-success' }} text-white ms-1" style="font-size: 9px;">
                                                     {{ ($openingBalancePkr ?? $openingBalance) > 0 ? 'Dr' : 'Cr' }}
                                                 </small>
                                             </td>
-                                            <td class="text-end fw-bold text-dark">
+                                            {{-- SAR Columns: Debit, Credit, Balance --}}
+                                            <td class="text-end fw-bold text-danger col-sar">
+                                                {{ ($openingBalanceSar ?? 0) > 0 ? number_format($openingBalanceSar, 2) : '—' }}
+                                            </td>
+                                            <td class="text-end fw-bold text-success col-sar">
+                                                {{ ($openingBalanceSar ?? 0) < 0 ? number_format(abs($openingBalanceSar), 2) : '—' }}
+                                            </td>
+                                            <td class="text-end fw-bold text-dark col-sar">
                                                 {{ number_format(abs($openingBalanceSar ?? 0), 2) }}
                                                 @if(($openingBalanceSar ?? 0) != 0)
                                                     <small class="badge {{ ($openingBalanceSar ?? 0) > 0 ? 'bg-danger' : 'bg-success' }} text-white ms-1" style="font-size: 9px;">
@@ -457,8 +486,15 @@
                                             <td class="text-end fw-bold {{ ($row['credit_pkr'] ?? $row['credit']) > 0 ? 'text-success' : 'text-muted' }}">
                                                 {{ ($row['credit_pkr'] ?? $row['credit']) > 0 ? number_format($row['credit_pkr'] ?? $row['credit'], 2) : '—' }}
                                             </td>
+                                            <!-- Running Balance PKR Column -->
+                                            <td class="text-end fw-bold text-dark">
+                                                {{ number_format(abs($row['running_balance_pkr'] ?? $row['running_balance']), 2) }}
+                                                <span class="badge {{ ($row['running_balance_pkr'] ?? $row['running_balance']) > 0 ? 'bg-soft-danger text-danger' : (($row['running_balance_pkr'] ?? $row['running_balance']) < 0 ? 'bg-soft-success text-success' : 'bg-light text-muted') }} ms-1" style="font-size: 9px;">
+                                                    {{ $row['balance_type'] }}
+                                                </span>
+                                            </td>
                                             <!-- SAR Debit Column -->
-                                            <td class="text-end fw-bold {{ ($row['debit_sar'] ?? 0) > 0 ? 'text-danger' : 'text-muted' }}">
+                                            <td class="text-end fw-bold col-sar {{ ($row['debit_sar'] ?? 0) > 0 ? 'text-danger' : 'text-muted' }}">
                                                 @if(($row['debit_sar'] ?? 0) > 0)
                                                     <div>{{ number_format($row['debit_sar'], 2) }}</div>
                                                     @if(!empty($row['exchange_rate']) && $row['exchange_rate'] > 1)
@@ -469,7 +505,7 @@
                                                 @endif
                                             </td>
                                             <!-- SAR Credit Column -->
-                                            <td class="text-end fw-bold {{ ($row['credit_sar'] ?? 0) > 0 ? 'text-success' : 'text-muted' }}">
+                                            <td class="text-end fw-bold col-sar {{ ($row['credit_sar'] ?? 0) > 0 ? 'text-success' : 'text-muted' }}">
                                                 @if(($row['credit_sar'] ?? 0) > 0)
                                                     <div>{{ number_format($row['credit_sar'], 2) }}</div>
                                                     @if(!empty($row['exchange_rate']) && $row['exchange_rate'] > 1)
@@ -479,15 +515,8 @@
                                                     —
                                                 @endif
                                             </td>
-                                            <!-- Running Balance PKR Column -->
-                                            <td class="text-end fw-bold text-dark">
-                                                {{ number_format(abs($row['running_balance_pkr'] ?? $row['running_balance']), 2) }}
-                                                <span class="badge {{ ($row['running_balance_pkr'] ?? $row['running_balance']) > 0 ? 'bg-soft-danger text-danger' : (($row['running_balance_pkr'] ?? $row['running_balance']) < 0 ? 'bg-soft-success text-success' : 'bg-light text-muted') }} ms-1" style="font-size: 9px;">
-                                                    {{ $row['balance_type'] }}
-                                                </span>
-                                            </td>
                                             <!-- Running Balance SAR Column -->
-                                            <td class="text-end fw-bold text-dark">
+                                            <td class="text-end fw-bold text-dark col-sar">
                                                 {{ number_format(abs($row['running_balance_sar'] ?? 0), 2) }}
                                                 @if(($row['running_balance_sar'] ?? 0) != 0)
                                                     <span class="badge {{ ($row['running_balance_sar'] ?? 0) > 0 ? 'bg-soft-danger text-danger' : 'bg-soft-success text-success' }} ms-1" style="font-size: 9px;">
@@ -523,10 +552,10 @@
                                         <td colspan="7" class="text-end text-uppercase fs-12">Period Totals:</td>
                                         <td class="text-end text-danger fs-13">PKR {{ number_format($periodDebitsPkr ?? $periodDebits, 2) }}</td>
                                         <td class="text-end text-success fs-13">PKR {{ number_format($periodCreditsPkr ?? $periodCredits, 2) }}</td>
-                                        <td class="text-end text-danger fs-13">SAR {{ number_format($periodDebitsSar ?? 0, 2) }}</td>
-                                        <td class="text-end text-success fs-13">SAR {{ number_format($periodCreditsSar ?? 0, 2) }}</td>
                                         <td class="text-end text-dark fs-13">PKR {{ number_format(abs($closingBalancePkr ?? $closingBalance), 2) }}</td>
-                                        <td class="text-end text-dark fs-13">SAR {{ number_format(abs($closingBalanceSar ?? 0), 2) }}</td>
+                                        <td class="text-end text-danger fs-13 col-sar">SAR {{ number_format($periodDebitsSar ?? 0, 2) }}</td>
+                                        <td class="text-end text-success fs-13 col-sar">SAR {{ number_format($periodCreditsSar ?? 0, 2) }}</td>
+                                        <td class="text-end text-dark fs-13 col-sar">SAR {{ number_format(abs($closingBalanceSar ?? 0), 2) }}</td>
                                         <td class="no-print"></td>
                                     </tr>
                                     @if(($currencySummary['SAR']['received_original'] ?? 0) > 0 || ($currencySummary['PKR']['received_original'] ?? 0) > 0)
@@ -537,7 +566,7 @@
                                             <td colspan="6" class="fs-12 text-end">
                                                 @foreach($currencySummary as $currCode => $currData)
                                                     @if(($currData['count'] ?? 0) > 0)
-                                                        <span class="badge {{ $currCode === 'SAR' ? 'bg-warning text-dark' : 'bg-light text-dark border' }} ms-1 px-2 py-1">
+                                                        <span class="badge {{ $currCode === 'SAR' ? 'bg-warning text-dark col-sar' : 'bg-light text-dark border' }} ms-1 px-2 py-1">
                                                             {{ $currCode }}: {{ number_format($currData['received_original'], 2) }}
                                                             @if($currCode !== 'PKR')
                                                                 <small class="text-muted">(Eq. PKR {{ number_format($currData['received_pkr'], 2) }})</small>
@@ -553,13 +582,10 @@
                                         <td colspan="7" class="text-end text-uppercase fs-13 text-dark">
                                             Net Closing Balance:
                                         </td>
-                                        <td colspan="4" class="text-center fs-12 text-muted">
-                                            (PKR Billed: {{ number_format($totalDebits, 2) }} | PKR Received: {{ number_format($totalCredits, 2) }} | SAR Received: {{ number_format($totalCreditsSar ?? 0, 2) }})
-                                        </td>
-                                        <td class="text-end fs-14 {{ $closingBalance > 0 ? 'text-danger' : ($closingBalance < 0 ? 'text-success' : 'text-dark') }}">
+                                        <td colspan="3" class="text-end fs-14 {{ $closingBalance > 0 ? 'text-danger' : ($closingBalance < 0 ? 'text-success' : 'text-dark') }}">
                                             PKR {{ number_format($absClosing, 2) }} {{ $closingTag }}
                                         </td>
-                                        <td class="text-end fs-14 {{ ($closingBalanceSar ?? 0) > 0 ? 'text-danger' : (($closingBalanceSar ?? 0) < 0 ? 'text-success' : 'text-dark') }}">
+                                        <td colspan="3" class="text-end fs-14 col-sar {{ ($closingBalanceSar ?? 0) > 0 ? 'text-danger' : (($closingBalanceSar ?? 0) < 0 ? 'text-success' : 'text-dark') }}">
                                             @if(($closingBalanceSar ?? 0) != 0)
                                                 SAR {{ number_format(abs($closingBalanceSar), 2) }} {{ $closingBalanceSar > 0 ? 'Dr' : 'Cr' }}
                                             @else
@@ -573,6 +599,301 @@
                         </div>
                     </div>
                 </div>
+                </div>{{-- /#c-view-statement --}}
+
+                <!-- ======================================================= -->
+                <!-- VIEW 2: BOOKINGS & SERVICES BREAKDOWN VIEW (CATEGORIZED) -->
+                <!-- ======================================================= -->
+                <div class="tab-pane fade" id="c-view-breakdown" role="tabpanel" aria-labelledby="c-breakdown-tab">
+
+                    <!-- 1. BOOKINGS LIST TABLE -->
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-header bg-white border-bottom py-2 d-flex justify-content-between align-items-center">
+                            <h6 class="fs-13 fw-bold m-0 text-dark">
+                                <i class="mdi mdi-book-open-outline text-primary me-1"></i> Client Bookings (Invoiced & Billed)
+                            </h6>
+                            <span class="badge bg-soft-primary text-primary">{{ isset($bookings) ? $bookings->count() : 0 }} Bookings</span>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-sm align-middle fs-12 mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Booking #</th>
+                                            <th>Booking Date</th>
+                                            <th>Package</th>
+                                            <th class="text-center">Pax</th>
+                                            <th class="text-end">Total Amount (PKR)</th>
+                                            <th class="text-end col-sar">Total Amount (SAR)</th>
+                                            <th class="text-end text-success">Advance / Received</th>
+                                            <th class="text-end text-danger">Balance Due</th>
+                                            <th class="text-center">Status</th>
+                                            <th class="text-center no-print">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @if(isset($bookings))
+                                            @forelse($bookings as $b)
+                                                @php
+                                                    $cur = strtoupper($b->currency ?: 'PKR');
+                                                    $roe = (float) ($b->flight_roe > 1 ? $b->flight_roe : 75);
+                                                    $totAmt = (float) $b->total_amount;
+                                                    $recAmt = (float) $b->total_received;
+                                                    $balAmt = (float) $b->balance_amount;
+                                                    if ($cur === 'SAR') {
+                                                        $totSar = $totAmt;
+                                                        $totPkr = round($totAmt * $roe, 2);
+                                                        $recPkr = round($recAmt * $roe, 2);
+                                                        $balPkr = round($balAmt * $roe, 2);
+                                                    } else {
+                                                        $totPkr = $totAmt;
+                                                        $totSar = $roe > 0 ? round($totAmt / $roe, 2) : 0;
+                                                        $recPkr = $recAmt;
+                                                        $balPkr = $balAmt;
+                                                    }
+                                                @endphp
+                                                <tr>
+                                                    <td>{{ $loop->iteration }}</td>
+                                                    <td>
+                                                        <a href="{{ route('booking.show', $b->id) }}" target="_blank" class="fw-semibold text-primary">
+                                                            #{{ $b->id }}
+                                                        </a>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-light text-dark">
+                                                            {{ $b->booking_date ? \Carbon\Carbon::parse($b->booking_date)->format('d M, Y') : ($b->created_at ? $b->created_at->format('d M, Y') : '—') }}
+                                                        </span>
+                                                    </td>
+                                                    <td><strong>{{ $b->package_name ?: ($b->package->name ?? 'Custom Package') }}</strong></td>
+                                                    <td class="text-center">{{ $b->no_of_pax ?? 1 }}</td>
+                                                    <td class="text-end fw-bold text-dark">PKR {{ number_format($totPkr, 2) }}</td>
+                                                    <td class="text-end fw-bold text-dark col-sar">{{ $totSar > 0 ? ('SAR ' . number_format($totSar, 2)) : '—' }}</td>
+                                                    <td class="text-end fw-bold text-success">PKR {{ number_format($recPkr, 2) }}</td>
+                                                    <td class="text-end fw-bold text-danger">PKR {{ number_format($balPkr, 2) }}</td>
+                                                    <td class="text-center">
+                                                        <span class="badge bg-soft-info text-info text-capitalize">{{ $b->status ?? 'Active' }}</span>
+                                                    </td>
+                                                    <td class="text-center no-print">
+                                                        <a href="{{ route('booking.show', $b->id) }}" target="_blank" class="btn btn-xs btn-outline-primary">
+                                                            <i class="mdi mdi-eye"></i> View
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="11" class="text-center py-3 text-muted">No bookings recorded for this client.</td>
+                                                </tr>
+                                            @endforelse
+                                        @endif
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. HOTEL STAYS BREAKDOWN -->
+                    @php
+                        $allHotels = collect();
+                        if(isset($bookings)) {
+                            foreach($bookings as $b) {
+                                if($b->hotels) {
+                                    foreach($b->hotels as $ht) {
+                                        $ht->booking_parent = $b;
+                                        $allHotels->push($ht);
+                                    }
+                                }
+                            }
+                        }
+                    @endphp
+                    @if($allHotels->count() > 0)
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-header bg-white border-bottom py-2 d-flex justify-content-between align-items-center">
+                            <h6 class="fs-13 fw-bold m-0 text-dark">
+                                <i class="mdi mdi-office-building text-primary me-1"></i> Hotel Accommodations Breakdown
+                            </h6>
+                            <span class="badge bg-soft-primary text-primary">{{ $allHotels->count() }} Hotels</span>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-sm align-middle fs-12 mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Booking #</th>
+                                            <th>Booking Date</th>
+                                            <th>Hotel Name</th>
+                                            <th>Location</th>
+                                            <th>Room Type</th>
+                                            <th class="text-center">Rooms</th>
+                                            <th class="text-center">Nights</th>
+                                            <th>Check In</th>
+                                            <th>Check Out</th>
+                                            <th class="text-end">Selling Price</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($allHotels as $h)
+                                            <tr>
+                                                <td>{{ $loop->iteration }}</td>
+                                                <td>
+                                                    <a href="{{ route('booking.show', $h->booking_id) }}" target="_blank" class="fw-semibold text-primary">
+                                                        #{{ $h->booking_id }}
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-light text-dark">
+                                                        {{ $h->booking_date ? \Carbon\Carbon::parse($h->booking_date)->format('d M, Y') : ($h->booking_parent->booking_date ? \Carbon\Carbon::parse($h->booking_parent->booking_date)->format('d M, Y') : '—') }}
+                                                    </span>
+                                                </td>
+                                                <td><strong>{{ $h->hotel_name ?? '-' }}</strong></td>
+                                                <td>{{ $h->location ? ucfirst($h->location) : '-' }}</td>
+                                                <td>{{ $h->room_type ? ucfirst($h->room_type) : '-' }}</td>
+                                                <td class="text-center">{{ $h->no_of_rooms ?? 1 }}</td>
+                                                <td class="text-center">{{ $h->no_of_nights ?? 1 }}</td>
+                                                <td>{{ $h->check_in ? \Carbon\Carbon::parse($h->check_in)->format('d M, Y') : '-' }}</td>
+                                                <td>{{ $h->check_out ? \Carbon\Carbon::parse($h->check_out)->format('d M, Y') : '-' }}</td>
+                                                <td class="text-end fw-bold text-dark">{{ number_format($h->selling_amount ?? 0, 2) }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    <!-- 3. VISA APPLICATIONS BREAKDOWN -->
+                    @php
+                        $allVisas = collect();
+                        if(isset($bookings)) {
+                            foreach($bookings as $b) {
+                                if($b->visas) {
+                                    foreach($b->visas as $vs) {
+                                        $vs->booking_parent = $b;
+                                        $allVisas->push($vs);
+                                    }
+                                }
+                            }
+                        }
+                    @endphp
+                    @if($allVisas->count() > 0)
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-header bg-white border-bottom py-2 d-flex justify-content-between align-items-center">
+                            <h6 class="fs-13 fw-bold m-0 text-dark">
+                                <i class="mdi mdi-card-account-details text-success me-1"></i> Visa Applications Breakdown
+                            </h6>
+                            <span class="badge bg-soft-success text-success">{{ $allVisas->count() }} Visas</span>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-sm align-middle fs-12 mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Booking #</th>
+                                            <th>Booking Date</th>
+                                            <th>Pilgrim Name</th>
+                                            <th>Passport #</th>
+                                            <th>Send To</th>
+                                            <th>Status</th>
+                                            <th class="text-end">Selling Price</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($allVisas as $v)
+                                            <tr>
+                                                <td>{{ $loop->iteration }}</td>
+                                                <td>
+                                                    <a href="{{ route('booking.show', $v->booking_id) }}" target="_blank" class="fw-semibold text-primary">
+                                                        #{{ $v->booking_id }}
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-light text-dark">
+                                                        {{ $v->booking_date ? \Carbon\Carbon::parse($v->booking_date)->format('d M, Y') : ($v->booking_parent->booking_date ? \Carbon\Carbon::parse($v->booking_parent->booking_date)->format('d M, Y') : '—') }}
+                                                    </span>
+                                                </td>
+                                                <td>{{ $v->given_name ?? '-' }}</td>
+                                                <td><strong>{{ $v->passport_number ?? '-' }}</strong></td>
+                                                <td>{{ $v->send_to ?? '-' }}</td>
+                                                <td><span class="badge bg-soft-info text-info">{{ ucfirst($v->status ?? 'pending') }}</span></td>
+                                                <td class="text-end fw-bold text-dark">{{ number_format($v->selling_amount ?? 0, 2) }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    <!-- 4. TRANSPORTS BREAKDOWN -->
+                    @php
+                        $allTransports = collect();
+                        if(isset($bookings)) {
+                            foreach($bookings as $b) {
+                                if($b->transports) {
+                                    foreach($b->transports as $tr) {
+                                        $tr->booking_parent = $b;
+                                        $allTransports->push($tr);
+                                    }
+                                }
+                            }
+                        }
+                    @endphp
+                    @if($allTransports->count() > 0)
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-header bg-white border-bottom py-2 d-flex justify-content-between align-items-center">
+                            <h6 class="fs-13 fw-bold m-0 text-dark">
+                                <i class="mdi mdi-bus text-warning me-1"></i> Transport Bookings Breakdown
+                            </h6>
+                            <span class="badge bg-soft-warning text-warning">{{ $allTransports->count() }} Transports</span>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-sm align-middle fs-12 mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Booking #</th>
+                                            <th>Booking Date</th>
+                                            <th>Route</th>
+                                            <th>Vehicle / Type</th>
+                                            <th>Travel Date</th>
+                                            <th class="text-end">Selling Price</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($allTransports as $t)
+                                            <tr>
+                                                <td>{{ $loop->iteration }}</td>
+                                                <td>
+                                                    <a href="{{ route('booking.show', $t->booking_id) }}" target="_blank" class="fw-semibold text-primary">
+                                                        #{{ $t->booking_id }}
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-light text-dark">
+                                                        {{ $t->booking_date ? \Carbon\Carbon::parse($t->booking_date)->format('d M, Y') : ($t->booking_parent->booking_date ? \Carbon\Carbon::parse($t->booking_parent->booking_date)->format('d M, Y') : '—') }}
+                                                    </span>
+                                                </td>
+                                                <td><strong>{{ $t->route ?? '-' }}</strong></td>
+                                                <td>{{ $t->vehicle ?? ($t->transport_type ?? '-') }}</td>
+                                                <td>{{ $t->travel_date ? \Carbon\Carbon::parse($t->travel_date)->format('d M, Y') : '-' }}</td>
+                                                <td class="text-end fw-bold text-dark">{{ number_format($t->selling_amount ?? 0, 2) }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                </div>{{-- /#c-view-breakdown --}}
+
+            </div>{{-- /#customerLedgerTabContent --}}
 
             </div>
         </div>
@@ -792,5 +1113,29 @@
 
             doc.save("Client_Ledger_{{ Str::slug($client->name) }}_{{ date('Ymd') }}.pdf");
         }
+
+        function toggleSarVisibility(show) {
+            document.querySelectorAll('.col-sar').forEach(el => {
+                if (show) {
+                    el.classList.remove('d-none');
+                } else {
+                    el.classList.add('d-none');
+                }
+            });
+            try {
+                localStorage.setItem('ledger_show_sar', show ? '1' : '0');
+            } catch(e) {}
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                const saved = localStorage.getItem('ledger_show_sar');
+                const chk = document.getElementById('toggleSarCols');
+                if (saved !== null && chk) {
+                    chk.checked = (saved === '1');
+                    toggleSarVisibility(chk.checked);
+                }
+            } catch(e) {}
+        });
     </script>
 @endsection

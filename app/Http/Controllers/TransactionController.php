@@ -361,7 +361,7 @@ class TransactionController extends Controller
         $openingBalance = $openingBalancePkr;
 
         // 2. Retrieve Bookings in Date Range (Debit = Charges, Credit = Initial Advance)
-        $bookingsQuery = Booking::with(['package', 'client', 'company']);
+        $bookingsQuery = Booking::with(['package', 'client', 'company', 'hotels', 'visas', 'transports']);
         if ($clientId !== 'all') {
             $bookingsQuery->where('client_id', $clientId);
         }
@@ -731,6 +731,7 @@ class TransactionController extends Controller
             'fromDate',
             'toDate',
             'clients',
+            'bookings',
             'bookingsCount',
             'transactionsCount',
             'currencySummary',
