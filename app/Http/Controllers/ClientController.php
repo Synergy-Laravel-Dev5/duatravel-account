@@ -10,26 +10,51 @@ use Illuminate\Validation\Rule;
 
 class ClientController extends Controller
 {
-    public function index()
+    public function index(Request $request = null)
     {
-        $package = session('dashboard_package', 'hajj');
-        $year    = (int) session('dashboard_year', Carbon::now()->year);
+        $request    = $request ?: request();
+        $sessionPkg = session('dashboard_package', 'hajj');
+        $year       = (int) session('dashboard_year', Carbon::now()->year);
 
-        $clients = Client::where(function ($query) use ($package, $year) {
-            $query->where('package_type', $package)
-                ->orWhere(function ($q) use ($package, $year) {
-                    $q->whereNull('package_type')
-                      ->whereHas('bookings', function ($bq) use ($package, $year) {
-                          $bq->where('package_type', $package);
+        $filterPkg = $request->get('package_type', $sessionPkg);
+        if (!in_array($filterPkg, ['hajj', 'umrah', 'all'])) {
+            $filterPkg = $sessionPkg;
+        }
+
+        $query = Client::with(['package', 'lead'])->latest();
+
+        if ($filterPkg !== 'all') {
+            $query->where(function ($q) use ($filterPkg, $year) {
+                // 1. Explicit package_type match
+                $q->where('package_type', $filterPkg)
+                  // 2. OR legacy / unassigned client with null/empty package_type
+                  ->orWhere(function ($sub) use ($filterPkg, $year) {
+                      $sub->where(function ($nullQ) {
+                          $nullQ->whereNull('package_type')
+                                ->orWhere('package_type', '');
+                      })->where(function ($matchQ) use ($filterPkg, $year) {
+                          // Has bookings matching this package
+                          $matchQ->whereHas('bookings', function ($bq) use ($filterPkg, $year) {
+                              $bq->where('package_type', $filterPkg);
+                          })
+                          // OR has assigned package matching this package
+                          ->orWhereHas('package', function ($pq) use ($filterPkg) {
+                              $pq->where('package_type', $filterPkg);
+                          })
+                          // OR has neither bookings nor package (freshly converted or unassigned client)
+                          ->orWhere(function ($orphan) {
+                              $orphan->whereDoesntHave('bookings')
+                                     ->whereDoesntHave('package');
+                          });
                       });
-                });
-        })
-            ->latest()
-            ->get();
+                  });
+            });
+        }
 
+        $clients = $query->get();
         $trashCount = Client::onlyTrashed()->count();
 
-        return view('client.index', compact('clients', 'trashCount'));
+        return view('client.index', compact('clients', 'trashCount', 'filterPkg', 'sessionPkg'));
     }
 
     public function create()

@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Booking;
 use App\Models\Company;
 use App\Models\ExpenseTransaction;
+use App\Models\Season;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -14,23 +15,52 @@ class DashboardController extends Controller
 
     public function welcome()
     {
+        $activeHajjSeason  = Season::hajj()->where('is_active', true)->first() ?? Season::hajj()->latest('year')->first();
+        $activeUmrahSeason = Season::umrah()->where('is_active', true)->first() ?? Season::umrah()->latest('year')->first();
+
         $hajjCount   = Booking::where('package_type', 'hajj')->count();
         $umrahCount  = Booking::where('package_type', 'umrah')->count();
 
         $hajjRevenue  = Booking::where('package_type', 'hajj')->sum('total_amount');
         $umrahRevenue = Booking::where('package_type', 'umrah')->sum('total_amount');
 
-        return view('welcome', compact('hajjCount', 'umrahCount', 'hajjRevenue', 'umrahRevenue'));
+        return view('welcome', compact('hajjCount', 'umrahCount', 'hajjRevenue', 'umrahRevenue', 'activeHajjSeason', 'activeUmrahSeason'));
     }
     
     public function index(Request $request)
     {
+        if ($request->has('season_id')) {
+            $season = Season::find($request->season_id);
+            if ($season) {
+                session([
+                    'selected_season_id'     => $season->id,
+                    'selected_season_name'   => $season->name,
+                    'dashboard_package'      => $season->season_type,
+                    'dashboard_year'         => $season->year,
+                    'dashboard_company_year' => $season->year,
+                ]);
+            }
+        }
+
         $package = $request->get('package', session('dashboard_package', 'hajj'));
         $year    = (int) $request->get('year', session('dashboard_year', Carbon::now()->year));
 
         session(['dashboard_package' => $package]);
         session(['dashboard_year'    => $year]);
         session(['dashboard_company_year' => $year]);
+
+        // Keep season name & id synced with package & year
+        $matchingSeason = Season::where('season_type', $package)->where('year', $year)->first();
+        if ($matchingSeason) {
+            session([
+                'selected_season_id'   => $matchingSeason->id,
+                'selected_season_name' => $matchingSeason->name,
+            ]);
+        } else {
+            session([
+                'selected_season_name' => strtoupper($package) . ' ' . $year,
+            ]);
+        }
 
         $bookingYears = Booking::where('package_type', $package)
             ->selectRaw('package_year as yr')

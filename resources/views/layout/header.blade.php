@@ -36,7 +36,93 @@
                         $displayName = $user->name ?? 'Admin User';
                         $isCompany = false;
                     }
+
+                    $topbarHajjSeasons  = \App\Models\Season::hajj()->orderByDesc('year')->get();
+                    $topbarUmrahSeasons = \App\Models\Season::umrah()->orderByDesc('year')->get();
+                    $topbarCurrSeason   = \App\Models\Season::current();
+                    $topbarCurrPkg      = session('dashboard_package', 'hajj');
+                    $topbarCurrYr       = (int) session('dashboard_year', date('Y'));
+                    $topbarSeasonName   = session('selected_season_name', ($topbarCurrSeason ? $topbarCurrSeason->name : strtoupper($topbarCurrPkg) . ' ' . $topbarCurrYr));
                 @endphp
+
+                <!-- Active Season Switcher Dropdown -->
+                <li class="dropdown notification-list topbar-dropdown me-2">
+                    <a class="nav-link dropdown-toggle py-1 px-3 d-flex align-items-center rounded-3 border" data-bs-toggle="dropdown" href="#"
+                        role="button" aria-haspopup="false" aria-expanded="false"
+                        style="background: rgba(255, 255, 255, 0.16); border-color: rgba(255, 255, 255, 0.35) !important;">
+                        <span class="fs-16 me-2">
+                            {{ $topbarCurrPkg === 'hajj' ? '🕋' : '🕌' }}
+                        </span>
+                        <div class="d-none d-sm-inline-block text-start lh-sm me-2">
+                            <span class="d-block fw-bold text-white fs-12" style="text-shadow: 0 1px 2px rgba(0,0,0,0.3);">{{ $topbarSeasonName }}</span>
+                            <span class="d-block" style="font-size: 10px; color: #e2e8f0;">{{ strtoupper($topbarCurrPkg) }} • {{ $topbarCurrYr }}</span>
+                        </div>
+                        <i class="mdi mdi-chevron-down text-white fs-14"></i>
+                    </a>
+
+                    <div class="dropdown-menu dropdown-menu-end shadow-lg" style="min-width: 270px;">
+                        <div class="dropdown-header d-flex justify-content-between align-items-center py-2 px-3 bg-light">
+                            <span class="fw-bold text-dark fs-12">SYSTEM SEASON</span>
+                            <a href="{{ route('season.index') }}" class="text-primary fs-11 text-decoration-none">
+                                <i class="mdi mdi-cog-outline"></i> Manage
+                            </a>
+                        </div>
+
+                        <!-- Hajj Section -->
+                        <div class="dropdown-header text-uppercase fs-11 fw-bold text-muted py-1 px-3">
+                            🕋 HAJJ SEASONS
+                        </div>
+                        @forelse($topbarHajjSeasons as $hs)
+                            @php
+                                $isThisActive = (session('selected_season_id') == $hs->id) || (!session('selected_season_id') && $topbarCurrPkg === 'hajj' && $topbarCurrYr == $hs->year);
+                            @endphp
+                            <a href="{{ route('season.switch', $hs->id) }}" class="dropdown-item d-flex align-items-center justify-content-between py-2 {{ $isThisActive ? 'active bg-primary-subtle text-primary fw-bold' : '' }}">
+                                <div>
+                                    <div class="fs-13">{{ $hs->name }}</div>
+                                    <small class="text-muted fs-11">{{ $hs->hijri_year ?? $hs->year }}</small>
+                                </div>
+                                @if($isThisActive)
+                                    <span class="badge bg-primary fs-10">Active</span>
+                                @elseif($hs->is_active)
+                                    <span class="badge bg-light text-muted border fs-10">Default</span>
+                                @endif
+                            </a>
+                        @empty
+                            <span class="dropdown-item text-muted fs-12">No Hajj seasons</span>
+                        @endforelse
+
+                        <div class="dropdown-divider my-1"></div>
+
+                        <!-- Umrah Section -->
+                        <div class="dropdown-header text-uppercase fs-11 fw-bold text-muted py-1 px-3">
+                            🕌 UMRAH SEASONS
+                        </div>
+                        @forelse($topbarUmrahSeasons as $us)
+                            @php
+                                $isThisActive = (session('selected_season_id') == $us->id) || (!session('selected_season_id') && $topbarCurrPkg === 'umrah' && $topbarCurrYr == $us->year);
+                            @endphp
+                            <a href="{{ route('season.switch', $us->id) }}" class="dropdown-item d-flex align-items-center justify-content-between py-2 {{ $isThisActive ? 'active bg-warning-subtle text-dark fw-bold' : '' }}">
+                                <div>
+                                    <div class="fs-13">{{ $us->name }}</div>
+                                    <small class="text-muted fs-11">{{ $us->hijri_year ?? $us->year }}</small>
+                                </div>
+                                @if($isThisActive)
+                                    <span class="badge bg-warning text-dark fs-10">Active</span>
+                                @elseif($us->is_active)
+                                    <span class="badge bg-light text-muted border fs-10">Default</span>
+                                @endif
+                            </a>
+                        @empty
+                            <span class="dropdown-item text-muted fs-12">No Umrah seasons</span>
+                        @endforelse
+
+                        <div class="dropdown-divider my-1"></div>
+
+                        <a href="{{ route('season.create') }}" class="dropdown-item text-center text-primary fw-semibold fs-12 py-2">
+                            <i class="mdi mdi-plus-circle-outline me-1"></i> Add New Season
+                        </a>
+                    </div>
+                </li>
 
                 <li class="dropdown notification-list topbar-dropdown">
                     <a class="nav-link dropdown-toggle nav-user me-0" data-bs-toggle="dropdown" href="#"
@@ -110,6 +196,41 @@
                         <i data-feather="home"></i>
                         <span>Dashboard</span>
                     </a>
+                </li>
+                <li class="{{ request()->routeIs('season.*') ? 'menuitem-active' : '' }}">
+                    <a href="#sidebarSeasons" data-bs-toggle="collapse" class="{{ request()->routeIs('season.*') ? 'active' : '' }}">
+                        <i data-feather="calendar"></i>
+                        <span>Seasons</span>
+                        <span class="menu-arrow"></span>
+                    </a>
+                    <div class="collapse {{ request()->routeIs('season.*') ? 'show' : '' }}" id="sidebarSeasons">
+                        <ul class="nav-second-level">
+                            <li>
+                                <a class="tp-link {{ request()->routeIs('season.index') && request('status') != 'active' && request('status') != 'inactive' ? 'active' : '' }}" href="{{ route('season.index') }}">
+                                    <i data-feather="list"></i>
+                                    <span>All Seasons</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="tp-link {{ request('status') === 'active' ? 'active' : '' }}" href="{{ route('season.index', ['status' => 'active']) }}">
+                                    <i data-feather="check-circle" class="text-success"></i>
+                                    <span>Active Seasons</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="tp-link {{ request('status') === 'inactive' ? 'active' : '' }}" href="{{ route('season.index', ['status' => 'inactive']) }}">
+                                    <i data-feather="x-circle" class="text-danger"></i>
+                                    <span>Inactive Seasons</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="tp-link {{ request()->routeIs('season.create') ? 'active' : '' }}" href="{{ route('season.create') }}">
+                                    <i data-feather="plus-circle"></i>
+                                    <span>Add Season</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </li>
                 <li>
                     <a href="#sidebarUserManagement" data-bs-toggle="collapse">
@@ -277,6 +398,12 @@
                                 <a class="tp-link" href="{{ route('package.index') }}">
                                     <i data-feather="package"></i>
                                     <span>{{ $isHajjPackage ? 'Packages' : 'Umrah Packages' }}</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="tp-link" href="{{ route('season.index') }}">
+                                    <i data-feather="calendar"></i>
+                                    <span>Hajj & Umrah Seasons</span>
                                 </a>
                             </li>
                             @if ($isHajjPackage)

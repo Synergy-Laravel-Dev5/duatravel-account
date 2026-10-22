@@ -81,8 +81,20 @@ $filesToUpdate = [
     'database/migrations/2026_10_22_143000_add_package_type_to_clients_table.php',
     'app/Models/Client.php',
     'app/Http/Controllers/ExpenseTransactionController.php',
+    'app/Http/Controllers/LeadController.php',
+    'resources/views/lead/show.blade.php',
+    'resources/views/lead/trash.blade.php',
     'resources/views/expense_transaction/create.blade.php',
     'resources/views/expense_transaction/edit.blade.php',
+    'database/migrations/2026_10_22_150000_create_seasons_table.php',
+    'app/Models/Season.php',
+    'app/Http/Controllers/SeasonController.php',
+    'app/Http/Controllers/DashboardController.php',
+    'resources/views/season/index.blade.php',
+    'resources/views/season/create.blade.php',
+    'resources/views/season/edit.blade.php',
+    'resources/views/season/trash.blade.php',
+    'resources/views/welcome.blade.php',
 ];
 
 $baseDir = realpath(__DIR__ . '/..');

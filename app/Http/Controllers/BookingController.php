@@ -40,7 +40,29 @@ class BookingController extends Controller
 
     public function create()
     {
-        $clients   = Client::where('status', 'active')->orWhereNull('status')->orderBy('name')->get();
+        // Auto-sync: if any active clients belong to trashed leads, move them to trash
+        $trashedLeadIds = \App\Models\Lead::onlyTrashed()->pluck('id');
+        if ($trashedLeadIds->isNotEmpty()) {
+            Client::whereIn('lead_id', $trashedLeadIds)->delete();
+        }
+
+        $sessionPkg = session('dashboard_package', 'hajj');
+        $clientsQ = Client::where(function ($q) {
+            $q->where('status', 'active')->orWhereNull('status');
+        })
+        ->whereDoesntHave('lead', function ($lq) {
+            $lq->onlyTrashed();
+        });
+
+        if (in_array($sessionPkg, ['hajj', 'umrah'])) {
+            $clientsQ->where(function ($q) use ($sessionPkg) {
+                $q->where('package_type', $sessionPkg)
+                  ->orWhereNull('package_type')
+                  ->orWhere('package_type', '');
+            });
+        }
+
+        $clients   = $clientsQ->orderBy('name')->get();
         $companies = Company::all();
         $packages  = Package::with(['accommodations.hotel', 'transports', 'transportFlights'])->latest()->get();
         $hotels    = \App\Models\Hotel::all();
@@ -338,8 +360,26 @@ class BookingController extends Controller
 
     public function edit($id)
     {
+        // Auto-sync: if any active clients belong to trashed leads, move them to trash
+        $trashedLeadIds = \App\Models\Lead::onlyTrashed()->pluck('id');
+        if ($trashedLeadIds->isNotEmpty()) {
+            Client::whereIn('lead_id', $trashedLeadIds)->delete();
+        }
+
         $booking   = Booking::with(['package', 'persons', 'hotels.supplier', 'transports', 'visas.supplier', 'flightSupplier', 'client', 'company'])->findOrFail($id);
-        $clients   = Client::where('status', 'active')->orWhereNull('status')->orderBy('name')->get();
+        $clients   = Client::where(function ($q) {
+                $q->where('status', 'active')->orWhereNull('status');
+            })
+            ->where(function ($q) use ($booking) {
+                $q->where('id', $booking->client_id)
+                  ->orWhere(function ($sub) {
+                      $sub->whereDoesntHave('lead', function ($lq) {
+                          $lq->onlyTrashed();
+                      });
+                  });
+            })
+            ->orderBy('name')
+            ->get();
         $companies = Company::all();
         $packages  = Package::with(['accommodations.hotel', 'transports', 'transportFlights'])->latest()->get();
         $hotels    = \App\Models\Hotel::all();

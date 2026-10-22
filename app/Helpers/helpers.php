@@ -56,3 +56,48 @@ if (!function_exists('getAuthCompany')) {
         return null;
     }
 }
+
+if (!function_exists('currentSeason')) {
+    function currentSeason()
+    {
+        return \App\Models\Season::current();
+    }
+}
+
+if (!function_exists('currentSeasonName')) {
+    function currentSeasonName()
+    {
+        $cur = currentSeason();
+        if ($cur) {
+            return $cur->name;
+        }
+        $pkg = session('dashboard_package', 'hajj');
+        $yr  = session('dashboard_year', date('Y'));
+        return ucfirst($pkg) . ' ' . $yr;
+    }
+}
+
+if (!function_exists('currentSeasonType')) {
+    function currentSeasonType()
+    {
+        return session('dashboard_package', 'hajj');
+    }
+}
+
+if (!function_exists('currentSeasonYear')) {
+    function currentSeasonYear()
+    {
+        return (int) session('dashboard_year', date('Y'));
+    }
+}
+
+if (!function_exists('allSeasonsList')) {
+    function allSeasonsList($type = null)
+    {
+        $q = \App\Models\Season::orderByDesc('year')->orderBy('season_type');
+        if ($type) {
+            $q->where('season_type', $type);
+        }
+        return $q->get();
+    }
+}

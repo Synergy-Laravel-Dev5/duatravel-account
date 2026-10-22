@@ -540,7 +540,7 @@
             <div class="cards">
 
                 {{-- Hajj --}}
-                <a href="{{ route('dashboard', ['package' => 'hajj', 'year' => now()->year]) }}" class="card hajj">
+                <a href="{{ isset($activeHajjSeason) && $activeHajjSeason ? route('season.switch', ['id' => $activeHajjSeason->id, 'redirect_to' => 'dashboard']) : route('dashboard', ['package' => 'hajj', 'year' => now()->year]) }}" class="card hajj">
                     <div class="band">
                         <div class="band-icon">
                             <svg width="56" height="56" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -574,7 +574,7 @@
                         </div>
                     </div>
                     <div class="card-inner">
-                        <div class="card-title">Hajj</div>
+                        <div class="card-title">{{ isset($activeHajjSeason) && $activeHajjSeason ? $activeHajjSeason->name : 'Hajj' }}</div>
                         <p class="card-desc">Bookings, clients, revenue & monthly performance at a glance.</p>
                         <div class="stats">
                             <div class="stat">
@@ -593,7 +593,7 @@
                 </a>
 
                 {{-- Umrah --}}
-                <a href="{{ route('dashboard', ['package' => 'umrah', 'year' => now()->year]) }}" class="card umrah">
+                <a href="{{ isset($activeUmrahSeason) && $activeUmrahSeason ? route('season.switch', ['id' => $activeUmrahSeason->id, 'redirect_to' => 'dashboard']) : route('dashboard', ['package' => 'umrah', 'year' => now()->year]) }}" class="card umrah">
                     <div class="band">
                         <div class="band-icon">
                             <svg width="56" height="56" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -636,7 +636,7 @@
                         </div>
                     </div>
                     <div class="card-inner">
-                        <div class="card-title">Umrah</div>
+                        <div class="card-title">{{ isset($activeUmrahSeason) && $activeUmrahSeason ? $activeUmrahSeason->name : 'Umrah' }}</div>
                         <p class="card-desc">Bookings, clients, revenue & monthly performance at a glance.</p>
                         <div class="stats">
                             <div class="stat">

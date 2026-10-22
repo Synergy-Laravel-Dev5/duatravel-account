@@ -33,6 +33,7 @@ use App\Http\Controllers\CheckInReportController;
 use App\Http\Controllers\ArrivalGroupController;
 use App\Http\Controllers\DepartureGroupController;
 use App\Http\Controllers\HajiGroupController;
+use App\Http\Controllers\SeasonController;
 
 
 
@@ -238,6 +239,8 @@ Route::middleware(['auth:web,company'])->group(function () {
             Route::post('convert-to-client/{id}', 'convertToClient')->name('lead.convert-to-client');
             Route::get('trash', 'trash')->name('lead.trash');
             Route::get('restore/{id}', 'restore')->name('lead.restore');
+            Route::delete('force-delete/{id}', 'forceDelete')->name('lead.force-delete');
+            Route::get('permanent-delete/{id}', 'forceDelete')->name('lead.permanent-delete');
         });
 
         Route::controller(BankController::class)->prefix('bank')->group(function () {
@@ -475,6 +478,22 @@ Route::middleware(['auth:web,company'])->group(function () {
         Route::get('reports/cash', [\App\Http\Controllers\CashReportController::class, 'index'])->name('reports.cash');
         Route::get('reports/cash/pdf', [\App\Http\Controllers\CashReportController::class, 'exportPdf'])->name('reports.cash.pdf');
         Route::get('reports/cash/export-excel', [\App\Http\Controllers\CashReportController::class, 'exportExcel'])->name('reports.cash.export-excel');
+
+        // Hajj & Umrah Season Management
+        Route::controller(SeasonController::class)->prefix('season')->group(function () {
+            Route::get('/', 'index')->name('season.index');
+            Route::get('create', 'create')->name('season.create');
+            Route::post('store', 'store')->name('season.store');
+            Route::get('edit/{id}', 'edit')->name('season.edit');
+            Route::put('update/{id}', 'update')->name('season.update');
+            Route::delete('delete/{id}', 'destroy')->name('season.delete');
+            Route::get('trash', 'trash')->name('season.trash');
+            Route::get('restore/{id}', 'restore')->name('season.restore');
+            Route::delete('force-delete/{id}', 'forceDelete')->name('season.force-delete');
+            Route::get('set-active/{id}', 'setActive')->name('season.set-active');
+            Route::get('toggle-status/{id}', 'toggleStatus')->name('season.toggle-status');
+            Route::get('switch/{id}', 'switchSeason')->name('season.switch');
+        });
 
         Route::post('/leads/{lead}/follow-ups', [FollowUpController::class, 'store'])->name('followUp.store');
         Route::post('/follow-ups/{followUp}/take', [FollowUpController::class, 'take'])->name('followUp.take');

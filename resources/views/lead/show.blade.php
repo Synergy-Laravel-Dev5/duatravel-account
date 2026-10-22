@@ -604,6 +604,20 @@
                                                     @endif
                                                 </td>
                                             </tr>
+                                            <tr>
+                                                <th>Client Category / Season:</th>
+                                                <td>
+                                                    @php
+                                                        $defaultPkg = ($lead->package && !empty($lead->package->package_type)) 
+                                                            ? $lead->package->package_type 
+                                                            : session('dashboard_package', 'hajj');
+                                                    @endphp
+                                                    <select name="package_type" class="form-select form-select-sm">
+                                                        <option value="hajj" {{ $defaultPkg === 'hajj' ? 'selected' : '' }}>Hajj Client</option>
+                                                        <option value="umrah" {{ $defaultPkg === 'umrah' ? 'selected' : '' }}>Umrah Client</option>
+                                                    </select>
+                                                </td>
+                                            </tr>
                                         </table>
                                     </div>
                                 </div>

@@ -6,9 +6,29 @@
         <div class="content">
             <div class="container-fluid">
 
-                <div class="py-3 d-flex align-items-center justify-content-between">
-                    <h4 class="fs-18 fw-semibold m-0">Clients / Vendors</h4>
-                    <div class="d-flex gap-2">
+                <div class="py-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <div>
+                        <h4 class="fs-18 fw-semibold m-0">Clients / Vendors</h4>
+                        <span class="text-muted fs-12">
+                            Showing {{ ($filterPkg ?? 'hajj') === 'all' ? 'All' : ucfirst($filterPkg ?? 'hajj') }} Clients
+                            (Current Dashboard Season: <strong class="text-uppercase text-dark">{{ $sessionPkg ?? session('dashboard_package', 'hajj') }}</strong>)
+                        </span>
+                    </div>
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <div class="btn-group btn-group-sm" role="group">
+                            <a href="{{ route('client.index', ['package_type' => ($sessionPkg ?? session('dashboard_package', 'hajj'))]) }}"
+                               class="btn {{ ($filterPkg ?? $sessionPkg) === ($sessionPkg ?? session('dashboard_package', 'hajj')) && ($filterPkg ?? '') !== 'all' ? 'btn-primary' : 'btn-outline-secondary' }}">
+                                {{ ucfirst($sessionPkg ?? session('dashboard_package', 'hajj')) }} Only
+                            </a>
+                            <a href="{{ route('client.index', ['package_type' => (($sessionPkg ?? session('dashboard_package', 'hajj')) === 'hajj' ? 'umrah' : 'hajj')]) }}"
+                               class="btn {{ ($filterPkg ?? '') === (($sessionPkg ?? session('dashboard_package', 'hajj')) === 'hajj' ? 'umrah' : 'hajj') ? 'btn-primary' : 'btn-outline-secondary' }}">
+                                {{ ($sessionPkg ?? session('dashboard_package', 'hajj')) === 'hajj' ? 'Umrah' : 'Hajj' }} Only
+                            </a>
+                            <a href="{{ route('client.index', ['package_type' => 'all']) }}"
+                               class="btn {{ ($filterPkg ?? '') === 'all' ? 'btn-primary' : 'btn-outline-secondary' }}">
+                                All Clients
+                            </a>
+                        </div>
                         @can('client_create')
                             <a href="{{ route('client.create') }}" class="btn btn-primary btn-sm">
                                 + Add Client
