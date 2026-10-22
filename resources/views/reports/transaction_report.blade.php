@@ -183,6 +183,16 @@
                     <form action="{{ route('reports.transactions') }}" method="GET">
                         <input type="hidden" name="quick_date" value="{{ $quickDate }}">
                         <div class="row g-2 align-items-end">
+                            <!-- Package Season -->
+                            <div class="col-6 col-md-2">
+                                <label class="form-label fs-11 fw-bold text-muted mb-1">Package Season</label>
+                                <select name="package_type" class="form-select form-select-sm">
+                                    <option value="hajj" {{ (request('package_type', $packageType ?? 'hajj') === 'hajj') ? 'selected' : '' }}>Hajj Only</option>
+                                    <option value="umrah" {{ (request('package_type', $packageType ?? 'hajj') === 'umrah') ? 'selected' : '' }}>Umrah Only</option>
+                                    <option value="all" {{ (request('package_type', $packageType ?? 'hajj') === 'all') ? 'selected' : '' }}>All Packages</option>
+                                </select>
+                            </div>
+
                             <!-- Flow (Inflow / Outflow) -->
                             <div class="col-6 col-md-2">
                                 <label class="form-label fs-11 fw-bold text-muted mb-1">Flow Type</label>
@@ -204,6 +214,7 @@
                                     <option value="supplier_payment" {{ $category === 'supplier_payment' ? 'selected' : '' }}>Supplier Payment</option>
                                     <option value="expense" {{ $category === 'expense' ? 'selected' : '' }}>Office / General Expense</option>
                                     <option value="staff_salary" {{ $category === 'staff_salary' ? 'selected' : '' }}>Staff Salary / Advance</option>
+                                    <option value="jv_voucher" {{ $category === 'jv_voucher' ? 'selected' : '' }}>Journal Voucher (JV)</option>
                                 </select>
                             </div>
 

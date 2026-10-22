@@ -168,7 +168,7 @@
                                 {{-- CLIENT BLOCK (Primary Selection) --}}
                                 <div class="col-md-4" id="clientBlock">
                                     <label class="form-label">Client Name <span class="text-danger">*</span></label>
-                                    <select name="client_id" id="clientSelect" class="form-select select2" required>
+                                    <select name="client_id" id="clientSelect" class="form-select select2">
                                         <option value="">-- Select Client --</option>
                                         @foreach ($clients as $cl)
                                             <option value="{{ $cl->id }}"
@@ -206,7 +206,7 @@
                                                 <div class="input-group">
                                                     <span class="input-group-text"><i class="mdi mdi-account"></i></span>
                                                     <input type="number" name="adults_count" id="pax_adults" class="form-control pax-breakdown-calc"
-                                                        value="{{ old('adults_count', $bAdults) }}" min="1" required>
+                                                        value="{{ old('adults_count', $bAdults) }}" min="1">
                                                 </div>
                                             </div>
                                             <div class="col-md-3">
@@ -228,7 +228,7 @@
                                             <div class="col-md-3">
                                                 <label class="form-label fw-semibold text-primary">Total Passengers</label>
                                                 <input type="number" name="no_of_pax" id="no_of_pax" class="form-control bg-white fw-bold text-primary"
-                                                    value="{{ old('no_of_pax', $booking->no_of_pax) }}" min="1" readonly required>
+                                                    value="{{ old('no_of_pax', $booking->no_of_pax) }}" min="1" readonly>
                                             </div>
                                         </div>
                                         <small class="text-muted mt-2"><i class="mdi mdi-information-outline"></i> Persons, Flight, Hotel, Transport & Visa tabs will update automatically based on passenger breakdown.</small>
@@ -750,13 +750,13 @@
                                                 <label class="form-label">Nights</label>
                                                 <input type="number" name="hotels[{{ $loop->index }}][no_of_nights]"
                                                     class="form-control hotel-nights" value="{{ old('hotels.'.$loop->index.'.no_of_nights', $hotel->no_of_nights ?: 1) }}"
-                                                    min="1" required>
+                                                    min="1">
                                             </div>
                                             <div class="col-md-2">
                                                 <label class="form-label">No. of Rooms</label>
                                                 <input type="number" name="hotels[{{ $loop->index }}][no_of_rooms]"
                                                     class="form-control hotel-rooms" value="{{ old('hotels.'.$loop->index.'.no_of_rooms', $hotel->no_of_rooms ?: 1) }}"
-                                                    min="1" required>
+                                                    min="1">
                                             </div>
                                             <div class="col-md-2">
                                                 <label class="form-label">Hotel Room #</label>
@@ -1853,7 +1853,7 @@
                                 </button>
                                 <div class="d-flex gap-2">
                                     <button type="button" class="btn btn-primary btn-next">Next <i class="mdi mdi-arrow-right ms-1"></i></button>
-                                    <button type="submit" class="btn btn-success px-5">
+                                    <button type="submit" class="btn btn-success px-5 btn-save-booking" onclick="return submitBookingForm(this);">
                                         <i class="mdi mdi-content-save me-1"></i> Update Booking
                                     </button>
                                 </div>
@@ -1882,7 +1882,7 @@
                                 </button>
                                 <div class="d-flex gap-2">
                                     <a href="{{ route('booking.index') }}" class="btn btn-secondary">Cancel</a>
-                                    <button type="submit" class="btn btn-success px-5">
+                                    <button type="submit" class="btn btn-success px-5 btn-save-booking" onclick="return submitBookingForm(this);">
                                         <i class="mdi mdi-content-save me-1"></i> Update Booking
                                     </button>
                                 </div>
@@ -2093,6 +2093,60 @@
                 calcTotal();
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function activateTabByHref(href) {
+            const link = document.querySelector(`#bookingTabs .nav-link[href="${href}"]`);
+            if (link) {
+                link.click();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function submitBookingForm(btn) {
+            const form = document.getElementById('bookingForm');
+            if (!form) return false;
+
+            // 1. Client Validation
+            const clientSelect = document.getElementById('clientSelect');
+            if (!clientSelect || !clientSelect.value) {
+                activateTabByHref('#tab-details');
+                alert('Please select a Client before updating the booking.');
+                setTimeout(() => {
+                    if (typeof $ !== 'undefined' && $(clientSelect).data('select2')) {
+                        $(clientSelect).select2('open');
+                    } else if (clientSelect) {
+                        clientSelect.focus();
+                    }
+                }, 250);
+                return false;
+            }
+
+            // 2. Passengers Validation
+            const adultsInput = document.getElementById('pax_adults');
+            const paxAdults = parseInt(adultsInput?.value) || 0;
+            if (paxAdults < 1) {
+                activateTabByHref('#tab-details');
+                alert('Please specify at least 1 Adult passenger.');
+                adultsInput?.focus();
+                return false;
+            }
+
+            // 3. Make sure totals and calculations are up to date
+            if (typeof calcTotal === 'function') {
+                calcTotal();
+            }
+
+            // 4. Update UI: show spinner & disable buttons
+            const submitBtns = document.querySelectorAll('button[type="submit"], .btn-save-booking');
+            submitBtns.forEach(b => {
+                b.disabled = true;
+                b.innerHTML = '<i class="mdi mdi-loading mdi-spin me-1"></i> Updating Booking...';
+            });
+
+            // 5. Submit the form
+            form.submit();
+            return true;
         }
 
         document.querySelectorAll('#bookingTabs .nav-link').forEach(link => {

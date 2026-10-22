@@ -30,6 +30,9 @@ use App\Http\Controllers\RoomTypeController;
 use App\Http\Controllers\RoomingListController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\CheckInReportController;
+use App\Http\Controllers\ArrivalGroupController;
+use App\Http\Controllers\DepartureGroupController;
+use App\Http\Controllers\HajiGroupController;
 
 
 
@@ -314,6 +317,38 @@ Route::middleware(['auth:web,company'])->group(function () {
             Route::delete('delete/{id}', 'destroy')->name('room-inventory.delete');
             Route::get('check-availability', 'checkAvailability')->name('room-inventory.check-availability');
             Route::get('hotel-summary/{hotel_id}', 'hotelSummary')->name('room-inventory.hotel-summary');
+        });
+
+        Route::controller(ArrivalGroupController::class)->prefix('arrival-group')->group(function () {
+            Route::get('/', 'index')->name('arrival-group.index');
+            Route::get('create', 'create')->name('arrival-group.create');
+            Route::post('store', 'store')->name('arrival-group.store');
+            Route::get('show/{id}', 'show')->name('arrival-group.show');
+            Route::get('edit/{id}', 'edit')->name('arrival-group.edit');
+            Route::put('update/{id}', 'update')->name('arrival-group.update');
+            Route::delete('delete/{id}', 'destroy')->name('arrival-group.delete');
+        });
+
+        Route::controller(DepartureGroupController::class)->prefix('departure-group')->group(function () {
+            Route::get('/', 'index')->name('departure-group.index');
+            Route::get('create', 'create')->name('departure-group.create');
+            Route::post('store', 'store')->name('departure-group.store');
+            Route::get('show/{id}', 'show')->name('departure-group.show');
+            Route::get('edit/{id}', 'edit')->name('departure-group.edit');
+            Route::put('update/{id}', 'update')->name('departure-group.update');
+            Route::delete('delete/{id}', 'destroy')->name('departure-group.delete');
+        });
+
+        Route::controller(HajiGroupController::class)->prefix('haji-group')->group(function () {
+            Route::get('/', 'index')->name('haji-group.index');
+            Route::get('create', 'create')->name('haji-group.create');
+            Route::post('store', 'store')->name('haji-group.store');
+            Route::get('show/{id}', 'show')->name('haji-group.show');
+            Route::get('edit/{id}', 'edit')->name('haji-group.edit');
+            Route::put('update/{id}', 'update')->name('haji-group.update');
+            Route::delete('delete/{id}', 'destroy')->name('haji-group.delete');
+            Route::post('smart-split/{id}', 'smartSplitBus')->name('haji-group.smart-split-bus');
+            Route::post('transfer-persons/{id}', 'transferPersons')->name('haji-group.transfer-persons');
         });
 
         Route::controller(HotelController::class)->prefix('hotel')->group(function () {

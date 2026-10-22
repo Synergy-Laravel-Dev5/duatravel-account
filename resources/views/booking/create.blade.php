@@ -53,7 +53,7 @@
                 {{-- Draft Restore Banner Container --}}
                 <div id="draftAlertContainer"></div>
 
-                <form action="{{ route('booking.store') }}" method="POST" id="bookingForm" enctype="multipart/form-data">
+                <form action="{{ route('booking.store') }}" method="POST" id="bookingForm" enctype="multipart/form-data" novalidate>
                     @csrf
 
                     {{-- TAB NAV --}}
@@ -104,7 +104,7 @@
                                     <label>Year <span class="text-danger">*</span></label>
                                     <input type="number" name="package_year" id="package_year" class="form-control"
                                         value="{{ old('package_year', date('Y')) }}" min="2000"
-                                        max="{{ date('Y') + 5 }}" required>
+                                        max="{{ date('Y') + 5 }}">
                                 </div>
                                 <div class="col-md-6" id="package_name_container" style="{{ $isUmrah ? 'display:none;' : '' }}">
                                     <label class="form-label">Package Name</label>
@@ -134,7 +134,7 @@
                                 {{-- CLIENT BLOCK (Primary Selection) --}}
                                 <div class="col-md-4" id="clientBlock">
                                     <label class="form-label">Client Name <span class="text-danger">*</span></label>
-                                    <select name="client_id" id="clientSelect" class="form-select select2" required>
+                                    <select name="client_id" id="clientSelect" class="form-select select2">
                                         <option value="">-- Select Client --</option>
                                         @foreach ($clients as $cl)
                                             <option value="{{ $cl->id }}"
@@ -163,7 +163,7 @@
                                                 <div class="input-group">
                                                     <span class="input-group-text"><i class="mdi mdi-account"></i></span>
                                                     <input type="number" name="adults_count" id="pax_adults" class="form-control pax-breakdown-calc"
-                                                        value="{{ old('adults_count', 1) }}" min="1" required>
+                                                        value="{{ old('adults_count', 1) }}" min="1">
                                                 </div>
                                             </div>
                                             <div class="col-md-3">
@@ -185,7 +185,7 @@
                                             <div class="col-md-3">
                                                 <label class="form-label fw-semibold text-primary">Total Passengers</label>
                                                 <input type="number" name="no_of_pax" id="no_of_pax" class="form-control bg-white fw-bold text-primary"
-                                                    value="{{ old('no_of_pax', 1) }}" min="1" readonly required>
+                                                    value="{{ old('no_of_pax', 1) }}" min="1" readonly>
                                             </div>
                                         </div>
                                         <small class="text-muted mt-2"><i class="mdi mdi-information-outline"></i> Persons, Flight, Hotel, Transport & Visa tabs will update automatically based on passenger breakdown.</small>
@@ -592,7 +592,7 @@
                                         <div class="col-md-1">
                                             <label class="form-label">Qty</label>
                                             <input type="number" name="transports[0][quantity]" class="form-control"
-                                                value="{{ old('transports.0.quantity', 1) }}" min="1">
+                                                value="{{ old('transports.0.quantity', 1) }}">
                                         </div>
                                         <div class="col-md-2">
                                             <label class="form-label">Type / Status</label>
@@ -607,7 +607,7 @@
                                         <div class="col-md-1">
                                             <label class="form-label">Pax</label>
                                             <input type="number" name="transports[0][pax]" class="form-control"
-                                                value="{{ old('transports.0.pax', 1) }}" min="1">
+                                                value="{{ old('transports.0.pax', 1) }}">
                                         </div>
                                         <div class="col-md-3">
                                             <label class="form-label d-flex justify-content-between align-items-center mb-1">
@@ -1003,7 +1003,7 @@
                                 </button>
                                 <div class="d-flex gap-2">
                                     <button type="button" class="btn btn-primary btn-next">Next <i class="mdi mdi-arrow-right ms-1"></i></button>
-                                    <button type="submit" class="btn btn-success px-5">
+                                    <button type="submit" class="btn btn-success px-5 btn-save-booking" onclick="return submitBookingForm(this);">
                                         <i class="mdi mdi-content-save me-1"></i> Save Booking
                                     </button>
                                 </div>
@@ -1028,7 +1028,7 @@
                                 </button>
                                 <div class="d-flex gap-2">
                                     <a href="{{ route('booking.index') }}" class="btn btn-secondary">Cancel</a>
-                                    <button type="submit" class="btn btn-success px-5">
+                                    <button type="submit" class="btn btn-success px-5 btn-save-booking" onclick="return submitBookingForm(this);">
                                         <i class="mdi mdi-content-save me-1"></i> Save Booking
                                     </button>
                                 </div>
@@ -1185,6 +1185,65 @@
                 calcTotal();
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function activateTabByHref(href) {
+            const link = document.querySelector(`#bookingTabs .nav-link[href="${href}"]`);
+            if (link) {
+                link.click();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function submitBookingForm(btn) {
+            const form = document.getElementById('bookingForm');
+            if (!form) return false;
+
+            // 1. Client Validation
+            const clientSelect = document.getElementById('clientSelect');
+            if (!clientSelect || !clientSelect.value) {
+                activateTabByHref('#tab-details');
+                alert('Please select a Client before saving the booking.');
+                setTimeout(() => {
+                    if (typeof $ !== 'undefined' && $(clientSelect).data('select2')) {
+                        $(clientSelect).select2('open');
+                    } else if (clientSelect) {
+                        clientSelect.focus();
+                    }
+                }, 250);
+                return false;
+            }
+
+            // 2. Passengers Validation
+            const adultsInput = document.getElementById('pax_adults');
+            const paxAdults = parseInt(adultsInput?.value) || 0;
+            if (paxAdults < 1) {
+                activateTabByHref('#tab-details');
+                alert('Please specify at least 1 Adult passenger.');
+                adultsInput?.focus();
+                return false;
+            }
+
+            // 3. Make sure totals and calculations are up to date
+            if (typeof calcTotal === 'function') {
+                calcTotal();
+            }
+
+            // 4. Clear the draft so it doesn't linger after save
+            if (typeof BookingDraftManager !== 'undefined' && BookingDraftManager.clearDraft) {
+                BookingDraftManager.clearDraft(false);
+            }
+
+            // 5. Update UI: show spinner & disable buttons
+            const submitBtns = document.querySelectorAll('button[type="submit"], .btn-save-booking');
+            submitBtns.forEach(b => {
+                b.disabled = true;
+                b.innerHTML = '<i class="mdi mdi-loading mdi-spin me-1"></i> Saving Booking...';
+            });
+
+            // 6. Submit the form
+            form.submit();
+            return true;
         }
 
         document.querySelectorAll('#bookingTabs .nav-link').forEach(link => {
@@ -3213,17 +3272,51 @@
                     isReload = false;
                 }
 
-                if (isReload) {
-                    this.restoreDraft();
-                } else {
-                    this.clearDraft(false);
+                const rawDraft = localStorage.getItem(this.storageKey);
+                if (rawDraft) {
+                    try {
+                        const draft = JSON.parse(rawDraft);
+                        if (draft && draft.fields && (Date.now() - draft.timestamp < 259200000)) {
+                            if (isReload) {
+                                this.restoreDraft();
+                            } else {
+                                const draftDate = new Date(draft.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                const banner = document.createElement('div');
+                                banner.className = 'alert alert-warning alert-dismissible fade show d-flex justify-content-between align-items-center mb-3 shadow-sm';
+                                banner.innerHTML = `
+                                    <div>
+                                        <i class="mdi mdi-restore me-1 fs-16"></i>
+                                        <strong>Unsaved Booking Draft Found!</strong> You have an unsaved voucher draft from (${draftDate}).
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button type="button" class="btn btn-sm btn-dark" onclick="BookingDraftManager.restoreDraft(); this.closest('.alert').remove();">
+                                            <i class="mdi mdi-undo-variant me-1"></i> Restore Draft
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="BookingDraftManager.clearDraft(false); this.closest('.alert').remove();">
+                                            Discard
+                                        </button>
+                                    </div>
+                                `;
+                                document.getElementById('draftAlertContainer')?.appendChild(banner);
+                            }
+                        }
+                    } catch(e) {}
                 }
 
                 const form = document.getElementById('bookingForm');
                 if (form) {
                     form.addEventListener('input', () => this.scheduleSave());
                     form.addEventListener('change', () => this.scheduleSave());
-                    form.addEventListener('submit', () => this.clearDraft(false));
+                    form.addEventListener('submit', (e) => {
+                        const clientSelect = document.getElementById('clientSelect');
+                        if (!clientSelect || !clientSelect.value) {
+                            e.preventDefault();
+                            activateTabByHref('#tab-details');
+                            alert('Please select a Client before saving the booking.');
+                            return false;
+                        }
+                        this.clearDraft(false);
+                    });
                 }
 
                 document.querySelectorAll('#bookingTabs .nav-link').forEach(link => {

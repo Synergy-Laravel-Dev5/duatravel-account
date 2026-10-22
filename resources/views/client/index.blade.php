@@ -52,6 +52,7 @@
                                             <td>{{ $loop->iteration }}</td>
                                             <td>
                                                 <strong>{{ $client->name }}</strong>
+                                                <span class="badge {{ ($client->package_type ?? 'hajj') === 'hajj' ? 'bg-warning text-dark' : 'bg-info text-white' }} fs-10 text-uppercase ms-1">{{ $client->package_type ?? 'hajj' }}</span>
                                                 @if ($client->lead_id)
                                                     <a href="{{ route('lead.show', $client->lead_id) }}" class="badge bg-soft-info text-info d-block mt-1" style="font-size: 11px; width: fit-content;">
                                                         <i class="mdi mdi-link-variant me-1"></i> Lead #{{ $client->lead_id }}

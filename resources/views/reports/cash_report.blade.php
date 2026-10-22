@@ -119,7 +119,16 @@
             <div class="card mb-3 border-0 shadow-sm no-print">
                 <div class="card-body p-3 bg-light rounded-3">
                     <form action="{{ route('reports.cash') }}" method="GET" class="row g-2 align-items-end">
-                        <div class="col-md-2">
+                        <div class="col-lg-2 col-md-3 col-sm-6">
+                            <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Package Season</label>
+                            <select name="package_type" class="form-select form-select-sm">
+                                <option value="hajj" {{ (request('package_type', $packageType) === 'hajj') ? 'selected' : '' }}>Hajj Only</option>
+                                <option value="umrah" {{ (request('package_type', $packageType) === 'umrah') ? 'selected' : '' }}>Umrah Only</option>
+                                <option value="all" {{ (request('package_type', $packageType) === 'all') ? 'selected' : '' }}>All Packages</option>
+                            </select>
+                        </div>
+
+                        <div class="col-lg-2 col-md-3 col-sm-6">
                             <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Cash Flow</label>
                             <select name="flow" class="form-select form-select-sm">
                                 <option value="all" {{ request('flow') === 'all' ? 'selected' : '' }}>All Cash Flow</option>
@@ -128,7 +137,7 @@
                             </select>
                         </div>
 
-                        <div class="col-md-2">
+                        <div class="col-lg-2 col-md-3 col-sm-6">
                             <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Category</label>
                             <select name="category" class="form-select form-select-sm">
                                 <option value="all" {{ request('category') === 'all' ? 'selected' : '' }}>All Categories</option>
@@ -141,22 +150,22 @@
                             </select>
                         </div>
 
-                        <div class="col-md-2">
-                            <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">From Date</label>
+                        <div class="col-lg-1 col-md-3 col-sm-6">
+                            <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">From</label>
                             <input type="date" name="date_from" class="form-control form-control-sm" value="{{ request('date_from', $dateFrom) }}">
                         </div>
 
-                        <div class="col-md-2">
-                            <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">To Date</label>
+                        <div class="col-lg-1 col-md-3 col-sm-6">
+                            <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">To</label>
                             <input type="date" name="date_to" class="form-control form-control-sm" value="{{ request('date_to', $dateTo) }}">
                         </div>
 
-                        <div class="col-md-3">
+                        <div class="col-lg-3 col-md-6 col-sm-8">
                             <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Search Keyword</label>
                             <input type="text" name="search" class="form-control form-control-sm" placeholder="Voucher #, party name, note..." value="{{ request('search') }}">
                         </div>
 
-                        <div class="col-md-1 d-flex gap-1">
+                        <div class="col-lg-1 col-md-3 col-sm-4 d-flex gap-1">
                             <button type="submit" class="btn btn-primary btn-sm w-100" title="Apply Filter">
                                 <i class="mdi mdi-magnify"></i>
                             </button>

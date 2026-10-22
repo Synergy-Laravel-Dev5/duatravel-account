@@ -27,6 +27,7 @@
                                 @endif
                                 <form action="{{ route('client.store') }}" method="POST">
                                     @csrf
+                                    <input type="hidden" name="package_type" value="{{ session('dashboard_package', 'hajj') }}">
                                     <div class="row">
                                         <div class="col-lg-6">
                                             <div class="mb-3">

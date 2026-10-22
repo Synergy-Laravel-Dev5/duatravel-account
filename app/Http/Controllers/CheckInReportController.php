@@ -17,7 +17,9 @@ class CheckInReportController extends Controller
     {
         $hotelName      = $request->get('hotel_name');
         $city           = $request->get('city');
-        $packageType    = $request->get('package_type');
+        $activeDashboardPkg = session('dashboard_package', 'hajj');
+        $defaultPackageType = in_array($activeDashboardPkg, ['hajj', 'umrah']) ? $activeDashboardPkg : null;
+        $packageType    = $request->has('package_type') ? $request->get('package_type') : $defaultPackageType;
         $checkInFrom    = $request->has('check_in_from') ? $request->get('check_in_from') : date('Y-m-d');
         $checkInTo      = $request->get('check_in_to');
         $search         = $request->get('search');
@@ -41,7 +43,18 @@ class CheckInReportController extends Controller
         ->whereNull('deleted_at')
         ->whereNotIn('status', ['cancelled', 'rejected']);
 
-        if ($packageType) {
+        if ($packageType === 'hajj') {
+            $bookingQuery->where(function ($q) {
+                $q->where('package_type', 'hajj')
+                  ->orWhereNull('package_type')
+                  ->orWhere('package_type', '');
+            })->where(function ($q) {
+                $q->whereNull('package_type')
+                  ->orWhereRaw('LOWER(TRIM(package_type)) != ?', ['umrah']);
+            });
+        } elseif ($packageType === 'umrah') {
+            $bookingQuery->whereRaw('LOWER(TRIM(package_type)) = ?', ['umrah']);
+        } elseif ($packageType && $packageType !== 'all') {
             $bookingQuery->where('package_type', $packageType);
         }
 

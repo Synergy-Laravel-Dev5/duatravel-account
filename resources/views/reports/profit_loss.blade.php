@@ -202,9 +202,9 @@
                         <div class="col-md-2 col-sm-6">
                             <label class="form-label fs-11 text-muted mb-1">Package Type</label>
                             <select name="package_type" class="form-select form-select-sm">
-                                <option value="all" {{ $packageType == 'all' ? 'selected' : '' }}>All Packages</option>
-                                <option value="umrah" {{ $packageType == 'umrah' ? 'selected' : '' }}>Umrah</option>
                                 <option value="hajj" {{ $packageType == 'hajj' ? 'selected' : '' }}>Hajj</option>
+                                <option value="umrah" {{ $packageType == 'umrah' ? 'selected' : '' }}>Umrah</option>
+                                <option value="all" {{ $packageType == 'all' ? 'selected' : '' }}>All Packages</option>
                             </select>
                         </div>
 

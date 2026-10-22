@@ -325,14 +325,18 @@ class RoomingListController extends Controller
         $toDate         = $request->get('to_date');
         $viewMode       = $request->get('view', 'manifest');
 
-        // Query active bookings
+        // Query active bookings (Rooming List & Manifest Report is strictly for Hajj - Umrah bookings are excluded)
         $bookingQuery = Booking::with([
             'client',
             'company',
             'persons',
             'hotels'
         ])->whereNull('deleted_at')
-          ->whereNotIn('status', ['cancelled', 'rejected']);
+          ->whereNotIn('status', ['cancelled', 'rejected'])
+          ->where(function ($q) {
+              $q->whereNull('package_type')
+                ->orWhereRaw('LOWER(TRIM(package_type)) != ?', ['umrah']);
+          });
 
         if (!empty($search)) {
             $term = '%' . $search . '%';

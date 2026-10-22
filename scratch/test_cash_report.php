@@ -1,29 +1,25 @@
 <?php
-require __DIR__ . '/../vendor/autoload.php';
-$app = require_once __DIR__ . '/../bootstrap/app.php';
+require 'vendor/autoload.php';
+$app = require_once 'bootstrap/app.php';
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 
-use App\Models\Booking;
-use App\Models\ExpenseTransaction;
-use App\Models\Transaction;
+session(['dashboard_package' => 'hajj']);
+$ctrl = new \App\Http\Controllers\CashReportController();
+$reqHajj = new \Illuminate\Http\Request();
+$resHajj = (new \ReflectionClass($ctrl))->getMethod('gatherCashData');
+$resHajj->setAccessible(true);
+$dataHajj = $resHajj->invoke($ctrl, $reqHajj);
 
-echo "=== CASH REPORT DATA TEST ===\n";
-
-// 1. ExpenseTransactions with payment_type = 'cash'
-$cashExp = ExpenseTransaction::where('payment_type', 'cash')->whereNull('deleted_at')->get();
-echo "ExpenseTransactions with cash: " . $cashExp->count() . "\n";
-foreach ($cashExp as $e) {
-    echo "ID: {$e->id} | Date: {$e->date} | Type: {$e->transaction_type} | Payee: {$e->payee_type} | Amt: {$e->amount} {$e->currency} @ {$e->exchange_rate}\n";
+echo "HAJJ CASH REPORT COUNT: " . count($dataHajj['transactions']) . "\n";
+foreach ($dataHajj['transactions'] as $t) {
+    echo "  - {$t['date']} | {$t['voucher_no']} | {$t['party_name']} | {$t['cash_in_pkr']} / {$t['cash_out_pkr']}\n";
 }
 
-// 2. Bookings with total_received > 0
-$cashBookings = Booking::where('total_received', '>', 0)->get();
-echo "\nBookings with total_received > 0: " . $cashBookings->count() . "\n";
-foreach ($cashBookings as $b) {
-    echo "Booking ID: {$b->id} | Date: {$b->booking_date} | Received: {$b->total_received} | Client: " . ($b->client?->name ?? 'None') . "\n";
+session(['dashboard_package' => 'umrah']);
+$reqUmrah = new \Illuminate\Http\Request();
+$dataUmrah = $resHajj->invoke($ctrl, $reqUmrah);
+echo "\nUMRAH CASH REPORT COUNT: " . count($dataUmrah['transactions']) . "\n";
+foreach ($dataUmrah['transactions'] as $t) {
+    echo "  - {$t['date']} | {$t['voucher_no']} | {$t['party_name']} | {$t['cash_in_pkr']} / {$t['cash_out_pkr']}\n";
 }
-
-// 3. Transactions with payment_type = 'cash'
-$cashTxns = Transaction::where('payment_type', 'cash')->get();
-echo "\nClient Transactions with cash: " . $cashTxns->count() . "\n";

@@ -129,6 +129,11 @@ class CashReportController extends Controller
      */
     private function gatherCashData(Request $request): array
     {
+        $activeDashboardPkg = session('dashboard_package', 'hajj');
+        $packageType = $request->has('package_type') 
+            ? $request->get('package_type') 
+            : (in_array($activeDashboardPkg, ['hajj', 'umrah']) ? $activeDashboardPkg : 'hajj');
+
         $flow      = $request->get('flow', 'all'); // 'all', 'inflow', 'outflow'
         $category  = $request->get('category', 'all');
         $clientId  = $request->get('client_id');
@@ -177,6 +182,20 @@ class CashReportController extends Controller
                 $txQ = Transaction::with(['client', 'company', 'booking'])
                     ->where('payment_type', 'cash')
                     ->where('status', 'confirmed');
+
+                if ($packageType === 'hajj') {
+                    $txQ->where(function ($q) {
+                        $q->whereHas('booking', function ($bq) {
+                            $bq->where(function ($sq) {
+                                $sq->where('package_type', 'hajj')->orWhereNull('package_type');
+                            })->where('package_type', '!=', 'umrah');
+                        })->orWhereNull('booking_id');
+                    });
+                } elseif ($packageType === 'umrah') {
+                    $txQ->whereHas('booking', function ($bq) {
+                        $bq->where('package_type', 'umrah');
+                    });
+                }
 
                 if (!empty($clientId)) {
                     $txQ->where('client_id', $clientId);
@@ -227,6 +246,14 @@ class CashReportController extends Controller
             // 2. Gather Cash Advances from `bookings` table (INFLOWS - PKR)
             if ($category === 'all' || $category === 'booking_advance') {
                 $bkQ = Booking::with(['client', 'company'])->where('total_received', '>', 0);
+
+                if ($packageType === 'hajj') {
+                    $bkQ->where(function ($q) {
+                        $q->where('package_type', 'hajj')->orWhereNull('package_type');
+                    })->where('package_type', '!=', 'umrah');
+                } elseif ($packageType === 'umrah') {
+                    $bkQ->where('package_type', 'umrah');
+                }
 
                 if (!empty($clientId)) {
                     $bkQ->where('client_id', $clientId);
@@ -280,6 +307,14 @@ class CashReportController extends Controller
         $etQ = ExpenseTransaction::with(['bank', 'supplier', 'client', 'staff', 'expense'])
             ->where('payment_type', 'cash')
             ->whereNull('deleted_at');
+
+        if ($packageType === 'hajj') {
+            $etQ->where(function ($q) {
+                $q->where('hajj_umrah', 'hajj')->orWhereNull('hajj_umrah');
+            })->where('hajj_umrah', '!=', 'umrah');
+        } elseif ($packageType === 'umrah') {
+            $etQ->where('hajj_umrah', 'umrah');
+        }
 
         if (!empty($clientId)) {
             $etQ->where('client_id', $clientId);
@@ -444,9 +479,18 @@ class CashReportController extends Controller
         // Reverse for display (latest first)
         $displayRecords = array_reverse($allRecords);
 
-        $clients = Client::where('status', 'active')->orderBy('name')->get();
+        $clientsQ = Client::where('status', 'active');
+        if ($packageType === 'hajj') {
+            $clientsQ->where(function ($q) {
+                $q->where('package_type', 'hajj')->orWhereNull('package_type');
+            })->where('package_type', '!=', 'umrah');
+        } elseif ($packageType === 'umrah') {
+            $clientsQ->where('package_type', 'umrah');
+        }
+        $clients = $clientsQ->orderBy('name')->get();
 
         return [
+            'packageType'        => $packageType,
             'transactions'       => $displayRecords,
             'totalCashInPkr'     => $totalCashInPkr,
             'totalCashOutPkr'    => $totalCashOutPkr,

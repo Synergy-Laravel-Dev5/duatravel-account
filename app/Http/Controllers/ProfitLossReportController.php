@@ -16,7 +16,9 @@ class ProfitLossReportController extends Controller
      */
     public function index(Request $request)
     {
-        $packageType = $request->get('package_type', 'all'); // 'all', 'hajj', 'umrah'
+        $activeDashboardPkg = session('dashboard_package', 'hajj');
+        $defaultPackageType = in_array($activeDashboardPkg, ['hajj', 'umrah']) ? $activeDashboardPkg : 'hajj';
+        $packageType = $request->has('package_type') ? $request->get('package_type') : $defaultPackageType;
         $year = $request->get('year', 'all'); // e.g. 2026, 2027, 'all'
         $month = $request->get('month', 'all'); // 1-12 or 'all'
         $dateFrom = $request->get('date_from');
@@ -36,7 +38,18 @@ class ProfitLossReportController extends Controller
             'flightSupplier'
         ]);
 
-        if ($packageType !== 'all') {
+        if ($packageType === 'hajj') {
+            $bookingQuery->where(function ($q) {
+                $q->where('package_type', 'hajj')
+                  ->orWhereNull('package_type')
+                  ->orWhere('package_type', '');
+            })->where(function ($q) {
+                $q->whereNull('package_type')
+                  ->orWhereRaw('LOWER(TRIM(package_type)) != ?', ['umrah']);
+            });
+        } elseif ($packageType === 'umrah') {
+            $bookingQuery->whereRaw('LOWER(TRIM(package_type)) = ?', ['umrah']);
+        } elseif ($packageType !== 'all') {
             $bookingQuery->where('package_type', $packageType);
         }
 
@@ -230,7 +243,14 @@ class ProfitLossReportController extends Controller
 
         // Query Overhead Expenses from ExpenseTransaction
         $expenseQuery = ExpenseTransaction::whereNull('deleted_at');
-        if ($packageType !== 'all') {
+        if ($packageType === 'hajj') {
+            $expenseQuery->where(function ($q) {
+                $q->where('hajj_umrah', 'hajj')
+                  ->orWhereNull('hajj_umrah');
+            });
+        } elseif ($packageType === 'umrah') {
+            $expenseQuery->where('hajj_umrah', 'umrah');
+        } elseif ($packageType !== 'all') {
             $expenseQuery->where('hajj_umrah', $packageType);
         }
         if ($year !== 'all' && !empty($year)) {

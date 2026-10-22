@@ -12,6 +12,7 @@ class Client extends Model
     protected $fillable = [
         'lead_id',
         'package_id',
+        'package_type',
         'name',
         'company_name',
         'passport_number',

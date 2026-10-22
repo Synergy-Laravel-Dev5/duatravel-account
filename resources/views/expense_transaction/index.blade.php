@@ -105,6 +105,17 @@
                                                             <i class="mdi mdi-office-building me-1"></i> {{ $t->expense->name ?? 'Office Expense' }}
                                                         </span>
                                                         <small class="text-muted d-block fs-11">Expense Head</small>
+                                                    @elseif($t->payee_type === 'jv')
+                                                        <span class="badge" style="background-color: #ede9fe; color: #6d28d9; border: 1px solid #ddd6fe;">
+                                                            <i class="mdi mdi-book-open-page-variant me-1"></i> JV Voucher
+                                                        </span>
+                                                        @if($t->client)
+                                                            <small class="text-muted d-block fs-11">Party: {{ $t->client->name }} (Client)</small>
+                                                        @elseif($t->supplier)
+                                                            <small class="text-muted d-block fs-11">Party: {{ $t->supplier->name }} (Supplier)</small>
+                                                        @else
+                                                            <small class="text-muted d-block fs-11">Journal Adjustment</small>
+                                                        @endif
                                                     @else
                                                         <span class="badge bg-soft-dark text-dark">
                                                             <i class="mdi mdi-account-circle me-1"></i> Self / Transfer

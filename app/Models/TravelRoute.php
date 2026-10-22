@@ -18,6 +18,11 @@ class TravelRoute extends Model
         'status',
     ];
 
+    public function getTitleAttribute()
+    {
+        return $this->name ?? ('Travel Route #' . $this->id);
+    }
+
     public function vehicle()
     {
         return $this->belongsTo(Vehicle::class);

@@ -279,18 +279,21 @@
                                     <span>{{ $isHajjPackage ? 'Packages' : 'Umrah Packages' }}</span>
                                 </a>
                             </li>
+                            @if ($isHajjPackage)
                             <li>
                                 <a class="tp-link" href="{{ route('room-inventory.index') }}">
                                     <i data-feather="box"></i>
                                     <span>Room Inventory</span>
                                 </a>
                             </li>
+                            @if ($isHajjPackage)
                             <li>
                                 <a class="tp-link" href="{{ route('report.rooming-list') }}">
                                     <i data-feather="clipboard"></i>
                                     <span>Room Allocation Manifest</span>
                                 </a>
                             </li>
+                            @endif
 
                             <li>
                                 <a class="tp-link" href="{{ route('training-session.index') }}">
@@ -298,6 +301,7 @@
                                     <span>Training Sessions</span>
                                 </a>
                             </li>
+                            @endif
                         </ul>
                     </div>
                 </li>
@@ -310,6 +314,27 @@
                         </a>
                     </li>
                 @endcan
+
+                @if ($isHajjPackage)
+                    <li class="{{ request()->routeIs('haji-group.*') ? 'menuitem-active' : '' }}">
+                        <a href="{{ route('haji-group.index') }}" class="{{ request()->routeIs('haji-group.*') ? 'active' : '' }}">
+                            <i data-feather="users"></i>
+                            <span>Haji Pilgrim Groups</span>
+                        </a>
+                    </li>
+                    <li class="{{ request()->routeIs('arrival-group.*') ? 'menuitem-active' : '' }}">
+                        <a href="{{ route('arrival-group.index') }}" class="{{ request()->routeIs('arrival-group.*') ? 'active' : '' }}">
+                            <i data-feather="arrow-down-left"></i>
+                            <span>Arrival Groups</span>
+                        </a>
+                    </li>
+                    <li class="{{ request()->routeIs('departure-group.*') ? 'menuitem-active' : '' }}">
+                        <a href="{{ route('departure-group.index') }}" class="{{ request()->routeIs('departure-group.*') ? 'active' : '' }}">
+                            <i data-feather="arrow-up-right"></i>
+                            <span>Departure Groups</span>
+                        </a>
+                    </li>
+                @endif
                 <li>
                     <a href="#sidebarFinanceManagement" data-bs-toggle="collapse">
                         <i data-feather="dollar-sign"></i>
@@ -333,7 +358,7 @@
                             </li> --}}
 
                             <li>
-                                <a class="tp-link" href="{{ route('report.profit-loss') }}">
+                                <a class="tp-link" href="{{ route('report.profit-loss', ['package_type' => $isHajjPackage ? 'hajj' : 'umrah']) }}">
                                     <i data-feather="dollar-sign"></i>
                                     <span>Profit & Loss Report</span>
                                 </a>
@@ -357,17 +382,19 @@
                                 </a>
                             </li>
                             <li>
-                                <a class="tp-link" href="{{ route('reports.checkin') }}">
+                                <a class="tp-link" href="{{ route('reports.checkin', ['package_type' => $isHajjPackage ? 'hajj' : 'umrah']) }}">
                                     <i data-feather="calendar"></i>
                                     <span>Check-In Report</span>
                                 </a>
                             </li>
+                            @if ($isHajjPackage)
                             <li>
                                 <a class="tp-link" href="{{ route('report.rooming-list') }}">
                                     <i data-feather="clipboard"></i>
                                     <span>Room Allocation Manifest</span>
                                 </a>
                             </li>
+                            @endif
                             <li>
                                 <a class="tp-link" href="{{ route('reports.transactions') }}">
                                     <i data-feather="file-text"></i>

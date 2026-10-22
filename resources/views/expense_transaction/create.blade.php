@@ -228,6 +228,13 @@
                                                 <i class="mdi mdi-account-circle me-1"></i> Self / Transfer
                                             </label>
                                         </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input payee-type-radio" type="radio" name="payee_type"
+                                                id="payee_jv" value="jv" {{ old('payee_type') == 'jv' ? 'checked' : '' }}>
+                                            <label class="form-check-label fs-13 fw-semibold" style="color: #7c3aed;" for="payee_jv">
+                                                <i class="mdi mdi-book-open-page-variant me-1"></i> JV Voucher
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -402,6 +409,48 @@
                                     </p>
                                 </div>
 
+                                <!-- 7. JV VOUCHER SECTION -->
+                                <div id="jvSection" class="{{ old('payee_type') == 'jv' ? '' : 'd-none' }}">
+                                    <div class="p-3 bg-white border rounded">
+                                        <div class="row g-3 align-items-center mb-2">
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-12 fw-semibold mb-1">JV Party Link (Optional)</label>
+                                                <select id="jv_party_toggle" class="form-select form-select-sm">
+                                                    <option value="none" {{ !old('jv_client_id') && !old('jv_supplier_id') ? 'selected' : '' }}>General Journal / No Party</option>
+                                                    <option value="client" {{ old('jv_client_id') ? 'selected' : '' }}>Client</option>
+                                                    <option value="supplier" {{ old('jv_supplier_id') ? 'selected' : '' }}>Supplier</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-8 {{ old('jv_client_id') ? '' : 'd-none' }}" id="jv_client_container">
+                                                <label class="form-label fs-12 fw-semibold mb-1">Select Client</label>
+                                                <select name="jv_client_id" class="form-select form-select-sm">
+                                                    <option value="">-- Select Client --</option>
+                                                    @foreach ($clients as $c)
+                                                        <option value="{{ $c->id }}" {{ old('jv_client_id') == $c->id ? 'selected' : '' }}>
+                                                            {{ $c->name }}{{ $c->phone ? ' (' . $c->phone . ')' : '' }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="col-md-8 {{ old('jv_supplier_id') ? '' : 'd-none' }}" id="jv_supplier_container">
+                                                <label class="form-label fs-12 fw-semibold mb-1">Select Supplier</label>
+                                                <select name="jv_supplier_id" class="form-select form-select-sm">
+                                                    <option value="">-- Select Supplier --</option>
+                                                    @foreach ($suppliers as $s)
+                                                        <option value="{{ $s->id }}" {{ old('jv_supplier_id') == $s->id ? 'selected' : '' }}>
+                                                            {{ $s->name }}{{ $s->company_name ? ' (' . $s->company_name . ')' : '' }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="alert alert-info py-2 px-3 mb-0 fs-12 border-0 bg-soft-info text-info">
+                                            <i class="mdi mdi-information-outline me-1"></i>
+                                            <strong>Journal Voucher (JV):</strong> For non-cash adjustments, inter-account transfers, discounts, and ledger write-offs.
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
 
@@ -460,6 +509,7 @@
         const staffSec = document.getElementById('staffSection');
         const expenseSec = document.getElementById('expenseHeadSection');
         const selfSec = document.getElementById('selfSection');
+        const jvSec = document.getElementById('jvSection');
 
         payeeRadios.forEach(radio => {
             radio.addEventListener('change', function() {
@@ -468,6 +518,7 @@
                 if (staffSec) staffSec.classList.add('d-none');
                 if (expenseSec) expenseSec.classList.add('d-none');
                 if (selfSec) selfSec.classList.add('d-none');
+                if (jvSec) jvSec.classList.add('d-none');
 
                 if (this.value === 'supplier' && supplierSec) {
                     supplierSec.classList.remove('d-none');
@@ -479,9 +530,27 @@
                     expenseSec.classList.remove('d-none');
                 } else if (this.value === 'self' && selfSec) {
                     selfSec.classList.remove('d-none');
+                } else if (this.value === 'jv' && jvSec) {
+                    jvSec.classList.remove('d-none');
                 }
             });
         });
+
+        // JV Party Toggle
+        const jvToggle = document.getElementById('jv_party_toggle');
+        const jvClientBox = document.getElementById('jv_client_container');
+        const jvSupplierBox = document.getElementById('jv_supplier_container');
+        if (jvToggle) {
+            jvToggle.addEventListener('change', function() {
+                if (jvClientBox) jvClientBox.classList.add('d-none');
+                if (jvSupplierBox) jvSupplierBox.classList.add('d-none');
+                if (this.value === 'client' && jvClientBox) {
+                    jvClientBox.classList.remove('d-none');
+                } else if (this.value === 'supplier' && jvSupplierBox) {
+                    jvSupplierBox.classList.remove('d-none');
+                }
+            });
+        }
 
         // Supplier Detail Preview
         const supplierSelect = document.getElementById('supplier_id_select');

@@ -30,6 +30,7 @@
                                 <form action="{{ route('client.update', $client->id) }}" method="POST">
                                     @csrf
                                     @method('PUT')
+                                    <input type="hidden" name="package_type" value="{{ old('package_type', $client->package_type ?? session('dashboard_package', 'hajj')) }}">
                                     <div class="row">
                                         <div class="col-lg-6">
                                             <div class="mb-3">

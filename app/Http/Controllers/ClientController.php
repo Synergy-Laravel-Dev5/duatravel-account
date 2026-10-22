@@ -16,13 +16,13 @@ class ClientController extends Controller
         $year    = (int) session('dashboard_year', Carbon::now()->year);
 
         $clients = Client::where(function ($query) use ($package, $year) {
-
-            $query->whereHas('bookings', function ($q) use ($package, $year) {
-                $q->where('package_type', $package)
-                    ->where('package_year', $year);
-            })
-
-                ->orWhereDoesntHave('bookings');
+            $query->where('package_type', $package)
+                ->orWhere(function ($q) use ($package, $year) {
+                    $q->whereNull('package_type')
+                      ->whereHas('bookings', function ($bq) use ($package, $year) {
+                          $bq->where('package_type', $package);
+                      });
+                });
         })
             ->latest()
             ->get();
@@ -68,6 +68,7 @@ class ClientController extends Controller
             'status'
         ]);
         $data['type'] = $request->type ?? 'client';
+        $data['package_type'] = $request->package_type ?: session('dashboard_package', 'hajj');
 
         $client = Client::create($data);
 
@@ -116,6 +117,9 @@ class ClientController extends Controller
         ]);
         if ($request->has('type')) {
             $data['type'] = $request->type;
+        }
+        if ($request->has('package_type')) {
+            $data['package_type'] = $request->package_type;
         }
 
         $client->update($data);

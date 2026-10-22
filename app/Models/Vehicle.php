@@ -17,4 +17,10 @@ class Vehicle extends Model
         'supplier_name',
         'status',
     ];
+
+    public function getTitleAttribute()
+    {
+        $parts = array_filter([$this->brand_name, $this->vehicle_type, $this->plate_number]);
+        return !empty($parts) ? implode(' - ', $parts) : ('Vehicle #' . $this->id);
+    }
 }

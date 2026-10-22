@@ -20,6 +20,11 @@ class Route extends Model
         return $this->start_place . ' TO ' . $this->end_place;
     }
 
+    public function getTitleAttribute(): string
+    {
+        return $this->start_place . ' TO ' . $this->end_place;
+    }
+
     public function travelRoutes()
     {
         return $this->belongsToMany(TravelRoute::class, 'travel_route_routes');

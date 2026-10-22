@@ -116,10 +116,11 @@
             {{-- Page Header & Actions --}}
             <div class="py-3 d-flex flex-wrap justify-content-between align-items-center gap-2 no-print">
                 <div>
-                    <h4 class="fs-20 fw-bold m-0 text-dark">
+                    <h4 class="fs-20 fw-bold m-0 text-dark d-flex align-items-center">
                         <i class="mdi mdi-clipboard-text-multiple text-primary me-2"></i>Official Rooming List & Manifest Report
+                        <span class="badge bg-success ms-2 fs-11 text-uppercase">Hajj Only</span>
                     </h4>
-                    <p class="text-muted mb-0 small">Official multi-pilgrim room allocation manifest matching airline/hotel printout format.</p>
+                    <p class="text-muted mb-0 small">Official Hajj multi-pilgrim room allocation manifest matching airline/hotel printout format (Umrah excluded).</p>
                 </div>
                 <div class="d-flex flex-wrap gap-2">
                     <div class="btn-group btn-group-sm">

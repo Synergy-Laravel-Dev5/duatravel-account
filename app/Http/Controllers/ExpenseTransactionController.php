@@ -37,10 +37,21 @@ class ExpenseTransactionController extends Controller
 
     public function create()
     {
+        $package = session('dashboard_package', 'hajj');
         $expenses = Expense::orderBy('name')->get();
         $banks = Bank::orderBy('name')->get();
         $suppliers = Supplier::orderBy('name')->get();
-        $clients = Client::orderBy('name')->get();
+
+        $clientsQ = Client::orderBy('name');
+        if ($package === 'hajj') {
+            $clientsQ->where(function ($q) {
+                $q->where('package_type', 'hajj')->orWhereNull('package_type');
+            })->where('package_type', '!=', 'umrah');
+        } elseif ($package === 'umrah') {
+            $clientsQ->where('package_type', 'umrah');
+        }
+        $clients = $clientsQ->get();
+
         $staffMembers = Staff::with(['department', 'designation'])->where('status', 'active')->orderBy('first_name')->get();
 
         $lastId = ExpenseTransaction::withTrashed()->max('id') ?? 0;
@@ -62,7 +73,7 @@ class ExpenseTransactionController extends Controller
             'amount'           => 'required|numeric|min:0.01',
             'payment_type'     => 'required|string|max:50',
             'transaction_type' => 'nullable|string',
-            'payee_type'       => 'nullable|in:supplier,client,staff,expense,general,self',
+            'payee_type'       => 'nullable|in:supplier,client,staff,expense,general,self,jv',
             'currency'         => 'required|string|max:10',
             'exchange_rate'    => 'nullable|numeric|min:0.0001',
             'date'             => 'required|date',
@@ -90,6 +101,19 @@ class ExpenseTransactionController extends Controller
             $staffId    = ($payeeType === 'staff') ? ($request->staff_id ?: null) : null;
             $companyId  = ($payeeType === 'company') ? ($request->company_id ?: null) : null;
             $expenseId  = ($payeeType === 'expense' || $request->filled('expense_id')) ? ($request->expense_id ?: null) : null;
+
+            if ($payeeType === 'jv') {
+                if ($request->filled('jv_client_id')) {
+                    $clientId = $request->jv_client_id;
+                } elseif ($request->filled('client_id')) {
+                    $clientId = $request->client_id;
+                }
+                if ($request->filled('jv_supplier_id')) {
+                    $supplierId = $request->jv_supplier_id;
+                } elseif ($request->filled('supplier_id')) {
+                    $supplierId = $request->supplier_id;
+                }
+            }
 
             $dateFormatted = Carbon::parse($request->date)->format('Y-m-d');
 
@@ -129,10 +153,21 @@ class ExpenseTransactionController extends Controller
     public function edit($id)
     {
         $transaction = ExpenseTransaction::with(['bank', 'supplier', 'client', 'staff', 'expense'])->findOrFail($id);
+        $package = $transaction->hajj_umrah ?: session('dashboard_package', 'hajj');
         $expenses = Expense::orderBy('name')->get();
         $banks = Bank::orderBy('name')->get();
         $suppliers = Supplier::orderBy('name')->get();
-        $clients = Client::orderBy('name')->get();
+
+        $clientsQ = Client::orderBy('name');
+        if ($package === 'hajj') {
+            $clientsQ->where(function ($q) {
+                $q->where('package_type', 'hajj')->orWhereNull('package_type');
+            })->where('package_type', '!=', 'umrah');
+        } elseif ($package === 'umrah') {
+            $clientsQ->where('package_type', 'umrah');
+        }
+        $clients = $clientsQ->get();
+
         $staffMembers = Staff::with(['department', 'designation'])->where('status', 'active')->orderBy('first_name')->get();
 
         return view('expense_transaction.edit', compact('transaction', 'expenses', 'banks', 'suppliers', 'clients', 'staffMembers'));
@@ -153,7 +188,7 @@ class ExpenseTransactionController extends Controller
             'amount'           => 'required|numeric|min:0.01',
             'payment_type'     => 'required|string|max:50',
             'transaction_type' => 'nullable|string',
-            'payee_type'       => 'nullable|in:supplier,client,staff,expense,general,self',
+            'payee_type'       => 'nullable|in:supplier,client,staff,expense,general,self,jv',
             'currency'         => 'required|string|max:10',
             'exchange_rate'    => 'nullable|numeric|min:0.0001',
             'date'             => 'required|date',
@@ -187,6 +222,19 @@ class ExpenseTransactionController extends Controller
             $staffId    = ($payeeType === 'staff') ? ($request->staff_id ?: null) : null;
             $companyId  = null;
             $expenseId  = ($payeeType === 'expense' || $request->filled('expense_id')) ? ($request->expense_id ?: null) : null;
+
+            if ($payeeType === 'jv') {
+                if ($request->filled('jv_client_id')) {
+                    $clientId = $request->jv_client_id;
+                } elseif ($request->filled('client_id')) {
+                    $clientId = $request->client_id;
+                }
+                if ($request->filled('jv_supplier_id')) {
+                    $supplierId = $request->jv_supplier_id;
+                } elseif ($request->filled('supplier_id')) {
+                    $supplierId = $request->supplier_id;
+                }
+            }
 
             $dateFormatted = Carbon::parse($request->date)->format('Y-m-d');
 

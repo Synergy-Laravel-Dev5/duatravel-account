@@ -47,4 +47,24 @@ class BookingPerson extends Model
     {
         return $this->belongsTo(Booking::class);
     }
+
+    public function travelGroups()
+    {
+        return $this->belongsToMany(
+            TravelGroup::class,
+            'travel_group_persons',
+            'booking_person_id',
+            'travel_group_id'
+        )->withPivot('booking_id')->withTimestamps();
+    }
+
+    public function hajiGroups()
+    {
+        return $this->belongsToMany(
+            HajiGroup::class,
+            'haji_group_persons',
+            'booking_person_id',
+            'haji_group_id'
+        )->withPivot('id', 'booking_id', 'seat_number', 'room_number', 'bed_number')->withTimestamps();
+    }
 }
