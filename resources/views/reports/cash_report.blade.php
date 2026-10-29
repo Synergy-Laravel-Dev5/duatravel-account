@@ -83,6 +83,9 @@
                     <span class="text-muted fs-12">Daily Cash Inflows, Outflows, Disbursements & Cash in Hand Ledger in both PKR & SAR.</span>
                 </div>
                 <div class="d-flex flex-wrap gap-2">
+                    <a href="{{ route('reports.hub', ['tab' => 'cash']) }}" class="btn btn-outline-primary btn-sm">
+                        <i class="mdi mdi-layers-outline me-1"></i> Reports Hub
+                    </a>
                     <a href="{{ route('expense.transaction.create') }}" class="btn btn-primary btn-sm">
                         <i class="mdi mdi-plus-circle me-1"></i> New Transaction
                     </a>

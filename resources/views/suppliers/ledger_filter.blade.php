@@ -14,9 +14,14 @@
                     <h4 class="fs-18 fw-semibold m-0 text-dark">
                         <i class="mdi mdi-book-open-variant text-primary me-1"></i> Supplier Ledger Filter
                     </h4>
-                    <a href="{{ route('supplier.index') }}" class="btn btn-secondary btn-sm">
-                        <i class="mdi mdi-arrow-left me-1"></i> Back to Suppliers
-                    </a>
+                    <div class="d-flex gap-2">
+                        <a href="{{ route('reports.hub', ['tab' => 'supplier']) }}" class="btn btn-primary btn-sm">
+                            <i class="mdi mdi-layers-outline me-1"></i> All-In-One Reports Hub
+                        </a>
+                        <a href="{{ route('supplier.index') }}" class="btn btn-secondary btn-sm">
+                            <i class="mdi mdi-arrow-left me-1"></i> Back to Suppliers
+                        </a>
+                    </div>
                 </div>
 
                 <div class="row">

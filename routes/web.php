@@ -482,6 +482,10 @@ Route::middleware(['auth:web,company'])->group(function () {
         Route::get('pilgrim/badge/{id}', [\App\Http\Controllers\PilgrimPassController::class, 'badge'])->name('pilgrim.badge');
         Route::get('booking/{booking}/badges', [\App\Http\Controllers\PilgrimPassController::class, 'bulkBadges'])->name('pilgrim.bulk-badges');
 
+        // Financial Reports & Ledgers Hub (Centralized All-in-One Filter Center)
+        Route::get('reports/hub', [\App\Http\Controllers\FinancialReportHubController::class, 'index'])->name('reports.hub');
+        Route::get('reports/financial-hub', [\App\Http\Controllers\FinancialReportHubController::class, 'index'])->name('reports.financial-hub');
+
         // Profit & Loss Report
         Route::get('reports/profit-loss', [\App\Http\Controllers\ProfitLossReportController::class, 'index'])->name('report.profit-loss');
         Route::get('reports/profit-loss/pdf', [\App\Http\Controllers\ProfitLossReportController::class, 'exportPdf'])->name('report.profit-loss.pdf');

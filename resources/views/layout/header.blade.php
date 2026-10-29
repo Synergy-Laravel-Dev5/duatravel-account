@@ -520,6 +520,12 @@
 
 
                             <li>
+                                <a class="tp-link text-primary fw-bold" href="{{ route('reports.hub') }}">
+                                    <i data-feather="layers" class="text-primary"></i>
+                                    <span>All-In-One Reports Hub</span>
+                                </a>
+                            </li>
+                            <li>
                                 <a class="tp-link"
                                     href="{{ route('report.profit-loss', ['package_type' => $isHajjPackage ? 'hajj' : 'umrah']) }}">
                                     <i data-feather="dollar-sign"></i>

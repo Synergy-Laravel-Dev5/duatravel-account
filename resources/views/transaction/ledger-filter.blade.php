@@ -20,9 +20,14 @@
                                         </h4>
                                         <p class="text-muted fs-12 mb-0">Generate double-entry Statement of Account with Debit, Credit & Running Balance.</p>
                                     </div>
-                                    <a href="{{ route('reports.transactions') }}" class="btn btn-outline-dark btn-sm">
-                                        <i class="mdi mdi-receipt-text-outline me-1"></i> All Transactions Report
-                                    </a>
+                                    <div class="d-flex gap-2">
+                                        <a href="{{ route('reports.hub', ['tab' => 'client']) }}" class="btn btn-primary btn-sm">
+                                            <i class="mdi mdi-layers-outline me-1"></i> All-In-One Reports Hub
+                                        </a>
+                                        <a href="{{ route('reports.transactions') }}" class="btn btn-outline-dark btn-sm">
+                                            <i class="mdi mdi-receipt-text-outline me-1"></i> All Transactions Report
+                                        </a>
+                                    </div>
                                 </div>
 
                                 <form action="{{ route('transaction.ledger.view') }}" method="GET">

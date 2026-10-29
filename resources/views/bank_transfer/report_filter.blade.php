@@ -20,6 +20,9 @@
                                     <p class="text-muted fs-13 mb-0 mt-1">Filter and generate comprehensive bank statements, deposits, payments, and inter-bank transfers.</p>
                                 </div>
                                 <div class="d-flex gap-2">
+                                    <a href="{{ route('reports.hub', ['tab' => 'bank']) }}" class="btn btn-primary btn-sm">
+                                        <i class="mdi mdi-layers-outline me-1"></i> All-In-One Reports Hub
+                                    </a>
                                     <a href="{{ route('bank-transfer.index') }}" class="btn btn-secondary btn-sm">
                                         <i class="mdi mdi-arrow-left me-1"></i> Back to Transfers
                                     </a>
