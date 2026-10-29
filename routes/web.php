@@ -34,6 +34,8 @@ use App\Http\Controllers\ArrivalGroupController;
 use App\Http\Controllers\DepartureGroupController;
 use App\Http\Controllers\HajiGroupController;
 use App\Http\Controllers\SeasonController;
+use App\Http\Controllers\MealPlanController;
+use App\Http\Controllers\DailyReportController;
 
 
 
@@ -106,6 +108,7 @@ Route::middleware(['auth:web,company'])->group(function () {
                 Route::delete('delete/{id}', 'destroy')->name('client.delete');
                 Route::get('trash',        'trash')->name('client.trash');
                 Route::get('restore/{id}', 'restore')->name('client.restore');
+                Route::get('json-list',    'jsonList')->name('client.json-list');
             });
 
         Route::controller(BookingController::class)
@@ -121,6 +124,7 @@ Route::middleware(['auth:web,company'])->group(function () {
                 Route::get('trash',        'trash')->name('booking.trash');
                 Route::get('restore/{id}', 'restore')->name('booking.restore');
                 Route::get('voucher/{booking}', 'voucher')->name('booking.voucher');
+                Route::get('umrah-invoice/{booking}', 'umrahInvoice')->name('booking.umrah-invoice');
             });
 
         Route::controller(ExpenseController::class)
@@ -216,6 +220,7 @@ Route::middleware(['auth:web,company'])->group(function () {
                 Route::delete('delete/{id}', 'destroy')->name('package.delete');
                 Route::get('trash', 'trash')->name('package.trash');
                 Route::get('restore/{id}', 'restore')->name('package.restore');
+                Route::get('json-list', 'jsonList')->name('package.json-list');
             });
 
         Route::controller(TrainingSessionController::class)
@@ -296,6 +301,17 @@ Route::middleware(['auth:web,company'])->group(function () {
             Route::get('edit/{staff}', 'edit')->name('staff.edit');
             Route::put('update/{staff}', 'update')->name('staff.update');
             Route::delete('delete/{staff}', 'destroy')->name('staff.destroy');
+        });
+
+        Route::controller(App\Http\Controllers\PayrollController::class)->prefix('payroll')->group(function () {
+            Route::get('/', 'index')->name('payroll.index');
+            Route::get('create', 'create')->name('payroll.create');
+            Route::post('store', 'store')->name('payroll.store');
+            Route::get('show/{id}', 'show')->name('payroll.show');
+            Route::get('edit/{id}', 'edit')->name('payroll.edit');
+            Route::put('update/{id}', 'update')->name('payroll.update');
+            Route::delete('delete/{id}', 'destroy')->name('payroll.destroy');
+            Route::get('staff-salary-info', 'getStaffSalaryInfo')->name('payroll.staff-info');
         });
 
         Route::controller(QuotationController::class)->prefix('quotation')->group(function () {
@@ -473,6 +489,14 @@ Route::middleware(['auth:web,company'])->group(function () {
         // All Transactions Report
         Route::get('reports/transactions', [\App\Http\Controllers\TransactionReportController::class, 'index'])->name('reports.transactions');
         Route::get('reports/transactions/export-excel', [\App\Http\Controllers\TransactionReportController::class, 'exportExcel'])->name('reports.transactions.export-excel');
+
+        // Daily Reporting (All Sales & Transactions in Right Time)
+        Route::get('reports/daily', [DailyReportController::class, 'index'])->name('reports.daily');
+        Route::get('reports/daily/pdf', [DailyReportController::class, 'exportPdf'])->name('reports.daily.pdf');
+
+        // Meal Plans Management
+        Route::resource('meal-plans', MealPlanController::class);
+        Route::get('api/meal-plans', [MealPlanController::class, 'getJson'])->name('meal-plans.json');
 
         // Cash Book & Cash Report
         Route::get('reports/cash', [\App\Http\Controllers\CashReportController::class, 'index'])->name('reports.cash');

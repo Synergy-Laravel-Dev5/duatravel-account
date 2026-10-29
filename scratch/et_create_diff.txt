@@ -1,0 +1,933 @@
+diff --git a/resources/views/expense_transaction/create.blade.php b/resources/views/expense_transaction/create.blade.php
+index 6fed181..0dd059d 100644
+--- a/resources/views/expense_transaction/create.blade.php
++++ b/resources/views/expense_transaction/create.blade.php
+@@ -53,139 +53,7 @@
+                     <form action="{{ route('expense.transaction.store') }}" method="POST" enctype="multipart/form-data" id="expenseForm">
+                         @csrf
+ 
+-                        <!-- ROW 1: Date, Season, Payment Mode -->
+-                        <div class="row g-3 mb-3">
+-                            <div class="col-md-4">
+-                                <label class="form-label fs-13 fw-semibold">Transaction Date <span class="text-danger">*</span></label>
+-                                <div class="input-group input-group-sm">
+-                                    <input type="text" name="date" id="trans_date" value="{{ old('date', date('Y-m-d')) }}"
+-                                        class="form-control form-control-sm flatpickr-date" placeholder="YYYY-MM-DD" required>
+-                                    <span class="input-group-text"><i class="mdi mdi-calendar"></i></span>
+-                                </div>
+-                            </div>
+-
+-                            <div class="col-md-4">
+-                                <label class="form-label fs-13 fw-semibold">Hajj / Umrah Season <span class="text-danger">*</span></label>
+-                                <div class="row g-1">
+-                                    <div class="col-6">
+-                                        <select name="hajj_umrah" id="hajj_umrah_select" class="form-select form-select-sm" required>
+-                                            <option value="hajj" {{ old('hajj_umrah', session('dashboard_package', 'hajj')) == 'hajj' ? 'selected' : '' }}>Hajj</option>
+-                                            <option value="umrah" {{ old('hajj_umrah', session('dashboard_package', 'hajj')) == 'umrah' ? 'selected' : '' }}>Umrah</option>
+-                                        </select>
+-                                    </div>
+-                                    <div class="col-6">
+-                                        <input type="number" name="year" id="year_input"
+-                                            value="{{ old('year', session('dashboard_year', date('Y'))) }}"
+-                                            class="form-control form-control-sm" placeholder="Year" min="2000" max="2100" required>
+-                                    </div>
+-                                </div>
+-                            </div>
+-
+-                            <div class="col-md-4">
+-                                <label class="form-label fs-13 fw-semibold">Payment Type <span class="text-danger">*</span></label>
+-                                <div class="d-flex gap-3 pt-1">
+-                                    <div class="form-check">
+-                                        <input class="form-check-input" type="radio" name="payment_type" id="pay_bank" value="bank"
+-                                            {{ old('payment_type', 'bank') == 'bank' ? 'checked' : '' }}>
+-                                        <label class="form-check-label fs-13" for="pay_bank">Bank Transfer</label>
+-                                    </div>
+-                                    <div class="form-check">
+-                                        <input class="form-check-input" type="radio" name="payment_type" id="pay_cash" value="cash"
+-                                            {{ old('payment_type') == 'cash' ? 'checked' : '' }}>
+-                                        <label class="form-check-label fs-13" for="pay_cash">Cash</label>
+-                                    </div>
+-                                    <div class="form-check">
+-                                        <input class="form-check-input" type="radio" name="payment_type" id="pay_cheque" value="cheque"
+-                                            {{ old('payment_type') == 'cheque' ? 'checked' : '' }}>
+-                                        <label class="form-check-label fs-13" for="pay_cheque">Cheque</label>
+-                                    </div>
+-                                    <div class="form-check">
+-                                        <input class="form-check-input" type="radio" name="payment_type" id="pay_online" value="online"
+-                                            {{ old('payment_type') == 'online' ? 'checked' : '' }}>
+-                                        <label class="form-check-label fs-13" for="pay_online">Online</label>
+-                                    </div>
+-                                </div>
+-                            </div>
+-                        </div>
+-
+-                        <!-- ROW 2: Bank, Currency, Exchange Rate -->
+-                        <div class="row g-3 mb-3">
+-                            <div class="col-md-6">
+-                                <label class="form-label fs-13 fw-semibold">Bank</label>
+-                                <select name="bank_id" class="form-select form-select-sm">
+-                                    <option value="">-- Select Bank --</option>
+-                                    @foreach ($banks as $b)
+-                                        <option value="{{ $b->id }}" {{ old('bank_id') == $b->id ? 'selected' : '' }}>
+-                                            {{ $b->name }}{{ !empty($b->account_name) ? ' - ' . $b->account_name : '' }}{{ !empty($b->account_number) && $b->account_number !== '0' ? ' (' . $b->account_number . ')' : '' }}
+-                                        </option>
+-                                    @endforeach
+-                                </select>
+-                            </div>
+-
+-                            <div class="col-md-6">
+-                                <label class="form-label fs-13 fw-semibold">Currency <span class="text-danger">*</span></label>
+-                                <div class="row g-1">
+-                                    <div class="col-6">
+-                                        <select name="currency" id="currency_select" class="form-select form-select-sm" required>
+-                                            <option value="PKR" {{ old('currency', 'PKR') == 'PKR' ? 'selected' : '' }}>PKR</option>
+-                                            <option value="SAR" {{ old('currency') == 'SAR' ? 'selected' : '' }}>SAR</option>
+-                                            <option value="USD" {{ old('currency') == 'USD' ? 'selected' : '' }}>USD</option>
+-                                        </select>
+-                                    </div>
+-                                    <div class="col-6">
+-                                        <input type="number" step="0.0001" name="exchange_rate" id="exchange_rate_input"
+-                                            value="{{ old('exchange_rate', 1) }}" class="form-control form-control-sm bg-light"
+-                                            placeholder="Ex. Rate" readonly required>
+-                                    </div>
+-                                </div>
+-                            </div>
+-                        </div>
+-
+-                        <!-- ROW 3: Total Amount, Transaction Type, Reference -->
+-                        <div class="row g-3 mb-3">
+-                            <div class="col-md-4">
+-                                <label class="form-label fs-13 fw-semibold">Total Amount <span class="text-danger">*</span></label>
+-                                <div class="input-group input-group-sm">
+-                                    <span class="input-group-text currency-symbol">PKR</span>
+-                                    <input type="number" step="any" name="amount" id="main_total_amount" value="{{ old('amount') }}"
+-                                        class="form-control form-control-sm fw-bold text-dark" placeholder="Enter Total Amount" required>
+-                                </div>
+-                            </div>
+-
+-                            <div class="col-md-4">
+-                                <label class="form-label fs-13 fw-semibold">Transaction Type</label>
+-                                <select name="transaction_type" class="form-select form-select-sm">
+-                                    <option value="debit" {{ old('transaction_type', 'debit') == 'debit' ? 'selected' : '' }}>Debit (Payment Out / Expense / Supplier Pay)</option>
+-                                    <option value="credit" {{ old('transaction_type') == 'credit' ? 'selected' : '' }}>Credit (Payment In / Client Receipt / Income)</option>
+-                                </select>
+-                            </div>
+-
+-                            <div class="col-md-4">
+-                                <label class="form-label fs-13 fw-semibold">Reference</label>
+-                                <input type="text" name="reference_no" value="{{ old('reference_no', $autoRef) }}"
+-                                    class="form-control form-control-sm" placeholder="DT-EXP-000001">
+-                            </div>
+-                        </div>
+-
+-                        <!-- ROW 4: Proof of Payment -->
+-                        <div class="row g-3 mb-3">
+-                            <div class="col-md-12">
+-                                <label class="form-label fs-13 fw-semibold">Proof of Payment</label>
+-                                <input type="file" name="proof" class="form-control form-control-sm" accept=".jpg,.jpeg,.png,.pdf">
+-                                <small class="text-muted fs-11">Supported formats: JPG, PNG, PDF (Max 5MB)</small>
+-                            </div>
+-                        </div>
+-
+-                        <!-- ROW 5: Description -->
+-                        <div class="row g-3 mb-4">
+-                            <div class="col-md-12">
+-                                <label class="form-label fs-13 fw-semibold">Description / Notes</label>
+-                                <textarea name="description" class="form-control" rows="2"
+-                                    placeholder="Reason for Payment / Details / Remarks">{{ old('description') }}</textarea>
+-                            </div>
+-                        </div>
+-
+-                        <!-- UNIFIED TRANSACTION CATEGORY / PAYEE SELECTOR -->
++<!-- UNIFIED TRANSACTION CATEGORY / PAYEE SELECTOR -->
+                         <div class="card mb-4 border bg-light">
+                             <div class="card-header bg-white border-bottom py-2">
+                                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+@@ -235,6 +103,13 @@ class="form-control form-control-sm" placeholder="DT-EXP-000001">
+                                                 <i class="mdi mdi-book-open-page-variant me-1"></i> JV Voucher
+                                             </label>
+                                         </div>
++                                        <div class="form-check">
++                                            <input class="form-check-input payee-type-radio" type="radio" name="payee_type"
++                                                id="payee_loan" value="loan" {{ old('payee_type') == 'loan' ? 'checked' : '' }}>
++                                            <label class="form-check-label fs-13 fw-semibold text-warning" for="payee_loan">
++                                                <i class="mdi mdi-hand-coin me-1"></i> Loan (Asset / Liability)
++                                            </label>
++                                        </div>
+                                     </div>
+                                 </div>
+                             </div>
+@@ -409,48 +284,429 @@ class="form-control form-control-sm" placeholder="DT-EXP-000001">
+                                     </p>
+                                 </div>
+ 
++                                <!-- 6.5. LOAN SECTION -->
++                                <div id="loanSection" class="{{ old('payee_type') == 'loan' ? '' : 'd-none' }}">
++                                    <div class="row g-3 align-items-end">
++                                        <div class="col-md-6">
++                                            <label class="form-label fs-13 fw-semibold">Select Loan Account <span class="text-danger">*</span></label>
++                                            <select name="loan_account_id" id="loan_account_id_select" class="form-select form-select-sm">
++                                                <option value="">-- Choose Loan Account --</option>
++                                                @foreach ($cashAccounts->filter(fn($a) => in_array($a->account_type, ['loan_asset', 'loan_liability'])) as $la)
++                                                    <option value="{{ $la->id }}" {{ old('loan_account_id') == $la->id ? 'selected' : '' }}>
++                                                        {{ $la->account_name }} ({{ $la->account_type === 'loan_asset' ? 'Loan Asset / Receivable' : 'Loan Liability / Payable' }}) — Opening: PKR {{ number_format($la->opening_balance_pkr, 2) }}
++                                                    </option>
++                                                @endforeach
++                                            </select>
++                                        </div>
++                                        <div class="col-md-6">
++                                            <a href="{{ route('account.create') }}" target="_blank" class="btn btn-outline-warning btn-sm">
++                                                <i class="mdi mdi-plus-circle me-1"></i> + Create New Loan Account
++                                            </a>
++                                            <small class="text-muted d-block mt-1">Record loans given (Assets) or loans borrowed (Liabilities).</small>
++                                        </div>
++                                    </div>
++                                </div>
++
+                                 <!-- 7. JV VOUCHER SECTION -->
+                                 <div id="jvSection" class="{{ old('payee_type') == 'jv' ? '' : 'd-none' }}">
+-                                    <div class="p-3 bg-white border rounded">
+-                                        <div class="row g-3 align-items-center mb-2">
+-                                            <div class="col-md-4">
+-                                                <label class="form-label fs-12 fw-semibold mb-1">JV Party Link (Optional)</label>
+-                                                <select id="jv_party_toggle" class="form-select form-select-sm">
+-                                                    <option value="none" {{ !old('jv_client_id') && !old('jv_supplier_id') ? 'selected' : '' }}>General Journal / No Party</option>
+-                                                    <option value="client" {{ old('jv_client_id') ? 'selected' : '' }}>Client</option>
+-                                                    <option value="supplier" {{ old('jv_supplier_id') ? 'selected' : '' }}>Supplier</option>
+-                                                </select>
++                                    <div class="p-3 bg-white border rounded shadow-sm">
++                                        
++                                        <!-- JV Mode Selector Tabs / Radios -->
++                                        <div class="mb-3">
++                                            <label class="form-label fs-12 fw-bold text-dark text-uppercase mb-2">
++                                                <i class="mdi mdi-format-list-bulleted-type text-primary me-1"></i> Select JV Voucher Mode:
++                                            </label>
++                                            <div class="d-flex flex-wrap gap-2">
++                                                <input type="radio" class="btn-check jv-mode-radio" name="jv_mode" id="jv_mode_univ" value="universal" {{ old('jv_mode', 'universal') === 'universal' ? 'checked' : '' }}>
++                                                <label class="btn btn-sm btn-outline-success" for="jv_mode_univ">
++                                                    <i class="mdi mdi-arrow-left-right-bold me-1"></i> 🌐 Universal JV (From A/C ➔ To A/C)
++                                                </label>
++
++                                                <input type="radio" class="btn-check jv-mode-radio" name="jv_mode" id="jv_mode_cs" value="client_supplier" {{ old('jv_mode', 'client_supplier') === 'client_supplier' ? 'checked' : '' }}>
++                                                <label class="btn btn-sm btn-outline-primary" for="jv_mode_cs">
++                                                    <i class="mdi mdi-account-switch me-1"></i> 👥 Client & Supplier (Both in 1 JV)
++                                                </label>
++
++                                                <input type="radio" class="btn-check jv-mode-radio" name="jv_mode" id="jv_mode_mc" value="multi_client" {{ old('jv_mode') === 'multi_client' ? 'checked' : '' }}>
++                                                <label class="btn btn-sm btn-outline-info" for="jv_mode_mc">
++                                                    <i class="mdi mdi-account-multiple-plus me-1"></i> 🔄 Multi-Client JV
++                                                </label>
++
++                                                <input type="radio" class="btn-check jv-mode-radio" name="jv_mode" id="jv_mode_sp" value="single_party" {{ old('jv_mode') === 'single_party' ? 'checked' : '' }}>
++                                                <label class="btn btn-sm btn-outline-secondary" for="jv_mode_sp">
++                                                    <i class="mdi mdi-account me-1"></i> 👤 Single Party (Client OR Supplier)
++                                                </label>
++
++                                                <input type="radio" class="btn-check jv-mode-radio" name="jv_mode" id="jv_mode_gen" value="general" {{ old('jv_mode') === 'general' ? 'checked' : '' }}>
++                                                <label class="btn btn-sm btn-outline-dark" for="jv_mode_gen">
++                                                    <i class="mdi mdi-book-outline me-1"></i> 📑 General Journal
++                                                </label>
+                                             </div>
+-                                            <div class="col-md-8 {{ old('jv_client_id') ? '' : 'd-none' }}" id="jv_client_container">
+-                                                <label class="form-label fs-12 fw-semibold mb-1">Select Client</label>
+-                                                <select name="jv_client_id" class="form-select form-select-sm">
+-                                                    <option value="">-- Select Client --</option>
+-                                                    @foreach ($clients as $c)
+-                                                        <option value="{{ $c->id }}" {{ old('jv_client_id') == $c->id ? 'selected' : '' }}>
+-                                                            {{ $c->name }}{{ $c->phone ? ' (' . $c->phone . ')' : '' }}
+-                                                        </option>
+-                                                    @endforeach
+-                                                </select>
++                                        </div>
++
++                                        <hr class="my-3 text-muted opacity-25">
++
++                                        <!-- 0. UNIVERSAL JV (FROM A/C TO A/C - ALL ENTITIES) -->
++                                        <div id="jv_panel_univ" class="jv-subpanel {{ old('jv_mode', 'universal') === 'universal' ? '' : 'd-none' }}">
++                                            <div class="alert alert-soft-success py-2 px-3 fs-12 border-0 mb-3">
++                                                <i class="mdi mdi-check-decagram text-success me-1"></i> <strong>Universal JV Voucher (Any Account ➔ Any Account):</strong>
++                                                Select source and destination accounts from <strong>Client, Supplier, Staff, Bank, Cash Counter, Office Expense, or Loan (Asset/Liability)</strong>. The system records balanced debit and credit entries simultaneously.
+                                             </div>
+-                                            <div class="col-md-8 {{ old('jv_supplier_id') ? '' : 'd-none' }}" id="jv_supplier_container">
+-                                                <label class="form-label fs-12 fw-semibold mb-1">Select Supplier</label>
+-                                                <select name="jv_supplier_id" class="form-select form-select-sm">
+-                                                    <option value="">-- Select Supplier --</option>
+-                                                    @foreach ($suppliers as $s)
+-                                                        <option value="{{ $s->id }}" {{ old('jv_supplier_id') == $s->id ? 'selected' : '' }}>
+-                                                            {{ $s->name }}{{ $s->company_name ? ' (' . $s->company_name . ')' : '' }}
++                                            <div class="row g-3 align-items-center">
++                                                <!-- FROM ACCOUNT -->
++                                                <div class="col-md-5">
++                                                    <div class="p-3 border rounded bg-white shadow-sm">
++                                                        <div class="d-flex justify-content-between align-items-center mb-2">
++                                                            <label class="form-label fs-12 fw-bold text-danger text-uppercase mb-0">
++                                                                <i class="mdi mdi-upload me-1"></i> From Account (Source / Credit -)
++                                                            </label>
++                                                        </div>
++                                                        <div class="mb-2">
++                                                            <label class="form-label fs-11 text-muted mb-1">Entity Type</label>
++                                                            <select id="jv_from_type" name="jv_from_type" class="form-select form-select-sm jv-entity-type-select" data-target="jv_from_id">
++                                                                <option value="client">Client</option>
++                                                                <option value="supplier">Supplier</option>
++                                                                <option value="staff">Staff Member</option>
++                                                                <option value="bank">Bank</option>
++                                                                <option value="cash">Cash Counter / Account</option>
++                                                                <option value="loan">Loan (Asset / Liability)</option>
++                                                                <option value="expense">Expense Head</option>
++                                                            </select>
++                                                        </div>
++                                                        <div>
++                                                            <label class="form-label fs-11 text-muted mb-1">Select Account / Party <span class="text-danger">*</span></label>
++                                                            <select id="jv_from_id" name="jv_from_id" class="form-select form-select-sm">
++                                                                <!-- Populated dynamically via JS -->
++                                                            </select>
++                                                        </div>
++                                                    </div>
++                                                </div>
++
++                                                <!-- DIRECTION ARROW -->
++                                                <div class="col-md-2 text-center d-flex flex-column justify-content-center">
++                                                    <div class="text-success fs-28"><i class="mdi mdi-arrow-right-bold-circle"></i></div>
++                                                    <small class="text-dark fs-11 fw-bold text-uppercase">Transfer To</small>
++                                                </div>
++
++                                                <!-- TO ACCOUNT -->
++                                                <div class="col-md-5">
++                                                    <div class="p-3 border rounded bg-white shadow-sm">
++                                                        <div class="d-flex justify-content-between align-items-center mb-2">
++                                                            <label class="form-label fs-12 fw-bold text-success text-uppercase mb-0">
++                                                                <i class="mdi mdi-download me-1"></i> To Account (Destination / Debit +)
++                                                            </label>
++                                                        </div>
++                                                        <div class="mb-2">
++                                                            <label class="form-label fs-11 text-muted mb-1">Entity Type</label>
++                                                            <select id="jv_to_type" name="jv_to_type" class="form-select form-select-sm jv-entity-type-select" data-target="jv_to_id">
++                                                                <option value="supplier" selected>Supplier</option>
++                                                                <option value="client">Client</option>
++                                                                <option value="staff">Staff Member</option>
++                                                                <option value="bank">Bank</option>
++                                                                <option value="cash">Cash Counter / Account</option>
++                                                                <option value="loan">Loan (Asset / Liability)</option>
++                                                                <option value="expense">Expense Head</option>
++                                                            </select>
++                                                        </div>
++                                                        <div>
++                                                            <label class="form-label fs-11 text-muted mb-1">Select Account / Party <span class="text-danger">*</span></label>
++                                                            <select id="jv_to_id" name="jv_to_id" class="form-select form-select-sm">
++                                                                <!-- Populated dynamically via JS -->
++                                                            </select>
++                                                        </div>
++                                                    </div>
++                                                </div>
++                                            </div>
++                                        </div>
++
++                                        <!-- 1. CLIENT & SUPPLIER (BOTH IN 1 JV) -->
++                                        <div id="jv_panel_cs" class="jv-subpanel {{ old('jv_mode', 'client_supplier') === 'client_supplier' ? '' : 'd-none' }}">
++                                            <div class="alert alert-soft-primary py-2 px-3 fs-12 border-0 mb-3">
++                                                <i class="mdi mdi-information me-1"></i> <strong>Client ⇄ Supplier Contra Adjustment:</strong>
++                                                Allows linking both a <strong>Client</strong> and a <strong>Supplier</strong> in the same JV. The system records balanced paired legs under the same voucher reference so both ledgers are adjusted simultaneously.
++                                            </div>
++                                            <div class="row g-3">
++                                                <div class="col-md-5">
++                                                    <label class="form-label fs-13 fw-semibold">Select Client <span class="text-danger">*</span></label>
++                                                    <select name="jv_client_id" id="jv_cs_client_id" class="form-select form-select-sm">
++                                                        <option value="">-- Choose Client --</option>
++                                                        @foreach ($clients as $c)
++                                                            <option value="{{ $c->id }}" {{ old('jv_client_id') == $c->id ? 'selected' : '' }}>
++                                                                {{ $c->name }}{{ $c->company_name ? ' (' . $c->company_name . ')' : '' }} - {{ $c->phone ?? $c->cnic }}
++                                                            </option>
++                                                        @endforeach
++                                                    </select>
++                                                </div>
++                                                <div class="col-md-2 text-center d-flex flex-column justify-content-center">
++                                                    <div class="text-primary fs-22"><i class="mdi mdi-swap-horizontal-bold"></i></div>
++                                                    <small class="text-muted fs-11 fw-bold">CONTRA</small>
++                                                </div>
++                                                <div class="col-md-5">
++                                                    <label class="form-label fs-13 fw-semibold">Select Supplier <span class="text-danger">*</span></label>
++                                                    <select name="jv_supplier_id" id="jv_cs_supplier_id" class="form-select form-select-sm">
++                                                        <option value="">-- Choose Supplier --</option>
++                                                        @foreach ($suppliers as $s)
++                                                            <option value="{{ $s->id }}" {{ old('jv_supplier_id') == $s->id ? 'selected' : '' }}>
++                                                                {{ $s->name }}{{ $s->company_name ? ' (' . $s->company_name . ')' : '' }} - {{ strtoupper($s->service_type ?? 'Supplier') }}
++                                                            </option>
++                                                        @endforeach
++                                                    </select>
++                                                </div>
++                                                <div class="col-md-12">
++                                                    <label class="form-label fs-12 fw-semibold mb-1">Adjustment Flow / Direction</label>
++                                                    <select name="jv_cs_direction" id="jv_cs_direction" class="form-select form-select-sm">
++                                                        <option value="client_to_supplier" {{ old('jv_cs_direction', 'client_to_supplier') === 'client_to_supplier' ? 'selected' : '' }}>
++                                                            Client Payment Applied ➔ Supplier Payable (Client Credit, Supplier Debit)
++                                                        </option>
++                                                        <option value="supplier_to_client" {{ old('jv_cs_direction') === 'supplier_to_client' ? 'selected' : '' }}>
++                                                            Supplier Refund ➔ Passed to Client Receipt (Supplier Credit, Client Debit)
+                                                         </option>
+-                                                    @endforeach
+-                                                </select>
++                                                    </select>
++                                                </div>
+                                             </div>
+                                         </div>
+-                                        <div class="alert alert-info py-2 px-3 mb-0 fs-12 border-0 bg-soft-info text-info">
+-                                            <i class="mdi mdi-information-outline me-1"></i>
+-                                            <strong>Journal Voucher (JV):</strong> For non-cash adjustments, inter-account transfers, discounts, and ledger write-offs.
++
++                                        <!-- 2. MULTI-CLIENT JV -->
++                                        <div id="jv_panel_mc" class="jv-subpanel {{ old('jv_mode') === 'multi_client' ? '' : 'd-none' }}">
++                                            <div class="alert alert-soft-info py-2 px-3 fs-12 border-0 mb-3">
++                                                <i class="mdi mdi-account-multiple me-1"></i> <strong>Multi-Client Journal Voucher:</strong>
++                                                Add multiple clients with their respective debit/credit amounts. Each client ledger will reflect its specific entry with the same shared JV reference.
++                                            </div>
++                                            <div class="table-responsive">
++                                                <table class="table table-bordered table-sm align-middle mb-2" id="multiClientTable">
++                                                    <thead class="table-light fs-12">
++                                                        <tr>
++                                                            <th style="min-width: 240px;">Client <span class="text-danger">*</span></th>
++                                                            <th style="width: 160px;">Entry Type <span class="text-danger">*</span></th>
++                                                            <th style="width: 160px;">Amount <span class="text-danger">*</span></th>
++                                                            <th>Remarks / Notes</th>
++                                                            <th style="width: 50px;" class="text-center">Action</th>
++                                                        </tr>
++                                                    </thead>
++                                                    <tbody id="multiClientTableBody">
++                                                        <!-- Dynamic client rows added via JS -->
++                                                    </tbody>
++                                                    <tfoot>
++                                                        <tr class="table-light">
++                                                            <td colspan="2" class="text-end fw-bold fs-12">Multi-Client Total:</td>
++                                                            <td class="fw-bold text-primary fs-13"><span id="mc_total_display">0.00</span></td>
++                                                            <td colspan="2">
++                                                                <button type="button" class="btn btn-sm btn-outline-primary" id="btnAddClientRow">
++                                                                    <i class="mdi mdi-plus-circle me-1"></i> Add Another Client
++                                                                </button>
++                                                            </td>
++                                                        </tr>
++                                                    </tfoot>
++                                                </table>
++                                            </div>
+                                         </div>
++
++                                        <!-- 3. SINGLE PARTY JV -->
++                                        <div id="jv_panel_sp" class="jv-subpanel {{ old('jv_mode') === 'single_party' ? '' : 'd-none' }}">
++                                            <div class="row g-3 align-items-center">
++                                                <div class="col-md-4">
++                                                    <label class="form-label fs-12 fw-semibold mb-1">Party Type</label>
++                                                    <select name="jv_single_type" id="jv_single_type" class="form-select form-select-sm">
++                                                        <option value="client" {{ old('jv_single_type', 'client') === 'client' ? 'selected' : '' }}>Client</option>
++                                                        <option value="supplier" {{ old('jv_single_type') === 'supplier' ? 'selected' : '' }}>Supplier</option>
++                                                    </select>
++                                                </div>
++                                                <div class="col-md-8 {{ old('jv_single_type', 'client') === 'client' ? '' : 'd-none' }}" id="jv_single_client_box">
++                                                    <label class="form-label fs-12 fw-semibold mb-1">Select Client</label>
++                                                    <select name="jv_single_client_id" id="jv_single_client_id" class="form-select form-select-sm">
++                                                        <option value="">-- Choose Client --</option>
++                                                        @foreach ($clients as $c)
++                                                            <option value="{{ $c->id }}" {{ old('jv_single_client_id') == $c->id ? 'selected' : '' }}>
++                                                                {{ $c->name }}{{ $c->company_name ? ' (' . $c->company_name . ')' : '' }} - {{ $c->phone ?? $c->cnic }}
++                                                            </option>
++                                                        @endforeach
++                                                    </select>
++                                                </div>
++                                                <div class="col-md-8 {{ old('jv_single_type') === 'supplier' ? '' : 'd-none' }}" id="jv_single_supplier_box">
++                                                    <label class="form-label fs-12 fw-semibold mb-1">Select Supplier</label>
++                                                    <select name="jv_single_supplier_id" id="jv_single_supplier_id" class="form-select form-select-sm">
++                                                        <option value="">-- Choose Supplier --</option>
++                                                        @foreach ($suppliers as $s)
++                                                            <option value="{{ $s->id }}" {{ old('jv_single_supplier_id') == $s->id ? 'selected' : '' }}>
++                                                                {{ $s->name }}{{ $s->company_name ? ' (' . $s->company_name . ')' : '' }}
++                                                            </option>
++                                                        @endforeach
++                                                    </select>
++                                                </div>
++                                            </div>
++                                        </div>
++
++                                        <!-- 4. GENERAL JOURNAL -->
++                                        <div id="jv_panel_gen" class="jv-subpanel {{ old('jv_mode') === 'general' ? '' : 'd-none' }}">
++                                            <p class="text-muted fs-12 mb-0">
++                                                <i class="mdi mdi-information-outline me-1"></i>
++                                                General non-party Journal Voucher for standard internal adjustments, discounts, or write-offs.
++                                            </p>
++                                        </div>
++
++                                    </div>
++                                </div>
++
++                            </div>
++                        </div>
++
++                        
++
++                        <!-- ROW 1: Date, Season, Payment Mode -->
++                        <div class="row g-3 mb-3">
++                            <div class="col-md-4">
++                                <label class="form-label fs-13 fw-semibold">Transaction Date <span class="text-danger">*</span></label>
++                                <div class="input-group input-group-sm">
++                                    <input type="text" name="date" id="trans_date" value="{{ old('date', date('Y-m-d')) }}"
++                                        class="form-control form-control-sm flatpickr-date" placeholder="YYYY-MM-DD" required>
++                                    <span class="input-group-text"><i class="mdi mdi-calendar"></i></span>
++                                </div>
++                            </div>
++
++                            <div class="col-md-4">
++                                <label class="form-label fs-13 fw-semibold">Hajj / Umrah Season <span class="text-danger">*</span></label>
++                                <div class="row g-1">
++                                    <div class="col-6">
++                                        <select name="hajj_umrah" id="hajj_umrah_select" class="form-select form-select-sm" required>
++                                            <option value="hajj" {{ old('hajj_umrah', session('dashboard_package', 'hajj')) == 'hajj' ? 'selected' : '' }}>Hajj</option>
++                                            <option value="umrah" {{ old('hajj_umrah', session('dashboard_package', 'hajj')) == 'umrah' ? 'selected' : '' }}>Umrah</option>
++                                        </select>
++                                    </div>
++                                    <div class="col-6">
++                                        <input type="number" name="year" id="year_input"
++                                            value="{{ old('year', session('dashboard_year', date('Y'))) }}"
++                                            class="form-control form-control-sm" placeholder="Year" min="2000" max="2100" required>
++                                    </div>
++                                </div>
++                            </div>
++
++                            <div class="col-md-4">
++                                <label class="form-label fs-13 fw-semibold">Payment Type <span class="text-danger">*</span></label>
++                                <div class="d-flex gap-3 pt-1">
++                                    <div class="form-check">
++                                        <input class="form-check-input" type="radio" name="payment_type" id="pay_bank" value="bank"
++                                            {{ old('payment_type', 'bank') == 'bank' ? 'checked' : '' }}>
++                                        <label class="form-check-label fs-13" for="pay_bank">Bank Transfer</label>
++                                    </div>
++                                    <div class="form-check">
++                                        <input class="form-check-input" type="radio" name="payment_type" id="pay_cash" value="cash"
++                                            {{ old('payment_type') == 'cash' ? 'checked' : '' }}>
++                                        <label class="form-check-label fs-13" for="pay_cash">Cash</label>
++                                    </div>
++                                    <div class="form-check">
++                                        <input class="form-check-input" type="radio" name="payment_type" id="pay_cheque" value="cheque"
++                                            {{ old('payment_type') == 'cheque' ? 'checked' : '' }}>
++                                        <label class="form-check-label fs-13" for="pay_cheque">Cheque</label>
++                                    </div>
++                                    <div class="form-check">
++                                        <input class="form-check-input" type="radio" name="payment_type" id="pay_online" value="online"
++                                            {{ old('payment_type') == 'online' ? 'checked' : '' }}>
++                                        <label class="form-check-label fs-13" for="pay_online">Online</label>
+                                     </div>
+                                 </div>
++                            </div>
++                        </div>
++
++                        <!-- ROW 2: Bank, Cash Account, Currency, Exchange Rate -->
++                        <div class="row g-3 mb-3">
++                            <div class="col-md-6" id="bank_select_group" style="{{ old('payment_type', 'bank') === 'cash' ? 'display:none;' : '' }}">
++                                <label class="form-label fs-13 fw-semibold">Bank</label>
++                                <select name="bank_id" id="bank_id_select" class="form-select form-select-sm">
++                                    <option value="">-- Select Bank --</option>
++                                    @foreach ($banks as $b)
++                                        <option value="{{ $b->id }}" {{ old('bank_id') == $b->id ? 'selected' : '' }}>
++                                            {{ $b->name }}{{ !empty($b->account_name) ? ' - ' . $b->account_name : '' }}{{ !empty($b->account_number) && $b->account_number !== '0' ? ' (' . $b->account_number . ')' : '' }}
++                                        </option>
++                                    @endforeach
++                                </select>
++                            </div>
+ 
++                            <div class="col-md-6" id="cash_account_group" style="{{ old('payment_type', 'bank') === 'cash' ? '' : 'display:none;' }}">
++                                <label class="form-label fs-13 fw-semibold">
++                                    <i class="mdi mdi-cash-multiple text-success me-1"></i> Cash / Counter Account <span class="text-danger">*</span>
++                                </label>
++                                <select name="account_id" id="cash_account_id_select" class="form-select form-select-sm">
++                                    <option value="">-- Select Cash Account --</option>
++                                    @foreach ($cashAccounts->filter(fn($a) => in_array($a->account_type, ['cash', 'general'])) as $ca)
++                                        <option value="{{ $ca->id }}" {{ old('account_id') == $ca->id ? 'selected' : ($ca->account_name === 'Cash' ? 'selected' : '') }}>
++                                            {{ $ca->account_name }} — Opening: PKR {{ number_format($ca->opening_balance_pkr, 2) }} / SAR {{ number_format($ca->opening_balance_sar, 2) }}
++                                        </option>
++                                    @endforeach
++                                </select>
++                                <small class="text-muted fs-11">Transactions will impact this cash account balance.</small>
++                            </div>
++
++                            <div class="col-md-6">
++                                <label class="form-label fs-13 fw-semibold">Currency <span class="text-danger">*</span></label>
++                                <div class="row g-1">
++                                    <div class="col-6">
++                                        <select name="currency" id="currency_select" class="form-select form-select-sm" required>
++                                            <option value="PKR" {{ old('currency', 'PKR') == 'PKR' ? 'selected' : '' }}>PKR</option>
++                                            <option value="SAR" {{ old('currency') == 'SAR' ? 'selected' : '' }}>SAR</option>
++                                            <option value="USD" {{ old('currency') == 'USD' ? 'selected' : '' }}>USD</option>
++                                        </select>
++                                    </div>
++                                    <div class="col-6">
++                                        <input type="number" step="0.0001" name="exchange_rate" id="exchange_rate_input"
++                                            value="{{ old('exchange_rate', 1) }}" class="form-control form-control-sm bg-light"
++                                            placeholder="Ex. Rate" readonly required>
++                                    </div>
++                                </div>
++                            </div>
++
++                            <!-- Live ROE Preview Box -->
++                            <div class="col-12" id="roe_live_preview_box" style="display: none;">
++                                <div class="p-2 px-3 rounded border border-info bg-soft-info d-flex align-items-center gap-2 fs-13">
++                                    <i class="mdi mdi-calculator text-info fs-18"></i>
++                                    <div>
++                                        <strong class="text-dark">Currency Conversion Preview:</strong>
++                                        <span id="roe_live_preview_text" class="fw-bold text-primary ms-1"></span>
++                                    </div>
++                                </div>
++                            </div>
++                        </div>
++
++                        <!-- ROW 3: Total Amount, Transaction Type, Reference -->
++                        <div class="row g-3 mb-3">
++                            <div class="col-md-4">
++                                <label class="form-label fs-13 fw-semibold">Total Amount <span class="text-danger">*</span></label>
++                                <div class="input-group input-group-sm">
++                                    <span class="input-group-text currency-symbol">PKR</span>
++                                    <input type="number" step="any" name="amount" id="main_total_amount" value="{{ old('amount') }}"
++                                        class="form-control form-control-sm fw-bold text-dark" placeholder="Enter Total Amount" required>
++                                </div>
++                            </div>
++
++                            <div class="col-md-4">
++                                <label class="form-label fs-13 fw-semibold">Transaction Type</label>
++                                <select name="transaction_type" class="form-select form-select-sm">
++                                    <option value="debit" {{ old('transaction_type', 'debit') == 'debit' ? 'selected' : '' }}>Debit (Payment Out / Expense / Supplier Pay)</option>
++                                    <option value="credit" {{ old('transaction_type') == 'credit' ? 'selected' : '' }}>Credit (Payment In / Client Receipt / Income)</option>
++                                </select>
++                            </div>
++
++                            <div class="col-md-4">
++                                <label class="form-label fs-13 fw-semibold">Reference</label>
++                                <input type="text" name="reference_no" id="reference_no_input" value="{{ old('reference_no', $autoRef) }}"
++                                    class="form-control form-control-sm" placeholder="DT-EXP-000001">
++                            </div>
++                        </div>
++
++                        <!-- ROW 4: Proof of Payment -->
++                        <div class="row g-3 mb-3">
++                            <div class="col-md-12">
++                                <label class="form-label fs-13 fw-semibold">Proof of Payment</label>
++                                <input type="file" name="proof" class="form-control form-control-sm" accept=".jpg,.jpeg,.png,.pdf">
++                                <small class="text-muted fs-11">Supported formats: JPG, PNG, PDF (Max 5MB)</small>
++                            </div>
++                        </div>
++
++                        <!-- ROW 5: Description -->
++                        <div class="row g-3 mb-4">
++                            <div class="col-md-12">
++                                <label class="form-label fs-13 fw-semibold">Description / Notes</label>
++                                <textarea name="description" class="form-control" rows="2"
++                                    placeholder="Reason for Payment / Details / Remarks">{{ old('description') }}</textarea>
+                             </div>
+                         </div>
+ 
+@@ -510,6 +766,11 @@ function updateCurrency() {
+         const expenseSec = document.getElementById('expenseHeadSection');
+         const selfSec = document.getElementById('selfSection');
+         const jvSec = document.getElementById('jvSection');
++        const loanSec = document.getElementById('loanSection');
++
++        const defaultExpRef = "{{ $autoRef }}";
++        const defaultJvRef = "{{ $autoJvRef }}";
++        const refInput = document.getElementById('reference_no_input');
+ 
+         payeeRadios.forEach(radio => {
+             radio.addEventListener('change', function() {
+@@ -519,6 +780,7 @@ function updateCurrency() {
+                 if (expenseSec) expenseSec.classList.add('d-none');
+                 if (selfSec) selfSec.classList.add('d-none');
+                 if (jvSec) jvSec.classList.add('d-none');
++                if (loanSec) loanSec.classList.add('d-none');
+ 
+                 if (this.value === 'supplier' && supplierSec) {
+                     supplierSec.classList.remove('d-none');
+@@ -532,23 +794,164 @@ function updateCurrency() {
+                     selfSec.classList.remove('d-none');
+                 } else if (this.value === 'jv' && jvSec) {
+                     jvSec.classList.remove('d-none');
++                } else if (this.value === 'loan' && loanSec) {
++                    loanSec.classList.remove('d-none');
++                }
++
++                // Auto toggle reference number
++                if (refInput) {
++                    if (this.value === 'jv') {
++                        if (!refInput.value || refInput.value.startsWith('DT-EXP-')) {
++                            refInput.value = defaultJvRef;
++                        }
++                    } else {
++                        if (!refInput.value || refInput.value.startsWith('DT-JV-')) {
++                            refInput.value = defaultExpRef;
++                        }
++                    }
+                 }
+             });
+         });
++        });
++
++        // JV Mode Switching
++        const jvModeRadios = document.querySelectorAll('.jv-mode-radio');
++        const jvPanelUniv = document.getElementById('jv_panel_univ');
++        const jvPanelCs = document.getElementById('jv_panel_cs');
++        const jvPanelMc = document.getElementById('jv_panel_mc');
++        const jvPanelSp = document.getElementById('jv_panel_sp');
++        const jvPanelGen = document.getElementById('jv_panel_gen');
+ 
+-        // JV Party Toggle
+-        const jvToggle = document.getElementById('jv_party_toggle');
+-        const jvClientBox = document.getElementById('jv_client_container');
+-        const jvSupplierBox = document.getElementById('jv_supplier_container');
+-        if (jvToggle) {
+-            jvToggle.addEventListener('change', function() {
+-                if (jvClientBox) jvClientBox.classList.add('d-none');
+-                if (jvSupplierBox) jvSupplierBox.classList.add('d-none');
+-                if (this.value === 'client' && jvClientBox) {
+-                    jvClientBox.classList.remove('d-none');
+-                } else if (this.value === 'supplier' && jvSupplierBox) {
+-                    jvSupplierBox.classList.remove('d-none');
++        function updateJvMode(mode) {
++            if (jvPanelUniv) jvPanelUniv.classList.add('d-none');
++            if (jvPanelCs) jvPanelCs.classList.add('d-none');
++            if (jvPanelMc) jvPanelMc.classList.add('d-none');
++            if (jvPanelSp) jvPanelSp.classList.add('d-none');
++            if (jvPanelGen) jvPanelGen.classList.add('d-none');
++
++            if (mode === 'universal' && jvPanelUniv) {
++                jvPanelUniv.classList.remove('d-none');
++            } else if (mode === 'client_supplier' && jvPanelCs) {
++                jvPanelCs.classList.remove('d-none');
++            } else if (mode === 'multi_client' && jvPanelMc) {
++                jvPanelMc.classList.remove('d-none');
++                if (document.querySelectorAll('#multiClientTableBody tr').length === 0) {
++                    addMultiClientRow();
+                 }
++            } else if (mode === 'single_party' && jvPanelSp) {
++                jvPanelSp.classList.remove('d-none');
++            } else if (mode === 'general' && jvPanelGen) {
++                jvPanelGen.classList.remove('d-none');
++            }
++        }
++
++        jvModeRadios.forEach(radio => {
++            radio.addEventListener('change', function() {
++                updateJvMode(this.value);
++            });
++        });
++
++        // JV Single Party Dropdown Toggle
++        const jvSingleType = document.getElementById('jv_single_type');
++        const jvSingleClientBox = document.getElementById('jv_single_client_box');
++        const jvSingleSupplierBox = document.getElementById('jv_single_supplier_box');
++        if (jvSingleType) {
++            jvSingleType.addEventListener('change', function() {
++                if (this.value === 'client') {
++                    if (jvSingleClientBox) jvSingleClientBox.classList.remove('d-none');
++                    if (jvSingleSupplierBox) jvSingleSupplierBox.classList.add('d-none');
++                } else {
++                    if (jvSingleClientBox) jvSingleClientBox.classList.add('d-none');
++                    if (jvSingleSupplierBox) jvSingleSupplierBox.classList.remove('d-none');
++                }
++            });
++        }
++
++        // Multi-Client Dynamic Rows
++        const mcTableBody = document.getElementById('multiClientTableBody');
++        const btnAddClient = document.getElementById('btnAddClientRow');
++        const mcTotalDisplay = document.getElementById('mc_total_display');
++        let mcRowIndex = 0;
++
++        const clientOptionsList = [
++            @foreach ($clients as $c)
++                { id: "{{ $c->id }}", text: "{{ addslashes($c->name) }}{{ $c->company_name ? ' (' . addslashes($c->company_name) . ')' : '' }} - {{ $c->phone ?? $c->cnic }}" },
++            @endforeach
++        ];
++
++        function recalculateMultiClientTotal() {
++            let total = 0;
++            document.querySelectorAll('.mc-amount-input').forEach(inp => {
++                const val = parseFloat(inp.value) || 0;
++                total += val;
++            });
++            if (mcTotalDisplay) {
++                mcTotalDisplay.textContent = total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
++            }
++            const activePayee = document.querySelector('.payee-type-radio:checked');
++            const activeJvMode = document.querySelector('.jv-mode-radio:checked');
++            if (activePayee && activePayee.value === 'jv' && activeJvMode && activeJvMode.value === 'multi_client') {
++                if (mainAmount) {
++                    mainAmount.value = total > 0 ? total.toFixed(2) : '';
++                }
++            }
++        }
++
++        function addMultiClientRow(initialData = null) {
++            if (!mcTableBody) return;
++            const idx = mcRowIndex++;
++            const tr = document.createElement('tr');
++            tr.className = 'mc-row';
++
++            let optionsHtml = '<option value="">-- Select Client --</option>';
++            clientOptionsList.forEach(c => {
++                const sel = (initialData && initialData.client_id == c.id) ? 'selected' : '';
++                optionsHtml += `<option value="${c.id}" ${sel}>${c.text}</option>`;
++            });
++
++            const selDebit = (initialData && initialData.type === 'debit') ? 'selected' : '';
++            const selCredit = (!initialData || initialData.type === 'credit') ? 'selected' : '';
++            const initAmt = (initialData && initialData.amount) ? initialData.amount : '';
++            const initNotes = (initialData && initialData.notes) ? initialData.notes : '';
++
++            tr.innerHTML = `
++                <td>
++                    <select name="jv_clients[${idx}][client_id]" class="form-select form-select-sm mc-client-select" required>
++                        ${optionsHtml}
++                    </select>
++                </td>
++                <td>
++                    <select name="jv_clients[${idx}][type]" class="form-select form-select-sm mc-type-select">
++                        <option value="credit" ${selCredit}>Credit (Receipt / Balance -)</option>
++                        <option value="debit" ${selDebit}>Debit (Charge / Balance +)</option>
++                    </select>
++                </td>
++                <td>
++                    <input type="number" step="any" min="0.01" name="jv_clients[${idx}][amount]" value="${initAmt}" class="form-control form-control-sm mc-amount-input fw-bold" placeholder="0.00" required>
++                </td>
++                <td>
++                    <input type="text" name="jv_clients[${idx}][notes]" value="${initNotes}" class="form-control form-control-sm" placeholder="Remarks for this client">
++                </td>
++                <td class="text-center">
++                    <button type="button" class="btn btn-sm btn-outline-danger btn-remove-mc-row" title="Remove Client">
++                        <i class="mdi mdi-trash-can-outline"></i>
++                    </button>
++                </td>
++            `;
++
++            mcTableBody.appendChild(tr);
++
++            // Bind events for the new row
++            tr.querySelector('.mc-amount-input').addEventListener('input', recalculateMultiClientTotal);
++            tr.querySelector('.btn-remove-mc-row').addEventListener('click', function() {
++                tr.remove();
++                recalculateMultiClientTotal();
++            });
++        }
++
++        if (btnAddClient) {
++            btnAddClient.addEventListener('click', function() {
++                addMultiClientRow();
+             });
+         }
+ 
+@@ -633,5 +1036,115 @@ function updateCurrency() {
+             }
+         });
+     });
++
++        // Payment Type Toggle (Bank vs Cash Account)
++        const paymentTypeRadios = document.querySelectorAll('input[name="payment_type"]');
++        const bankSelectGroup = document.getElementById('bank_select_group');
++        const cashAccountGroup = document.getElementById('cash_account_group');
++
++        function updatePaymentMode(type) {
++            if (type === 'cash') {
++                if (bankSelectGroup) bankSelectGroup.style.display = 'none';
++                if (cashAccountGroup) cashAccountGroup.style.display = 'block';
++            } else {
++                if (bankSelectGroup) bankSelectGroup.style.display = 'block';
++                if (cashAccountGroup) cashAccountGroup.style.display = 'none';
++            }
++        }
++        paymentTypeRadios.forEach(r => {
++            r.addEventListener('change', function() { updatePaymentMode(this.value); });
++        });
++
++        // Live ROE Calculation Preview
++        const amountInput = document.getElementById('main_total_amount');
++        const roePreviewBox = document.getElementById('roe_live_preview_box');
++        const roePreviewText = document.getElementById('roe_live_preview_text');
++
++        function updateLiveRoePreview() {
++            if (!amountInput || !roePreviewBox || !roePreviewText) return;
++            const amt = parseFloat(amountInput.value) || 0;
++            const curr = currencySelect ? currencySelect.value : 'PKR';
++            const rate = parseFloat(rateInput ? rateInput.value : 1) || 1;
++
++            if (amt > 0 && curr === 'SAR' && rate > 0) {
++                const equivPkr = amt * rate;
++                roePreviewText.textContent = `${amt.toLocaleString('en-US', {minimumFractionDigits: 2})} SAR × ${rate.toFixed(2)} ROE = PKR ${equivPkr.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
++                roePreviewBox.style.display = 'block';
++            } else if (amt > 0 && curr === 'PKR' && rate > 1) {
++                const equivSar = amt / rate;
++                roePreviewText.textContent = `PKR ${amt.toLocaleString('en-US', {minimumFractionDigits: 2})} ÷ ${rate.toFixed(2)} ROE = ${equivSar.toLocaleString('en-US', {minimumFractionDigits: 2})} SAR`;
++                roePreviewBox.style.display = 'block';
++            } else {
++                roePreviewBox.style.display = 'none';
++            }
++        }
++
++        if (amountInput) amountInput.addEventListener('input', updateLiveRoePreview);
++        if (rateInput) rateInput.addEventListener('input', updateLiveRoePreview);
++        if (currencySelect) currencySelect.addEventListener('change', updateLiveRoePreview);
++        updateLiveRoePreview();
++
++        // Universal JV Dynamic Entities
++        const universalEntities = {
++            client: [
++                @foreach($clients as $c)
++                    { id: "{{ $c->id }}", name: "{{ addslashes($c->name) }}{{ $c->company_name ? ' (' . addslashes($c->company_name) . ')' : '' }} - {{ $c->phone ?? $c->cnic }}" },
++                @endforeach
++            ],
++            supplier: [
++                @foreach($suppliers as $s)
++                    { id: "{{ $s->id }}", name: "{{ addslashes($s->name) }}{{ $s->company_name ? ' (' . addslashes($s->company_name) . ')' : '' }} - {{ strtoupper($s->service_type ?? 'Supplier') }}" },
++                @endforeach
++            ],
++            staff: [
++                @foreach($staffMembers as $st)
++                    { id: "{{ $st->id }}", name: "{{ addslashes($st->first_name . ' ' . $st->last_name) }} ({{ $st->designation->name ?? 'Staff' }})" },
++                @endforeach
++            ],
++            bank: [
++                @foreach($banks as $b)
++                    { id: "{{ $b->id }}", name: "{{ addslashes($b->name) }}{{ $b->account_name ? ' - ' . addslashes($b->account_name) : '' }}" },
++                @endforeach
++            ],
++            cash: [
++                @foreach($cashAccounts->filter(fn($a) => in_array($a->account_type, ['cash', 'general'])) as $ca)
++                    { id: "{{ $ca->id }}", name: "{{ addslashes($ca->account_name) }} (Opening: PKR {{ number_format($ca->opening_balance_pkr, 2) }})" },
++                @endforeach
++            ],
++            loan: [
++                @foreach($cashAccounts->filter(fn($a) => in_array($a->account_type, ['loan_asset', 'loan_liability'])) as $la)
++                    { id: "{{ $la->id }}", name: "{{ addslashes($la->account_name) }} ({{ $la->account_type === 'loan_asset' ? 'Loan Asset' : 'Loan Liability' }})" },
++                @endforeach
++            ],
++            expense: [
++                @foreach($expenses as $e)
++                    { id: "{{ $e->id }}", name: "{{ addslashes($e->name) }} (Office Expense Head)" },
++                @endforeach
++            ]
++        };
++
++        function populateUniversalDropdown(typeSelectId, targetSelectId, selectedVal = null) {
++            const typeSelect = document.getElementById(typeSelectId);
++            const targetSelect = document.getElementById(targetSelectId);
++            if (!typeSelect || !targetSelect) return;
++            const type = typeSelect.value;
++            const items = universalEntities[type] || [];
++            let html = `<option value="">-- Choose ${type.charAt(0).toUpperCase() + type.slice(1)} --</option>`;
++            items.forEach(it => {
++                const isSel = (selectedVal && selectedVal == it.id) ? 'selected' : '';
++                html += `<option value="${it.id}" ${isSel}>${it.name}</option>`;
++            });
++            targetSelect.innerHTML = html;
++        }
++
++        document.querySelectorAll('.jv-entity-type-select').forEach(sel => {
++            sel.addEventListener('change', function() {
++                const targetId = this.getAttribute('data-target');
++                populateUniversalDropdown(this.id, targetId);
++            });
++        });
++
++        populateUniversalDropdown('jv_from_type', 'jv_from_id');
++        populateUniversalDropdown('jv_to_type', 'jv_to_id');
+ </script>
+ @endsection

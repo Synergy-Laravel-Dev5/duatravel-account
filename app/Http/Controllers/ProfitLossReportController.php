@@ -53,25 +53,53 @@ class ProfitLossReportController extends Controller
             $bookingQuery->where('package_type', $packageType);
         }
 
-        $dateExpr = "COALESCE((SELECT booking_date FROM booking_visas WHERE booking_visas.booking_id = bookings.id AND booking_date IS NOT NULL LIMIT 1), (SELECT booking_date FROM booking_hotels WHERE booking_hotels.booking_id = bookings.id AND booking_date IS NOT NULL LIMIT 1), (SELECT booking_date FROM booking_transports WHERE booking_transports.booking_id = bookings.id AND booking_date IS NOT NULL LIMIT 1), booking_date, flight_booking_date, DATE(created_at))";
-
         if ($year !== 'all' && !empty($year)) {
-            $bookingQuery->where(function ($q) use ($year, $dateExpr) {
+            $bookingQuery->where(function ($q) use ($year) {
                 $q->where('package_year', $year)
-                  ->orWhereRaw("YEAR({$dateExpr}) = ?", [$year]);
+                  ->orWhereHas('hotels', function ($hq) use ($year) {
+                      $hq->whereRaw("YEAR(COALESCE(booking_date, check_in)) = ?", [$year]);
+                  })->orWhereHas('visas', function ($vq) use ($year) {
+                      $vq->whereRaw("YEAR(booking_date) = ?", [$year]);
+                  })->orWhereHas('transports', function ($tq) use ($year) {
+                      $tq->whereRaw("YEAR(COALESCE(booking_date, travel_date)) = ?", [$year]);
+                  })->orWhereRaw("YEAR(COALESCE(flight_booking_date, booking_date, DATE(created_at))) = ?", [$year]);
             });
         }
 
         if ($month !== 'all' && !empty($month)) {
-            $bookingQuery->whereRaw("MONTH({$dateExpr}) = ?", [$month]);
+            $bookingQuery->where(function ($q) use ($month) {
+                $q->whereHas('hotels', function ($hq) use ($month) {
+                    $hq->whereRaw("MONTH(COALESCE(booking_date, check_in)) = ?", [$month]);
+                })->orWhereHas('visas', function ($vq) use ($month) {
+                    $vq->whereRaw("MONTH(booking_date) = ?", [$month]);
+                })->orWhereHas('transports', function ($tq) use ($month) {
+                    $tq->whereRaw("MONTH(COALESCE(booking_date, travel_date)) = ?", [$month]);
+                })->orWhereRaw("MONTH(COALESCE(flight_booking_date, booking_date, DATE(created_at))) = ?", [$month]);
+            });
         }
 
         if (!empty($dateFrom)) {
-            $bookingQuery->whereRaw("DATE({$dateExpr}) >= ?", [$dateFrom]);
+            $bookingQuery->where(function ($q) use ($dateFrom) {
+                $q->whereHas('hotels', function ($hq) use ($dateFrom) {
+                    $hq->whereRaw("DATE(COALESCE(booking_date, check_in)) >= ?", [$dateFrom]);
+                })->orWhereHas('visas', function ($vq) use ($dateFrom) {
+                    $vq->whereRaw("DATE(booking_date) >= ?", [$dateFrom]);
+                })->orWhereHas('transports', function ($tq) use ($dateFrom) {
+                    $tq->whereRaw("DATE(COALESCE(booking_date, travel_date)) >= ?", [$dateFrom]);
+                })->orWhereRaw("DATE(COALESCE(flight_booking_date, booking_date, DATE(created_at))) >= ?", [$dateFrom]);
+            });
         }
 
         if (!empty($dateTo)) {
-            $bookingQuery->whereRaw("DATE({$dateExpr}) <= ?", [$dateTo]);
+            $bookingQuery->where(function ($q) use ($dateTo) {
+                $q->whereHas('hotels', function ($hq) use ($dateTo) {
+                    $hq->whereRaw("DATE(COALESCE(booking_date, check_in)) <= ?", [$dateTo]);
+                })->orWhereHas('visas', function ($vq) use ($dateTo) {
+                    $vq->whereRaw("DATE(booking_date) <= ?", [$dateTo]);
+                })->orWhereHas('transports', function ($tq) use ($dateTo) {
+                    $tq->whereRaw("DATE(COALESCE(booking_date, travel_date)) <= ?", [$dateTo]);
+                })->orWhereRaw("DATE(COALESCE(flight_booking_date, booking_date, DATE(created_at))) <= ?", [$dateTo]);
+            });
         }
 
         if (!empty($clientId)) {
@@ -100,7 +128,17 @@ class ProfitLossReportController extends Controller
         // Process Costing & Profit per Booking
         $processedBookings = [];
         $totalSellingPkr = 0;
+        $totalHotelSellPkr = 0;
+        $totalFlightSellPkr = 0;
+        $totalVisaSellPkr = 0;
+        $totalTransSellPkr = 0;
+
         $totalDirectCostPkr = 0;
+        $totalHotelCostPkr = 0;
+        $totalFlightCostPkr = 0;
+        $totalVisaCostPkr = 0;
+        $totalTransCostPkr = 0;
+
         $totalGrossProfitPkr = 0;
         $totalReceivedPkr = 0;
         $totalBalancePkr = 0;
@@ -108,137 +146,377 @@ class ProfitLossReportController extends Controller
 
         $monthlyData = [];
 
+        // Helper to check if a service date matches active period filter
+        $isDateInFilter = function ($dateStr) use ($month, $year, $dateFrom, $dateTo) {
+            if (!$dateStr) return false;
+            $dt = Carbon::parse($dateStr);
+            if ($year !== 'all' && !empty($year) && (int) $dt->format('Y') !== (int) $year) {
+                return false;
+            }
+            if ($month !== 'all' && !empty($month) && (int) $dt->format('n') !== (int) $month) {
+                return false;
+            }
+            if (!empty($dateFrom) && $dt->format('Y-m-d') < $dateFrom) {
+                return false;
+            }
+            if (!empty($dateTo) && $dt->format('Y-m-d') > $dateTo) {
+                return false;
+            }
+            return true;
+        };
+
+        $hasFilter = ($month !== 'all' && !empty($month)) || ($year !== 'all' && !empty($year)) || !empty($dateFrom) || !empty($dateTo);
+
         foreach ($bookings as $b) {
             $curr = $b->currency ?: 'PKR';
             $pax = max(1, (int) ($b->no_of_pax ?: $b->persons->count() ?: 1));
-            $totalPaxCount += $pax;
 
-            // Direct Costs Breakdown in PKR
-            $hotelCostPkr = 0;
-            foreach ($b->hotels as $h) {
-                if ((float) $h->cost_amount > 0) {
-                    $hotelCostPkr += (float) $h->cost_amount;
-                } else {
-                    $hCurr = strtoupper($h->currency ?? 'SAR');
-                    $hRoe = ($hCurr === 'PKR') ? 1 : (float) ($h->cost_roe > 0 ? $h->cost_roe : ($h->roe > 0 ? $h->roe : 75));
-                    $hotelCostPkr += (float) ($h->cost_per_night * ($h->no_of_nights ?: 1) * ($h->no_of_rooms ?: 1)) * $hRoe;
-                }
-            }
-
-            $flightCostPkr = 0;
-            if ((float) $b->flight_cost > 0) {
-                $flightCostPkr = (float) $b->flight_cost;
-            } else {
-                $fCurr = strtoupper($b->flight_currency ?? 'SAR');
-                $fRoe = ($fCurr === 'PKR') ? 1 : (float) ($b->flight_cost_roe > 0 ? $b->flight_cost_roe : ($b->flight_roe > 0 ? $b->flight_roe : 75));
-                $flightCostPkr = (float) ($b->flight_cost_rate > 0 ? ($b->flight_cost_rate * $pax) : 0) * $fRoe;
-            }
-
-            $visaCostPkr = 0;
-            foreach ($b->visas as $v) {
-                if ((float) $v->cost_amount > 0) {
-                    $visaCostPkr += (float) $v->cost_amount;
-                } else {
-                    $vCurr = strtoupper($v->currency ?? 'SAR');
-                    $vRoe = ($vCurr === 'PKR') ? 1 : (float) ($v->cost_roe > 0 ? $v->cost_roe : ($v->roe > 0 ? $v->roe : 75));
-                    $visaCostPkr += (float) $v->cost_rate * $vRoe;
-                }
-            }
-
-            $transportCostPkr = 0;
-            foreach ($b->transports as $t) {
-                if ((float) $t->cost_amount > 0) {
-                    $transportCostPkr += (float) $t->cost_amount;
-                } else {
-                    $tCurr = strtoupper($t->currency ?? 'SAR');
-                    $tRoe = ($tCurr === 'PKR') ? 1 : (float) ($t->cost_roe > 0 ? $t->cost_roe : ($t->roe > 0 ? $t->roe : 75));
-                    $transportCostPkr += (float) $t->cost_rate * $tRoe;
-                }
-            }
-
-            $totalDirectCost = $hotelCostPkr + $flightCostPkr + $visaCostPkr + $transportCostPkr;
-
-            // Selling in PKR
             $sellingRoe = 1;
             if ($curr === 'SAR') {
-                $sellingRoe = (float) ($b->flight_roe > 1 ? $b->flight_roe : ($b->hotels->first()->roe ?? 75));
+                $sellingRoe = (float) ($b->flight_roe > 1 ? $b->flight_roe : ($b->hotels->first()?->roe ?? 75));
             }
-            $sellingPkr = (float) $b->total_amount * $sellingRoe;
+
+            // 1. Hotels Breakdown & Monthly Allocation
+            $bHotelCostPkr = 0;
+            $bHotelSellPkr = 0;
+            $allHotelCostPkr = 0;
+            $allHotelSellPkr = 0;
+            $primaryHotelDate = null;
+
+            foreach ($b->hotels as $h) {
+                $hDate = $h->booking_date ?: ($h->check_in ?: ($b->booking_date ?: ($b->created_at ? $b->created_at->toDateString() : date('Y-m-d'))));
+                if (!$primaryHotelDate) $primaryHotelDate = $hDate;
+                $cDate = Carbon::parse($hDate);
+                $mKey = $cDate->format('Y-m');
+                $mLabel = $cDate->format('M Y');
+
+                $hCurr = strtoupper($h->currency ?? 'SAR');
+                $hCostRoe = ($hCurr === 'PKR') ? 1 : (float) ($h->cost_roe > 0 ? $h->cost_roe : ($h->roe > 0 ? $h->roe : 75));
+                $hSaleRoe = ($hCurr === 'PKR') ? 1 : (float) ($h->sale_roe > 0 ? $h->sale_roe : ($h->roe > 0 ? $h->roe : 75));
+
+                $cCost = (float) $h->cost_amount ?: ((float) ($h->cost_per_night * ($h->no_of_nights ?: 1) * ($h->no_of_rooms ?: 1)) * $hCostRoe);
+                $cSell = (float) $h->selling_amount ?: ((float) ($h->selling_per_night * ($h->no_of_nights ?: 1) * ($h->no_of_rooms ?: 1)) * $hSaleRoe);
+
+                // Add to Monthly Table for that specific hotel's month
+                if (!isset($monthlyData[$mKey])) {
+                    $monthlyData[$mKey] = [
+                        'month_label'       => $mLabel,
+                        'year_month'        => $mKey,
+                        'bookings_count'    => 0,
+                        'pax_count'         => 0,
+                        'selling_pkr'       => 0,
+                        'direct_cost_pkr'   => 0,
+                        'hotel_cost_pkr'    => 0,
+                        'flight_cost_pkr'   => 0,
+                        'visa_cost_pkr'     => 0,
+                        'transport_cost_pkr'=> 0,
+                        'gross_profit_pkr'  => 0,
+                        'expenses_pkr'      => 0,
+                        'net_profit_pkr'    => 0,
+                        '_booking_ids'      => [],
+                    ];
+                }
+                if (!in_array($b->id, $monthlyData[$mKey]['_booking_ids'])) {
+                    $monthlyData[$mKey]['_booking_ids'][] = $b->id;
+                    $monthlyData[$mKey]['bookings_count']++;
+                    $monthlyData[$mKey]['pax_count'] = ($monthlyData[$mKey]['pax_count'] ?? 0) + $pax;
+                }
+                $monthlyData[$mKey]['hotel_cost_pkr'] += $cCost;
+                $monthlyData[$mKey]['direct_cost_pkr'] += $cCost;
+                $monthlyData[$mKey]['selling_pkr'] += $cSell;
+                $monthlyData[$mKey]['gross_profit_pkr'] += ($cSell - $cCost);
+
+                $allHotelCostPkr += $cCost;
+                $allHotelSellPkr += $cSell;
+
+                if (!$hasFilter || $isDateInFilter($hDate)) {
+                    $bHotelCostPkr += $cCost;
+                    $bHotelSellPkr += $cSell;
+                }
+            }
+
+            // 2. Flight Breakdown & Monthly Allocation
+            $bFlightCostPkr = 0;
+            $bFlightSellPkr = 0;
+            $allFlightCostPkr = 0;
+            $allFlightSellPkr = 0;
+            $primaryFlightDate = null;
+
+            if ((float) $b->flight_cost > 0 || (float) $b->flight_charges > 0 || (float) $b->flight_cost_rate > 0) {
+                $fDate = $b->flight_booking_date ?: ($b->departure_date ?: ($b->booking_date ?: ($b->created_at ? $b->created_at->toDateString() : date('Y-m-d'))));
+                $primaryFlightDate = $fDate;
+                $cDate = Carbon::parse($fDate);
+                $mKey = $cDate->format('Y-m');
+                $mLabel = $cDate->format('M Y');
+
+                $fCurr = strtoupper($b->flight_currency ?? 'SAR');
+                $fRoe = ($fCurr === 'PKR') ? 1 : (float) ($b->flight_cost_roe > 0 ? $b->flight_cost_roe : ($b->flight_roe > 0 ? $b->flight_roe : 75));
+                $fSaleRoe = ($fCurr === 'PKR') ? 1 : (float) ($b->flight_sale_roe > 0 ? $b->flight_sale_roe : ($b->flight_roe > 0 ? $b->flight_roe : 75));
+
+                $fCost = (float) $b->flight_cost ?: ((float) ($b->flight_cost_rate > 0 ? ($b->flight_cost_rate * $pax) : 0) * $fRoe);
+                $fSell = (float) $b->flight_charges ?: ((float) ($b->flight_selling_rate > 0 ? ($b->flight_selling_rate * $pax) : 0) * $fSaleRoe);
+
+                if (!isset($monthlyData[$mKey])) {
+                    $monthlyData[$mKey] = [
+                        'month_label'       => $mLabel,
+                        'year_month'        => $mKey,
+                        'bookings_count'    => 0,
+                        'pax_count'         => 0,
+                        'selling_pkr'       => 0,
+                        'direct_cost_pkr'   => 0,
+                        'hotel_cost_pkr'    => 0,
+                        'flight_cost_pkr'   => 0,
+                        'visa_cost_pkr'     => 0,
+                        'transport_cost_pkr'=> 0,
+                        'gross_profit_pkr'  => 0,
+                        'expenses_pkr'      => 0,
+                        'net_profit_pkr'    => 0,
+                        '_booking_ids'      => [],
+                    ];
+                }
+                if (!in_array($b->id, $monthlyData[$mKey]['_booking_ids'])) {
+                    $monthlyData[$mKey]['_booking_ids'][] = $b->id;
+                    $monthlyData[$mKey]['bookings_count']++;
+                    $monthlyData[$mKey]['pax_count'] = ($monthlyData[$mKey]['pax_count'] ?? 0) + $pax;
+                }
+                $monthlyData[$mKey]['flight_cost_pkr'] += $fCost;
+                $monthlyData[$mKey]['direct_cost_pkr'] += $fCost;
+                $monthlyData[$mKey]['selling_pkr'] += $fSell;
+                $monthlyData[$mKey]['gross_profit_pkr'] += ($fSell - $fCost);
+
+                $allFlightCostPkr += $fCost;
+                $allFlightSellPkr += $fSell;
+
+                if (!$hasFilter || $isDateInFilter($fDate)) {
+                    $bFlightCostPkr += $fCost;
+                    $bFlightSellPkr += $fSell;
+                }
+            }
+
+            // 3. Visa Breakdown & Monthly Allocation
+            $bVisaCostPkr = 0;
+            $bVisaSellPkr = 0;
+            $allVisaCostPkr = 0;
+            $allVisaSellPkr = 0;
+            $primaryVisaDate = null;
+
+            foreach ($b->visas as $v) {
+                $vDate = $v->booking_date ?: ($b->booking_date ?: ($b->created_at ? $b->created_at->toDateString() : date('Y-m-d')));
+                if (!$primaryVisaDate) $primaryVisaDate = $vDate;
+                $cDate = Carbon::parse($vDate);
+                $mKey = $cDate->format('Y-m');
+                $mLabel = $cDate->format('M Y');
+
+                $vCurr = strtoupper($v->currency ?? 'SAR');
+                $vCostRoe = ($vCurr === 'PKR') ? 1 : (float) ($v->cost_roe > 0 ? $v->cost_roe : ($v->roe > 0 ? $v->roe : 75));
+                $vSaleRoe = ($vCurr === 'PKR') ? 1 : (float) ($v->sale_roe > 0 ? $v->sale_roe : ($v->roe > 0 ? $v->roe : 75));
+
+                $cCost = (float) $v->cost_amount ?: ((float) $v->cost_rate * $vCostRoe);
+                $cSell = (float) $v->selling_amount ?: ((float) $v->selling_rate * $vSaleRoe);
+
+                if (!isset($monthlyData[$mKey])) {
+                    $monthlyData[$mKey] = [
+                        'month_label'       => $mLabel,
+                        'year_month'        => $mKey,
+                        'bookings_count'    => 0,
+                        'pax_count'         => 0,
+                        'selling_pkr'       => 0,
+                        'direct_cost_pkr'   => 0,
+                        'hotel_cost_pkr'    => 0,
+                        'flight_cost_pkr'   => 0,
+                        'visa_cost_pkr'     => 0,
+                        'transport_cost_pkr'=> 0,
+                        'gross_profit_pkr'  => 0,
+                        'expenses_pkr'      => 0,
+                        'net_profit_pkr'    => 0,
+                        '_booking_ids'      => [],
+                    ];
+                }
+                if (!in_array($b->id, $monthlyData[$mKey]['_booking_ids'])) {
+                    $monthlyData[$mKey]['_booking_ids'][] = $b->id;
+                    $monthlyData[$mKey]['bookings_count']++;
+                    $monthlyData[$mKey]['pax_count'] = ($monthlyData[$mKey]['pax_count'] ?? 0) + $pax;
+                }
+                $monthlyData[$mKey]['visa_cost_pkr'] += $cCost;
+                $monthlyData[$mKey]['direct_cost_pkr'] += $cCost;
+                $monthlyData[$mKey]['selling_pkr'] += $cSell;
+                $monthlyData[$mKey]['gross_profit_pkr'] += ($cSell - $cCost);
+
+                $allVisaCostPkr += $cCost;
+                $allVisaSellPkr += $cSell;
+
+                if (!$hasFilter || $isDateInFilter($vDate)) {
+                    $bVisaCostPkr += $cCost;
+                    $bVisaSellPkr += $cSell;
+                }
+            }
+
+            // 4. Transport Breakdown & Monthly Allocation
+            $bTransCostPkr = 0;
+            $bTransSellPkr = 0;
+            $allTransCostPkr = 0;
+            $allTransSellPkr = 0;
+            $primaryTransDate = null;
+
+            foreach ($b->transports as $t) {
+                $tDate = $t->booking_date ?: ($t->travel_date ?: ($b->booking_date ?: ($b->created_at ? $b->created_at->toDateString() : date('Y-m-d'))));
+                if (!$primaryTransDate) $primaryTransDate = $tDate;
+                $cDate = Carbon::parse($tDate);
+                $mKey = $cDate->format('Y-m');
+                $mLabel = $cDate->format('M Y');
+
+                $tCurr = strtoupper($t->currency ?? 'SAR');
+                $tCostRoe = ($tCurr === 'PKR') ? 1 : (float) ($t->cost_roe > 0 ? $t->cost_roe : ($t->roe > 0 ? $t->roe : 75));
+                $tSaleRoe = ($tCurr === 'PKR') ? 1 : (float) ($t->sale_roe > 0 ? $t->sale_roe : ($t->roe > 0 ? $t->roe : 75));
+
+                $cCost = (float) $t->cost_amount ?: ((float) $t->cost_rate * $tCostRoe);
+                $cSell = (float) $t->selling_amount ?: ((float) $t->selling_rate * $tSaleRoe);
+
+                if (!isset($monthlyData[$mKey])) {
+                    $monthlyData[$mKey] = [
+                        'month_label'       => $mLabel,
+                        'year_month'        => $mKey,
+                        'bookings_count'    => 0,
+                        'pax_count'         => 0,
+                        'selling_pkr'       => 0,
+                        'direct_cost_pkr'   => 0,
+                        'hotel_cost_pkr'    => 0,
+                        'flight_cost_pkr'   => 0,
+                        'visa_cost_pkr'     => 0,
+                        'transport_cost_pkr'=> 0,
+                        'gross_profit_pkr'  => 0,
+                        'expenses_pkr'      => 0,
+                        'net_profit_pkr'    => 0,
+                        '_booking_ids'      => [],
+                    ];
+                }
+                if (!in_array($b->id, $monthlyData[$mKey]['_booking_ids'])) {
+                    $monthlyData[$mKey]['_booking_ids'][] = $b->id;
+                    $monthlyData[$mKey]['bookings_count']++;
+                    $monthlyData[$mKey]['pax_count'] = ($monthlyData[$mKey]['pax_count'] ?? 0) + $pax;
+                }
+                $monthlyData[$mKey]['transport_cost_pkr'] += $cCost;
+                $monthlyData[$mKey]['direct_cost_pkr'] += $cCost;
+                $monthlyData[$mKey]['selling_pkr'] += $cSell;
+                $monthlyData[$mKey]['gross_profit_pkr'] += ($cSell - $cCost);
+
+                $allTransCostPkr += $cCost;
+                $allTransSellPkr += $cSell;
+
+                if (!$hasFilter || $isDateInFilter($tDate)) {
+                    $bTransCostPkr += $cCost;
+                    $bTransSellPkr += $cSell;
+                }
+            }
+
+            // Residual package selling / additional services not attached to individual items
+            $totalBookingSellPkr = (float) $b->total_amount * $sellingRoe;
+            $allServiceSellSum = $allHotelSellPkr + $allFlightSellPkr + $allVisaSellPkr + $allTransSellPkr;
+            $residualSell = max(0, $totalBookingSellPkr - $allServiceSellSum);
+
+            if ($residualSell > 0) {
+                $mainDate = $b->booking_date ?: ($b->created_at ? $b->created_at->toDateString() : date('Y-m-d'));
+                $cDate = Carbon::parse($mainDate);
+                $mKey = $cDate->format('Y-m');
+                $mLabel = $cDate->format('M Y');
+                if (!isset($monthlyData[$mKey])) {
+                    $monthlyData[$mKey] = [
+                        'month_label'       => $mLabel,
+                        'year_month'        => $mKey,
+                        'bookings_count'    => 0,
+                        'pax_count'         => 0,
+                        'selling_pkr'       => 0,
+                        'direct_cost_pkr'   => 0,
+                        'hotel_cost_pkr'    => 0,
+                        'flight_cost_pkr'   => 0,
+                        'visa_cost_pkr'     => 0,
+                        'transport_cost_pkr'=> 0,
+                        'gross_profit_pkr'  => 0,
+                        'expenses_pkr'      => 0,
+                        'net_profit_pkr'    => 0,
+                        '_booking_ids'      => [],
+                    ];
+                }
+                $monthlyData[$mKey]['selling_pkr'] += $residualSell;
+                $monthlyData[$mKey]['gross_profit_pkr'] += $residualSell;
+
+                if (!$hasFilter || $isDateInFilter($mainDate)) {
+                    // add to current filtered row
+                }
+            }
+
+            // Calculate Per-Booking row for Tab 1
+            if ($hasFilter) {
+                $bSellingPkr = $bHotelSellPkr + $bFlightSellPkr + $bVisaSellPkr + $bTransSellPkr;
+                if ($allServiceSellSum == 0 && $totalBookingSellPkr > 0) {
+                    $bSellingPkr = $totalBookingSellPkr;
+                }
+                $bDirectCostPkr = $bHotelCostPkr + $bFlightCostPkr + $bVisaCostPkr + $bTransCostPkr;
+                $bGrossProfitPkr = $bSellingPkr - $bDirectCostPkr;
+                $relevantDate = $bHotelCostPkr > 0 ? $primaryHotelDate : ($bFlightCostPkr > 0 ? $primaryFlightDate : ($bVisaCostPkr > 0 ? $primaryVisaDate : ($bTransCostPkr > 0 ? $primaryTransDate : $b->booking_date)));
+            } else {
+                $bSellingPkr = $totalBookingSellPkr ?: ($allHotelSellPkr + $allFlightSellPkr + $allVisaSellPkr + $allTransSellPkr);
+                $bHotelCostPkr = $allHotelCostPkr;
+                $bFlightCostPkr = $allFlightCostPkr;
+                $bVisaCostPkr = $allVisaCostPkr;
+                $bTransCostPkr = $allTransCostPkr;
+                $bDirectCostPkr = $bHotelCostPkr + $bFlightCostPkr + $bVisaCostPkr + $bTransCostPkr;
+                $bGrossProfitPkr = $bSellingPkr - $bDirectCostPkr;
+                $relevantDate = $b->booking_date ?: ($primaryHotelDate ?: ($primaryFlightDate ?: ($b->created_at ? $b->created_at->toDateString() : date('Y-m-d'))));
+            }
+
+            $bMarginPct = $bSellingPkr > 0 ? round(($bGrossProfitPkr / $bSellingPkr) * 100, 1) : 0;
+            $bPerPaxProfit = round($bGrossProfitPkr / $pax, 2);
+            $bPerPaxSelling = round($bSellingPkr / $pax, 2);
+            $bPerPaxCost = round($bDirectCostPkr / $pax, 2);
+
             $receivedPkr = (float) $b->total_received * $sellingRoe;
             $balancePkr = (float) $b->balance * $sellingRoe;
 
-            $grossProfit = $sellingPkr - $totalDirectCost;
-            $marginPct = $sellingPkr > 0 ? round(($grossProfit / $sellingPkr) * 100, 1) : 0;
-            $perPaxProfit = round($grossProfit / $pax, 2);
-            $perPaxSelling = round($sellingPkr / $pax, 2);
-            $perPaxCost = round($totalDirectCost / $pax, 2);
+            if (!$hasFilter || ($bDirectCostPkr > 0 || $bSellingPkr > 0)) {
+                $totalPaxCount += $pax;
+                $totalSellingPkr += $bSellingPkr;
+                $totalHotelSellPkr += $bHotelSellPkr;
+                $totalFlightSellPkr += $bFlightSellPkr;
+                $totalVisaSellPkr += $bVisaSellPkr;
+                $totalTransSellPkr += $bTransSellPkr;
 
-            $totalSellingPkr += $sellingPkr;
-            $totalDirectCostPkr += $totalDirectCost;
-            $totalGrossProfitPkr += $grossProfit;
-            $totalReceivedPkr += $receivedPkr;
-            $totalBalancePkr += $balancePkr;
+                $totalDirectCostPkr += $bDirectCostPkr;
+                $totalHotelCostPkr += $bHotelCostPkr;
+                $totalFlightCostPkr += $bFlightCostPkr;
+                $totalVisaCostPkr += $bVisaCostPkr;
+                $totalTransCostPkr += $bTransCostPkr;
 
-            $effectiveBookingDate = $b->visas->whereNotNull('booking_date')->first()?->booking_date 
-                ?: ($b->hotels->whereNotNull('booking_date')->first()?->booking_date 
-                    ?: ($b->transports->whereNotNull('booking_date')->first()?->booking_date 
-                        ?: (!empty($b->booking_date) 
-                            ? $b->booking_date 
-                            : (!empty($b->flight_booking_date) 
-                                ? $b->flight_booking_date 
-                                : ($b->created_at ? $b->created_at->toDateString() : date('Y-m-d'))))));
-            $bDate = Carbon::parse($effectiveBookingDate);
-            $monthKey = $bDate->format('Y-m');
-            $monthLabel = $bDate->format('M Y');
+                $totalGrossProfitPkr += $bGrossProfitPkr;
+                $totalReceivedPkr += $receivedPkr;
+                $totalBalancePkr += $balancePkr;
 
-            if (!isset($monthlyData[$monthKey])) {
-                $monthlyData[$monthKey] = [
-                    'month_label'       => $monthLabel,
-                    'year_month'        => $monthKey,
-                    'bookings_count'    => 0,
-                    'pax_count'         => 0,
-                    'selling_pkr'       => 0,
-                    'direct_cost_pkr'   => 0,
-                    'hotel_cost_pkr'    => 0,
-                    'flight_cost_pkr'   => 0,
-                    'visa_cost_pkr'     => 0,
-                    'transport_cost_pkr'=> 0,
-                    'gross_profit_pkr'  => 0,
-                    'expenses_pkr'      => 0,
-                    'net_profit_pkr'    => 0,
+                $processedBookings[] = (object) [
+                    'booking'            => $b,
+                    'pax'                => $pax,
+                    'currency'           => $curr,
+                    'selling_raw'        => $bSellingPkr,
+                    'selling_pkr'        => $bSellingPkr,
+                    'hotel_sell_pkr'     => $bHotelSellPkr,
+                    'flight_sell_pkr'    => $bFlightSellPkr,
+                    'visa_sell_pkr'      => $bVisaSellPkr,
+                    'transport_sell_pkr' => $bTransSellPkr,
+                    'received_pkr'       => $receivedPkr,
+                    'balance_pkr'        => $balancePkr,
+                    'hotel_cost_pkr'     => $bHotelCostPkr,
+                    'flight_cost_pkr'    => $bFlightCostPkr,
+                    'visa_cost_pkr'      => $bVisaCostPkr,
+                    'transport_cost_pkr' => $bTransCostPkr,
+                    'direct_cost_pkr'    => $bDirectCostPkr,
+                    'gross_profit_pkr'   => $bGrossProfitPkr,
+                    'margin_pct'         => $bMarginPct,
+                    'per_pax_profit'     => $bPerPaxProfit,
+                    'per_pax_selling'    => $bPerPaxSelling,
+                    'per_pax_cost'       => $bPerPaxCost,
+                    'persons'            => $b->persons,
+                    'relevant_date'      => $relevantDate,
                 ];
             }
-
-            $monthlyData[$monthKey]['bookings_count']++;
-            $monthlyData[$monthKey]['pax_count'] += $pax;
-            $monthlyData[$monthKey]['selling_pkr'] += $sellingPkr;
-            $monthlyData[$monthKey]['direct_cost_pkr'] += $totalDirectCost;
-            $monthlyData[$monthKey]['hotel_cost_pkr'] += $hotelCostPkr;
-            $monthlyData[$monthKey]['flight_cost_pkr'] += $flightCostPkr;
-            $monthlyData[$monthKey]['visa_cost_pkr'] += $visaCostPkr;
-            $monthlyData[$monthKey]['transport_cost_pkr'] += $transportCostPkr;
-            $monthlyData[$monthKey]['gross_profit_pkr'] += $grossProfit;
-
-            $processedBookings[] = (object) [
-                'booking'            => $b,
-                'pax'                => $pax,
-                'currency'           => $curr,
-                'selling_raw'        => $b->total_amount,
-                'selling_pkr'        => $sellingPkr,
-                'received_pkr'       => $receivedPkr,
-                'balance_pkr'        => $balancePkr,
-                'hotel_cost_pkr'     => $hotelCostPkr,
-                'flight_cost_pkr'    => $flightCostPkr,
-                'visa_cost_pkr'      => $visaCostPkr,
-                'transport_cost_pkr' => $transportCostPkr,
-                'direct_cost_pkr'    => $totalDirectCost,
-                'gross_profit_pkr'   => $grossProfit,
-                'margin_pct'         => $marginPct,
-                'per_pax_profit'     => $perPaxProfit,
-                'per_pax_selling'    => $perPaxSelling,
-                'per_pax_cost'       => $perPaxCost,
-                'persons'            => $b->persons,
-            ];
         }
 
         // Query Overhead Expenses from ExpenseTransaction
@@ -324,7 +602,15 @@ class ProfitLossReportController extends Controller
             'processedBookings',
             'monthlyData',
             'totalSellingPkr',
+            'totalHotelSellPkr',
+            'totalFlightSellPkr',
+            'totalVisaSellPkr',
+            'totalTransSellPkr',
             'totalDirectCostPkr',
+            'totalHotelCostPkr',
+            'totalFlightCostPkr',
+            'totalVisaCostPkr',
+            'totalTransCostPkr',
             'totalGrossProfitPkr',
             'totalOverheadExpensesPkr',
             'netOperatingProfitPkr',

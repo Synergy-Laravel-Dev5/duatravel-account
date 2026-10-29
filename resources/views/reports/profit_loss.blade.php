@@ -300,24 +300,141 @@
                         
                         <!-- ════════════════ TAB 1: PER BOOKING / PERSON PROFITABILITY ════════════════ -->
                         <div class="tab-pane active" id="tab-per-booking" role="tabpanel">
+                            
+                            <!-- DEDICATED SALES & COST SUMMARY BREAKDOWN CARDS -->
+                            <div class="row g-3 p-3 bg-light border-bottom">
+                                <!-- 1. Sales / Revenue Summary Block -->
+                                <div class="col-lg-6 col-12">
+                                    <div class="card border border-primary border-opacity-25 shadow-none mb-0 bg-white h-100">
+                                        <div class="card-header py-2 px-3 bg-soft-primary border-bottom border-primary border-opacity-10 d-flex justify-content-between align-items-center">
+                                            <span class="fw-bold text-primary fs-13">
+                                                <i class="mdi mdi-cash-multiple me-1"></i> Sales Revenue Breakdown Summary
+                                            </span>
+                                            <span class="badge bg-primary fs-12 px-2 py-1">
+                                                Total Sale: PKR {{ number_format($totalSellingPkr, 0) }}
+                                            </span>
+                                        </div>
+                                        <div class="card-body p-3">
+                                            <div class="row g-2 text-center">
+                                                <div class="col-sm-3 col-6">
+                                                    <div class="p-2 border rounded bg-light">
+                                                        <small class="text-muted fs-11 text-uppercase d-block mb-1">Hotel Sale</small>
+                                                        <strong class="text-dark fs-12">PKR {{ number_format($totalHotelSellPkr, 0) }}</strong>
+                                                    </div>
+                                                </div>
+                                                <div class="col-sm-3 col-6">
+                                                    <div class="p-2 border rounded bg-light">
+                                                        <small class="text-muted fs-11 text-uppercase d-block mb-1">Flight Sale</small>
+                                                        <strong class="text-dark fs-12">PKR {{ number_format($totalFlightSellPkr, 0) }}</strong>
+                                                    </div>
+                                                </div>
+                                                <div class="col-sm-3 col-6">
+                                                    <div class="p-2 border rounded bg-light">
+                                                        <small class="text-muted fs-11 text-uppercase d-block mb-1">Visa Sale</small>
+                                                        <strong class="text-dark fs-12">PKR {{ number_format($totalVisaSellPkr, 0) }}</strong>
+                                                    </div>
+                                                </div>
+                                                <div class="col-sm-3 col-6">
+                                                    <div class="p-2 border rounded bg-light">
+                                                        <small class="text-muted fs-11 text-uppercase d-block mb-1">Trans Sale</small>
+                                                        <strong class="text-dark fs-12">PKR {{ number_format($totalTransSellPkr, 0) }}</strong>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 2. Direct Costs Summary Block -->
+                                <div class="col-lg-6 col-12">
+                                    <div class="card border border-danger border-opacity-25 shadow-none mb-0 bg-white h-100">
+                                        <div class="card-header py-2 px-3 bg-soft-danger border-bottom border-danger border-opacity-10 d-flex justify-content-between align-items-center">
+                                            <span class="fw-bold text-danger fs-13">
+                                                <i class="mdi mdi-truck-delivery-outline me-1"></i> Direct Costs Breakdown Summary
+                                            </span>
+                                            <span class="badge bg-danger fs-12 px-2 py-1">
+                                                Total Cost: PKR {{ number_format($totalDirectCostPkr, 0) }}
+                                            </span>
+                                        </div>
+                                        <div class="card-body p-3">
+                                            <div class="row g-2 text-center">
+                                                <div class="col-sm-3 col-6">
+                                                    <div class="p-2 border rounded bg-light">
+                                                        <small class="text-muted fs-11 text-uppercase d-block mb-1">Hotel Cost</small>
+                                                        <strong class="text-danger fs-12">PKR {{ number_format($totalHotelCostPkr, 0) }}</strong>
+                                                    </div>
+                                                </div>
+                                                <div class="col-sm-3 col-6">
+                                                    <div class="p-2 border rounded bg-light">
+                                                        <small class="text-muted fs-11 text-uppercase d-block mb-1">Flight Cost</small>
+                                                        <strong class="text-danger fs-12">PKR {{ number_format($totalFlightCostPkr, 0) }}</strong>
+                                                    </div>
+                                                </div>
+                                                <div class="col-sm-3 col-6">
+                                                    <div class="p-2 border rounded bg-light">
+                                                        <small class="text-muted fs-11 text-uppercase d-block mb-1">Visa Cost</small>
+                                                        <strong class="text-danger fs-12">PKR {{ number_format($totalVisaCostPkr, 0) }}</strong>
+                                                    </div>
+                                                </div>
+                                                <div class="col-sm-3 col-6">
+                                                    <div class="p-2 border rounded bg-light">
+                                                        <small class="text-muted fs-11 text-uppercase d-block mb-1">Trans Cost</small>
+                                                        <strong class="text-danger fs-12">PKR {{ number_format($totalTransCostPkr, 0) }}</strong>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="table-responsive">
                                 <table id="plBookingTable" class="table table-hover align-middle table-nowrap mb-0 fs-12">
-                                    <thead class="table-light text-uppercase fs-11 text-muted">
-                                        <tr>
-                                            <th style="width: 35px;" class="text-center">#</th>
-                                            <th>Voucher / Haji ID</th>
-                                            <th>Client / Package</th>
-                                            <th class="text-center">Pax</th>
-                                            <th class="text-end">Selling Price (PKR)</th>
-                                            <th class="text-end">Hotel Cost</th>
-                                            <th class="text-end">Flight Cost</th>
-                                            <th class="text-end">Visa Cost</th>
-                                            <th class="text-end">Trans Cost</th>
-                                            <th class="text-end">Total Direct Cost</th>
-                                            <th class="text-end">Gross Profit</th>
-                                            <th class="text-center">Margin %</th>
-                                            <th class="text-end">Per Pax Profit</th>
-                                            <th class="text-center no-print">Actions</th>
+                                    <thead class="fs-11">
+                                        <!-- Level 1 Grouped Header -->
+                                        <tr class="text-uppercase text-center border-bottom">
+                                            <th rowspan="2" style="width: 35px; vertical-align: middle;" class="text-center bg-light">#</th>
+                                            <th rowspan="2" style="vertical-align: middle;" class="text-start bg-light">Voucher / Haji ID</th>
+                                            <th rowspan="2" style="vertical-align: middle;" class="text-start bg-light">Client / Package</th>
+                                            <th rowspan="2" style="width: 55px; vertical-align: middle;" class="text-center bg-light">Pax</th>
+                                            
+                                            <!-- SALES / REVENUE GROUP -->
+                                            <th colspan="5" class="py-2 text-center text-white" style="background: #0f535e; border-right: 2px solid #0a3d45;">
+                                                <i class="mdi mdi-cash-multiple me-1"></i> Sales Revenue Breakdown (PKR)
+                                            </th>
+                                            
+                                            <!-- DIRECT COSTS GROUP -->
+                                            <th colspan="5" class="py-2 text-center text-white" style="background: #be123c; border-right: 2px solid #9f1239;">
+                                                <i class="mdi mdi-truck-delivery-outline me-1"></i> Direct Costs Breakdown (PKR)
+                                            </th>
+                                            
+                                            <!-- PROFITABILITY GROUP -->
+                                            <th colspan="3" class="py-2 text-center text-white" style="background: #047857;">
+                                                <i class="mdi mdi-chart-line me-1"></i> Profitability Summary
+                                            </th>
+                                            
+                                            <th rowspan="2" style="width: 45px; vertical-align: middle;" class="text-center bg-light no-print">Actions</th>
+                                        </tr>
+                                        <!-- Level 2 Sub-Columns Header -->
+                                        <tr class="text-uppercase fs-10 text-muted border-bottom">
+                                            <!-- Under Sales -->
+                                            <th class="text-end" style="background: #f0fdf4; color: #166534;">Hotel Sale</th>
+                                            <th class="text-end" style="background: #f0fdf4; color: #166534;">Flight Sale</th>
+                                            <th class="text-end" style="background: #f0fdf4; color: #166534;">Visa Sale</th>
+                                            <th class="text-end" style="background: #f0fdf4; color: #166534;">Trans Sale</th>
+                                            <th class="text-end fw-bold" style="background: #dcfce7; color: #14532d; border-right: 2px solid #cbd5e1;">Total Sale</th>
+                                            
+                                            <!-- Under Direct Costs -->
+                                            <th class="text-end" style="background: #fff1f2; color: #9f1239;">Hotel Cost</th>
+                                            <th class="text-end" style="background: #fff1f2; color: #9f1239;">Flight Cost</th>
+                                            <th class="text-end" style="background: #fff1f2; color: #9f1239;">Visa Cost</th>
+                                            <th class="text-end" style="background: #fff1f2; color: #9f1239;">Trans Cost</th>
+                                            <th class="text-end fw-bold" style="background: #fee2e2; color: #991b1b; border-right: 2px solid #cbd5e1;">Total Cost</th>
+                                            
+                                            <!-- Under Profitability -->
+                                            <th class="text-end fw-bold text-success" style="background: #f0fdf4;">Gross Profit</th>
+                                            <th class="text-center fw-bold text-success" style="background: #f0fdf4;">Margin %</th>
+                                            <th class="text-end fw-bold text-success" style="background: #f0fdf4;">Profit / Pax</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -338,7 +455,7 @@
                                                         </span>
                                                     @endif
                                                     @php
-                                                        $dispDate = $b->booking_date ?: ($b->flight_booking_date ?: $b->hotels->first()?->booking_date);
+                                                        $dispDate = $b->relevant_date ?? ($b->booking_date ?: ($b->flight_booking_date ?: $b->hotels->first()?->booking_date));
                                                     @endphp
                                                     <br><small class="text-muted">{{ $dispDate ? date('d M Y', strtotime($dispDate)) : '—' }}</small>
                                                 </td>
@@ -357,12 +474,28 @@
                                                         {{ $row->pax }} Pax
                                                     </span>
                                                 </td>
-                                                <td class="text-end fw-bold text-dark">
+                                                
+                                                <!-- SALES BREAKDOWN -->
+                                                <td class="text-end text-muted">
+                                                    {{ $row->hotel_sell_pkr > 0 ? 'PKR ' . number_format($row->hotel_sell_pkr, 0) : '—' }}
+                                                </td>
+                                                <td class="text-end text-muted">
+                                                    {{ $row->flight_sell_pkr > 0 ? 'PKR ' . number_format($row->flight_sell_pkr, 0) : '—' }}
+                                                </td>
+                                                <td class="text-end text-muted">
+                                                    {{ $row->visa_sell_pkr > 0 ? 'PKR ' . number_format($row->visa_sell_pkr, 0) : '—' }}
+                                                </td>
+                                                <td class="text-end text-muted">
+                                                    {{ $row->transport_sell_pkr > 0 ? 'PKR ' . number_format($row->transport_sell_pkr, 0) : '—' }}
+                                                </td>
+                                                <td class="text-end fw-bold text-dark" style="background: #f8fafc; border-right: 2px solid #e2e8f0;">
                                                     PKR {{ number_format($row->selling_pkr, 0) }}
                                                     @if($row->currency !== 'PKR')
                                                         <br><small class="text-muted fs-10">({{ $row->currency }} {{ number_format($row->selling_raw, 0) }})</small>
                                                     @endif
                                                 </td>
+
+                                                <!-- DIRECT COSTS BREAKDOWN -->
                                                 <td class="text-end text-muted">
                                                     {{ $row->hotel_cost_pkr > 0 ? 'PKR ' . number_format($row->hotel_cost_pkr, 0) : '—' }}
                                                 </td>
@@ -375,9 +508,11 @@
                                                 <td class="text-end text-muted">
                                                     {{ $row->transport_cost_pkr > 0 ? 'PKR ' . number_format($row->transport_cost_pkr, 0) : '—' }}
                                                 </td>
-                                                <td class="text-end fw-semibold text-danger">
+                                                <td class="text-end fw-semibold text-danger" style="background: #fef2f2; border-right: 2px solid #e2e8f0;">
                                                     PKR {{ number_format($row->direct_cost_pkr, 0) }}
                                                 </td>
+
+                                                <!-- PROFITABILITY -->
                                                 <td class="text-end fw-bold {{ $isProfit ? 'text-success' : 'text-danger' }}">
                                                     PKR {{ number_format($row->gross_profit_pkr, 0) }}
                                                 </td>
@@ -418,7 +553,7 @@
                                             @if($row->persons && $row->persons->count() > 1)
                                                 <tr class="bg-light fs-11 text-muted" style="border-bottom: 1.5px solid #e2e8f0;">
                                                     <td></td>
-                                                    <td colspan="13">
+                                                    <td colspan="17">
                                                         <span class="fw-bold text-dark"><i class="mdi mdi-account-multiple me-1"></i> Pilgrims Breakdown ({{ $row->persons->count() }}):</span>
                                                         @foreach($row->persons as $p)
                                                             <span class="badge bg-white text-dark border me-1 my-1">
@@ -430,7 +565,7 @@
                                             @endif
                                         @empty
                                             <tr>
-                                                <td colspan="14" class="text-center py-4 text-muted">
+                                                <td colspan="18" class="text-center py-4 text-muted">
                                                     <i class="mdi mdi-information-outline fs-24 d-block mb-1"></i>
                                                     No bookings found matching the selected filter criteria.
                                                 </td>
@@ -441,9 +576,22 @@
                                         <tr>
                                             <td colspan="3" class="text-uppercase text-dark">Total Summary</td>
                                             <td class="text-center">{{ $totalPaxCount }} Pax</td>
-                                            <td class="text-end text-primary">PKR {{ number_format($totalSellingPkr, 0) }}</td>
-                                            <td colspan="4"></td>
-                                            <td class="text-end text-danger">PKR {{ number_format($totalDirectCostPkr, 0) }}</td>
+                                            
+                                            <!-- Sales Totals -->
+                                            <td class="text-end text-success">PKR {{ number_format($totalHotelSellPkr, 0) }}</td>
+                                            <td class="text-end text-success">PKR {{ number_format($totalFlightSellPkr, 0) }}</td>
+                                            <td class="text-end text-success">PKR {{ number_format($totalVisaSellPkr, 0) }}</td>
+                                            <td class="text-end text-success">PKR {{ number_format($totalTransSellPkr, 0) }}</td>
+                                            <td class="text-end text-primary fw-bold" style="background: #e0f2fe; border-right: 2px solid #cbd5e1;">PKR {{ number_format($totalSellingPkr, 0) }}</td>
+
+                                            <!-- Cost Totals -->
+                                            <td class="text-end text-muted">PKR {{ number_format($totalHotelCostPkr, 0) }}</td>
+                                            <td class="text-end text-muted">PKR {{ number_format($totalFlightCostPkr, 0) }}</td>
+                                            <td class="text-end text-muted">PKR {{ number_format($totalVisaCostPkr, 0) }}</td>
+                                            <td class="text-end text-muted">PKR {{ number_format($totalTransCostPkr, 0) }}</td>
+                                            <td class="text-end text-danger fw-bold" style="background: #fee2e2; border-right: 2px solid #cbd5e1;">PKR {{ number_format($totalDirectCostPkr, 0) }}</td>
+
+                                            <!-- Profit Totals -->
                                             <td class="text-end text-success">PKR {{ number_format($totalGrossProfitPkr, 0) }}</td>
                                             <td class="text-center text-success">{{ $overallGrossMarginPct }}%</td>
                                             <td class="text-end text-success">Avg PKR {{ number_format($avgProfitPerPax, 0) }}</td>

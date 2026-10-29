@@ -23,17 +23,22 @@ class BookingHotel extends Model
         'room_type',
         'no_of_rooms',
         'room_number',
+        'meal_plan',
+        'room_view',
         'gender',
         'cost_per_night',
         'cost_amount',
         'selling_per_night',
         'selling_amount',
         'person_rates',
-        'hotel_voucher'
+        'hotel_voucher',
+        'voucher_no',
+        'additional_rooms'
     ];
 
     protected $casts = [
         'person_rates' => 'array',
+        'additional_rooms' => 'array',
     ];
 
     public function supplier()

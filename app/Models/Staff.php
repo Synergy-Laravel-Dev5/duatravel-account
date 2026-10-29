@@ -19,4 +19,14 @@ class Staff extends Model
     {
         return $this->belongsTo(Designation::class);
     }
+
+    public function payrolls()
+    {
+        return $this->hasMany(Payroll::class);
+    }
+
+    public function expenseTransactions()
+    {
+        return $this->hasMany(ExpenseTransaction::class, 'staff_id');
+    }
 }

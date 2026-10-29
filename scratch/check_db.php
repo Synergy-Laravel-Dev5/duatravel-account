@@ -1,18 +1,13 @@
 <?php
-require 'vendor/autoload.php';
-$app = require_once 'bootstrap/app.php';
-$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
-$kernel->bootstrap();
+require __DIR__ . '/../vendor/autoload.php';
+$app = require_once __DIR__ . '/../bootstrap/app.php';
+$app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
-use App\Models\Lead;
-use App\Models\Client;
+echo "Transactions columns:\n";
+print_r(\Illuminate\Support\Facades\Schema::getColumnListing('transactions'));
 
-echo "=== ALL LEADS (INCLUDING TRASHED) ===\n";
-foreach (Lead::withTrashed()->get() as $l) {
-    echo "Lead ID: {$l->id} | Contact: {$l->contact_person} | Phone: {$l->phone} | DeletedAt: {$l->deleted_at}\n";
-}
+echo "\nExpenseTransactions columns:\n";
+print_r(\Illuminate\Support\Facades\Schema::getColumnListing('expense_transactions'));
 
-echo "\n=== ALL CLIENTS (INCLUDING TRASHED) ===\n";
-foreach (Client::withTrashed()->get() as $c) {
-    echo "Client ID: {$c->id} | Name: {$c->name} | LeadID: {$c->lead_id} | Status: {$c->status} | PkgType: '{$c->package_type}' | DeletedAt: {$c->deleted_at}\n";
-}
+echo "\nAccounts columns:\n";
+print_r(\Illuminate\Support\Facades\Schema::getColumnListing('accounts'));

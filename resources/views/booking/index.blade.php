@@ -117,6 +117,12 @@
                                                                 </a>
                                                             @endcan
 
+                                                            <a href="{{ route('booking.umrah-invoice', $booking->id) }}"
+                                                                target="_blank" class="btn btn-sm btn-outline-info"
+                                                                title="Umrah Invoice">
+                                                                <i class="mdi mdi-receipt"></i>
+                                                            </a>
+
                                                             <a href="{{ route('booking.voucher', $booking->id) }}"
                                                                 target="_blank" class="btn btn-sm btn-outline-warning"
                                                                 title="Hotel Voucher">

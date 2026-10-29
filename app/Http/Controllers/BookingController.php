@@ -70,9 +70,21 @@ class BookingController extends Controller
         $airlines  = \App\Models\Airline::where('status', 'active')->orWhereNull('status')->orderBy('name')->get();
         $routes    = \App\Models\Route::where('status', 'active')->orWhereNull('status')->orderBy('start_place')->get();
         $vehicles  = \App\Models\Vehicle::where('status', 'active')->orWhereNull('status')->orderBy('vehicle_type')->get();
+        $mealPlans = \App\Models\MealPlan::where('status', 'active')->orderBy('name')->get();
         $years     = [date('Y'), date('Y') + 1, date('Y') + 2];
 
-        return view('booking.create', compact('clients', 'companies', 'packages', 'hotels', 'suppliers', 'years', 'airlines', 'routes', 'vehicles'));
+        $nextId = (Booking::max('id') ?? 0) + 1;
+        $curYear  = date('Y');
+        $paddedId = str_pad($nextId, 5, '0', STR_PAD_LEFT);
+        $defaultVouchers = [
+            'booking'   => 'BK-' . $curYear . '-' . $paddedId,
+            'flight'    => 'FLT-' . $curYear . '-' . $paddedId,
+            'hotel'     => 'HTL-' . $curYear . '-' . $paddedId,
+            'transport' => 'TRN-' . $curYear . '-' . $paddedId,
+            'visa'      => 'VIS-' . $curYear . '-' . $paddedId,
+        ];
+
+        return view('booking.create', compact('clients', 'companies', 'packages', 'hotels', 'suppliers', 'years', 'airlines', 'routes', 'vehicles', 'mealPlans', 'defaultVouchers'));
     }
 
     public function store(Request $request)
@@ -98,6 +110,27 @@ class BookingController extends Controller
             'haji_id'      => 'nullable|string|max:100',
             'room_number'  => 'nullable|string|max:100',
         ]);
+
+        // Point 4: Validate Unique Ticket Numbers
+        $submittedTickets = [];
+        $personsInput = $request->persons ?? [];
+        $flightPersonsInput = $request->flight_persons ?? [];
+        $maxRows = max(count($personsInput), count($flightPersonsInput));
+
+        for ($i = 0; $i < $maxRows; $i++) {
+            $t = trim((string) ($personsInput[$i]['flight_ticket'] ?? ($flightPersonsInput[$i]['ticket'] ?? ($flightPersonsInput[$i]['flight_ticket'] ?? ''))));
+            if ($t !== '') {
+                $tLower = strtolower($t);
+                if (in_array($tLower, $submittedTickets, true)) {
+                    return back()->withInput()->with('error', "Duplicate ticket number '{$t}' found in the booking form. Each passenger must have a unique ticket number.");
+                }
+                $submittedTickets[] = $tLower;
+
+                if (\Illuminate\Support\Facades\DB::table('booking_persons')->where('flight_ticket', $t)->exists()) {
+                    return back()->withInput()->with('error', "Ticket number '{$t}' is already registered in another booking. Every ticket number must be unique.");
+                }
+            }
+        }
 
         $bookingFor = 'client';
         $clientId  = $request->client_id;
@@ -131,6 +164,21 @@ class BookingController extends Controller
             $resolvedBookingDate = $specificServiceDate ?: now()->toDateString();
         }
 
+        $calcAdults = 0;
+        $calcChildren = 0;
+        $calcInfants = 0;
+        if (!empty($request->persons) && is_array($request->persons)) {
+            foreach ($request->persons as $p) {
+                $pt = strtolower($p['pax_type'] ?? 'adult');
+                if ($pt === 'child') $calcChildren++;
+                elseif ($pt === 'infant') $calcInfants++;
+                else $calcAdults++;
+            }
+        }
+        $finalAdults = $calcAdults > 0 ? $calcAdults : ($request->pax_adults ?? ($request->adults_count ?? 1));
+        $finalChildren = ($calcAdults > 0 || $calcChildren > 0 || $calcInfants > 0) ? $calcChildren : ($request->pax_children ?? ($request->children_count ?? 0));
+        $finalInfants = ($calcAdults > 0 || $calcChildren > 0 || $calcInfants > 0) ? $calcInfants : ($request->pax_infants ?? ($request->infants_count ?? 0));
+
         $bookingData = array_merge(
             $request->except(['persons', 'hotels', 'transports', 'visas', 'flight_persons', '_token', 'cnic_front', 'cnic_back', 'passport_photo', 'photo', 'medical_certificate', 'flight_attachment']),
             [
@@ -150,9 +198,13 @@ class BookingController extends Controller
                 'flight_cost_rate'    => $request->flight_cost_rate ?? 0,
                 'flight_cost'         => $request->flight_cost ?? 0,
                 'flight_selling_rate' => $request->flight_selling_rate ?? 0,
-                'adults_count'        => $request->adults_count ?? 1,
-                'children_count'      => $request->children_count ?? 0,
-                'infants_count'       => $request->infants_count ?? 0,
+                'pax_adults'          => $finalAdults,
+                'pax_children'        => $finalChildren,
+                'pax_infants'         => $finalInfants,
+                'adults_count'        => $finalAdults,
+                'children_count'      => $finalChildren,
+                'infants_count'       => $finalInfants,
+                'no_of_pax'           => $request->no_of_pax ?? max(1, count($request->persons ?? [])),
                 'flight_adult_cost'   => $request->flight_adult_cost ?? 0,
                 'flight_adult_sell'   => $request->flight_adult_sell ?? 0,
                 'flight_child_cost'   => $request->flight_child_cost ?? 0,
@@ -171,6 +223,7 @@ class BookingController extends Controller
                 'total_received'      => $request->total_received ?? 0,
                 'total_amount'        => $total,
                 'balance'             => $total - ($request->total_received ?? 0),
+                'flight_time_format'  => $request->flight_time_format ?? '12',
             ]
         );
 
@@ -178,11 +231,33 @@ class BookingController extends Controller
             $bookingData['flight_attachment'] = $request->file('flight_attachment')->store('bookings/flight_attachment', 'public');
         }
 
+        $bookingCategory = $request->booking_category ?: 'umrah';
+        $bookingData['booking_category'] = $bookingCategory;
+
         // Defensive column check against missing columns on older database schemas
         $existingCols = \Illuminate\Support\Facades\Schema::getColumnListing('bookings');
         $bookingData = array_intersect_key($bookingData, array_flip($existingCols));
 
         $booking = Booking::create($bookingData);
+
+        // Point 23: Separate Voucher Numbers
+        $curYear  = date('Y');
+        $paddedId = str_pad($booking->id, 5, '0', STR_PAD_LEFT);
+        $flightVoucher    = $request->flight_voucher_no ?: ('FLT-' . $curYear . '-' . $paddedId);
+        $hotelVoucher     = $request->hotel_voucher_no ?: ('HTL-' . $curYear . '-' . $paddedId);
+        $transportVoucher = $request->transport_voucher_no ?: ('TRN-' . $curYear . '-' . $paddedId);
+        $visaVoucher      = $request->visa_voucher_no ?: ('VIS-' . $curYear . '-' . $paddedId);
+
+        $isFlightOnly = ($bookingCategory === 'domestic' || $bookingCategory === 'international' || (!$request->has('hotels') && (float)$request->flight_charges > 0));
+        $bookingVoucher = $request->voucher_number ?: ($isFlightOnly ? $flightVoucher : ('BK-' . $curYear . '-' . $paddedId));
+
+        $booking->update([
+            'voucher_number'       => $bookingVoucher,
+            'flight_voucher_no'    => $flightVoucher,
+            'hotel_voucher_no'     => $hotelVoucher,
+            'transport_voucher_no' => $transportVoucher,
+            'visa_voucher_no'      => $visaVoucher,
+        ]);
 
         if ($request->has('persons')) {
             foreach ($request->persons as $idx => $person) {
@@ -207,29 +282,37 @@ class BookingController extends Controller
                 $flTicket = $person['flight_ticket'] ?? ($flPerson['ticket'] ?? ($flPerson['flight_ticket'] ?? null));
                 $flCost   = (float) ($person['flight_cost'] ?? ($flPerson['cost_rate'] ?? ($flPerson['flight_cost'] ?? 0)));
                 $flSell   = (float) ($person['flight_sell'] ?? ($flPerson['sell_rate'] ?? ($flPerson['flight_sell'] ?? 0)));
+                $flSupId  = $flPerson['flight_supplier_id'] ?? ($person['flight_supplier_id'] ?? ($request->flight_supplier_id ?: null));
+                $flPnr    = $flPerson['flight_pnr'] ?? ($person['flight_pnr'] ?? ($request->departure_pnr ?: null));
+                $flDate   = $flPerson['flight_date'] ?? ($person['flight_date'] ?? ($request->departure_date ?: null));
+                $flTime   = $flPerson['flight_time'] ?? ($person['flight_time'] ?? ($request->departure_time ?: null));
 
                 $personData = [
-                    'full_name'        => $paxName,
-                    'haji_id'          => $person['haji_id'] ?? ($idx === 0 ? $hajiId : null),
-                    'pax_type'         => $paxType,
-                    'flight_ticket'    => $flTicket,
-                    'flight_cost'      => $flCost,
-                    'flight_sell'      => $flSell,
-                    'surname'          => $surname,
-                    'given_name'       => $givenName,
-                    'father_name'      => $person['father_name'] ?? null,
-                    'dob'              => $person['dob'] ?? null,
-                    'gender'           => $person['gender'] ?? null,
-                    'city'             => $person['city'] ?? null,
-                    'blood_group'      => $person['blood_group'] ?? null,
-                    'passport_number'  => $person['passport_number'] ?? null,
-                    'room_number'      => $person['room_number'] ?? ($idx === 0 ? $roomNumber : null),
-                    'cnic'             => $person['cnic'] ?? null,
-                    'phone'            => $person['phone'] ?? null,
-                    'nominee_name'     => $person['nominee_name'] ?? null,
-                    'nominee_relation' => $person['nominee_relation'] ?? null,
-                    'nominee_cnic'     => $person['nominee_cnic'] ?? null,
-                    'nominee_mobile'   => $person['nominee_mobile'] ?? null,
+                    'full_name'          => $paxName,
+                    'haji_id'            => $person['haji_id'] ?? ($idx === 0 ? $hajiId : null),
+                    'pax_type'           => $paxType,
+                    'flight_ticket'      => $flTicket,
+                    'flight_cost'        => $flCost,
+                    'flight_sell'        => $flSell,
+                    'flight_supplier_id' => $flSupId ?: null,
+                    'flight_pnr'         => $flPnr ?: null,
+                    'flight_date'        => !empty($flDate) ? date('Y-m-d', strtotime($flDate)) : null,
+                    'flight_time'        => $flTime ?: null,
+                    'surname'            => $surname,
+                    'given_name'         => $givenName,
+                    'father_name'        => $person['father_name'] ?? null,
+                    'dob'                => $person['dob'] ?? null,
+                    'gender'             => $person['gender'] ?? null,
+                    'city'               => $person['city'] ?? null,
+                    'blood_group'        => $person['blood_group'] ?? null,
+                    'passport_number'    => $person['passport_number'] ?? null,
+                    'room_number'        => $person['room_number'] ?? ($idx === 0 ? $roomNumber : null),
+                    'cnic'               => $person['cnic'] ?? null,
+                    'phone'              => $person['phone'] ?? null,
+                    'nominee_name'       => $person['nominee_name'] ?? null,
+                    'nominee_relation'   => $person['nominee_relation'] ?? null,
+                    'nominee_cnic'       => $person['nominee_cnic'] ?? null,
+                    'nominee_mobile'     => $person['nominee_mobile'] ?? null,
                 ];
 
                 $docFields = ['cnic_front', 'cnic_back', 'passport_photo', 'photo', 'medical_certificate'];
@@ -277,6 +360,15 @@ class BookingController extends Controller
                         $hotelData['room_type'] = 'double';
                     }
 
+                    // Point 9: Additional rooms
+                    if (isset($hotel['extra_rooms'])) {
+                        $hotelData['additional_rooms'] = is_array($hotel['extra_rooms']) ? $hotel['extra_rooms'] : json_decode($hotel['extra_rooms'], true);
+                    } elseif (isset($hotel['additional_rooms'])) {
+                        $hotelData['additional_rooms'] = is_array($hotel['additional_rooms']) ? $hotel['additional_rooms'] : json_decode($hotel['additional_rooms'], true);
+                    }
+                    // Point 23: Child voucher number
+                    $hotelData['voucher_no'] = $hotel['voucher_no'] ?? ($hotelVoucher . '-' . ($idx + 1));
+
                     $hotelData = array_intersect_key($hotelData, array_flip($hotelCols));
                     $booking->hotels()->create($hotelData);
                 }
@@ -322,6 +414,9 @@ class BookingController extends Controller
                             $transportData['transport_type'] = 'private_car';
                         }
                     }
+                    // Point 23: Child voucher number
+                    $transportData['voucher_no'] = $transport['voucher_no'] ?? ($transportVoucher . '-' . ($idx + 1));
+
                     $transportData = array_intersect_key($transportData, array_flip($transportCols));
                     $booking->transports()->create($transportData);
                 }
@@ -331,11 +426,14 @@ class BookingController extends Controller
         if ($request->has('visas')) {
             $visaCols = \Illuminate\Support\Facades\Schema::getColumnListing('booking_visas');
             foreach ($request->visas as $idx => $visa) {
-                if (!empty($visa['passport_number'])) {
+                if (!empty($visa['passport_number']) || !empty($visa['given_name']) || (float)($visa['cost_rate'] ?? 0) > 0 || (float)($visa['selling_rate'] ?? 0) > 0) {
                     $visaData = $visa;
                     if ($request->hasFile("visas.$idx.visa_attachment")) {
                         $visaData['visa_attachment'] = $request->file("visas.$idx.visa_attachment")->store('bookings/visas', 'public');
                     }
+                    // Point 23: Child voucher number
+                    $visaData['voucher_no'] = $visa['voucher_no'] ?? ($visaVoucher . '-' . ($idx + 1));
+
                     $visaData = array_intersect_key($visaData, array_flip($visaCols));
                     $booking->visas()->create($visaData);
                 }
@@ -387,13 +485,32 @@ class BookingController extends Controller
         $airlines  = \App\Models\Airline::where('status', 'active')->orWhereNull('status')->orderBy('name')->get();
         $routes    = \App\Models\Route::where('status', 'active')->orWhereNull('status')->orderBy('start_place')->get();
         $vehicles  = \App\Models\Vehicle::where('status', 'active')->orWhereNull('status')->orderBy('vehicle_type')->get();
+        $mealPlans = \App\Models\MealPlan::where('status', 'active')->orderBy('name')->get();
         $years     = [date('Y'), date('Y') + 1, date('Y') + 2];
 
         $transactionsPaid = Transaction::where('client_id', $booking->client_id)
             ->where('status', 'confirmed')
             ->sum('amount');
 
-        return view('booking.edit', compact('booking', 'clients', 'companies', 'packages', 'hotels', 'suppliers', 'years', 'transactionsPaid', 'airlines', 'routes', 'vehicles'));
+        $curYear  = date('Y');
+        $paddedId = str_pad($booking->id, 5, '0', STR_PAD_LEFT);
+        if (empty($booking->voucher_number)) {
+            $booking->voucher_number = 'BK-' . $curYear . '-' . $paddedId;
+        }
+        if (empty($booking->flight_voucher_no)) {
+            $booking->flight_voucher_no = 'FLT-' . $curYear . '-' . $paddedId;
+        }
+        if (empty($booking->hotel_voucher_no)) {
+            $booking->hotel_voucher_no = 'HTL-' . $curYear . '-' . $paddedId;
+        }
+        if (empty($booking->transport_voucher_no)) {
+            $booking->transport_voucher_no = 'TRN-' . $curYear . '-' . $paddedId;
+        }
+        if (empty($booking->visa_voucher_no)) {
+            $booking->visa_voucher_no = 'VIS-' . $curYear . '-' . $paddedId;
+        }
+
+        return view('booking.edit', compact('booking', 'clients', 'companies', 'packages', 'hotels', 'suppliers', 'years', 'transactionsPaid', 'airlines', 'routes', 'vehicles', 'mealPlans'));
     }
 
     public function update(Request $request, $id)
@@ -408,6 +525,27 @@ class BookingController extends Controller
             'haji_id'      => 'nullable|string|max:100',
             'room_number'  => 'nullable|string|max:100',
         ]);
+
+        // Point 4: Validate Unique Ticket Numbers
+        $submittedTickets = [];
+        $personsInput = $request->persons ?? [];
+        $flightPersonsInput = $request->flight_persons ?? [];
+        $maxRows = max(count($personsInput), count($flightPersonsInput));
+
+        for ($i = 0; $i < $maxRows; $i++) {
+            $t = trim((string) ($personsInput[$i]['flight_ticket'] ?? ($flightPersonsInput[$i]['ticket'] ?? ($flightPersonsInput[$i]['flight_ticket'] ?? ''))));
+            if ($t !== '') {
+                $tLower = strtolower($t);
+                if (in_array($tLower, $submittedTickets, true)) {
+                    return back()->withInput()->with('error', "Duplicate ticket number '{$t}' found in the booking form. Each passenger must have a unique ticket number.");
+                }
+                $submittedTickets[] = $tLower;
+
+                if (\Illuminate\Support\Facades\DB::table('booking_persons')->where('flight_ticket', $t)->where('booking_id', '!=', $booking->id)->exists()) {
+                    return back()->withInput()->with('error', "Ticket number '{$t}' is already registered in another booking. Every ticket number must be unique.");
+                }
+            }
+        }
 
         try {
             \Illuminate\Support\Facades\DB::beginTransaction();
@@ -457,6 +595,21 @@ class BookingController extends Controller
                     ?: ($booking->booking_date ?: now()->toDateString()))));
             }
 
+            $calcAdults = 0;
+            $calcChildren = 0;
+            $calcInfants = 0;
+            if (!empty($request->persons) && is_array($request->persons)) {
+                foreach ($request->persons as $p) {
+                    $pt = strtolower($p['pax_type'] ?? 'adult');
+                    if ($pt === 'child') $calcChildren++;
+                    elseif ($pt === 'infant') $calcInfants++;
+                    else $calcAdults++;
+                }
+            }
+            $finalAdults = $calcAdults > 0 ? $calcAdults : ($request->pax_adults ?? ($request->adults_count ?? ($booking->pax_adults ?? 1)));
+            $finalChildren = ($calcAdults > 0 || $calcChildren > 0 || $calcInfants > 0) ? $calcChildren : ($request->pax_children ?? ($request->children_count ?? ($booking->pax_children ?? 0)));
+            $finalInfants = ($calcAdults > 0 || $calcChildren > 0 || $calcInfants > 0) ? $calcInfants : ($request->pax_infants ?? ($request->infants_count ?? ($booking->pax_infants ?? 0)));
+
             $bookingData = array_merge(
                 $request->except(['persons', 'hotels', 'transports', 'visas', 'flight_persons', '_token', '_method', 'cnic_front', 'cnic_back', 'passport_photo', 'photo', 'medical_certificate', 'flight_attachment']),
                 [
@@ -476,9 +629,13 @@ class BookingController extends Controller
                     'flight_cost_rate'    => $request->flight_cost_rate ?? 0,
                     'flight_cost'         => $request->flight_cost ?? 0,
                     'flight_selling_rate' => $request->flight_selling_rate ?? 0,
-                    'adults_count'        => $request->adults_count ?? ($booking->adults_count ?? 1),
-                    'children_count'      => $request->children_count ?? ($booking->children_count ?? 0),
-                    'infants_count'       => $request->infants_count ?? ($booking->infants_count ?? 0),
+                    'pax_adults'          => $finalAdults,
+                    'pax_children'        => $finalChildren,
+                    'pax_infants'         => $finalInfants,
+                    'adults_count'        => $finalAdults,
+                    'children_count'      => $finalChildren,
+                    'infants_count'       => $finalInfants,
+                    'no_of_pax'           => $request->no_of_pax ?? max(1, count($request->persons ?? [])),
                     'flight_adult_cost'   => $request->flight_adult_cost ?? ($booking->flight_adult_cost ?? 0),
                     'flight_adult_sell'   => $request->flight_adult_sell ?? ($booking->flight_adult_sell ?? 0),
                     'flight_child_cost'   => $request->flight_child_cost ?? ($booking->flight_child_cost ?? 0),
@@ -516,6 +673,25 @@ class BookingController extends Controller
                 $bookingData['flight_attachment'] = $request->input('old_flight_attachment');
             }
 
+            $curYear  = date('Y');
+            $paddedId = str_pad($booking->id, 5, '0', STR_PAD_LEFT);
+            $bookingCategory  = $request->booking_category ?: ($booking->booking_category ?: 'umrah');
+            $flightVoucher    = $request->flight_voucher_no ?: ($booking->flight_voucher_no ?: ('FLT-' . $curYear . '-' . $paddedId));
+            $hotelVoucher     = $request->hotel_voucher_no ?: ($booking->hotel_voucher_no ?: ('HTL-' . $curYear . '-' . $paddedId));
+            $transportVoucher = $request->transport_voucher_no ?: ($booking->transport_voucher_no ?: ('TRN-' . $curYear . '-' . $paddedId));
+            $visaVoucher      = $request->visa_voucher_no ?: ($booking->visa_voucher_no ?: ('VIS-' . $curYear . '-' . $paddedId));
+
+            $isFlightOnly = ($bookingCategory === 'domestic' || $bookingCategory === 'international' || (!$request->has('hotels') && (float)$request->flight_charges > 0));
+            $bookingVoucher   = $request->voucher_number ?: ($isFlightOnly ? $flightVoucher : ($booking->voucher_number ?: ('BK-' . $curYear . '-' . $paddedId)));
+
+            $bookingData['booking_category']     = $bookingCategory;
+            $bookingData['voucher_number']       = $bookingVoucher;
+            $bookingData['flight_voucher_no']    = $flightVoucher;
+            $bookingData['hotel_voucher_no']     = $hotelVoucher;
+            $bookingData['transport_voucher_no'] = $transportVoucher;
+            $bookingData['visa_voucher_no']      = $visaVoucher;
+            $bookingData['flight_time_format']   = $request->flight_time_format ?? ($booking->flight_time_format ?? '12');
+
             // Defensive column check against missing columns on older database schemas
             $existingCols = \Illuminate\Support\Facades\Schema::getColumnListing('bookings');
             $bookingData = array_intersect_key($bookingData, array_flip($existingCols));
@@ -547,29 +723,37 @@ class BookingController extends Controller
                     $flTicket = $person['flight_ticket'] ?? ($flPerson['ticket'] ?? ($flPerson['flight_ticket'] ?? null));
                     $flCost   = (float) ($person['flight_cost'] ?? ($flPerson['cost_rate'] ?? ($flPerson['flight_cost'] ?? 0)));
                     $flSell   = (float) ($person['flight_sell'] ?? ($flPerson['sell_rate'] ?? ($flPerson['flight_sell'] ?? 0)));
+                    $flSupId  = $flPerson['flight_supplier_id'] ?? ($person['flight_supplier_id'] ?? ($request->flight_supplier_id ?: null));
+                    $flPnr    = $flPerson['flight_pnr'] ?? ($person['flight_pnr'] ?? ($request->departure_pnr ?: null));
+                    $flDate   = $flPerson['flight_date'] ?? ($person['flight_date'] ?? ($request->departure_date ?: null));
+                    $flTime   = $flPerson['flight_time'] ?? ($person['flight_time'] ?? ($request->departure_time ?: null));
 
                     $personData = [
-                        'full_name'        => $paxName,
-                        'haji_id'          => $person['haji_id'] ?? ($idx === 0 ? $hajiId : null),
-                        'pax_type'         => $paxType,
-                        'flight_ticket'    => $flTicket,
-                        'flight_cost'      => $flCost,
-                        'flight_sell'      => $flSell,
-                        'surname'          => $surname,
-                        'given_name'       => $givenName,
-                        'father_name'      => $person['father_name'] ?? null,
-                        'dob'              => !empty($person['dob']) ? $person['dob'] : null,
-                        'gender'           => $person['gender'] ?? null,
-                        'city'             => $person['city'] ?? null,
-                        'blood_group'      => $person['blood_group'] ?? null,
-                        'passport_number'  => $person['passport_number'] ?? null,
-                        'room_number'      => $person['room_number'] ?? ($idx === 0 ? $roomNumber : null),
-                        'cnic'             => $person['cnic'] ?? null,
-                        'phone'            => $person['phone'] ?? null,
-                        'nominee_name'     => $person['nominee_name'] ?? null,
-                        'nominee_relation' => $person['nominee_relation'] ?? null,
-                        'nominee_cnic'     => $person['nominee_cnic'] ?? null,
-                        'nominee_mobile'   => $person['nominee_mobile'] ?? null,
+                        'full_name'          => $paxName,
+                        'haji_id'            => $person['haji_id'] ?? ($idx === 0 ? $hajiId : null),
+                        'pax_type'           => $paxType,
+                        'flight_ticket'      => $flTicket,
+                        'flight_cost'        => $flCost,
+                        'flight_sell'        => $flSell,
+                        'flight_supplier_id' => $flSupId ?: null,
+                        'flight_pnr'         => $flPnr ?: null,
+                        'flight_date'        => !empty($flDate) ? date('Y-m-d', strtotime($flDate)) : null,
+                        'flight_time'        => $flTime ?: null,
+                        'surname'            => $surname,
+                        'given_name'         => $givenName,
+                        'father_name'        => $person['father_name'] ?? null,
+                        'dob'                => !empty($person['dob']) ? $person['dob'] : null,
+                        'gender'             => $person['gender'] ?? null,
+                        'city'               => $person['city'] ?? null,
+                        'blood_group'        => $person['blood_group'] ?? null,
+                        'passport_number'    => $person['passport_number'] ?? null,
+                        'room_number'        => $person['room_number'] ?? ($idx === 0 ? $roomNumber : null),
+                        'cnic'               => $person['cnic'] ?? null,
+                        'phone'              => $person['phone'] ?? null,
+                        'nominee_name'       => $person['nominee_name'] ?? null,
+                        'nominee_relation'   => $person['nominee_relation'] ?? null,
+                        'nominee_cnic'       => $person['nominee_cnic'] ?? null,
+                        'nominee_mobile'     => $person['nominee_mobile'] ?? null,
                     ];
 
                     $docFields = ['cnic_front', 'cnic_back', 'passport_photo', 'photo', 'medical_certificate'];
@@ -621,6 +805,15 @@ class BookingController extends Controller
                             $hotelData['room_type'] = 'double';
                         }
 
+                        // Point 9: Additional rooms
+                        if (isset($hotel['extra_rooms'])) {
+                            $hotelData['additional_rooms'] = is_array($hotel['extra_rooms']) ? $hotel['extra_rooms'] : json_decode($hotel['extra_rooms'], true);
+                        } elseif (isset($hotel['additional_rooms'])) {
+                            $hotelData['additional_rooms'] = is_array($hotel['additional_rooms']) ? $hotel['additional_rooms'] : json_decode($hotel['additional_rooms'], true);
+                        }
+                        // Point 23: Child voucher number
+                        $hotelData['voucher_no'] = $hotel['voucher_no'] ?? ($hotelVoucher . '-' . ($idx + 1));
+
                         $hotelData = array_intersect_key($hotelData, array_flip($hotelCols));
                         $booking->hotels()->create($hotelData);
                     }
@@ -671,6 +864,8 @@ class BookingController extends Controller
                                 $transportData['transport_type'] = 'private_car';
                             }
                         }
+                        // Point 23: Child voucher number
+                        $transportData['voucher_no'] = $transport['voucher_no'] ?? ($transportVoucher . '-' . ($idx + 1));
 
                         $transportData = array_intersect_key($transportData, array_flip($transportCols));
                         $booking->transports()->create($transportData);
@@ -682,7 +877,7 @@ class BookingController extends Controller
             if ($request->has('visas')) {
                 $visaCols = \Illuminate\Support\Facades\Schema::getColumnListing('booking_visas');
                 foreach ($request->visas as $idx => $visa) {
-                    if (!empty($visa['passport_number'])) {
+                    if (!empty($visa['passport_number']) || !empty($visa['given_name']) || (float)($visa['cost_rate'] ?? 0) > 0 || (float)($visa['selling_rate'] ?? 0) > 0) {
                         $visaData = $visa;
                         if ($request->hasFile("visas.$idx.visa_attachment")) {
                             $visaData['visa_attachment'] = $request->file("visas.$idx.visa_attachment")->store('bookings/visas', 'public');
@@ -699,6 +894,8 @@ class BookingController extends Controller
                         if (isset($visaData['supplier_id']) && empty($visaData['supplier_id'])) {
                             $visaData['supplier_id'] = null;
                         }
+                        // Point 23: Child voucher number
+                        $visaData['voucher_no'] = $visa['voucher_no'] ?? ($visaVoucher . '-' . ($idx + 1));
 
                         $visaData = array_intersect_key($visaData, array_flip($visaCols));
                         $booking->visas()->create($visaData);
@@ -710,7 +907,15 @@ class BookingController extends Controller
 
             logUserActivity('Booking Updated', 'Package: ' . $booking->package_type . ' | Total: ' . $booking->total_amount, $booking->id, 'Booking');
 
-            return redirect()->route('booking.index')->with('success', 'Booking updated successfully!');
+            $activeTab = $request->input('active_tab', '#tab-details');
+            $saveAction = $request->input('save_action', 'save_stay');
+
+            if ($saveAction === 'save_close') {
+                return redirect()->route('booking.index')->with('success', 'Booking updated successfully!');
+            }
+
+            return redirect()->route('booking.edit', ['id' => $booking->id, 'tab' => $activeTab])
+                ->with('success', 'Booking changes saved successfully!');
 
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\DB::rollBack();
@@ -782,5 +987,29 @@ class BookingController extends Controller
     {
         $booking->load(['client', 'company', 'persons', 'hotels']);
         return view('booking.voucher', compact('booking'));
+    }
+
+    public function umrahInvoice(Request $request, Booking $booking)
+    {
+        $booking->load([
+            'client',
+            'company',
+            'package',
+            'persons',
+            'hotels',
+            'transports',
+            'visas',
+        ]);
+
+        $personId = $request->input('person_id');
+        $selectedPerson = null;
+        if ($personId && $personId !== 'all') {
+            $selectedPerson = $booking->persons->firstWhere('id', (int) $personId);
+        }
+
+        $showRates = (int) $request->input('show_rates', 0); // 0 = without rates (customer copy), 1 = with rates
+        $currencyMode = $request->input('currency_mode', 'mix'); // 'mix' (SAR+PKR), 'pkr', 'sar'
+
+        return view('booking.umrah_invoice', compact('booking', 'selectedPerson', 'showRates', 'currencyMode'));
     }
 }

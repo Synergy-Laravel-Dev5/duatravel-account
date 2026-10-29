@@ -390,7 +390,17 @@ class TransactionReportController extends Controller
             } elseif ($pType === 'jv') {
                 $catKey = 'jv_voucher';
                 $catLabel = 'Journal Voucher (JV)';
-                $partyName = $et->client ? $et->client->name : ($et->supplier ? $et->supplier->name : 'JV Adjustment');
+                if ($et->client && $et->supplier) {
+                    $partyName = $et->client->name . ' ⇄ ' . $et->supplier->name;
+                } elseif ($et->client) {
+                    $sibSup = !empty($et->reference_no) ? ExpenseTransaction::where('payee_type', 'jv')->where('reference_no', $et->reference_no)->whereNotNull('supplier_id')->with('supplier')->first() : null;
+                    $partyName = ($sibSup && $sibSup->supplier) ? ($et->client->name . ' ⇄ ' . $sibSup->supplier->name) : $et->client->name;
+                } elseif ($et->supplier) {
+                    $sibCl = !empty($et->reference_no) ? ExpenseTransaction::where('payee_type', 'jv')->where('reference_no', $et->reference_no)->whereNotNull('client_id')->with('client')->first() : null;
+                    $partyName = ($sibCl && $sibCl->client) ? ($sibCl->client->name . ' ⇄ ' . $et->supplier->name) : $et->supplier->name;
+                } else {
+                    $partyName = 'JV Adjustment';
+                }
                 $partyType = 'JV Voucher';
                 $partyLink = $et->client_id ? route('client.edit', $et->client_id) : ($et->supplier_id ? route('supplier.ledger.show', $et->supplier_id) : null);
             }

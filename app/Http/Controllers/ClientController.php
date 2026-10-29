@@ -7,6 +7,7 @@ use App\Models\Package;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Storage;
 
 class ClientController extends Controller
 {
@@ -66,19 +67,30 @@ class ClientController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'            => 'required|string|max:255',
-            'company_name'    => 'nullable|string|max:255',
-            'package_id'      => 'nullable|exists:packages,id',
-            'lead_id'         => 'nullable|exists:leads,id',
-            'phone'           => 'nullable|string|max:20',
-            'email'           => 'nullable|email|max:255',
-            'cnic'            => 'nullable|string|unique:clients,cnic',
-            'passport_number' => 'nullable|string|unique:clients,passport_number',
+            'name'              => 'required|string|max:255',
+            'company_name'      => 'nullable|string|max:255',
+            'package_id'        => 'nullable|exists:packages,id',
+            'lead_id'           => 'nullable|exists:leads,id',
+            'phone'             => 'nullable|string|max:20',
+            'email'             => 'nullable|email|max:255',
+            'cnic'              => 'nullable|string|unique:clients,cnic',
+            'passport_number'   => 'nullable|string|unique:clients,passport_number',
+            'cnic_document'     => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:10240',
+            'passport_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:10240',
+            'opening_balance_pkr'      => 'nullable|numeric',
+            'opening_balance_sar'      => 'nullable|numeric',
+            'opening_balance_roe'      => 'nullable|numeric',
+            'opening_balance_pkr_type' => 'nullable|in:debit,credit',
+            'opening_balance_sar_type' => 'nullable|in:debit,credit',
         ], [
-            'name.required'           => 'Client name is required.',
-            'package_id.exists'       => 'Selected package is invalid.',
-            'cnic.unique'             => 'This CNIC is already registered with another client.',
-            'passport_number.unique'  => 'This Passport Number is already registered with another client.',
+            'name.required'             => 'Client name is required.',
+            'package_id.exists'         => 'Selected package is invalid.',
+            'cnic.unique'               => 'This CNIC is already registered with another client.',
+            'passport_number.unique'    => 'This Passport Number is already registered with another client.',
+            'cnic_document.max'         => 'CNIC document size must not exceed 10MB.',
+            'passport_document.max'     => 'Passport document size must not exceed 10MB.',
+            'cnic_document.mimes'       => 'CNIC document must be a file of type: pdf, jpg, jpeg, png, webp.',
+            'passport_document.mimes'   => 'Passport document must be a file of type: pdf, jpg, jpeg, png, webp.',
         ]);
 
         $data = $request->only([
@@ -90,10 +102,53 @@ class ClientController extends Controller
             'cnic',
             'phone',
             'email',
-            'status'
+            'status',
+            'opening_balance_pkr',
+            'opening_balance_sar',
+            'opening_balance_pkr_type',
+            'opening_balance_sar_type',
+            'opening_balance_roe',
         ]);
+
+        $obPkr = (float)($request->opening_balance_pkr ?? 0);
+        $obSar = (float)($request->opening_balance_sar ?? 0);
+        $obRoe = (float)($request->opening_balance_roe > 0 ? $request->opening_balance_roe : 75.0);
+
+        if ($obRoe <= 1) {
+            // When ROE is 1 or less, balance is PKR-only and should NOT go to SAR
+            $data['opening_balance_sar'] = 0;
+            $data['opening_balance_sar_type'] = $request->opening_balance_pkr_type ?? 'debit';
+        } else {
+            if ($obSar == 0 && $obPkr != 0) {
+                $data['opening_balance_sar'] = round($obPkr / $obRoe, 2);
+                $data['opening_balance_sar_type'] = $request->opening_balance_pkr_type ?? 'debit';
+            } elseif ($obPkr == 0 && $obSar != 0) {
+                $data['opening_balance_pkr'] = round($obSar * $obRoe, 2);
+                $data['opening_balance_pkr_type'] = $request->opening_balance_sar_type ?? 'debit';
+            }
+        }
+        $data['opening_balance_roe'] = $obRoe;
         $data['type'] = $request->type ?? 'client';
         $data['package_type'] = $request->package_type ?: session('dashboard_package', 'hajj');
+
+        $uploadDir = public_path('assets/images/client_documents');
+        if (!file_exists($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+        if ($request->hasFile('cnic_document')) {
+            $file     = $request->file('cnic_document');
+            $filename = time() . '_cnic.' . $file->getClientOriginalExtension();
+            $file->move($uploadDir, $filename);
+            $data['cnic_document'] = $filename;
+        }
+
+        if ($request->hasFile('passport_document')) {
+            $file     = $request->file('passport_document');
+            $filename = time() . '_passport.' . $file->getClientOriginalExtension();
+            $file->move($uploadDir, $filename);
+            $data['passport_document'] = $filename;
+        }
 
         $client = Client::create($data);
 
@@ -114,19 +169,30 @@ class ClientController extends Controller
         $client = Client::findOrFail($id);
 
         $request->validate([
-            'name'            => 'required|string|max:255',
-            'package_id'      => 'nullable|exists:packages,id',
-            'lead_id'         => 'nullable|exists:leads,id',
-            'company_name'    => 'nullable|string|max:255',
-            'phone'           => 'nullable|string|max:20',
-            'email'           => 'nullable|email|max:255',
-            'cnic'            => ['nullable', 'string', Rule::unique('clients', 'cnic')->ignore($client->id)],
-            'passport_number' => ['nullable', 'string', Rule::unique('clients', 'passport_number')->ignore($client->id)],
+            'name'              => 'required|string|max:255',
+            'package_id'        => 'nullable|exists:packages,id',
+            'lead_id'           => 'nullable|exists:leads,id',
+            'company_name'      => 'nullable|string|max:255',
+            'phone'             => 'nullable|string|max:20',
+            'email'             => 'nullable|email|max:255',
+            'cnic'              => ['nullable', 'string', Rule::unique('clients', 'cnic')->ignore($client->id)],
+            'passport_number'   => ['nullable', 'string', Rule::unique('clients', 'passport_number')->ignore($client->id)],
+            'cnic_document'     => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:10240',
+            'passport_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:10240',
+            'opening_balance_pkr'      => 'nullable|numeric',
+            'opening_balance_sar'      => 'nullable|numeric',
+            'opening_balance_roe'      => 'nullable|numeric',
+            'opening_balance_pkr_type' => 'nullable|in:debit,credit',
+            'opening_balance_sar_type' => 'nullable|in:debit,credit',
         ], [
-            'name.required'           => 'Client name is required.',
-            'package_id.exists'       => 'Selected package is invalid.',
-            'cnic.unique'             => 'This CNIC is already registered with another client.',
-            'passport_number.unique'  => 'This Passport Number is already registered with another client.',
+            'name.required'             => 'Client name is required.',
+            'package_id.exists'         => 'Selected package is invalid.',
+            'cnic.unique'               => 'This CNIC is already registered with another client.',
+            'passport_number.unique'    => 'This Passport Number is already registered with another client.',
+            'cnic_document.max'         => 'CNIC document size must not exceed 10MB.',
+            'passport_document.max'     => 'Passport document size must not exceed 10MB.',
+            'cnic_document.mimes'       => 'CNIC document must be a file of type: pdf, jpg, jpeg, png, webp.',
+            'passport_document.mimes'   => 'Passport document must be a file of type: pdf, jpg, jpeg, png, webp.',
         ]);
 
         $data = $request->only([
@@ -138,13 +204,68 @@ class ClientController extends Controller
             'cnic',
             'phone',
             'email',
-            'status'
+            'status',
+            'opening_balance_pkr',
+            'opening_balance_sar',
+            'opening_balance_pkr_type',
+            'opening_balance_sar_type',
+            'opening_balance_roe',
         ]);
+
+        $obPkr = (float)($request->opening_balance_pkr ?? 0);
+        $obSar = (float)($request->opening_balance_sar ?? 0);
+        $obRoe = (float)($request->opening_balance_roe > 0 ? $request->opening_balance_roe : 75.0);
+
+        if ($obRoe <= 1) {
+            // When ROE is 1 or less, balance is PKR-only and should NOT go to SAR
+            $data['opening_balance_sar'] = 0;
+            $data['opening_balance_sar_type'] = $request->opening_balance_pkr_type ?? 'debit';
+        } else {
+            if ($obSar == 0 && $obPkr != 0) {
+                $data['opening_balance_sar'] = round($obPkr / $obRoe, 2);
+                $data['opening_balance_sar_type'] = $request->opening_balance_pkr_type ?? 'debit';
+            } elseif ($obPkr == 0 && $obSar != 0) {
+                $data['opening_balance_pkr'] = round($obSar * $obRoe, 2);
+                $data['opening_balance_pkr_type'] = $request->opening_balance_sar_type ?? 'debit';
+            }
+        }
+        $data['opening_balance_roe'] = $obRoe;
         if ($request->has('type')) {
             $data['type'] = $request->type;
         }
         if ($request->has('package_type')) {
             $data['package_type'] = $request->package_type;
+        }
+
+        $uploadDir = public_path('assets/images/client_documents');
+        if (!file_exists($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+        if ($request->hasFile('cnic_document')) {
+            if ($client->cnic_document) {
+                $oldPath = $uploadDir . '/' . basename($client->cnic_document);
+                if (file_exists($oldPath)) {
+                    @unlink($oldPath);
+                }
+            }
+            $file     = $request->file('cnic_document');
+            $filename = time() . '_cnic.' . $file->getClientOriginalExtension();
+            $file->move($uploadDir, $filename);
+            $data['cnic_document'] = $filename;
+        }
+
+        if ($request->hasFile('passport_document')) {
+            if ($client->passport_document) {
+                $oldPath = $uploadDir . '/' . basename($client->passport_document);
+                if (file_exists($oldPath)) {
+                    @unlink($oldPath);
+                }
+            }
+            $file     = $request->file('passport_document');
+            $filename = time() . '_passport.' . $file->getClientOriginalExtension();
+            $file->move($uploadDir, $filename);
+            $data['passport_document'] = $filename;
         }
 
         $client->update($data);
@@ -179,5 +300,13 @@ class ClientController extends Controller
         logUserActivity('Client Restored', 'Name: ' . $client->name, $client->id, 'Client');
 
         return redirect()->route('client.trash')->with('success', 'Client restored.');
+    }
+
+    public function jsonList()
+    {
+        $clients = Client::where('status', 'active')
+            ->orderBy('name')
+            ->get(['id', 'name', 'company_name', 'phone', 'cnic', 'passport_number']);
+        return response()->json($clients);
     }
 }

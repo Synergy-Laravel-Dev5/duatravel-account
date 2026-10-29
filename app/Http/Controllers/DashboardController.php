@@ -249,6 +249,45 @@ class DashboardController extends Controller
             ? round((($receivedThisWeek - $receivedLastWeek) / $receivedLastWeek) * 100, 1)
             : 0;
 
+        // Operational Reminders & Alerts (Check-in, Option Date, Flight Departure & Arrival)
+        $todayStr     = Carbon::today()->toDateString();
+        $next7DaysStr = Carbon::today()->addDays(7)->toDateString();
+        $next3DaysStr = Carbon::today()->addDays(3)->toDateString();
+
+        $hotelCheckinReminders = \App\Models\BookingHotel::with(['booking.client'])
+            ->whereNotNull('check_in')
+            ->where('check_in', '>=', $todayStr)
+            ->where('check_in', '<=', $next7DaysStr)
+            ->orderBy('check_in')
+            ->take(10)
+            ->get();
+
+        $hotelOptionDateReminders = \App\Models\BookingHotel::with(['booking.client', 'supplier'])
+            ->whereNotNull('option_date')
+            ->where('option_date', '>=', Carbon::today()->subDays(2)->toDateString())
+            ->where('option_date', '<=', Carbon::today()->addDays(5)->toDateString())
+            ->orderBy('option_date')
+            ->take(10)
+            ->get();
+
+        $flightDepartureReminders = Booking::with(['client'])
+            ->whereNotNull('departure_date')
+            ->where('departure_date', '>=', $todayStr)
+            ->where('departure_date', '<=', $next3DaysStr)
+            ->orderBy('departure_date')
+            ->orderBy('departure_time')
+            ->take(10)
+            ->get();
+
+        $flightArrivalReminders = Booking::with(['client'])
+            ->whereNotNull('arrival_date')
+            ->where('arrival_date', '>=', $todayStr)
+            ->where('arrival_date', '<=', $next3DaysStr)
+            ->orderBy('arrival_date')
+            ->orderBy('arrival_time')
+            ->take(10)
+            ->get();
+
         return view('dashboard', compact(
             'package',
             'year',
@@ -284,6 +323,11 @@ class DashboardController extends Controller
 
             'profit',
             'isProfit',
+
+            'hotelCheckinReminders',
+            'hotelOptionDateReminders',
+            'flightDepartureReminders',
+            'flightArrivalReminders',
         ));
     }
 

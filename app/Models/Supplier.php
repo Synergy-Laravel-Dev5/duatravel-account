@@ -21,6 +21,11 @@ class Supplier extends Model
         'city',
         'country',
         'opening_balance',
+        'opening_balance_pkr',
+        'opening_balance_sar',
+        'opening_balance_pkr_type',
+        'opening_balance_sar_type',
+        'opening_balance_roe',
         'status',
     ];
 
@@ -54,6 +59,11 @@ class Supplier extends Model
         return $this->hasMany(Booking::class, 'flight_supplier_id');
     }
 
+    public function flightPersons()
+    {
+        return $this->hasMany(BookingPerson::class, 'flight_supplier_id');
+    }
+
     public function expenseTransactions()
     {
         return $this->hasMany(ExpenseTransaction::class, 'supplier_id');
@@ -64,8 +74,25 @@ class Supplier extends Model
         $hotelCost = $this->bookingHotels()->sum('cost_amount');
         $visaCost = $this->bookingVisas()->sum('cost_amount');
         $transportCost = $this->bookingTransports()->sum('cost_amount');
-        $flightCost = $this->bookingsAsFlightSupplier()->sum('flight_cost');
-        $opening = (float) $this->opening_balance;
+
+        // Flight cost: individual passenger flight costs assigned to this supplier
+        $personFlightCost = BookingPerson::where('flight_supplier_id', $this->id)
+            ->where('flight_cost', '>', 0)
+            ->sum('flight_cost');
+
+        // Plus booking-level flight cost for bookings with this supplier where persons have no individual flight_supplier_id
+        $bookingFlightCost = Booking::where('flight_supplier_id', $this->id)
+            ->where('flight_cost', '>', 0)
+            ->where(function ($q) {
+                $q->doesntHave('persons')
+                  ->orWhereDoesntHave('persons', function ($pq) {
+                      $pq->whereNotNull('flight_supplier_id');
+                  });
+            })
+            ->sum('flight_cost');
+
+        $flightCost = (float) $personFlightCost + (float) $bookingFlightCost;
+        $opening = (float) ($this->opening_balance_pkr ?: $this->opening_balance ?: 0);
 
         return $opening + $hotelCost + $visaCost + $transportCost + $flightCost;
     }

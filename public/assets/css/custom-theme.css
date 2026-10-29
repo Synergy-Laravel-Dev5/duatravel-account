@@ -79,11 +79,22 @@
 }
 
 /* ── Tabs (Click & Active States) ── */
+.booking-tabs .nav-link.active,
+.booking-tabs .nav-link.active *,
+.booking-tabs .nav-link.active i,
+.booking-tabs .nav-link.active span,
 .nav-tabs .nav-link.active,
-.nav-pills .nav-link.active {
+.nav-tabs .nav-link.active *,
+.nav-tabs .nav-link.active i,
+.nav-tabs .nav-link.active span,
+.nav-pills .nav-link.active,
+.nav-pills .nav-link.active *,
+.nav-pills .nav-link.active i {
     background-color: var(--primary-teal) !important;
     border-color: var(--primary-teal) !important;
     color: #ffffff !important;
+    fill: #ffffff !important;
+    font-weight: 600;
 }
 
 .nav-tabs .nav-link:hover,
@@ -310,3 +321,20 @@
     }
 }
 
+
+
+/* ── Remove Number Input Spinners (Up/Down Arrows) Globally ── */
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none !important;
+    margin: 0 !important;
+}
+
+/* Firefox */
+input[type="number"] {
+    -moz-appearance: textfield !important;
+    appearance: textfield !important;
+}

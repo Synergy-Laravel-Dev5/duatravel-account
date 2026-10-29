@@ -79,6 +79,13 @@
                 if (typeof feather !== "undefined") {
                     feather.replace();
                 }
+
+                // Prevent mouse wheel from accidentally changing number inputs when focused
+                document.addEventListener('wheel', function(e) {
+                    if (document.activeElement && document.activeElement.type === 'number') {
+                        document.activeElement.blur();
+                    }
+                }, { passive: true });
             });
         </script>
         @yield('scripts')

@@ -41,11 +41,20 @@ class BookingPerson extends Model
         'flight_ticket',
         'flight_cost',
         'flight_sell',
+        'flight_supplier_id',
+        'flight_pnr',
+        'flight_date',
+        'flight_time',
     ];
 
     public function booking()
     {
         return $this->belongsTo(Booking::class);
+    }
+
+    public function flightSupplier()
+    {
+        return $this->belongsTo(Supplier::class, 'flight_supplier_id');
     }
 
     public function travelGroups()

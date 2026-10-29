@@ -89,8 +89,22 @@
                                                 @endif
                                             </td>
 
-                                            <td>{{ $client->passport_number ?? '—' }}</td>
-                                            <td>{{ $client->cnic ?? '—' }}</td>
+                                            <td>
+                                                {{ $client->passport_number ?? '—' }}
+                                                @if ($client->passport_document)
+                                                    <a href="{{ $client->passport_document_url }}" target="_blank" class="badge bg-soft-info text-info d-block mt-1" style="font-size: 10px; width: fit-content;" title="View Passport Document">
+                                                        <i class="mdi mdi-file-document-outline me-1"></i> Passport Doc
+                                                    </a>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                {{ $client->cnic ?? '—' }}
+                                                @if ($client->cnic_document)
+                                                    <a href="{{ $client->cnic_document_url }}" target="_blank" class="badge bg-soft-success text-success d-block mt-1" style="font-size: 10px; width: fit-content;" title="View CNIC Document">
+                                                        <i class="mdi mdi-card-account-details-outline me-1"></i> CNIC Doc
+                                                    </a>
+                                                @endif
+                                            </td>
                                             <td>{{ $client->phone ?? '—' }}</td>
                                             <td>
                                                 <span
@@ -99,10 +113,10 @@
                                                 </span>
                                             </td>
                                             <td>
-                                                <div class="d-flex gap-1">
+                                                <div class="d-flex align-items-center gap-1">
                                                     <a href="{{ route('transaction.ledger.view') }}?client_id={{ $client->id }}"
-                                                        class="btn btn-sm btn-outline-primary" title="Statement / Ledger (Dr/Cr)">
-                                                        <i class="mdi mdi-book-open-page-variant"></i>
+                                                        class="btn btn-sm btn-info text-white" title="Generate Client Report / Statement">
+                                                        <i class="mdi mdi-file-chart me-1"></i> Report
                                                     </a>
                                                     @can('client_edit')
                                                         <a href="{{ route('client.edit', $client->id) }}"

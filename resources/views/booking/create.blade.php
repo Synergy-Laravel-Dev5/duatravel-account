@@ -88,9 +88,35 @@
 
                         {{-- TAB 1: Package --}}
                         <div class="tab-pane fade {{ $isUmrah ? '' : 'show active' }}" id="tab-package">
+                            <!-- TOP ROW: Booking Date (First Field) & Package Info -->
+                            <div class="row g-2 align-items-center mb-3 p-2 px-3 rounded bg-light border border-start border-start-4 border-start-secondary shadow-sm">
+                                <div class="col-md-4">
+                                    <label class="form-label fs-12 fw-bold text-dark mb-1">
+                                        <i class="mdi mdi-calendar-check text-secondary me-1"></i> Booking Date <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="date" class="form-control form-control-sm sync-booking-date" value="{{ old('booking_date', date('Y-m-d')) }}">
+                                    <small class="text-muted fs-11">Synchronized across all tabs</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fs-12 fw-bold text-dark mb-1">
+                                        <i class="mdi mdi-tag text-secondary me-1"></i> Package Selection
+                                    </label>
+                                    <div>
+                                        <span class="badge bg-secondary fs-13 px-2 py-1 font-monospace">Package Booking</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-md-end">
+                                    <span class="badge bg-soft-info text-info fs-12 py-2 px-3 border border-info border-opacity-25">
+                                        <i class="mdi mdi-sync me-1"></i> Global Date Active
+                                    </span>
+                                </div>
+                            </div>
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label">Select Package <span class="text-danger">*</span></label>
+                                    <label class="form-label d-flex justify-content-between align-items-center mb-1">
+                                        <span>Select Package <span class="text-danger">*</span></span>
+                                        <button type="button" class="btn btn-xs btn-link text-primary p-0 text-decoration-none" onclick="refreshPackagesDropdown(true)" title="Reload Packages"><i class="mdi mdi-refresh"></i> Refresh</button>
+                                    </label>
                                     <select name="package_id" id="packageSelect" class="form-select" onchange="onPackageSelectChange(this)">
                                         <option value="">-- Select Package --</option>
                                         @foreach ($packages as $pkg)
@@ -119,7 +145,8 @@
                                     <input type="hidden" name="package_type" id="package_type" value="{{ $dashboardPkg }}">
                                 </div>
                             </div>
-                            <div class="d-flex justify-content-end mt-4">
+                            <div class="d-flex justify-content-between align-items-center mt-4">
+                                <button type="submit" class="btn btn-success"><i class="mdi mdi-content-save me-1"></i> Save Booking</button>
                                 <button type="button" class="btn btn-primary btn-next">Next <i
                                         class="mdi mdi-arrow-right ms-1"></i></button>
                             </div>
@@ -128,12 +155,76 @@
                         {{-- TAB 2: Booking Details --}}
                         <div class="tab-pane fade {{ $isUmrah ? 'show active' : '' }}" id="tab-details">
 
+                            <!-- TOP ROW: Booking Date (First Field) & Main Booking Voucher -->
+                            <div class="row g-2 align-items-center mb-3 p-2 px-3 rounded bg-light border border-start border-start-4 border-start-primary shadow-sm">
+                                <div class="col-md-4">
+                                    <label class="form-label fs-12 fw-bold text-dark mb-1">
+                                        <i class="mdi mdi-calendar-check text-primary me-1"></i> Booking Date <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="date" name="booking_date" id="booking_date"
+                                        class="form-control form-control-sm sync-booking-date"
+                                        value="{{ old('booking_date', date('Y-m-d')) }}" required>
+                                    <small class="text-muted fs-11">Primary Booking Date (Synchronized across all tabs)</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fs-12 fw-bold text-dark mb-1">
+                                        <i class="mdi mdi-ticket-confirmation text-primary me-1"></i> Booking Voucher No:
+                                    </label>
+                                    <div>
+                                        <span class="badge bg-primary fs-13 px-2 py-1 font-monospace" id="booking_voucher_disp">{{ $defaultVouchers['booking'] ?? ('BK-' . date('Y') . '-00001') }}</span>
+                                    </div>
+                                    <input type="hidden" name="voucher_number" id="booking_voucher_input" value="{{ $defaultVouchers['booking'] ?? ('BK-' . date('Y') . '-00001') }}">
+                                </div>
+                                <div class="col-md-4 text-md-end">
+                                    <span class="badge bg-soft-info text-info fs-12 py-2 px-3 border border-info border-opacity-25">
+                                        <i class="mdi mdi-sync me-1"></i> Global Date Active
+                                    </span>
+                                </div>
+                            </div>
+
                             <div class="row g-3">
+
+                                {{-- BOOKING CATEGORY / SECTOR TYPE (Umrah vs Domestic vs International) --}}
+                                <div class="col-12">
+                                    <div class="card border mb-2 bg-light shadow-sm">
+                                        <div class="card-body p-2 px-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+                                            <span class="fw-bold text-dark fs-13">
+                                                <i class="mdi mdi-format-list-bulleted-type text-primary me-1"></i> Booking Category / Sector:
+                                            </span>
+                                            <div class="d-flex flex-wrap gap-3">
+                                                @php
+                                                    $bCat = old('booking_category', 'umrah');
+                                                @endphp
+                                                <div class="form-check">
+                                                    <input class="form-check-input booking-category-radio" type="radio" name="booking_category" id="bcat_umrah" value="umrah" {{ $bCat === 'umrah' ? 'checked' : '' }}>
+                                                    <label class="form-check-label fs-13 fw-semibold text-primary" for="bcat_umrah">
+                                                        <i class="mdi mdi-mosque me-1"></i> Umrah Pilgrimage
+                                                    </label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input booking-category-radio" type="radio" name="booking_category" id="bcat_domestic" value="domestic" {{ $bCat === 'domestic' ? 'checked' : '' }}>
+                                                    <label class="form-check-label fs-13 fw-semibold text-success" for="bcat_domestic">
+                                                        <i class="mdi mdi-airplane me-1"></i> Domestic Flight (Pakistan)
+                                                    </label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input booking-category-radio" type="radio" name="booking_category" id="bcat_international" value="international" {{ $bCat === 'international' ? 'checked' : '' }}>
+                                                    <label class="form-check-label fs-13 fw-semibold text-info" for="bcat_international">
+                                                        <i class="mdi mdi-earth me-1"></i> International Flight
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                                 <input type="hidden" name="booking_for" id="booking_for_input" value="client">
 
                                 {{-- CLIENT BLOCK (Primary Selection) --}}
                                 <div class="col-md-4" id="clientBlock">
-                                    <label class="form-label">Client Name <span class="text-danger">*</span></label>
+                                    <label class="form-label d-flex justify-content-between align-items-center mb-1">
+                                        <span>Client Name <span class="text-danger">*</span></span>
+                                        <button type="button" class="btn btn-xs btn-link text-primary p-0 text-decoration-none" onclick="refreshClientsDropdown(true)" title="Reload Clients"><i class="mdi mdi-refresh"></i> Refresh</button>
+                                    </label>
                                     <select name="client_id" id="clientSelect" class="form-select select2">
                                         <option value="">-- Select Client --</option>
                                         @foreach ($clients as $cl)
@@ -151,45 +242,20 @@
                                     </select>
                                 </div>
 
-                                <div class="col-md-12">
-                                    <div class="card bg-light border p-3 mb-1">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <h6 class="text-primary mb-0"><i class="mdi mdi-account-group me-1"></i> Passengers Breakdown</h6>
-                                            <span class="badge bg-primary fs-12">Total Pax: <span id="bar_pax_badge">1</span></span>
-                                        </div>
-                                        <div class="row g-3">
-                                            <div class="col-md-3">
-                                                <label class="form-label fw-semibold">Adults (12+ yrs) <span class="text-danger">*</span></label>
-                                                <div class="input-group">
-                                                    <span class="input-group-text"><i class="mdi mdi-account"></i></span>
-                                                    <input type="number" name="adults_count" id="pax_adults" class="form-control pax-breakdown-calc"
-                                                        value="{{ old('adults_count', 1) }}" min="1">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label fw-semibold">Children (2-11 yrs)</label>
-                                                <div class="input-group">
-                                                    <span class="input-group-text"><i class="mdi mdi-account-child"></i></span>
-                                                    <input type="number" name="children_count" id="pax_children" class="form-control pax-breakdown-calc"
-                                                        value="{{ old('children_count', 0) }}" min="0">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label fw-semibold">Infants (0-2 yrs)</label>
-                                                <div class="input-group">
-                                                    <span class="input-group-text"><i class="mdi mdi-baby-carriage"></i></span>
-                                                    <input type="number" name="infants_count" id="pax_infants" class="form-control pax-breakdown-calc"
-                                                        value="{{ old('infants_count', 0) }}" min="0">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label fw-semibold text-primary">Total Passengers</label>
-                                                <input type="number" name="no_of_pax" id="no_of_pax" class="form-control bg-white fw-bold text-primary"
-                                                    value="{{ old('no_of_pax', 1) }}" min="1" readonly>
-                                            </div>
-                                        </div>
-                                        <small class="text-muted mt-2"><i class="mdi mdi-information-outline"></i> Persons, Flight, Hotel, Transport & Visa tabs will update automatically based on passenger breakdown.</small>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold text-primary"><i class="mdi mdi-account-group me-1"></i> No. of Pax (Passengers) <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light text-primary"><i class="mdi mdi-account-multiple"></i></span>
+                                        <input type="number" name="no_of_pax" id="no_of_pax" class="form-control fw-bold fs-15 text-primary"
+                                            value="{{ old('no_of_pax', 1) }}" min="1" placeholder="Enter number of passengers">
                                     </div>
+                                    <input type="hidden" name="adults_count" id="pax_adults" value="{{ old('adults_count', 1) }}">
+                                    <input type="hidden" name="children_count" id="pax_children" value="{{ old('children_count', 0) }}">
+                                    <input type="hidden" name="infants_count" id="pax_infants" value="{{ old('infants_count', 0) }}">
+                                    <input type="hidden" name="pax_adults" id="hidden_pax_adults" value="{{ old('pax_adults', 1) }}">
+                                    <input type="hidden" name="pax_children" id="hidden_pax_children" value="{{ old('pax_children', 0) }}">
+                                    <input type="hidden" name="pax_infants" id="hidden_pax_infants" value="{{ old('pax_infants', 0) }}">
+                                    <small class="text-muted"><i class="mdi mdi-information-outline"></i> Set total passengers here. In the <strong>Persons</strong> tab, select whether each passenger is an Adult, Child, or Infant.</small>
                                 </div>
 
                                 <div class="col-md-4">
@@ -219,45 +285,107 @@
                                     <input type="text" name="emergency_phone" class="form-control"
                                         placeholder="+92 300 0000000" value="{{ old('emergency_phone') }}">
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-bold">Booking Date</label>
-                                    <input type="date" name="booking_date" id="booking_date" class="form-control" value="{{ old('booking_date', date('Y-m-d')) }}">
-                                </div>
                                 <input type="hidden" name="currency" id="booking_currency" value="PKR">
                             </div>
 
-                            <div class="d-flex justify-content-between mt-4">
+                            <div class="d-flex justify-content-between align-items-center mt-4">
                                 <div>
                                     @if(!$isUmrah)
                                         <button type="button" class="btn btn-outline-secondary btn-prev"><i
                                                 class="mdi mdi-arrow-left me-1"></i> Prev</button>
                                     @endif
                                 </div>
-                                <button type="button" class="btn btn-primary btn-next">Next <i
-                                        class="mdi mdi-arrow-right ms-1"></i></button>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-success"><i class="mdi mdi-content-save me-1"></i> Save Booking</button>
+                                    <button type="button" class="btn btn-primary btn-next">Next <i
+                                            class="mdi mdi-arrow-right ms-1"></i></button>
+                                </div>
                             </div>
                         </div>
 
                         {{-- TAB 3: Persons --}}
                         <div class="tab-pane fade" id="tab-persons">
+                            <!-- TOP ROW: Booking Date (First Field) & Passengers Overview -->
+                            <div class="row g-2 align-items-center mb-3 p-2 px-3 rounded bg-light border border-start border-start-4 border-start-primary shadow-sm">
+                                <div class="col-md-4">
+                                    <label class="form-label fs-12 fw-bold text-dark mb-1">
+                                        <i class="mdi mdi-calendar-check text-primary me-1"></i> Booking Date <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="date" class="form-control form-control-sm sync-booking-date" value="{{ old('booking_date', date('Y-m-d')) }}">
+                                    <small class="text-muted fs-11">Synchronized across all tabs</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fs-12 fw-bold text-dark mb-1">
+                                        <i class="mdi mdi-account-group text-primary me-1"></i> Passenger Breakdown
+                                    </label>
+                                    <div>
+                                        <span class="badge bg-primary fs-12">Total: <span id="bar_pax_badge_header">1</span></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-md-end">
+                                    <span class="badge bg-soft-info text-info fs-12 py-2 px-3 border border-info border-opacity-25">
+                                        <i class="mdi mdi-sync me-1"></i> Global Date Active
+                                    </span>
+                                </div>
+                            </div>
                             <div id="personsBookingForNote" class="alert alert-info py-2 px-3 {{ $isUmrah ? 'd-none' : '' }}"
                                 style="font-size:13px;">
                                 <i class="mdi mdi-information me-1"></i>
                                 This is a company booking. The client dropdown is hidden for the main passenger. Please
                                 enter the name and passport details manually.
                             </div>
+                            <div class="p-2 px-3 mb-3 border rounded bg-light d-flex flex-wrap align-items-center justify-content-between gap-2">
+                                <div>
+                                    <strong class="text-primary fs-13"><i class="mdi mdi-account-group me-1"></i> Passenger Details & Category</strong>
+                                    <small class="text-muted d-block" style="font-size:11px;">Select whether each passenger is Adult, Child, or Infant. Flight, Hotel, Visa, and Costing tabs will automatically reflect their category.</small>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-primary fs-12">Total Pax: <span id="bar_pax_badge">1</span></span>
+                                    <span class="badge bg-secondary fs-12">Adults: <span id="bar_pax_adults">1</span></span>
+                                    <span class="badge bg-info text-dark fs-12">Children: <span id="bar_pax_children">0</span></span>
+                                    <span class="badge bg-warning text-dark fs-12">Infants: <span id="bar_pax_infants">0</span></span>
+                                </div>
+                            </div>
                             <div id="personsList"></div>
 
-                            <div class="d-flex justify-content-between mt-4">
+                            <div class="d-flex justify-content-between align-items-center mt-4">
                                 <button type="button" class="btn btn-outline-secondary btn-prev"><i
                                         class="mdi mdi-arrow-left me-1"></i> Prev</button>
-                                <button type="button" class="btn btn-primary btn-next">Next <i
-                                        class="mdi mdi-arrow-right ms-1"></i></button>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-success"><i class="mdi mdi-content-save me-1"></i> Save Booking</button>
+                                    <button type="button" class="btn btn-primary btn-next">Next <i
+                                            class="mdi mdi-arrow-right ms-1"></i></button>
+                                </div>
                             </div>
                         </div>
 
                         {{-- TAB 4: Flight --}}
                         <div class="tab-pane fade" id="tab-flight">
+
+                            <!-- TOP ROW: Booking Date Sync & Flight Voucher No -->
+                            <div class="row g-2 align-items-center mb-3 p-2 px-3 rounded bg-light border border-start border-start-4 border-start-info shadow-sm">
+                                <div class="col-md-4">
+                                    <label class="form-label fs-12 fw-bold text-dark mb-1">
+                                        <i class="mdi mdi-calendar-check text-info me-1"></i> Booking Date
+                                    </label>
+                                    <input type="date" id="booking_date_flight_tab" class="form-control form-control-sm sync-booking-date" value="{{ old('booking_date', date('Y-m-d')) }}">
+                                    <small class="text-muted fs-11">Auto-syncs with Flight Departure Date</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fs-12 fw-bold text-dark mb-1">
+                                        <i class="mdi mdi-airplane text-info me-1"></i> Flight Voucher No:
+                                    </label>
+                                    <div>
+                                        <span class="badge bg-info fs-13 px-2 py-1 font-monospace">{{ $defaultVouchers['flight'] ?? ('FLT-' . date('Y') . '-00001') }}</span>
+                                    </div>
+                                    <input type="hidden" name="flight_voucher_no" id="flight_voucher_no" value="{{ $defaultVouchers['flight'] ?? ('FLT-' . date('Y') . '-00001') }}">
+                                </div>
+                                <div class="col-md-4 text-md-end">
+                                    <span class="badge bg-soft-info text-info fs-12 py-2 px-3 border border-info border-opacity-25">
+                                        <i class="mdi mdi-airplane-takeoff me-1"></i> Flight Date Auto-Sync Active
+                                    </span>
+                                </div>
+                            </div>
 
                             {{-- SUPPLIER & COSTING / SELLING (Dual Currency SAR & PKR + Tier Rates) --}}
                             <div class="card mb-4 border shadow-sm">
@@ -312,10 +440,7 @@
                                             </div>
                                             <input type="hidden" name="flight_roe" id="flight_roe" value="75">
                                         </div>
-                                        <div class="col-md-3">
-                                            <label class="form-label"><i class="mdi mdi-calendar me-1 text-primary"></i> Flight Booking Date</label>
-                                            <input type="date" name="flight_booking_date" id="flight_booking_date" class="form-control flight-booking-date" value="{{ old('flight_booking_date', date('Y-m-d')) }}">
-                                        </div>
+                                        <input type="hidden" name="flight_booking_date" id="flight_booking_date" class="sync-booking-date" value="{{ old('booking_date', date('Y-m-d')) }}">
                                     </div>
 
                                     {{-- Hidden fields for Controller compatibility --}}
@@ -373,12 +498,23 @@
                                 </div>
                             </div>
 
-                            {{-- DEPARTURE --}}
+                            {{-- DEPARTURE & TIME FORMAT (Point 6) --}}
                             <div class="row g-3 mb-4">
-                                <div class="col-12">
-                                    <h6 class="text-muted border-bottom pb-2">
-                                        <i class="mdi mdi-airplane-takeoff me-1"></i> Departure Info
+                                <div class="col-12 d-flex flex-wrap justify-content-between align-items-center border-bottom pb-2">
+                                    <h6 class="text-muted mb-0">
+                                        <i class="mdi mdi-airplane-takeoff me-1"></i> Flight Schedule (Departure & Arrival)
                                     </h6>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <span class="fw-bold fs-12 text-dark"><i class="mdi mdi-clock-outline me-1"></i> Time Format:</span>
+                                        <div class="form-check form-check-inline mb-0">
+                                            <input class="form-check-input flight-time-format-radio" type="radio" name="flight_time_format" id="time_format_12" value="12" checked>
+                                            <label class="form-check-label fs-12 fw-semibold" for="time_format_12">12-Hour (AM/PM)</label>
+                                        </div>
+                                        <div class="form-check form-check-inline mb-0">
+                                            <input class="form-check-input flight-time-format-radio" type="radio" name="flight_time_format" id="time_format_24" value="24">
+                                            <label class="form-check-label fs-12 fw-semibold" for="time_format_24">24-Hour (23:59)</label>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">Date of Departure</label>
@@ -458,18 +594,90 @@
                             </div>
 
 
-                            <div class="d-flex justify-content-between mt-4">
+                            <div class="d-flex justify-content-between align-items-center mt-4">
                                 <button type="button" class="btn btn-outline-secondary btn-prev">
                                     <i class="mdi mdi-arrow-left me-1"></i> Prev
                                 </button>
-                                <button type="button" class="btn btn-primary btn-next">
-                                    Next <i class="mdi mdi-arrow-right ms-1"></i>
-                                </button>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-success"><i class="mdi mdi-content-save me-1"></i> Save Booking</button>
+                                    <button type="button" class="btn btn-primary btn-next">
+                                        Next <i class="mdi mdi-arrow-right ms-1"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
                         {{-- TAB 5: Hotel --}}
                         <div class="tab-pane fade" id="tab-hotel">
+                            <!-- TOP ROW: Booking Date (First Field) & Hotel Voucher No -->
+                            <div class="row g-2 align-items-center mb-3 p-2 px-3 rounded bg-light border border-start border-start-4 border-start-primary shadow-sm">
+                                <div class="col-md-4">
+                                    <label class="form-label fs-12 fw-bold text-dark mb-1">
+                                        <i class="mdi mdi-calendar-check text-primary me-1"></i> Booking Date <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="date" name="booking_date_hotel_tab" id="booking_date_hotel_tab"
+                                        class="form-control form-control-sm sync-booking-date"
+                                        value="{{ old('booking_date', date('Y-m-d')) }}">
+                                    <small class="text-muted fs-11">Synchronized with Booking Details tab</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fs-12 fw-bold text-dark mb-1">
+                                        <i class="mdi mdi-hotel text-success me-1"></i> Hotel Voucher No:
+                                    </label>
+                                    <div>
+                                        <span class="badge bg-success fs-13 px-2 py-1 font-monospace">{{ $defaultVouchers['hotel'] ?? ('HTL-' . date('Y') . '-00001') }}</span>
+                                    </div>
+                                    <input type="hidden" name="hotel_voucher_no" id="hotel_voucher_no" value="{{ $defaultVouchers['hotel'] ?? ('HTL-' . date('Y') . '-00001') }}">
+                                </div>
+                                <div class="col-md-4 text-md-end">
+                                    <span class="badge bg-soft-info text-info fs-12 py-2 px-3 border border-info border-opacity-25">
+                                        <i class="mdi mdi-sync me-1"></i> Global Date Active
+                                    </span>
+                                </div>
+                            </div>
+
+                            {{-- HOTEL ACCOMMODATION SUMMARY TABLE (As per user request) --}}
+                            <div id="hotelAccommodationSummaryBox" class="card border mb-3 shadow-sm">
+                                <div class="card-header bg-white py-2 border-bottom d-flex justify-content-between align-items-center">
+                                    <h6 class="m-0 fs-13 fw-bold" style="color: #c2410c;">
+                                        <i class="mdi mdi-bed text-warning me-1"></i> 🏨 Hotel | Accomodation
+                                    </h6>
+                                    <span class="badge bg-soft-warning text-dark border fs-11" id="hotel_summary_badge">Summary View</span>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-sm align-middle mb-0 text-center" style="font-size: 12px;">
+                                        <thead class="fw-bold text-uppercase" style="background-color: #fff7ed; color: #c2410c;">
+                                            <tr>
+                                                <th class="text-start" style="color: #c2410c;">Hotel Name</th>
+                                                <th style="color: #c2410c;">City</th>
+                                                <th style="color: #c2410c;">Check In</th>
+                                                <th style="color: #c2410c;">Check Out</th>
+                                                <th style="color: #c2410c;">Nights</th>
+                                                <th style="color: #c2410c;">Room Type</th>
+                                                <th style="color: #c2410c;">QTY</th>
+                                                <th style="color: #c2410c;">Meal Plan</th>
+                                                <th style="color: #c2410c;" class="text-end">Total Cost</th>
+                                                <th style="color: #c2410c;" class="text-end">Total Sale</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="hotelAccommodationSummaryRows">
+                                            <tr>
+                                                <td colspan="10" class="text-muted py-2">No hotels added yet.</td>
+                                            </tr>
+                                        </tbody>
+                                        <tfoot class="fw-bold bg-white">
+                                            <tr>
+                                                <td colspan="4" class="text-end pe-3 fw-bold">Total</td>
+                                                <td id="hotel_summary_total_nights" class="fw-bold text-dark fs-13">0</td>
+                                                <td colspan="3"></td>
+                                                <td id="hotel_summary_total_cost" class="text-end text-danger fw-bold fs-12">0.00 SAR</td>
+                                                <td id="hotel_summary_total_sell" class="text-end text-success fw-bold fs-12">0.00 SAR</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+
                             {{-- Hotel Dual Currency Totals Display --}}
                             <div class="row g-2 p-2 rounded bg-light border mb-3">
                                 <div class="col-md-3">
@@ -496,6 +704,12 @@
                                         <strong class="text-success fs-14" id="hotel_sell_pkr_total">0.00 PKR</strong>
                                     </div>
                                 </div>
+                                <div class="col-12 mt-2">
+                                    <div class="p-2 px-3 border rounded bg-white d-flex flex-wrap justify-content-between align-items-center shadow-sm">
+                                        <div><i class="mdi mdi-calendar-range text-primary me-1"></i> <strong class="text-dark">Hotel Stay Summary:</strong> <span id="hotel_stay_summary_dates" class="badge bg-soft-primary text-primary fs-12 ms-1">No check-in dates set</span></div>
+                                        <div class="text-muted small"><span id="hotel_stay_total_nights" class="fw-semibold text-dark">0</span> Total Nights &bull; <span id="hotel_stay_total_rooms" class="fw-semibold text-dark">0</span> Total Rooms</div>
+                                    </div>
+                                </div>
                             </div>
                             <div id="noHotelAlert" class="alert alert-light border py-4 text-center text-muted mb-3">
                                 <i class="mdi mdi-hotel fs-36 text-primary d-block mb-1"></i>
@@ -519,16 +733,44 @@
                                 </button>
                             </div>
 
-                            <div class="d-flex justify-content-between mt-4">
+                            <div class="d-flex justify-content-between align-items-center mt-4">
                                 <button type="button" class="btn btn-outline-secondary btn-prev"><i
                                         class="mdi mdi-arrow-left me-1"></i> Prev</button>
-                                <button type="button" class="btn btn-primary btn-next">Next <i
-                                        class="mdi mdi-arrow-right ms-1"></i></button>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-success"><i class="mdi mdi-content-save me-1"></i> Save Booking</button>
+                                    <button type="button" class="btn btn-primary btn-next">Next <i
+                                            class="mdi mdi-arrow-right ms-1"></i></button>
+                                </div>
                             </div>
                         </div>
 
                         {{-- TAB 6: Transport --}}
                         <div class="tab-pane fade" id="tab-transport">
+                            <!-- TOP ROW: Booking Date (First Field) & Transport Voucher No -->
+                            <div class="row g-2 align-items-center mb-3 p-2 px-3 rounded bg-light border border-start border-start-4 border-start-warning shadow-sm">
+                                <div class="col-md-4">
+                                    <label class="form-label fs-12 fw-bold text-dark mb-1">
+                                        <i class="mdi mdi-calendar-check text-warning me-1"></i> Booking Date <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="date" class="form-control form-control-sm sync-booking-date" value="{{ old('booking_date', date('Y-m-d')) }}">
+                                    <small class="text-muted fs-11">Synchronized across all tabs</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fs-12 fw-bold text-dark mb-1">
+                                        <i class="mdi mdi-bus text-warning me-1"></i> Transport Voucher No:
+                                    </label>
+                                    <div>
+                                        <span class="badge bg-warning text-dark fs-13 px-2 py-1 font-monospace">{{ $defaultVouchers['transport'] ?? ('TRN-' . date('Y') . '-00001') }}</span>
+                                    </div>
+                                    <input type="hidden" name="transport_voucher_no" id="transport_voucher_no" value="{{ $defaultVouchers['transport'] ?? ('TRN-' . date('Y') . '-00001') }}">
+                                </div>
+                                <div class="col-md-4 text-md-end">
+                                    <span class="badge bg-soft-info text-info fs-12 py-2 px-3 border border-info border-opacity-25">
+                                        <i class="mdi mdi-sync me-1"></i> Global Date Active
+                                    </span>
+                                </div>
+                            </div>
+
                             {{-- Transport Dual Currency Totals Display --}}
                             <div class="row g-2 p-2 rounded bg-light border mb-3">
                                 <div class="col-md-3">
@@ -662,11 +904,6 @@
                                                 @endif
                                             </select>
                                         </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label text-muted"><i class="mdi mdi-calendar-check me-1"></i> Booking Date</label>
-                                            <input type="date" name="transports[0][booking_date]" class="form-control" value="{{ old('transports.0.booking_date', date('Y-m-d')) }}">
-                                        </div>
-
                                         <div class="col-md-2">
                                             <label class="form-label text-dark fw-bold">Currency</label>
                                             <select name="transports[0][currency]" class="form-select transport-currency fw-bold">
@@ -738,16 +975,44 @@
                             <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="addRoute">+ Add
                                 Route</button>
 
-                            <div class="d-flex justify-content-between mt-4">
+                            <div class="d-flex justify-content-between align-items-center mt-4">
                                 <button type="button" class="btn btn-outline-secondary btn-prev"><i
                                         class="mdi mdi-arrow-left me-1"></i> Prev</button>
-                                <button type="button" class="btn btn-primary btn-next">Next <i
-                                        class="mdi mdi-arrow-right ms-1"></i></button>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-success"><i class="mdi mdi-content-save me-1"></i> Save Booking</button>
+                                    <button type="button" class="btn btn-primary btn-next">Next <i
+                                            class="mdi mdi-arrow-right ms-1"></i></button>
+                                </div>
                             </div>
                         </div>
 
                         {{-- TAB 7: Visa --}}
                         <div class="tab-pane fade" id="tab-visa">
+                            <!-- TOP ROW: Booking Date (First Field) & Visa Voucher No -->
+                            <div class="row g-2 align-items-center mb-3 p-2 px-3 rounded bg-light border border-start border-start-4 border-start-danger shadow-sm">
+                                <div class="col-md-4">
+                                    <label class="form-label fs-12 fw-bold text-dark mb-1">
+                                        <i class="mdi mdi-calendar-check text-danger me-1"></i> Booking Date <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="date" class="form-control form-control-sm sync-booking-date" value="{{ old('booking_date', date('Y-m-d')) }}">
+                                    <small class="text-muted fs-11">Synchronized across all tabs</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fs-12 fw-bold text-dark mb-1">
+                                        <i class="mdi mdi-passport text-danger me-1"></i> Visa Voucher No:
+                                    </label>
+                                    <div>
+                                        <span class="badge bg-danger fs-13 px-2 py-1 font-monospace">{{ $defaultVouchers['visa'] ?? ('VIS-' . date('Y') . '-00001') }}</span>
+                                    </div>
+                                    <input type="hidden" name="visa_voucher_no" id="visa_voucher_no" value="{{ $defaultVouchers['visa'] ?? ('VIS-' . date('Y') . '-00001') }}">
+                                </div>
+                                <div class="col-md-4 text-md-end">
+                                    <span class="badge bg-soft-info text-info fs-12 py-2 px-3 border border-info border-opacity-25">
+                                        <i class="mdi mdi-sync me-1"></i> Global Date Active
+                                    </span>
+                                </div>
+                            </div>
+
                             {{-- Visa Dual Currency Totals Display --}}
                             <div class="row g-2 p-2 rounded bg-light border mb-3">
                                 <div class="col-md-3">
@@ -775,22 +1040,102 @@
                                     </div>
                                 </div>
                             </div>
+
+                            {{-- Point 14: Default Visa Supplier & Rates for All Passengers --}}
+                            <div class="card border mb-3 bg-light shadow-sm">
+                                <div class="card-header bg-soft-primary py-2 d-flex justify-content-between align-items-center">
+                                    <strong class="text-primary fs-12"><i class="mdi mdi-account-multiple-check me-1"></i> Default Visa Supplier & Rate (Applies to all passengers by default)</strong>
+                                    <span class="badge bg-primary fs-11">Bulk / Default Apply</span>
+                                </div>
+                                <div class="card-body p-2">
+                                    <div class="row g-2 align-items-end">
+                                        <div class="col-12 col-md-4 col-xl-3">
+                                            <label class="form-label fs-12 mb-1 fw-semibold">Default Visa Supplier</label>
+                                            <select id="default_visa_supplier_id" class="form-select form-select-sm">
+                                                <option value="">-- Select Default Supplier --</option>
+                                                @foreach ($suppliers as $sup)
+                                                    <option value="{{ $sup->id }}">{{ $sup->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-6 col-md-2 col-xl-2">
+                                            <label class="form-label fs-12 mb-1 text-dark fw-bold">Currency</label>
+                                            <select id="default_visa_currency" class="form-select form-select-sm fw-bold" onchange="handleDefaultVisaCurrencyChange(this.value)">
+                                                <option value="SAR" selected>SAR (Riyal)</option>
+                                                <option value="PKR">PKR (Rupee)</option>
+                                                <option value="USD">USD (Dollar)</option>
+                                                <option value="MYR">MYR (Ringgit)</option>
+                                                <option value="AED">AED (Dirham)</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-6 col-md-3 col-xl-1">
+                                            <label class="form-label fs-12 mb-1 text-danger fw-bold">Cost ROE</label>
+                                            <input type="number" step="0.0001" id="default_visa_cost_roe" class="form-control form-control-sm text-center" value="75.0000" placeholder="75.00">
+                                        </div>
+                                        <div class="col-6 col-md-3 col-xl-1">
+                                            <label class="form-label fs-12 mb-1 text-success fw-bold">Sale ROE</label>
+                                            <input type="number" step="0.0001" id="default_visa_sale_roe" class="form-control form-control-sm text-center" value="76.0000" placeholder="76.00">
+                                        </div>
+                                        <div class="col-6 col-md-4 col-xl-2">
+                                            <label class="form-label fs-12 mb-1 text-danger fw-semibold">Default Cost Rate (<span class="def-visa-curr-label">SAR</span>)</label>
+                                            <input type="number" step="0.01" id="default_visa_cost_rate" class="form-control form-control-sm text-end" placeholder="0.00">
+                                        </div>
+                                        <div class="col-6 col-md-4 col-xl-2">
+                                            <label class="form-label fs-12 mb-1 text-success fw-semibold">Default Sell Rate (<span class="def-visa-curr-label">SAR</span>)</label>
+                                            <input type="number" step="0.01" id="default_visa_sell_rate" class="form-control form-control-sm text-end" placeholder="0.00">
+                                        </div>
+                                        <div class="col-12 col-md-4 col-xl-1">
+                                            <button type="button" class="btn btn-sm btn-primary w-100" id="btn_apply_default_visa" onclick="applyDefaultVisaToAll()" title="Apply to All Passengers">
+                                                <i class="mdi mdi-check-all me-1"></i> Apply
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted d-block mt-1 fs-11"><i class="mdi mdi-information-outline"></i> Select supplier, currency, ROE, and rates above to apply to all passengers at once. Individual passengers can still be edited below.</small>
+                                </div>
+                            </div>
+
                             <p class="text-muted small mb-3">
                                 <i class="mdi mdi-information me-1"></i>
                                 Names and passport numbers filled in Persons tab will auto-fill here. You can edit them.
                             </p>
                             <div id="visasList"></div>
 
-                            <div class="d-flex justify-content-between mt-4">
+                            <div class="d-flex justify-content-between align-items-center mt-4">
                                 <button type="button" class="btn btn-outline-secondary btn-prev"><i
                                         class="mdi mdi-arrow-left me-1"></i> Prev</button>
-                                <button type="button" class="btn btn-primary btn-next">Next <i
-                                        class="mdi mdi-arrow-right ms-1"></i></button>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-success"><i class="mdi mdi-content-save me-1"></i> Save Booking</button>
+                                    <button type="button" class="btn btn-primary btn-next">Next <i
+                                            class="mdi mdi-arrow-right ms-1"></i></button>
+                                </div>
                             </div>
                         </div>
 
                         {{-- TAB 8: Costing --}}
                         <div class="tab-pane fade" id="tab-costing">
+                            <!-- TOP ROW: Booking Date (First Field) & Costing Overview -->
+                            <div class="row g-2 align-items-center mb-3 p-2 px-3 rounded bg-light border border-start border-start-4 border-start-success shadow-sm">
+                                <div class="col-md-4">
+                                    <label class="form-label fs-12 fw-bold text-dark mb-1">
+                                        <i class="mdi mdi-calendar-check text-success me-1"></i> Booking Date <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="date" class="form-control form-control-sm sync-booking-date" value="{{ old('booking_date', date('Y-m-d')) }}">
+                                    <small class="text-muted fs-11">Synchronized across all tabs</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fs-12 fw-bold text-dark mb-1">
+                                        <i class="mdi mdi-cash text-success me-1"></i> Costing & Pricing Overview
+                                    </label>
+                                    <div>
+                                        <span class="badge bg-success fs-13 px-2 py-1 font-monospace">Package Ledger</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-md-end">
+                                    <span class="badge bg-soft-info text-info fs-12 py-2 px-3 border border-info border-opacity-25">
+                                        <i class="mdi mdi-sync me-1"></i> Global Date Active
+                                    </span>
+                                </div>
+                            </div>
                             <div class="row g-3">
                                 <div class="col-md-3" id="costing_package_cost_col" style="{{ $isUmrah ? 'display:none;' : '' }}">
                                     <label class="form-label">Package Cost / Person (<span class="curr-symbol">PKR</span>)</label>
@@ -876,10 +1221,7 @@
                                                         <span>Total Selling:</span>
                                                         <span id="cost_sar_total">0.00 SAR</span>
                                                     </div>
-                                                    <div class="d-flex justify-content-between text-danger fs-14 fw-semibold">
-                                                        <span>Balance Remaining:</span>
-                                                        <span id="cost_sar_balance">0.00 SAR</span>
-                                                    </div>
+                                                    <span id="cost_sar_balance" style="display:none;">0.00 SAR</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -928,10 +1270,7 @@
                                                         <span>Total Selling (PKR):</span>
                                                         <span id="cost_pkr_total">0.00 PKR</span>
                                                     </div>
-                                                    <div class="d-flex justify-content-between text-danger fs-14 fw-semibold">
-                                                        <span>Balance Remaining (PKR):</span>
-                                                        <span id="cost_pkr_balance">0.00 PKR</span>
-                                                    </div>
+                                                    <span id="cost_pkr_balance" style="display:none;">0.00 PKR</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -1012,6 +1351,29 @@
 
                         {{-- TAB 9: Additional Services --}}
                         <div class="tab-pane fade" id="tab-additional-services">
+                            <!-- TOP ROW: Booking Date (First Field) & Services -->
+                            <div class="row g-2 align-items-center mb-3 p-2 px-3 rounded bg-light border border-start border-start-4 border-start-secondary shadow-sm">
+                                <div class="col-md-4">
+                                    <label class="form-label fs-12 fw-bold text-dark mb-1">
+                                        <i class="mdi mdi-calendar-check text-secondary me-1"></i> Booking Date <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="date" class="form-control form-control-sm sync-booking-date" value="{{ old('booking_date', date('Y-m-d')) }}">
+                                    <small class="text-muted fs-11">Synchronized across all tabs</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fs-12 fw-bold text-dark mb-1">
+                                        <i class="mdi mdi-plus-circle text-secondary me-1"></i> Additional Services
+                                    </label>
+                                    <div>
+                                        <span class="badge bg-secondary fs-13 px-2 py-1 font-monospace">Custom Services</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-md-end">
+                                    <span class="badge bg-soft-info text-info fs-12 py-2 px-3 border border-info border-opacity-25">
+                                        <i class="mdi mdi-sync me-1"></i> Global Date Active
+                                    </span>
+                                </div>
+                            </div>
                             <div class="row g-3">
                                 <div class="col-md-12">
                                     <label class="form-label">Service Details</label>
@@ -1074,6 +1436,19 @@
             padding: 12px 16px;
             margin-bottom: 10px;
         }
+
+        /* Hide number spin buttons */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none !important;
+            margin: 0 !important;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield !important;
+            appearance: textfield !important;
+        }
     </style>
 @endsection
 
@@ -1087,15 +1462,59 @@
         let airlinesData    = @json($airlines ?? []);
         let routesData      = @json($routes ?? []);
         let vehiclesData    = @json($vehicles ?? []);
+        const mealPlansData = @json($mealPlans ?? []);
 
         function buildSuppliersOptions() {
             return `<option value="">-- Select Supplier --</option>` +
                 (Array.isArray(suppliersData) ? suppliersData.map(s => `<option value="${s.id}">${s.name}</option>`).join('') : '');
         }
 
-        function buildHotelsOptions() {
+        function buildHotelsOptions(filterCity = null) {
+            let list = Array.isArray(hotelsData) ? hotelsData : [];
+            if (filterCity) {
+                const fc = filterCity.toLowerCase();
+                list = list.filter(h => {
+                    const p = (h.city || (typeof h.place === 'object' ? h.place?.value : h.place) || '').toLowerCase();
+                    return p.includes(fc);
+                });
+            }
             return `<option value="">Select Hotel</option>` +
-                (Array.isArray(hotelsData) ? hotelsData.map(h => `<option value="${h.name}">${h.name} (${h.city || h.place || ''})</option>`).join('') : '');
+                list.map(h => {
+                    const cityStr = h.city || (typeof h.place === 'object' ? h.place?.value : h.place) || '';
+                    return `<option value="${h.name}">${h.name} (${cityStr})</option>`;
+                }).join('');
+        }
+
+        function buildMealPlansOptions(selectedCode = 'BB') {
+            if (!Array.isArray(mealPlansData) || mealPlansData.length === 0) {
+                return `
+                    <option value="RO" ${selectedCode === 'RO' ? 'selected' : ''}>Room Only (RO)</option>
+                    <option value="BB" ${selectedCode === 'BB' ? 'selected' : ''}>Bed & Breakfast (BB)</option>
+                    <option value="HB" ${selectedCode === 'HB' ? 'selected' : ''}>Half Board (HB)</option>
+                    <option value="FB" ${selectedCode === 'FB' ? 'selected' : ''}>Full Board (FB)</option>
+                    <option value="SO" ${selectedCode === 'SO' ? 'selected' : ''}>Suhoor Only (SO)</option>
+                    <option value="IO" ${selectedCode === 'IO' ? 'selected' : ''}>Iftar Only (IO)</option>
+                `;
+            }
+            return mealPlansData.map(mp => `
+                <option value="${mp.code}" ${selectedCode === mp.code ? 'selected' : ''}>${mp.name} (${mp.code})</option>
+            `).join('');
+        }
+
+                function buildRoomViewsOptions(selected = 'Standard View') {
+            const views = [
+                'Standard View',
+                'City View',
+                'Haram View',
+                'Kaaba View',
+                'Partial Haram View',
+                'Sea / Mountain View'
+            ];
+            return views.map(v => `<option value="${v}" ${selected === v ? 'selected' : ''}>${v}</option>`).join('');
+        }
+
+        function refreshHotelsDropdown(idx = null) {
+            refreshMasterData(true);
         }
 
         function buildRoutesOptions() {
@@ -1168,6 +1587,195 @@
             await refreshMasterData(showNotification);
         }
 
+        // Point 12: Dropdown Auto-Refresh for Clients
+        async function refreshClientsDropdown(showNotification = true) {
+            try {
+                const clientSelect = document.getElementById('clientSelect');
+                const curVal = clientSelect ? clientSelect.value : '';
+                const res = await fetch('{{ route("client.json-list") }}');
+                const data = await res.json();
+                if (Array.isArray(data)) {
+                    clientsData = data;
+                    if (clientSelect) {
+                        let html = '<option value="">-- Select Client --</option>';
+                        data.forEach(c => {
+                            const compStr = c.company_name ? ` (${c.company_name})` : '';
+                            const phoneCnic = c.phone || c.cnic || '';
+                            const isSel = (c.id == curVal) ? 'selected' : '';
+                            html += `<option value="${c.id}" data-name="${c.name}" data-phone="${c.phone || ''}" data-cnic="${c.cnic || ''}" data-passport="${c.passport_number || ''}" data-company="${c.company_name || ''}" ${isSel}>${c.name}${compStr} - ${phoneCnic}</option>`;
+                        });
+                        clientSelect.innerHTML = html;
+                        if (curVal) clientSelect.value = curVal;
+                        if (typeof $ !== 'undefined' && $(clientSelect).data('select2')) {
+                            $(clientSelect).trigger('change.select2');
+                        }
+                    }
+                    if (showNotification) {
+                        showAutoRefreshToast('Clients dropdown refreshed without losing data!');
+                    }
+                }
+            } catch(e) {
+                console.error('Error refreshing clients:', e);
+            }
+        }
+
+        // Point 12: Dropdown Auto-Refresh for Packages
+        async function refreshPackagesDropdown(showNotification = true) {
+            try {
+                const pkgSelect = document.getElementById('packageSelect');
+                const curVal = pkgSelect ? pkgSelect.value : '';
+                const res = await fetch('{{ route("package.json-list") }}');
+                const data = await res.json();
+                if (Array.isArray(data)) {
+                    if (pkgSelect) {
+                        let html = '<option value="">-- Select Package --</option>';
+                        data.forEach(p => {
+                            const codeStr = p.code ? ` (${p.code})` : '';
+                            const isSel = (p.id == curVal) ? 'selected' : '';
+                            html += `<option value="${p.id}" ${isSel}>${p.name}${codeStr}</option>`;
+                        });
+                        pkgSelect.innerHTML = html;
+                        if (curVal) pkgSelect.value = curVal;
+                    }
+                    if (showNotification) {
+                        showAutoRefreshToast('Packages dropdown refreshed without losing data!');
+                    }
+                }
+            } catch(e) {
+                console.error('Error refreshing packages:', e);
+            }
+        }
+
+        function showAutoRefreshToast(msg) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success alert-dismissible fade show p-2 px-3 mb-2 shadow position-fixed top-0 end-0 m-3';
+            alertDiv.style.zIndex = '99999';
+            alertDiv.innerHTML = `<i class="mdi mdi-check-circle me-1"></i> <strong>Refreshed!</strong> ${msg} <button type="button" class="btn-close p-2" data-bs-dismiss="alert"></button>`;
+            document.body.appendChild(alertDiv);
+            setTimeout(() => alertDiv.remove(), 3500);
+        }
+
+        function handleDefaultVisaCurrencyChange(val) {
+            const costRoeInput = document.getElementById('default_visa_cost_roe');
+            const saleRoeInput = document.getElementById('default_visa_sale_roe');
+            const currLabels = document.querySelectorAll('.def-visa-curr-label');
+
+            currLabels.forEach(el => el.textContent = val);
+
+            if (val === 'PKR') {
+                if (costRoeInput) { costRoeInput.value = '1.0000'; costRoeInput.readOnly = true; }
+                if (saleRoeInput) { saleRoeInput.value = '1.0000'; saleRoeInput.readOnly = true; }
+            } else {
+                if (costRoeInput) {
+                    costRoeInput.readOnly = false;
+                    if (val === 'SAR') costRoeInput.value = '75.0000';
+                    else if (val === 'MYR') costRoeInput.value = '63.0000';
+                    else if (val === 'USD') costRoeInput.value = '278.0000';
+                    else if (val === 'AED') costRoeInput.value = '76.0000';
+                }
+                if (saleRoeInput) {
+                    saleRoeInput.readOnly = false;
+                    if (val === 'SAR') saleRoeInput.value = '76.0000';
+                    else if (val === 'MYR') saleRoeInput.value = '64.0000';
+                    else if (val === 'USD') saleRoeInput.value = '280.0000';
+                    else if (val === 'AED') saleRoeInput.value = '77.0000';
+                }
+            }
+        }
+
+        // Point 14: Apply Default Visa to All Passengers
+        function applyDefaultVisaToAll() {
+            const defSup = document.getElementById('default_visa_supplier_id')?.value;
+            const defCurr = document.getElementById('default_visa_currency')?.value || 'SAR';
+            const isPkr = (defCurr === 'PKR');
+            const defCostRoe = isPkr ? '1.0000' : (document.getElementById('default_visa_cost_roe')?.value || '75.0000');
+            const defSaleRoe = isPkr ? '1.0000' : (document.getElementById('default_visa_sale_roe')?.value || '76.0000');
+            const defCost = document.getElementById('default_visa_cost_rate')?.value;
+            const defSell = document.getElementById('default_visa_sell_rate')?.value;
+
+            document.querySelectorAll('#visasList .visa-card').forEach(card => {
+                if (defSup) {
+                    const supSel = card.querySelector('select[name*="[supplier_id]"]');
+                    if (supSel) supSel.value = defSup;
+                }
+
+                const currSel = card.querySelector('.visa-currency') || card.querySelector('select[name*="[currency]"]');
+                if (currSel) {
+                    currSel.value = defCurr;
+                }
+
+                const costRoeInput = card.querySelector('.visa-cost-roe');
+                const saleRoeInput = card.querySelector('.visa-sale-roe');
+                const legacyRoe = card.querySelector('.visa-roe');
+
+                if (isPkr) {
+                    if (costRoeInput) { costRoeInput.value = '1.0000'; costRoeInput.readOnly = true; }
+                    if (saleRoeInput) { saleRoeInput.value = '1.0000'; saleRoeInput.readOnly = true; }
+                    if (legacyRoe) legacyRoe.value = '1.0000';
+                } else {
+                    if (costRoeInput) {
+                        costRoeInput.readOnly = false;
+                        if (defCostRoe !== '' && defCostRoe !== undefined) costRoeInput.value = defCostRoe;
+                    }
+                    if (saleRoeInput) {
+                        saleRoeInput.readOnly = false;
+                        if (defSaleRoe !== '' && defSaleRoe !== undefined) saleRoeInput.value = defSaleRoe;
+                    }
+                    if (legacyRoe && defCostRoe !== '' && defCostRoe !== undefined) legacyRoe.value = defCostRoe;
+                }
+
+                if (defCost !== '' && defCost !== undefined) {
+                    const cInp = card.querySelector('.visa-cost-rate');
+                    if (cInp) cInp.value = defCost;
+                }
+                if (defSell !== '' && defSell !== undefined) {
+                    const sInp = card.querySelector('.visa-sell-rate');
+                    if (sInp) sInp.value = defSell;
+                }
+
+                card.querySelectorAll('.visa-curr-label').forEach(el => el.textContent = defCurr);
+                card.querySelectorAll('.visa-curr-prefix').forEach(el => el.textContent = `1 ${defCurr} =`);
+                card.querySelectorAll('.visa-curr-name').forEach(el => el.textContent = `${defCurr}:`);
+
+                if (typeof calculateVisaRow === 'function') {
+                    calculateVisaRow(card);
+                }
+            });
+            if (typeof calcTotal === 'function') {
+                calcTotal();
+            }
+            showAutoRefreshToast('Default visa supplier, currency, ROE, and rates applied to all passengers!');
+        }
+
+        // Point 4: Live Unique Ticket Check
+        function checkUniqueTicketNumbers() {
+            const inputs = document.querySelectorAll('.person-flight-ticket');
+            const seen = {};
+            inputs.forEach(inp => {
+                inp.classList.remove('is-invalid');
+                const existingWarn = inp.parentElement.querySelector('.ticket-dup-warn');
+                if (existingWarn) existingWarn.remove();
+            });
+
+            inputs.forEach(inp => {
+                const val = inp.value.trim().toLowerCase();
+                if (val) {
+                    if (seen[val]) {
+                        inp.classList.add('is-invalid');
+                        seen[val].classList.add('is-invalid');
+                        if (!inp.parentElement.querySelector('.ticket-dup-warn')) {
+                            const msg = document.createElement('small');
+                            msg.className = 'text-danger d-block ticket-dup-warn fs-11 fw-semibold mt-1';
+                            msg.innerHTML = '<i class="mdi mdi-alert-circle me-1"></i>Duplicate ticket!';
+                            inp.parentElement.appendChild(msg);
+                        }
+                    } else {
+                        seen[val] = inp;
+                    }
+                }
+            });
+        }
+
         const tabLinks = Array.from(document.querySelectorAll('#bookingTabs .nav-link'));
 
         function activateTab(idx) {
@@ -1215,12 +1823,12 @@
             }
 
             // 2. Passengers Validation
-            const adultsInput = document.getElementById('pax_adults');
-            const paxAdults = parseInt(adultsInput?.value) || 0;
-            if (paxAdults < 1) {
+            const paxInput = document.getElementById('no_of_pax');
+            const noOfPax = parseInt(paxInput?.value) || 0;
+            if (noOfPax < 1) {
                 activateTabByHref('#tab-details');
-                alert('Please specify at least 1 Adult passenger.');
-                adultsInput?.focus();
+                alert('Please enter at least 1 passenger.');
+                paxInput?.focus();
                 return false;
             }
 
@@ -1364,15 +1972,26 @@
             calcTotal();
         }
 
-        function buildPersonRow(idx, isFirst = false) {
+        function buildPersonRow(idx, isFirst = false, paxType = 'adult') {
             const label = isFirst ? 'Main Passenger' : `Passenger ${idx + 1}`;
+            const badgeClass = paxType === 'child' ? 'bg-info text-dark' : (paxType === 'infant' ? 'bg-warning text-dark' : 'bg-primary');
+            const typeLabel = paxType === 'child' ? 'Child' : (paxType === 'infant' ? 'Infant' : 'Adult');
 
             return `
             <div class="person-card" id="person_card_${idx}">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <strong class="text-primary" style="font-size:13px;">${label}</strong>
+                    <span class="badge ${badgeClass} person-type-badge" id="person_type_badge_${idx}">${typeLabel}</span>
                 </div>
                 <div class="row g-2">
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold" style="font-size:12px;">Passenger Type <span class="text-danger">*</span></label>
+                        <select name="persons[${idx}][pax_type]" id="person_pax_type_${idx}" class="form-select form-select-sm person-pax-type-select" onchange="onPersonPaxTypeChange(${idx}, this.value)">
+                            <option value="adult" ${paxType === 'adult' ? 'selected' : ''}>Adult (12+ yrs)</option>
+                            <option value="child" ${paxType === 'child' ? 'selected' : ''}>Child (2-11 yrs)</option>
+                            <option value="infant" ${paxType === 'infant' ? 'selected' : ''}>Infant (0-2 yrs)</option>
+                        </select>
+                    </div>
                     <div class="col-md-3">
                         <label class="form-label" style="font-size:12px;">Surname (Passport)</label>
                         <input type="text" name="persons[${idx}][surname]" id="person_surname_${idx}"
@@ -1393,12 +2012,12 @@
                         <input type="text" name="persons[${idx}][passport_number]" id="person_passport_${idx}"
                                class="form-control form-control-sm" placeholder="Passport #">
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label" style="font-size:12px;">Date of Birth</label>
                         <input type="date" name="persons[${idx}][dob]" id="person_dob_${idx}"
                                class="form-control form-control-sm">
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label" style="font-size:12px;">Gender</label>
                         <select name="persons[${idx}][gender]" id="person_gender_${idx}" class="form-select form-select-sm">
                             <option value="">-- Select --</option>
@@ -1406,7 +2025,7 @@
                             <option value="female">Female</option>
                         </select>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label" style="font-size:12px;">City</label>
                         <input type="text" name="persons[${idx}][city]" id="person_city_${idx}"
                                class="form-control form-control-sm" placeholder="e.g. Lahore / Karachi">
@@ -1435,61 +2054,141 @@
             </div>`;
         }
 
-        function rebuildPersons() {
-            const adults = parseInt(document.getElementById('pax_adults')?.value) || 0;
-            const children = parseInt(document.getElementById('pax_children')?.value) || 0;
-            const infants = parseInt(document.getElementById('pax_infants')?.value) || 0;
-            const pax = Math.max(1, adults + children + infants);
+        function updatePaxCountsFromPersons() {
+            let adults = 0;
+            let children = 0;
+            let infants = 0;
 
-            if (document.getElementById('no_of_pax')) document.getElementById('no_of_pax').value = pax;
-            if (document.getElementById('bar_pax_badge')) document.getElementById('bar_pax_badge').textContent = pax;
+            const paxSelects = document.querySelectorAll('.person-pax-type-select');
+            paxSelects.forEach((sel, idx) => {
+                const val = sel.value || 'adult';
+                if (val === 'child') children++;
+                else if (val === 'infant') infants++;
+                else adults++;
+
+                const badge = document.getElementById(`person_type_badge_${idx}`);
+                if (badge) {
+                    if (val === 'child') {
+                        badge.className = 'badge bg-info text-dark person-type-badge';
+                        badge.textContent = 'Child';
+                    } else if (val === 'infant') {
+                        badge.className = 'badge bg-warning text-dark person-type-badge';
+                        badge.textContent = 'Infant';
+                    } else {
+                        badge.className = 'badge bg-primary person-type-badge';
+                        badge.textContent = 'Adult';
+                    }
+                }
+            });
+
+            if (paxSelects.length === 0) {
+                adults = parseInt(document.getElementById('no_of_pax')?.value) || 1;
+            }
+
+            if (document.getElementById('pax_adults')) document.getElementById('pax_adults').value = adults;
+            if (document.getElementById('pax_children')) document.getElementById('pax_children').value = children;
+            if (document.getElementById('pax_infants')) document.getElementById('pax_infants').value = infants;
+            if (document.getElementById('hidden_pax_adults')) document.getElementById('hidden_pax_adults').value = adults;
+            if (document.getElementById('hidden_pax_children')) document.getElementById('hidden_pax_children').value = children;
+            if (document.getElementById('hidden_pax_infants')) document.getElementById('hidden_pax_infants').value = infants;
+
+            if (document.getElementById('bar_pax_adults')) document.getElementById('bar_pax_adults').textContent = adults;
+            if (document.getElementById('bar_pax_children')) document.getElementById('bar_pax_children').textContent = children;
+            if (document.getElementById('bar_pax_infants')) document.getElementById('bar_pax_infants').textContent = infants;
 
             if (document.getElementById('flight_adult_pax_label')) document.getElementById('flight_adult_pax_label').textContent = adults;
             if (document.getElementById('flight_child_pax_label')) document.getElementById('flight_child_pax_label').textContent = children;
             if (document.getElementById('flight_infant_pax_label')) document.getElementById('flight_infant_pax_label').textContent = infants;
 
-            const list = document.getElementById('personsList');
-            if (list) {
-                list.innerHTML = '';
-                for (let i = 0; i < pax; i++) {
-                    list.insertAdjacentHTML('beforeend', buildPersonRow(i, i === 0));
+            calculateFlight();
+            calcTotal();
+        }
+
+        function onPersonPaxTypeChange(idx, val) {
+            // Update Flight row category
+            const flRow = document.getElementById(`flight_person_row_${idx}`);
+            if (flRow) {
+                const flPaxTypeSel = flRow.querySelector('.person-flight-pax-type');
+                if (flPaxTypeSel && flPaxTypeSel.value !== val) {
+                    flPaxTypeSel.value = val;
                 }
             }
 
-            // If client selected, populate passenger 0
+            // Update Hotel badges
+            document.querySelectorAll(`.hotel-person-row[data-person-idx="${idx}"] .person-hotel-type-badge`).forEach(b => {
+                b.textContent = val.toUpperCase();
+                b.className = `badge ${val === 'child' ? 'bg-info text-dark' : (val === 'infant' ? 'bg-warning text-dark' : 'bg-primary')} person-hotel-type-badge ms-1`;
+            });
+
+            // Update Visa badge
+            const vBadge = document.querySelector(`#visa_card_${idx} .person-visa-type-badge`);
+            if (vBadge) {
+                vBadge.textContent = val.toUpperCase();
+                vBadge.className = `badge ${val === 'child' ? 'bg-info text-dark' : (val === 'infant' ? 'bg-warning text-dark' : 'bg-primary')} person-visa-type-badge ms-1`;
+            }
+
+            updatePaxCountsFromPersons();
+        }
+
+        function onFlightPaxTypeChange(idx, val) {
+            const pSel = document.getElementById(`person_pax_type_${idx}`);
+            if (pSel && pSel.value !== val) {
+                pSel.value = val;
+            }
+            onPersonPaxTypeChange(idx, val);
+        }
+
+        function rebuildPersons() {
+            const paxInput = document.getElementById('no_of_pax');
+            const pax = Math.max(1, parseInt(paxInput?.value) || 1);
+
+            if (document.getElementById('bar_pax_badge')) document.getElementById('bar_pax_badge').textContent = pax;
+
+            const list = document.getElementById('personsList');
+            if (list) {
+                const currentCards = list.querySelectorAll('.person-card');
+                const currentCount = currentCards.length;
+
+                if (currentCount === 0) {
+                    for (let i = 0; i < pax; i++) {
+                        list.insertAdjacentHTML('beforeend', buildPersonRow(i, i === 0, 'adult'));
+                    }
+                } else if (pax > currentCount) {
+                    for (let i = currentCount; i < pax; i++) {
+                        list.insertAdjacentHTML('beforeend', buildPersonRow(i, false, 'adult'));
+                    }
+                } else if (pax < currentCount) {
+                    for (let i = currentCount - 1; i >= pax; i--) {
+                        document.getElementById('person_card_' + i)?.remove();
+                    }
+                }
+            }
+
+            // If client selected and passenger 0 empty, populate passenger 0
             const clientSel = document.getElementById('clientSelect');
             if (clientSel && clientSel.value) {
                 const clientId = parseInt(clientSel.value);
                 const client = clientsData.find(c => c.id === clientId);
                 if (client) {
-                    if (document.getElementById('person_name_0')) document.getElementById('person_name_0').value = client.name || '';
-                    if (document.getElementById('person_passport_0')) document.getElementById('person_passport_0').value = client.passport_number || '';
-                    if (document.getElementById('person_cnic_0')) document.getElementById('person_cnic_0').value = client.cnic || '';
+                    const p0Name = document.getElementById('person_name_0');
+                    if (p0Name && !p0Name.value) p0Name.value = client.name || '';
+                    const p0Pass = document.getElementById('person_passport_0');
+                    if (p0Pass && !p0Pass.value) p0Pass.value = client.passport_number || '';
+                    const p0Cnic = document.getElementById('person_cnic_0');
+                    if (p0Cnic && !p0Cnic.value) p0Cnic.value = client.cnic || '';
                 }
             }
 
-            calculateFlight();
-            calcTotal();
+            updatePaxCountsFromPersons();
         }
 
-        document.querySelectorAll('.pax-breakdown-calc').forEach(el => {
-            el.addEventListener('input', function() {
-                rebuildPersons();
-                syncFlightPersons();
-                syncVisas();
-                syncAllHotelPersons();
-            });
-        });
-
         document.getElementById('no_of_pax')?.addEventListener('input', function() {
-            const total = parseInt(this.value) || 1;
-            const curChild  = parseInt(document.getElementById('pax_children')?.value) || 0;
-            const curInfant = parseInt(document.getElementById('pax_infants')?.value) || 0;
-            const nonAdults = curChild + curInfant;
-
-            if (total >= nonAdults) {
-                if (document.getElementById('pax_adults')) document.getElementById('pax_adults').value = Math.max(1, total - nonAdults);
-            }
+            rebuildPersons();
+            syncFlightPersons();
+            syncVisas();
+            syncAllHotelPersons();
+        });
+        document.getElementById('no_of_pax')?.addEventListener('change', function() {
             rebuildPersons();
             syncFlightPersons();
             syncVisas();
@@ -1504,6 +2203,10 @@
             const curr = document.getElementById('flight_currency')?.value || 'SAR';
             const costRoe = (curr === 'PKR') ? 1 : (parseFloat(document.getElementById('flight_cost_roe')?.value) || parseFloat(document.getElementById('flight_roe')?.value) || 75);
             const saleRoe = (curr === 'PKR') ? 1 : (parseFloat(document.getElementById('flight_sale_roe')?.value) || costRoe || 75);
+            const mainSupId = document.getElementById('flight_supplier_id')?.value || '';
+            const depDate = document.querySelector('input[name="departure_date"]')?.value || '';
+            const depTime = document.querySelector('input[name="departure_time"]')?.value || '';
+            const depPnr  = document.querySelector('input[name="departure_pnr"]')?.value || '';
 
             // Preserve any existing DOM input values so user typing is not wiped out
             const existingRowData = {};
@@ -1511,10 +2214,14 @@
                 const idx = row.getAttribute('data-idx');
                 if (idx !== null) {
                     existingRowData[idx] = {
-                        pax_type: row.querySelector('.person-flight-pax-type')?.value,
-                        ticket:   row.querySelector('.person-flight-ticket')?.value,
-                        cost:     row.querySelector('.person-flight-cost')?.value,
-                        sell:     row.querySelector('.person-flight-sell')?.value,
+                        pax_type:           row.querySelector('.person-flight-pax-type')?.value,
+                        ticket:             row.querySelector('.person-flight-ticket')?.value,
+                        cost:               row.querySelector('.person-flight-cost')?.value,
+                        sell:               row.querySelector('.person-flight-sell')?.value,
+                        flight_supplier_id: row.querySelector('.person-flight-supplier')?.value,
+                        flight_pnr:         row.querySelector('.person-flight-pnr')?.value,
+                        flight_date:        row.querySelector('.person-flight-date')?.value,
+                        flight_time:        row.querySelector('.person-flight-time')?.value,
                     };
                 }
             });
@@ -1526,20 +2233,35 @@
 
                 const inDom = existingRowData[i];
 
-                let pType = 'adult';
+                let pType   = document.getElementById(`person_pax_type_${i}`)?.value || (inDom ? inDom.pax_type : 'adult');
                 let pTicket = '';
-                let pCost = '';
-                let pSell = '';
+                let pCost   = '';
+                let pSell   = '';
+                let pSup    = '';
+                let pPnr    = depPnr;
+                let pDate   = depDate;
+                let pTime   = depTime;
 
                 if (inDom) {
-                    pType   = inDom.pax_type || 'adult';
+                    pType   = document.getElementById(`person_pax_type_${i}`)?.value || inDom.pax_type || 'adult';
                     pTicket = inDom.ticket || '';
                     pCost   = inDom.cost !== undefined ? inDom.cost : '';
                     pSell   = inDom.sell !== undefined ? inDom.sell : '';
+                    pSup    = inDom.flight_supplier_id || '';
+                    pPnr    = inDom.flight_pnr !== undefined ? inDom.flight_pnr : depPnr;
+                    pDate   = inDom.flight_date !== undefined ? inDom.flight_date : depDate;
+                    pTime   = inDom.flight_time !== undefined ? inDom.flight_time : depTime;
                 }
 
                 const costVal = parseFloat(pCost) || 0;
                 const sellVal = parseFloat(pSell) || 0;
+
+                // Build supplier dropdown options (Point 3)
+                const effectiveSup = pSup || mainSupId;
+                let supOptionsHtml = '<option value="">-- Main Supplier --</option>';
+                if (typeof suppliersData !== 'undefined' && Array.isArray(suppliersData)) {
+                    supOptionsHtml += suppliersData.map(s => `<option value="${s.id}" ${s.id == effectiveSup ? 'selected' : ''}>${s.name}</option>`).join('');
+                }
 
                 rowsHtml += `
                 <tr class="flight-person-row" data-idx="${i}" id="flight_person_row_${i}">
@@ -1547,19 +2269,36 @@
                     <td>
                         <strong class="text-primary person-flight-name-disp">${personName}</strong>
                         <input type="hidden" name="flight_persons[${i}][name]" class="person-flight-name" value="${personName}">
+                        <div class="mt-1">
+                            <input type="text" name="flight_persons[${i}][passport]" class="form-control form-control-sm person-flight-passport" value="${personPass}" placeholder="Passport #">
+                        </div>
                     </td>
                     <td>
-                        <select name="flight_persons[${i}][pax_type]" class="form-select form-select-sm person-flight-pax-type">
+                        <select name="flight_persons[${i}][pax_type]" class="form-select form-select-sm person-flight-pax-type" onchange="onFlightPaxTypeChange(${i}, this.value)">
                             <option value="adult" ${pType === 'adult' ? 'selected' : ''}>Adult</option>
                             <option value="child" ${pType === 'child' ? 'selected' : ''}>Child</option>
                             <option value="infant" ${pType === 'infant' ? 'selected' : ''}>Infant</option>
                         </select>
                     </td>
+                    {{-- Point 3: Supplier per passenger --}}
                     <td>
-                        <input type="text" name="flight_persons[${i}][passport]" class="form-control form-control-sm person-flight-passport" value="${personPass}" placeholder="Passport #">
+                        <select name="flight_persons[${i}][flight_supplier_id]" class="form-select form-select-sm person-flight-supplier">
+                            ${supOptionsHtml}
+                        </select>
                     </td>
+                    {{-- Point 4 & 11: Ticket # with Unique check & PNR --}}
                     <td>
-                        <input type="text" name="flight_persons[${i}][ticket]" class="form-control form-control-sm person-flight-ticket" value="${pTicket}" placeholder="Seat / Ticket #">
+                        <div class="mb-1">
+                            <input type="text" name="flight_persons[${i}][ticket]" class="form-control form-control-sm person-flight-ticket" value="${pTicket}" placeholder="Ticket / E-Ticket #" oninput="checkUniqueTicketNumbers()">
+                        </div>
+                        <input type="text" name="flight_persons[${i}][flight_pnr]" class="form-control form-control-sm person-flight-pnr" value="${pPnr}" placeholder="PNR #">
+                    </td>
+                    {{-- Point 11: Separate Flight Date & Time --}}
+                    <td>
+                        <div class="mb-1">
+                            <input type="date" name="flight_persons[${i}][flight_date]" class="form-control form-control-sm person-flight-date" value="${pDate}" title="Flight date for this passenger">
+                        </div>
+                        <input type="text" name="flight_persons[${i}][flight_time]" class="form-control form-control-sm person-flight-time flight-time-picker" value="${pTime}" placeholder="hh:mm">
                     </td>
                     <td>
                         <input type="number" step="0.01" name="flight_persons[${i}][flight_cost]" class="form-control form-control-sm text-end person-flight-cost flight-rate-calc" value="${pCost}" placeholder="0.00">
@@ -1575,8 +2314,8 @@
             list.innerHTML = `
                 <div class="p-2 px-3 mb-2 border rounded bg-light d-flex flex-wrap align-items-center justify-content-between gap-2">
                     <div>
-                        <span class="fw-bold text-dark fs-12"><i class="mdi mdi-account-multiple-check me-1 text-primary"></i> Individual Passenger Air Ticket Rates:</span>
-                        <small class="text-muted d-block" style="font-size:11px;">Enter custom rates for each passenger independently below (e.g. Person 1 and Person 2 can have different rates).</small>
+                        <span class="fw-bold text-dark fs-12"><i class="mdi mdi-airplane me-1 text-primary"></i> Passenger-Wise Flight & Ticket Management:</span>
+                        <small class="text-muted d-block" style="font-size:11px;">Each passenger can have unique tickets, separate suppliers, custom flight details (Date/Time/PNR), and rates.</small>
                     </div>
                     <div class="d-flex flex-wrap align-items-center gap-2">
                         <div class="input-group input-group-sm" style="width: auto;">
@@ -1592,12 +2331,13 @@
                         <thead class="table-light fs-12">
                             <tr>
                                 <th style="width: 30px;" class="text-center">#</th>
-                                <th style="width: 22%;">Passenger Name</th>
-                                <th style="width: 110px;">Category</th>
-                                <th style="width: 15%;">Passport #</th>
-                                <th style="width: 15%;">Ticket / Seat #</th>
-                                <th style="width: 15%;" class="text-danger text-end">Cost (<span class="flight-curr-label">${curr}</span>)</th>
-                                <th style="width: 15%;" class="text-success text-end">Sell (<span class="flight-curr-label">${curr}</span>)</th>
+                                <th style="width: 17%;">Passenger & Passport</th>
+                                <th style="width: 95px;">Category</th>
+                                <th style="width: 16%;">Flight Supplier</th>
+                                <th style="width: 16%;">Ticket # & PNR</th>
+                                <th style="width: 15%;">Flight Date & Time</th>
+                                <th style="width: 11%;" class="text-danger text-end">Cost (<span class="flight-curr-label">${curr}</span>)</th>
+                                <th style="width: 11%;" class="text-success text-end">Sell (<span class="flight-curr-label">${curr}</span>)</th>
                             </tr>
                         </thead>
                         <tbody id="flightPersonsTableBody">
@@ -1605,7 +2345,7 @@
                         </tbody>
                         <tfoot class="table-light fw-bold fs-12 border-top">
                             <tr>
-                                <td colspan="4" class="text-dark">Total Flight Tickets (${pax} Passengers)</td>
+                                <td colspan="5" class="text-dark">Total Flight Tickets (${pax} Passengers)</td>
                                 <td class="text-end text-muted small">Total:</td>
                                 <td class="text-end text-danger">
                                     <span id="tbl_flight_cost_curr_total">0.00 ${curr}</span>
@@ -1622,6 +2362,7 @@
             `;
 
             calculateFlight();
+            checkUniqueTicketNumbers();
         }
 
         function syncVisas() {
@@ -1633,22 +2374,34 @@
             const defaultCostRoe = (flightCurr === 'PKR') ? 1 : (document.getElementById('flight_cost_roe')?.value || 75);
             const defaultSaleRoe = (flightCurr === 'PKR') ? 1 : (document.getElementById('flight_sale_roe')?.value || defaultCostRoe);
 
+            const defVisaCurr = document.getElementById('default_visa_currency')?.value;
+            const defVisaCostRoe = document.getElementById('default_visa_cost_roe')?.value;
+            const defVisaSaleRoe = document.getElementById('default_visa_sale_roe')?.value;
+            const defVisaCostRate = document.getElementById('default_visa_cost_rate')?.value;
+            const defVisaSellRate = document.getElementById('default_visa_sell_rate')?.value;
+            const defVisaSup = document.getElementById('default_visa_supplier_id')?.value;
+
+            const fallbackCurr = defVisaCurr || flightCurr;
+            const isDefPkr = (fallbackCurr === 'PKR');
+            const fallbackCostRoe = isDefPkr ? 1 : (defVisaCostRoe || defaultCostRoe);
+            const fallbackSaleRoe = isDefPkr ? 1 : (defVisaSaleRoe || defaultSaleRoe || fallbackCostRoe);
+
             const currentVisas = [];
             for (let i = 0; i < pax; i++) {
                 currentVisas.push({
                     passport: document.querySelector(`input[name="visas[${i}][passport_number]"]`)?.value || document.getElementById(`person_passport_${i}`)?.value || '',
                     name: document.querySelector(`input[name="visas[${i}][given_name]"]`)?.value || document.getElementById(`person_name_${i}`)?.value || '',
                     dob: document.querySelector(`input[name="visas[${i}][date_of_birth]"]`)?.value || document.getElementById(`person_dob_${i}`)?.value || '',
-                    supplier_id: document.querySelector(`select[name="visas[${i}][supplier_id]"]`)?.value || '',
+                    supplier_id: document.querySelector(`select[name="visas[${i}][supplier_id]"]`)?.value || defVisaSup || '',
                     company: document.querySelector(`input[name="visas[${i}][company]"]`)?.value || '',
                     send_to: document.querySelector(`select[name="visas[${i}][send_to]"]`)?.value || '',
-                    currency: document.querySelector(`select[name="visas[${i}][currency]"]`)?.value || flightCurr,
-                    cost_roe: document.querySelector(`input[name="visas[${i}][cost_roe]"]`)?.value || defaultCostRoe,
-                    sale_roe: document.querySelector(`input[name="visas[${i}][sale_roe]"]`)?.value || defaultSaleRoe,
-                    roe: document.querySelector(`input[name="visas[${i}][cost_roe]"]`)?.value || defaultCostRoe,
-                    cost_rate: document.querySelector(`input[name="visas[${i}][cost_rate]"]`)?.value || '0',
+                    currency: document.querySelector(`select[name="visas[${i}][currency]"]`)?.value || fallbackCurr,
+                    cost_roe: document.querySelector(`input[name="visas[${i}][cost_roe]"]`)?.value || fallbackCostRoe,
+                    sale_roe: document.querySelector(`input[name="visas[${i}][sale_roe]"]`)?.value || fallbackSaleRoe,
+                    roe: document.querySelector(`input[name="visas[${i}][cost_roe]"]`)?.value || fallbackCostRoe,
+                    cost_rate: document.querySelector(`input[name="visas[${i}][cost_rate]"]`)?.value || defVisaCostRate || '0',
                     cost_amount: document.querySelector(`input[name="visas[${i}][cost_amount]"]`)?.value || '0',
-                    selling_rate: document.querySelector(`input[name="visas[${i}][selling_rate]"]`)?.value || '0',
+                    selling_rate: document.querySelector(`input[name="visas[${i}][selling_rate]"]`)?.value || defVisaSellRate || '0',
                     selling_amount: document.querySelector(`input[name="visas[${i}][selling_amount]"]`)?.value || '0',
                     status: document.querySelector(`select[name="visas[${i}][status]"]`)?.value || 'pending',
                     booking_date: document.querySelector(`input[name="visas[${i}][booking_date]"]`)?.value || '{{ date('Y-m-d') }}',
@@ -1678,10 +2431,24 @@
                 let supplierOptionsHtml = `<option value="">-- Select Supplier --</option>` +
                     (typeof suppliersData !== 'undefined' ? suppliersData.map(s => `<option value="${s.id}" ${s.id == supId ? 'selected' : ''}>${s.name}</option>`).join('') : '');
 
+                const vType = document.getElementById(`person_pax_type_${i}`)?.value || 'adult';
+                const vTypeLabel = vType === 'child' ? 'Child' : (vType === 'infant' ? 'Infant' : 'Adult');
+                const vBadgeClass = vType === 'child' ? 'bg-info text-dark' : (vType === 'infant' ? 'bg-warning text-dark' : 'bg-primary');
+
+                const visaVoucherBase = document.getElementById('visa_voucher_no')?.value || '{{ $defaultVouchers["visa"] ?? ("VIS-" . date("Y") . "-00001") }}';
+                const vChildVoucher = visaVoucherBase + '-' + (i + 1);
+
                 list.insertAdjacentHTML('beforeend', `
                 <div class="visa-card border rounded p-3 mb-2 bg-white" id="visa_card_${i}">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <strong class="text-primary" style="font-size:13px;">Passenger ${i + 1}: ${personName || 'Main Passenger'}</strong>
+                        <div class="d-flex align-items-center gap-2">
+                            <strong class="text-primary" style="font-size:13px;">Passenger ${i + 1}: ${personName || 'Main Passenger'}</strong>
+                            <span class="badge ${vBadgeClass} person-visa-type-badge" style="font-size:10px;">${vTypeLabel}</span>
+                            <span class="badge bg-soft-danger text-danger border border-danger fs-11 font-monospace">
+                                <i class="mdi mdi-ticket-confirmation me-1"></i>Voucher #: ${vChildVoucher}
+                            </span>
+                            <input type="hidden" name="visas[${i}][voucher_no]" value="${vChildVoucher}">
+                        </div>
                         <span class="badge bg-warning text-dark">${status.toUpperCase()}</span>
                     </div>
                     <div class="row g-2">
@@ -1746,11 +2513,7 @@
                             <input type="hidden" name="visas[${i}][cost_amount]" class="visa-cost-amount" value="${costAmt}">
                             <input type="hidden" name="visas[${i}][selling_amount]" class="visa-sell-amount" value="${sellAmt}">
                         </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label" style="font-size:12px;"><i class="mdi mdi-calendar me-1 text-primary"></i> Booking Date</label>
-                            <input type="date" name="visas[${i}][booking_date]" class="form-control form-control-sm visa-booking-date" value="${vBookingDate}">
-                        </div>
+                       
                         <div class="col-md-3">
                             <label class="form-label" style="font-size:12px;">Visa Status</label>
                             <select name="visas[${i}][status]" class="form-select form-select-sm">
@@ -1761,10 +2524,6 @@
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label" style="font-size:12px;">Company / Sub-Agent</label>
-                            <input type="text" name="visas[${i}][company]" class="form-control form-control-sm" value="${company}" placeholder="Optional">
-                        </div>
-                        <div class="col-md-3">
                             <label class="form-label" style="font-size:12px;">Send To</label>
                             <select name="visas[${i}][send_to]" class="form-select form-select-sm">
                                 <option value="">-- Select --</option>
@@ -1773,7 +2532,7 @@
                                 <option value="both" ${sendTo === 'both' ? 'selected' : ''}>Both</option>
                             </select>
                         </div>
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <label class="form-label" style="font-size:12px;">Visa Attachment / Document</label>
                             <input type="file" name="visas[${i}][visa_attachment]" class="form-control form-control-sm" accept="image/*,.pdf">
                         </div>
@@ -1956,19 +2715,58 @@
             const defaultCostRoe = (flightCurr === 'PKR') ? 1 : (document.getElementById('flight_cost_roe')?.value || 75);
             const defaultSaleRoe = (flightCurr === 'PKR') ? 1 : (document.getElementById('flight_sale_roe')?.value || defaultCostRoe);
             const isPkr = (flightCurr === 'PKR');
+            const hotelVoucherBase = document.getElementById('hotel_voucher_no')?.value || '{{ $defaultVouchers["hotel"] ?? ("HTL-" . date("Y") . "-00001") }}';
+            const childVoucher = hotelVoucherBase + '-' + (hotelIdx + 1);
+
+            // Filter hotels by location
+            const relevantHotelsOptions = buildHotelsOptions(loc === 'makkah' ? 'makkah' : (loc === 'madinah' ? 'madinah' : null));
 
             const html = `
-            <div class="hotel-block border rounded p-3 mb-3 bg-white shadow-sm" data-hotel-idx="${hotelIdx}">
+            <div class="hotel-block border rounded p-3 mb-3 bg-white shadow-sm" data-hotel-idx="${hotelIdx}" data-location="${locVal}" data-city="${locVal.toUpperCase()}">
                 <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
-                    <h6 class="text-primary mb-0 fw-bold"><i class="mdi mdi-hotel me-1"></i> ${locLabel}</h6>
+                    <div class="d-flex align-items-center gap-2">
+                        <h6 class="text-primary mb-0 fw-bold"><i class="mdi mdi-hotel me-1"></i> ${locLabel}</h6>
+                        <span class="badge bg-soft-success text-success border border-success fs-12 px-2 py-1 font-monospace">
+                            <i class="mdi mdi-ticket-confirmation me-1"></i>Voucher #: ${childVoucher}
+                        </span>
+                        <input type="hidden" name="hotels[${hotelIdx}][voucher_no]" value="${childVoucher}">
+                    </div>
                     <button type="button" class="btn btn-outline-danger btn-sm remove-hotel"><i class="mdi mdi-delete-outline me-1"></i> Remove</button>
                 </div>
                 <input type="hidden" name="hotels[${hotelIdx}][location]" value="${locVal}">
+                
+                {{-- TOP ROW: Booking Information & Single-Line Dates (Point 7) --}}
+                <div class="p-2 mb-3 rounded bg-light border">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-5">
+                            <label class="form-label fw-bold text-dark mb-1"><i class="mdi mdi-calendar-range me-1 text-primary"></i> Stay Period (Check In & Check Out)</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-white text-primary fw-semibold"><i class="mdi mdi-login me-1"></i> Check In</span>
+                                <input type="date" name="hotels[${hotelIdx}][check_in]" class="form-control form-control-sm hotel-checkin" onchange="calculateHotelNights(${hotelIdx})">
+                                <span class="input-group-text bg-white text-danger fw-semibold"><i class="mdi mdi-logout me-1"></i> Check Out</span>
+                                <input type="date" name="hotels[${hotelIdx}][check_out]" class="form-control form-control-sm hotel-checkout" onchange="calculateHotelNights(${hotelIdx})">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label mb-1">Nights</label>
+                            <input type="number" name="hotels[${hotelIdx}][no_of_nights]" class="form-control form-control-sm hotel-nights" value="1" min="1">
+                        </div>
+                        <input type="hidden" name="hotels[${hotelIdx}][booking_date]" class="hotel-booking-date sync-booking-date" value="{{ date('Y-m-d') }}">
+                        <div class="col-md-3">
+                            <label class="form-label text-warning fw-bold mb-1"><i class="mdi mdi-calendar-clock me-1 text-warning"></i> Option Date</label>
+                            <input type="date" name="hotels[${hotelIdx}][option_date]" class="form-control form-control-sm hotel-option-date border-warning">
+                        </div>
+                    </div>
+                </div>
+
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <label class="form-label">Hotel Name</label>
-                        <select name="hotels[${hotelIdx}][hotel_name]" class="form-select hotel-name-select">
-                            ${hotelsOptions}
+                        <label class="form-label d-flex justify-content-between align-items-center mb-1">
+                            <span>Hotel Name</span>
+                            <button type="button" class="btn btn-xs btn-link text-primary p-0 text-decoration-none" onclick="refreshHotelsDropdown(${hotelIdx})" title="Reload Hotels"><i class="mdi mdi-refresh"></i> Refresh</button>
+                        </label>
+                        <select name="hotels[${hotelIdx}][hotel_name]" class="form-select hotel-name-select" onchange="updateHotelStaySummary()">
+                            ${relevantHotelsOptions}
                         </select>
                     </div>
                     <div class="col-md-3">
@@ -2008,7 +2806,7 @@
 
                     <div class="col-md-2">
                         <label class="form-label">Room Type</label>
-                        <select name="hotels[${hotelIdx}][room_type]" class="form-select">
+                        <select name="hotels[${hotelIdx}][room_type]" class="form-select hotel-room-type">
                             <option value="single">Single</option>
                             <option value="double" selected>Double</option>
                             <option value="triple">Triple</option>
@@ -2018,10 +2816,6 @@
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label">Nights</label>
-                        <input type="number" name="hotels[${hotelIdx}][no_of_nights]" class="form-control hotel-nights" value="1" min="1">
-                    </div>
-                    <div class="col-md-2">
                         <label class="form-label">No. of Rooms</label>
                         <input type="number" name="hotels[${hotelIdx}][no_of_rooms]" class="form-control hotel-rooms" value="1" min="1">
                     </div>
@@ -2029,48 +2823,49 @@
                         <label class="form-label">Hotel Room #</label>
                         <input type="text" name="hotels[${hotelIdx}][room_number]" class="form-control hotel-room-number-input" placeholder="e.g. 402 / 505">
                     </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Check In</label>
-                        <input type="date" name="hotels[${hotelIdx}][check_in]" class="form-control hotel-checkin">
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold"><i class="mdi mdi-silverware me-1 text-primary"></i> Meal Plan</label>
+                        <select name="hotels[${hotelIdx}][meal_plan]" class="form-select hotel-meal-plan" onchange="updateHotelStaySummary()">
+                            ${buildMealPlansOptions('BB')}
+                        </select>
                     </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Check Out</label>
-                        <input type="date" name="hotels[${hotelIdx}][check_out]" class="form-control hotel-checkout">
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold"><i class="mdi mdi-eye me-1 text-info"></i> Room View</label>
+                        <select name="hotels[${hotelIdx}][room_view]" class="form-select hotel-room-view">
+                            ${buildRoomViewsOptions('Standard View')}
+                        </select>
                     </div>
-                    <div class="col-md-2">
-                        <label class="form-label text-warning fw-bold"><i class="mdi mdi-calendar-clock me-1 text-warning"></i> Option Date</label>
-                        <input type="date" name="hotels[${hotelIdx}][option_date]" class="form-control hotel-option-date border-warning">
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label"><i class="mdi mdi-calendar me-1 text-primary"></i> Booking Date</label>
-                        <input type="date" name="hotels[${hotelIdx}][booking_date]" class="form-control hotel-booking-date" value="{{ date('Y-m-d') }}">
-                    </div>
-
                     <div class="col-md-3">
                         <label class="form-label text-danger fw-semibold">Cost Rate / Night (<span class="hotel-curr-label">${flightCurr}</span>)</label>
                         <input type="number" step="0.01" name="hotels[${hotelIdx}][cost_per_night]" class="form-control hotel-cost-rate" placeholder="0.00" value="0">
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label text-danger fw-semibold">Total Cost (<span class="hotel-curr-label">${flightCurr}</span> & PKR)</label>
-                        <div class="p-1 px-2 border rounded bg-light">
-                            <div class="d-flex justify-content-between small text-danger"><span class="hotel-curr-name">${flightCurr}:</span><strong class="hotel-cost-sar-disp">0.00 ${flightCurr}</strong></div>
-                            <div class="d-flex justify-content-between small text-danger"><span>PKR:</span><strong class="hotel-cost-pkr-disp">0.00 PKR</strong></div>
-                        </div>
-                        <input type="hidden" name="hotels[${hotelIdx}][cost_amount]" class="hotel-cost-total" value="0">
-                    </div>
-
-                    <div class="col-md-3">
                         <label class="form-label text-success fw-semibold">Sell Rate / Night (<span class="hotel-curr-label">${flightCurr}</span>)</label>
                         <input type="number" step="0.01" name="hotels[${hotelIdx}][selling_per_night]" class="form-control hotel-sell-rate" placeholder="0.00" value="0">
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label text-success fw-semibold">Total Sell (<span class="hotel-curr-label">${flightCurr}</span> & PKR)</label>
-                        <div class="p-1 px-2 border rounded bg-light">
-                            <div class="d-flex justify-content-between small text-success"><span class="hotel-curr-name">${flightCurr}:</span><strong class="hotel-sell-sar-disp">0.00 ${flightCurr}</strong></div>
-                            <div class="d-flex justify-content-between small text-success"><span>PKR:</span><strong class="hotel-sell-pkr-disp">0.00 PKR</strong></div>
+
+                    {{-- Main Cost Division & Additional Rooms Controls (Points 8 & 9) --}}
+                    <div class="col-12">
+                        <div class="d-flex flex-wrap align-items-center justify-content-between p-2 rounded bg-light border gap-2">
+                            <div class="d-flex flex-wrap gap-2">
+                                <button type="button" class="btn btn-xs btn-outline-info" onclick="divideHotelMainCost(${hotelIdx})" title="Divide main cost equally among passengers">
+                                    <i class="mdi mdi-calculator me-1"></i> Divide / Allocate Main Cost
+                                </button>
+                                <button type="button" class="btn btn-xs btn-outline-primary" onclick="addAdditionalRoomToHotel(${hotelIdx})" title="Add another room under this hotel booking">
+                                    <i class="mdi mdi-plus-circle me-1"></i> + Add Additional Room
+                                </button>
+                            </div>
+                            <div class="d-flex gap-3 small">
+                                <span class="text-danger">Total Cost: <strong class="hotel-cost-sar-disp">0.00 ${flightCurr}</strong> (<strong class="hotel-cost-pkr-disp">0.00 PKR</strong>)</span>
+                                <span class="text-success">Total Sell: <strong class="hotel-sell-sar-disp">0.00 ${flightCurr}</strong> (<strong class="hotel-sell-pkr-disp">0.00 PKR</strong>)</span>
+                            </div>
                         </div>
+                        <input type="hidden" name="hotels[${hotelIdx}][cost_amount]" class="hotel-cost-total" value="0">
                         <input type="hidden" name="hotels[${hotelIdx}][selling_amount]" class="hotel-sell-total" value="0">
                     </div>
+
+                    {{-- Additional Rooms List Container (Point 9) --}}
+                    <div class="col-12" id="additional_rooms_list_${hotelIdx}"></div>
 
                     <div class="col-md-12">
                         <label class="form-label">Hotel Voucher / Booking Confirmation</label>
@@ -2132,6 +2927,7 @@
             syncBookingHotelDates();
             if (lastRow) {
                 syncHotelPersons(lastRow);
+                autoDivideHotelRates(lastRow);
                 calculateHotelRow(lastRow);
             }
             calcTotal();
@@ -2254,11 +3050,16 @@
                 const totSellForeign = sellNum * nights;
                 const totSellPkr = totSellForeign * saleRoe;
 
+                const pType = document.getElementById(`person_pax_type_${p}`)?.value || 'adult';
+                const pTypeLabel = pType === 'child' ? 'Child' : (pType === 'infant' ? 'Infant' : 'Adult');
+                const hBadgeClass = pType === 'child' ? 'bg-info text-dark' : (pType === 'infant' ? 'bg-warning text-dark' : 'bg-primary');
+
                 rowsHtml += `
                 <tr class="hotel-person-row" data-person-idx="${p}">
                     <td class="text-center text-muted fw-bold">${p + 1}</td>
                     <td>
                         <strong class="text-primary person-hotel-name-disp">${personName}</strong>
+                        <span class="badge ${hBadgeClass} person-hotel-type-badge ms-1" style="font-size:10px;">${pTypeLabel}</span>
                         <input type="hidden" name="hotels[${hotelIdx}][person_rates][${p}][name]" class="person-hotel-name" value="${personName}">
                     </td>
                     <td class="text-center fw-semibold hotel-person-nights-disp">${nights}</td>
@@ -2292,7 +3093,7 @@
             });
         }
 
-        function calculateHotelRow(row) {
+        function calculateHotelRow(row, source) {
             if (!row) return;
             const nights = parseFloat(row.querySelector('.hotel-nights')?.value) || 0;
             const rooms = parseFloat(row.querySelector('.hotel-rooms')?.value) || 1;
@@ -2359,13 +3160,34 @@
             let sellCurr = 0;
 
             if (hasPersonRates) {
-                costCurr = sumPersonCostForeign;
-                sellCurr = sumPersonSellForeign;
-                if (nights > 0) {
-                    const crInput = row.querySelector('.hotel-cost-rate');
-                    if (crInput) crInput.value = (costCurr / nights).toFixed(2);
-                    const srInput = row.querySelector('.hotel-sell-rate');
-                    if (srInput) srInput.value = (sellCurr / nights).toFixed(2);
+                costCurr = Math.round(sumPersonCostForeign * 100) / 100;
+                sellCurr = Math.round(sumPersonSellForeign * 100) / 100;
+
+                const crInput = row.querySelector('.hotel-cost-rate');
+                const srInput = row.querySelector('.hotel-sell-rate');
+
+                // If user entered a main costRate, snap sum to exact costRate if difference is rounding cent (< 0.05)
+                if (crInput && source === 'costRate') {
+                    const enteredCost = parseFloat(crInput.value) || 0;
+                    if (Math.abs(costCurr - (enteredCost * nights)) < 0.05) {
+                        costCurr = enteredCost * nights;
+                    }
+                } else if (crInput && source !== 'costRate') {
+                    if (nights > 0) {
+                        crInput.value = (Math.round((costCurr / nights) * 100) / 100).toFixed(2);
+                    }
+                }
+
+                // If user entered a main sellRate, snap sum to exact sellRate if difference is rounding cent (< 0.05)
+                if (srInput && source === 'sellRate') {
+                    const enteredSell = parseFloat(srInput.value) || 0;
+                    if (Math.abs(sellCurr - (enteredSell * nights)) < 0.05) {
+                        sellCurr = enteredSell * nights;
+                    }
+                } else if (srInput && source !== 'sellRate') {
+                    if (nights > 0) {
+                        srInput.value = (Math.round((sellCurr / nights) * 100) / 100).toFixed(2);
+                    }
                 }
             } else {
                 const costRate = parseFloat(row.querySelector('.hotel-cost-rate')?.value) || 0;
@@ -2411,6 +3233,239 @@
                 document.getElementById('hotel_charges').value = totalHotelSelling.toFixed(2);
             }
             calcTotal();
+            updateHotelStaySummary();
+        }
+
+        function calculateHotelCost(row) {
+            calculateHotelRow(row);
+        }
+
+        function calculateHotelNights(idx) {
+            const block = document.querySelector(`.hotel-block[data-hotel-idx="${idx}"]`);
+            if (!block) return;
+            const cin = block.querySelector('.hotel-checkin')?.value;
+            const cout = block.querySelector('.hotel-checkout')?.value;
+            if (cin && cout) {
+                const d1 = new Date(cin);
+                const d2 = new Date(cout);
+                const diffDays = Math.max(1, Math.round((d2 - d1) / (1000 * 60 * 60 * 24)));
+                const nightsInput = block.querySelector('.hotel-nights');
+                if (nightsInput) {
+                    nightsInput.value = diffDays;
+                    calculateHotelCost(block);
+                }
+            }
+            updateHotelStaySummary();
+        }
+
+        function updateHotelStaySummary() {
+            let minIn = null;
+            let maxOut = null;
+            let totalNights = 0;
+            let totalRooms = 0;
+            let summaryTableHtml = '';
+
+            const blocks = document.querySelectorAll('.hotel-block');
+            blocks.forEach(b => {
+                const cin = b.querySelector('.hotel-checkin')?.value;
+                const cout = b.querySelector('.hotel-checkout')?.value;
+                const nights = parseInt(b.querySelector('.hotel-nights')?.value) || 0;
+                const rooms = parseInt(b.querySelector('.hotel-rooms')?.value) || 0;
+                totalNights += nights;
+                totalRooms += rooms;
+                if (cin && (!minIn || cin < minIn)) minIn = cin;
+                if (cout && (!maxOut || cout > maxOut)) maxOut = cout;
+
+                // Hotel Name
+                let hName = '—';
+                const nameSelect = b.querySelector('.hotel-name-select');
+                const nameInput = b.querySelector('.hotel-name-input');
+                if (nameSelect && nameSelect.value) {
+                    hName = nameSelect.options[nameSelect.selectedIndex]?.text || nameSelect.value;
+                } else if (nameInput && nameInput.value) {
+                    hName = nameInput.value;
+                }
+
+                // City (from data-location or data-city)
+                const locAttr = b.getAttribute('data-location') || b.getAttribute('data-city') || 'makkah';
+                const city = locAttr.toUpperCase();
+
+                // Room Type, Rooms, Meal Plan
+                const roomType = (b.querySelector('.hotel-room-type')?.value || 'DOUBLE').toUpperCase();
+                const mealPlan = (b.querySelector('.hotel-meal-plan')?.value || 'BB').toUpperCase();
+
+                const costSarText = b.querySelector('.hotel-cost-sar-disp')?.textContent?.trim() || '0.00 SAR';
+                const costPkrText = b.querySelector('.hotel-cost-pkr-disp')?.textContent?.trim() || '0.00 PKR';
+                const sellSarText = b.querySelector('.hotel-sell-sar-disp')?.textContent?.trim() || '0.00 SAR';
+                const sellPkrText = b.querySelector('.hotel-sell-pkr-disp')?.textContent?.trim() || '0.00 PKR';
+
+                summaryTableHtml += `<tr>
+                    <td class="text-start fw-bold text-dark">${hName}</td>
+                    <td class="fw-semibold">${city}</td>
+                    <td>${cin || '—'}</td>
+                    <td>${cout || '—'}</td>
+                    <td class="fw-bold text-dark">${nights}</td>
+                    <td>${roomType}</td>
+                    <td>${rooms || 1}</td>
+                    <td>${mealPlan}</td>
+                    <td class="text-end text-danger fw-semibold">
+                        <span>${costSarText}</span><br>
+                        <small class="text-muted fw-normal">${costPkrText}</small>
+                    </td>
+                    <td class="text-end text-success fw-semibold">
+                        <span>${sellSarText}</span><br>
+                        <small class="text-muted fw-normal">${sellPkrText}</small>
+                    </td>
+                </tr>`;
+            });
+
+            const sumDisp = document.getElementById('hotel_stay_summary_dates');
+            const nightsDisp = document.getElementById('hotel_stay_total_nights');
+            const roomsDisp = document.getElementById('hotel_stay_total_rooms');
+            const summaryTableBody = document.getElementById('hotelAccommodationSummaryRows');
+            const summaryNightsTotal = document.getElementById('hotel_summary_total_nights');
+
+            if (summaryTableBody) {
+                if (blocks.length === 0) {
+                    summaryTableBody.innerHTML = '<tr><td colspan="10" class="text-muted py-2">No hotels added yet.</td></tr>';
+                } else {
+                    summaryTableBody.innerHTML = summaryTableHtml;
+                }
+            }
+
+            const totCostSarText = document.getElementById('hotel_cost_sar_total')?.textContent || '0.00 SAR';
+            const totCostPkrText = document.getElementById('hotel_cost_pkr_total')?.textContent || '0.00 PKR';
+            const totSellSarText = document.getElementById('hotel_sell_sar_total')?.textContent || '0.00 SAR';
+            const totSellPkrText = document.getElementById('hotel_sell_pkr_total')?.textContent || '0.00 PKR';
+
+            const summaryCostTotal = document.getElementById('hotel_summary_total_cost');
+            const summarySellTotal = document.getElementById('hotel_summary_total_sell');
+            if (summaryCostTotal) summaryCostTotal.innerHTML = `<span>${totCostSarText}</span><br><small class="text-muted fw-normal">${totCostPkrText}</small>`;
+            if (summarySellTotal) summarySellTotal.innerHTML = `<span>${totSellSarText}</span><br><small class="text-muted fw-normal">${totSellPkrText}</small>`;
+            if (summaryNightsTotal) {
+                summaryNightsTotal.textContent = totalNights;
+            }
+
+            if (sumDisp) {
+                if (minIn && maxOut) {
+                    sumDisp.textContent = `${minIn} to ${maxOut}`;
+                    sumDisp.className = 'badge bg-success text-white fs-12 ms-1';
+                } else if (minIn) {
+                    sumDisp.textContent = `Check-in: ${minIn}`;
+                    sumDisp.className = 'badge bg-soft-primary text-primary fs-12 ms-1';
+                } else {
+                    sumDisp.textContent = 'No check-in dates set';
+                    sumDisp.className = 'badge bg-light text-muted fs-12 ms-1';
+                }
+            }
+            if (nightsDisp) nightsDisp.textContent = `${totalNights} Total Nights`;
+            if (roomsDisp) roomsDisp.textContent = `${totalRooms} Total Rooms`;
+        }
+
+        // Integer-cent allocation helper so sum ALWAYS matches total exactly (no 99.99 or 200.01)
+        function allocateExactAmount(totalAmount, count) {
+            if (count <= 0) return [];
+            const totalCents = Math.round(totalAmount * 100);
+            const baseCents = Math.floor(totalCents / count);
+            let remainder = totalCents - (baseCents * count);
+
+            const amounts = [];
+            for (let i = 0; i < count; i++) {
+                const paxCents = baseCents + (i < remainder ? 1 : 0);
+                amounts.push((paxCents / 100).toFixed(2));
+            }
+            return amounts;
+        }
+
+        // Point 8: Automatic & Manual Main Cost Division Across Passengers
+        function autoDivideHotelRates(block, whichField) {
+            if (!block) return;
+            const personRows = block.querySelectorAll('.hotel-person-row');
+            const paxCount = personRows.length > 0 ? personRows.length : (parseInt(document.getElementById('no_of_pax')?.value) || 1);
+            if (paxCount <= 0) return;
+
+            if (!whichField || whichField === 'cost') {
+                const costRate = parseFloat(block.querySelector('.hotel-cost-rate')?.value) || 0;
+                if (costRate > 0) {
+                    const costAmounts = allocateExactAmount(costRate, paxCount);
+                    personRows.forEach((el, idx) => {
+                        const cInput = el.querySelector('.hotel-person-cost');
+                        if (cInput) cInput.value = costAmounts[idx] || '0.00';
+                    });
+                } else {
+                    personRows.forEach(el => {
+                        const cInput = el.querySelector('.hotel-person-cost');
+                        if (cInput) cInput.value = '0.00';
+                    });
+                }
+            }
+
+            if (!whichField || whichField === 'sell') {
+                const sellRate = parseFloat(block.querySelector('.hotel-sell-rate')?.value) || 0;
+                if (sellRate > 0) {
+                    const sellAmounts = allocateExactAmount(sellRate, paxCount);
+                    personRows.forEach((el, idx) => {
+                        const sInput = el.querySelector('.hotel-person-sell');
+                        if (sInput) sInput.value = sellAmounts[idx] || '0.00';
+                    });
+                } else {
+                    personRows.forEach(el => {
+                        const sInput = el.querySelector('.hotel-person-sell');
+                        if (sInput) sInput.value = '0.00';
+                    });
+                }
+            }
+        }
+
+        function divideHotelMainCost(idx) {
+            const block = document.querySelector(`.hotel-block[data-hotel-idx="${idx}"]`);
+            if (!block) return;
+            autoDivideHotelRates(block);
+            calculateHotelRow(block);
+        }
+
+        // Point 9: Add Additional Room to existing hotel
+        let addRoomCounter = 1;
+        function addAdditionalRoomToHotel(hotelIdx) {
+            const container = document.getElementById(`additional_rooms_list_${hotelIdx}`);
+            if (!container) return;
+            const curr = document.querySelector(`.hotel-block[data-hotel-idx="${hotelIdx}"] .hotel-currency`)?.value || 'SAR';
+            const rId = addRoomCounter++;
+
+            const html = `
+            <div class="border rounded p-2 mb-2 bg-light additional-room-item" id="add_room_${rId}">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <strong class="text-primary fs-12"><i class="mdi mdi-door"></i> Additional Room</strong>
+                    <button type="button" class="btn btn-xs btn-outline-danger" onclick="document.getElementById('add_room_${rId}').remove(); calculateHotelCost(document.querySelector('.hotel-block[data-hotel-idx=\\'${hotelIdx}\\']')); updateHotelStaySummary();">×</button>
+                </div>
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <label class="form-label fs-11 mb-0">Room Type</label>
+                        <select name="hotels[${hotelIdx}][extra_rooms][${rId}][room_type]" class="form-select form-select-sm">
+                            <option value="single">Single</option>
+                            <option value="double" selected>Double</option>
+                            <option value="triple">Triple</option>
+                            <option value="quad">Quad</option>
+                            <option value="sharing">Sharing</option>
+                            <option value="suite">Suite</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fs-11 mb-0">Room #</label>
+                        <input type="text" name="hotels[${hotelIdx}][extra_rooms][${rId}][room_number]" class="form-control form-control-sm" placeholder="e.g. 502">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fs-11 mb-0">Cost Rate (${curr})</label>
+                        <input type="number" step="0.01" name="hotels[${hotelIdx}][extra_rooms][${rId}][cost_rate]" class="form-control form-control-sm add-room-cost" value="0">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fs-11 mb-0">Sell Rate (${curr})</label>
+                        <input type="number" step="0.01" name="hotels[${hotelIdx}][extra_rooms][${rId}][sell_rate]" class="form-control form-control-sm add-room-sell" value="0">
+                    </div>
+                </div>
+            </div>`;
+            container.insertAdjacentHTML('beforeend', html);
+            updateHotelStaySummary();
         }
 
         // Transports Dynamic Management
@@ -2421,11 +3476,19 @@
             const defaultCostRoe = (flightCurr === 'PKR') ? 1 : (document.getElementById('flight_cost_roe')?.value || 75);
             const defaultSaleRoe = (flightCurr === 'PKR') ? 1 : (document.getElementById('flight_sale_roe')?.value || defaultCostRoe);
             const isPkr = (flightCurr === 'PKR');
+            const trnVoucherBase = document.getElementById('transport_voucher_no')?.value || '{{ $defaultVouchers["transport"] ?? ("TRN-" . date("Y") . "-00001") }}';
+            const childVoucher = trnVoucherBase + '-' + (routeIdx + 1);
 
             document.getElementById('routesList').insertAdjacentHTML('beforeend', `
                 <div class="route-block border rounded p-3 mb-2 bg-white shadow-sm">
-                    <div class="d-flex justify-content-between mb-1">
-                        <span class="text-muted small fw-bold">Route #${routeIdx + 1}</span>
+                    <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+                        <div class="d-flex align-items-center gap-2">
+                            <h6 class="text-dark mb-0 fw-bold"><i class="mdi mdi-bus me-1 text-warning"></i> Route #${routeIdx + 1}</h6>
+                            <span class="badge bg-soft-warning text-dark border border-warning fs-12 px-2 py-1 font-monospace">
+                                <i class="mdi mdi-ticket-confirmation me-1"></i>Voucher #: ${childVoucher}
+                            </span>
+                            <input type="hidden" name="transports[${routeIdx}][voucher_no]" value="${childVoucher}">
+                        </div>
                         <button type="button" class="btn btn-outline-danger btn-sm remove-route">×</button>
                     </div>
                     <div class="row g-3">
@@ -2468,7 +3531,7 @@
                             <input type="text" name="transports[${routeIdx}][pickup_from]" class="form-control transport-pickup-from" placeholder="e.g. JED APT">
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label"><i class="mdi mdi-map-marker-check me-1 text-danger"></i> Destination</label>
+                            <label class="form-label"><i class="mdi mdi-map-marker-check me-1 text-danger"></i> Destin</label>
                             <input type="text" name="transports[${routeIdx}][destination]" class="form-control transport-destination" placeholder="e.g. MAK HTL">
                         </div>
                         <div class="col-md-2">
@@ -3080,9 +4143,23 @@
 
         // Global Event Delegation for live calculations
         document.addEventListener('input', function(e) {
-            if (e.target.matches('.hotel-nights, .hotel-rooms, .hotel-roe, .hotel-cost-roe, .hotel-sale-roe, .hotel-cost-rate, .hotel-sell-rate, .hotel-person-cost, .hotel-person-sell')) {
+            if (e.target.matches('.hotel-cost-rate')) {
+                const row = e.target.closest('.hotel-block');
+                autoDivideHotelRates(row, 'cost');
+                calculateHotelRow(row, 'costRate');
+            } else if (e.target.matches('.hotel-sell-rate')) {
+                const row = e.target.closest('.hotel-block');
+                autoDivideHotelRates(row, 'sell');
+                calculateHotelRow(row, 'sellRate');
+            } else if (e.target.matches('.hotel-rooms')) {
                 const row = e.target.closest('.hotel-block');
                 calculateHotelRow(row);
+            } else if (e.target.matches('.hotel-nights, .hotel-roe, .hotel-cost-roe, .hotel-sale-roe')) {
+                const row = e.target.closest('.hotel-block');
+                calculateHotelRow(row);
+            } else if (e.target.matches('.hotel-person-cost, .hotel-person-sell')) {
+                const row = e.target.closest('.hotel-block');
+                calculateHotelRow(row, 'personRate');
             }
             if (e.target.matches('.visa-roe, .visa-cost-roe, .visa-sale-roe, .visa-cost-rate, .visa-sell-rate')) {
                 const row = e.target.closest('.visa-card');
@@ -3104,9 +4181,23 @@
         });
 
         document.addEventListener('change', function(e) {
-            if (e.target.matches('.hotel-nights, .hotel-rooms, .hotel-roe, .hotel-cost-roe, .hotel-sale-roe, .hotel-cost-rate, .hotel-sell-rate, .hotel-person-cost, .hotel-person-sell')) {
+            if (e.target.matches('.hotel-cost-rate')) {
+                const row = e.target.closest('.hotel-block');
+                autoDivideHotelRates(row, 'cost');
+                calculateHotelRow(row, 'costRate');
+            } else if (e.target.matches('.hotel-sell-rate')) {
+                const row = e.target.closest('.hotel-block');
+                autoDivideHotelRates(row, 'sell');
+                calculateHotelRow(row, 'sellRate');
+            } else if (e.target.matches('.hotel-rooms')) {
                 const row = e.target.closest('.hotel-block');
                 calculateHotelRow(row);
+            } else if (e.target.matches('.hotel-nights, .hotel-roe, .hotel-cost-roe, .hotel-sale-roe')) {
+                const row = e.target.closest('.hotel-block');
+                calculateHotelRow(row);
+            } else if (e.target.matches('.hotel-person-cost, .hotel-person-sell')) {
+                const row = e.target.closest('.hotel-block');
+                calculateHotelRow(row, 'personRate');
             }
             if (e.target.matches('.visa-roe, .visa-cost-roe, .visa-sale-roe, .visa-cost-rate, .visa-sell-rate')) {
                 const row = e.target.closest('.visa-card');
@@ -3251,6 +4342,43 @@
             // Initialize Draft Auto-saver & Restorer
             if (typeof BookingDraftManager !== 'undefined' && BookingDraftManager.init) {
                 BookingDraftManager.init();
+            }
+
+            // Point 1 & Point 3: Global Booking Date Synchronization Across All Tabs & Auto-Fill Flight Date
+            function syncGlobalBookingDate(val) {
+                if (!val) return;
+                const mainDate = document.getElementById('booking_date');
+                const hotelDate = document.getElementById('booking_date_hotel_tab');
+                const flightDate = document.getElementById('booking_date_flight_tab');
+                const depDate = document.querySelector('input[name="departure_date"]');
+
+                if (mainDate && mainDate.value !== val) mainDate.value = val;
+                if (hotelDate && hotelDate.value !== val) hotelDate.value = val;
+                if (flightDate && flightDate.value !== val) flightDate.value = val;
+
+                // Point 3: Flight departure date auto-selects if empty or synced
+                if (depDate && (!depDate.value || depDate.getAttribute('data-synced') === 'true')) {
+                    depDate.value = val;
+                    depDate.setAttribute('data-synced', 'true');
+                }
+            }
+
+            document.querySelectorAll('.sync-booking-date, #booking_date').forEach(el => {
+                el.addEventListener('change', function() { syncGlobalBookingDate(this.value); });
+                el.addEventListener('input', function() { syncGlobalBookingDate(this.value); });
+            });
+
+            const depDateInput = document.querySelector('input[name="departure_date"]');
+            if (depDateInput) {
+                depDateInput.addEventListener('change', function() {
+                    this.removeAttribute('data-synced'); // user manually changed it
+                });
+            }
+
+            // Initial sync on load
+            const currentBkDate = document.getElementById('booking_date')?.value || document.getElementById('booking_date_hotel_tab')?.value;
+            if (currentBkDate) {
+                syncGlobalBookingDate(currentBkDate);
             }
         });
 
@@ -3529,6 +4657,82 @@
         document.addEventListener('change', function(e) {
             if (e.target && e.target.classList.contains('hotel-room-number-input')) {
                 checkHotelRoomCapacity(e.target);
+            }
+        });
+        // --- TIME FORMAT & FLATPICKR HANDLING ---
+        function initFlightTimePickers(format = '12') {
+            const is24 = (format === '24');
+            document.querySelectorAll('.flight-time-picker').forEach(el => {
+                if (el._flatpickr) {
+                    el._flatpickr.destroy();
+                }
+                flatpickr(el, {
+                    enableTime: true,
+                    noCalendar: true,
+                    dateFormat: is24 ? "H:i" : "h:i K",
+                    time_24hr: is24,
+                    allowInput: true
+                });
+            });
+        }
+
+        const initialTimeFmt = document.querySelector('input[name="flight_time_format"]:checked')?.value || '12';
+        initFlightTimePickers(initialTimeFmt);
+
+        document.querySelectorAll('.flight-time-format-radio').forEach(r => {
+            r.addEventListener('change', function() {
+                initFlightTimePickers(this.value);
+            });
+        });
+
+        // --- CASCADE MAIN FLIGHT DETAILS TO PASSENGERS ---
+        function syncMainFlightDetailsToPassengers() {
+            const mainDate = document.getElementById('flight_booking_date')?.value || document.querySelector('input[name="departure_date"]')?.value || '';
+            const mainSup  = document.querySelector('select[name="flight_supplier_id"]')?.value || '';
+            const mainPnr  = document.querySelector('input[name="departure_pnr"]')?.value || '';
+            const mainTime = document.querySelector('input[name="departure_time"]')?.value || '';
+
+            document.querySelectorAll('.flight-person-row').forEach(row => {
+                const dInput = row.querySelector('.person-flight-date');
+                const sSelect = row.querySelector('.person-flight-supplier');
+                const pInput = row.querySelector('.person-flight-pnr');
+                const tInput = row.querySelector('.person-flight-time');
+
+                if (dInput && !dInput.getAttribute('data-customized')) dInput.value = mainDate;
+                if (sSelect && !sSelect.getAttribute('data-customized') && mainSup) $(sSelect).val(mainSup).trigger('change');
+                if (pInput && !pInput.getAttribute('data-customized')) pInput.value = mainPnr;
+                if (tInput && !tInput.getAttribute('data-customized')) tInput.value = mainTime;
+            });
+        }
+
+        $('#flight_booking_date, input[name="departure_date"], select[name="flight_supplier_id"], input[name="departure_pnr"], input[name="departure_time"]').on('change input', syncMainFlightDetailsToPassengers);
+
+        $(document).on('change input', '.person-flight-date, .person-flight-supplier, .person-flight-pnr, .person-flight-time', function() {
+            this.setAttribute('data-customized', 'true');
+        });
+
+        // --- BOOKING CATEGORY SYNC ---
+        $(document).on('change', '.booking-category-radio', function() {
+            const cat = this.value;
+            const currSelect = document.getElementById('flight_currency');
+            const costRoe = document.getElementById('flight_cost_roe');
+            const saleRoe = document.getElementById('flight_sale_roe');
+            const vInput = document.getElementById('booking_voucher_input');
+            const vDisp = document.getElementById('booking_voucher_disp');
+            const fltVoucher = document.getElementById('flight_voucher_no')?.value;
+
+            if (cat === 'domestic') {
+                if (currSelect) $(currSelect).val('PKR').trigger('change');
+                if (costRoe) costRoe.value = '1';
+                if (saleRoe) saleRoe.value = '1';
+                if (fltVoucher && vInput) {
+                    vInput.value = fltVoucher;
+                    if (vDisp) vDisp.textContent = fltVoucher;
+                }
+            } else {
+                if (currSelect && currSelect.value === 'PKR') $(currSelect).val('SAR').trigger('change');
+                if (costRoe && costRoe.value === '1') costRoe.value = '75';
+                if (saleRoe && saleRoe.value === '1') saleRoe.value = '75';
             }
         });
     </script>

@@ -775,6 +775,293 @@
 
             </div>{{-- End Row 3 --}}
 
+            {{-- ════ OPERATIONAL REMINDERS & ALERTS (Check-in, Option Date, Flight Departure & Arrival) ════ --}}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-2 border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div>
+                        <h5 class="fs-14 fw-bold mb-0 text-dark">
+                            <i class="mdi mdi-bell-ring text-warning me-1"></i> Operational Reminders & Alerts
+                        </h5>
+                        <small class="text-muted">Live tracking for upcoming hotel check-ins, expiring option dates, and flight schedules.</small>
+                    </div>
+                    <ul class="nav nav-pills card-header-pills fs-12 fw-semibold" id="reminderTabs" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link active py-1 px-3" data-bs-toggle="pill" data-bs-target="#tab-hotel-checkins" type="button">
+                                🏨 Check-ins <span class="badge bg-primary ms-1">{{ $hotelCheckinReminders->count() }}</span>
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link py-1 px-3" data-bs-toggle="pill" data-bs-target="#tab-option-dates" type="button">
+                                ⏳ Option Dates <span class="badge bg-warning text-dark ms-1">{{ $hotelOptionDateReminders->count() }}</span>
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link py-1 px-3" data-bs-toggle="pill" data-bs-target="#tab-flight-departures" type="button">
+                                🛫 Departures <span class="badge bg-info ms-1">{{ $flightDepartureReminders->count() }}</span>
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link py-1 px-3" data-bs-toggle="pill" data-bs-target="#tab-flight-arrivals" type="button">
+                                🛬 Arrivals <span class="badge bg-success ms-1">{{ $flightArrivalReminders->count() }}</span>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body p-0">
+                    <div class="tab-content" id="reminderTabContent">
+
+                        {{-- TAB 1: Hotel Check-ins --}}
+                        <div class="tab-pane fade show active" id="tab-hotel-checkins">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0 fs-13">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Hotel & City</th>
+                                            <th>Client / Guest</th>
+                                            <th>Check-In Date</th>
+                                            <th>Check-Out Date</th>
+                                            <th>Nights & Rooms</th>
+                                            <th>Voucher</th>
+                                            <th class="text-center">Status Alert</th>
+                                            <th class="text-center">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($hotelCheckinReminders as $hcr)
+                                            @php
+                                                $ci = \Carbon\Carbon::parse($hcr->check_in);
+                                                $daysDiff = \Carbon\Carbon::today()->diffInDays($ci, false);
+                                                $alertBadge = match(true) {
+                                                    $daysDiff < 0 => '<span class="badge bg-danger">Overdue Check-in</span>',
+                                                    $daysDiff == 0 => '<span class="badge bg-success"><i class="mdi mdi-bell-ring"></i> Today</span>',
+                                                    $daysDiff == 1 => '<span class="badge bg-warning text-dark">Tomorrow</span>',
+                                                    default => '<span class="badge bg-soft-primary text-primary">In ' . $daysDiff . ' Days</span>'
+                                                };
+                                            @endphp
+                                            <tr>
+                                                <td>
+                                                    <strong class="text-dark">{{ $hcr->hotel_name }}</strong>
+                                                    <span class="badge bg-light text-muted border ms-1">{{ strtoupper($hcr->location ?? 'Hotel') }}</span>
+                                                </td>
+                                                <td>
+                                                    <strong>{{ $hcr->booking->client->name ?? ($hcr->booking->given_name ?? '—') }}</strong>
+                                                    @if($hcr->booking && $hcr->booking->client && $hcr->booking->client->phone)
+                                                        <small class="text-muted d-block">{{ $hcr->booking->client->phone }}</small>
+                                                    @endif
+                                                </td>
+                                                <td><span class="fw-bold text-primary">{{ $ci->format('d M, Y') }}</span></td>
+                                                <td>{{ $hcr->check_out ? \Carbon\Carbon::parse($hcr->check_out)->format('d M, Y') : '—' }}</td>
+                                                <td>{{ $hcr->no_of_nights ?: 1 }} Nights &bull; {{ $hcr->no_of_rooms ?: 1 }} Room(s)</td>
+                                                <td><span class="font-monospace text-muted">{{ $hcr->voucher_no ?: ('BK-' . $hcr->booking_id) }}</span></td>
+                                                <td class="text-center">{!! $alertBadge !!}</td>
+                                                <td class="text-center">
+                                                    @if($hcr->booking_id)
+                                                        <a href="{{ route('booking.edit', $hcr->booking_id) }}" class="btn btn-xs btn-outline-primary py-0 px-2" title="View Booking">
+                                                            <i class="mdi mdi-eye"></i>
+                                                        </a>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="8" class="text-center py-3 text-muted">
+                                                    No hotel check-ins scheduled for the next 7 days.
+                                                </td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {{-- TAB 2: Hotel Option Dates --}}
+                        <div class="tab-pane fade" id="tab-option-dates">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0 fs-13">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Hotel & City</th>
+                                            <th>Supplier / Vendor</th>
+                                            <th>Client / Booking</th>
+                                            <th>Option Cut-Off Date</th>
+                                            <th>Check-In</th>
+                                            <th class="text-center">Expiry Alert</th>
+                                            <th class="text-center">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($hotelOptionDateReminders as $odr)
+                                            @php
+                                                $od = \Carbon\Carbon::parse($odr->option_date);
+                                                $daysDiff = \Carbon\Carbon::today()->diffInDays($od, false);
+                                                $optBadge = match(true) {
+                                                    $daysDiff < 0 => '<span class="badge bg-danger"><i class="mdi mdi-alert-circle"></i> Expired / Overdue</span>',
+                                                    $daysDiff == 0 => '<span class="badge bg-warning text-dark"><i class="mdi mdi-alert"></i> Expires Today!</span>',
+                                                    $daysDiff == 1 => '<span class="badge bg-info text-white">Expires Tomorrow</span>',
+                                                    default => '<span class="badge bg-soft-warning text-dark">Expires in ' . $daysDiff . ' Days</span>'
+                                                };
+                                            @endphp
+                                            <tr>
+                                                <td>
+                                                    <strong class="text-dark">{{ $odr->hotel_name }}</strong>
+                                                    <span class="badge bg-light text-muted border ms-1">{{ strtoupper($odr->location ?? 'Hotel') }}</span>
+                                                </td>
+                                                <td>{{ $odr->supplier->name ?? '—' }}</td>
+                                                <td>
+                                                    <strong>{{ $odr->booking->client->name ?? '—' }}</strong>
+                                                    <small class="text-muted d-block">Booking #{{ $odr->booking_id }}</small>
+                                                </td>
+                                                <td><span class="fw-bold text-danger">{{ $od->format('d M, Y') }}</span></td>
+                                                <td>{{ $odr->check_in ? \Carbon\Carbon::parse($odr->check_in)->format('d M, Y') : '—' }}</td>
+                                                <td class="text-center">{!! $optBadge !!}</td>
+                                                <td class="text-center">
+                                                    @if($odr->booking_id)
+                                                        <a href="{{ route('booking.edit', $odr->booking_id) }}" class="btn btn-xs btn-outline-warning py-0 px-2" title="Manage Booking">
+                                                            <i class="mdi mdi-pencil"></i>
+                                                        </a>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="7" class="text-center py-3 text-muted">
+                                                    No hotel option date cut-offs pending.
+                                                </td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {{-- TAB 3: Flight Departures --}}
+                        <div class="tab-pane fade" id="tab-flight-departures">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0 fs-13">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Flight # & Airline</th>
+                                            <th>Client / Passengers</th>
+                                            <th>Departure Date</th>
+                                            <th>Departure Time</th>
+                                            <th>PNR / Ticket</th>
+                                            <th class="text-center">Status</th>
+                                            <th class="text-center">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($flightDepartureReminders as $fdr)
+                                            @php
+                                                $depD = \Carbon\Carbon::parse($fdr->departure_date);
+                                                $daysDiff = \Carbon\Carbon::today()->diffInDays($depD, false);
+                                                $depBadge = match(true) {
+                                                    $daysDiff < 0 => '<span class="badge bg-secondary">Departed</span>',
+                                                    $daysDiff == 0 => '<span class="badge bg-success"><i class="mdi mdi-airplane-takeoff"></i> Departing Today</span>',
+                                                    $daysDiff == 1 => '<span class="badge bg-info">Departing Tomorrow</span>',
+                                                    default => '<span class="badge bg-soft-primary text-primary">In ' . $daysDiff . ' Days</span>'
+                                                };
+                                            @endphp
+                                            <tr>
+                                                <td>
+                                                    <strong class="text-dark">{{ $fdr->departure_flight ?: 'Flight' }}</strong>
+                                                    <span class="text-muted d-block small">{{ $fdr->departure_airline ?? '—' }}</span>
+                                                </td>
+                                                <td>
+                                                    <strong>{{ $fdr->client->name ?? '—' }}</strong>
+                                                    <span class="badge bg-light text-dark border ms-1">{{ $fdr->no_of_pax ?: 1 }} Pax</span>
+                                                </td>
+                                                <td><span class="fw-bold text-primary">{{ $depD->format('d M, Y') }}</span></td>
+                                                <td>
+                                                    <span class="badge bg-light text-dark border font-monospace">
+                                                        <i class="mdi mdi-clock-outline me-1"></i> {{ $fdr->departure_time ?: '—' }}
+                                                    </span>
+                                                </td>
+                                                <td><span class="font-monospace text-primary fw-bold">{{ $fdr->departure_pnr ?: '—' }}</span></td>
+                                                <td class="text-center">{!! $depBadge !!}</td>
+                                                <td class="text-center">
+                                                    <a href="{{ route('booking.edit', $fdr->id) }}" class="btn btn-xs btn-outline-primary py-0 px-2" title="View Booking">
+                                                        <i class="mdi mdi-eye"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="7" class="text-center py-3 text-muted">
+                                                    No flight departures scheduled for the next 3 days.
+                                                </td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {{-- TAB 4: Flight Arrivals --}}
+                        <div class="tab-pane fade" id="tab-flight-arrivals">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0 fs-13">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Flight # & Airline</th>
+                                            <th>Client / Passengers</th>
+                                            <th>Arrival Date</th>
+                                            <th>Arrival Time</th>
+                                            <th>PNR</th>
+                                            <th class="text-center">Status</th>
+                                            <th class="text-center">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($flightArrivalReminders as $far)
+                                            @php
+                                                $arrD = \Carbon\Carbon::parse($far->arrival_date);
+                                                $daysDiff = \Carbon\Carbon::today()->diffInDays($arrD, false);
+                                                $arrBadge = match(true) {
+                                                    $daysDiff < 0 => '<span class="badge bg-secondary">Arrived</span>',
+                                                    $daysDiff == 0 => '<span class="badge bg-success"><i class="mdi mdi-airplane-landing"></i> Arriving Today</span>',
+                                                    $daysDiff == 1 => '<span class="badge bg-info">Arriving Tomorrow</span>',
+                                                    default => '<span class="badge bg-soft-primary text-primary">In ' . $daysDiff . ' Days</span>'
+                                                };
+                                            @endphp
+                                            <tr>
+                                                <td>
+                                                    <strong class="text-dark">{{ $far->arrival_flight ?: ($far->departure_flight ?: 'Flight') }}</strong>
+                                                    <span class="text-muted d-block small">{{ $far->arrival_airline ?: ($far->departure_airline ?? '—') }}</span>
+                                                </td>
+                                                <td>
+                                                    <strong>{{ $far->client->name ?? '—' }}</strong>
+                                                    <span class="badge bg-light text-dark border ms-1">{{ $far->no_of_pax ?: 1 }} Pax</span>
+                                                </td>
+                                                <td><span class="fw-bold text-success">{{ $arrD->format('d M, Y') }}</span></td>
+                                                <td>
+                                                    <span class="badge bg-light text-dark border font-monospace">
+                                                        <i class="mdi mdi-clock-outline me-1"></i> {{ $far->arrival_time ?: '—' }}
+                                                    </span>
+                                                </td>
+                                                <td><span class="font-monospace text-primary fw-bold">{{ $far->arrival_pnr ?: ($far->departure_pnr ?: '—') }}</span></td>
+                                                <td class="text-center">{!! $arrBadge !!}</td>
+                                                <td class="text-center">
+                                                    <a href="{{ route('booking.edit', $far->id) }}" class="btn btn-xs btn-outline-success py-0 px-2" title="View Booking">
+                                                        <i class="mdi mdi-eye"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="7" class="text-center py-3 text-muted">
+                                                    No flight arrivals scheduled for the next 3 days.
+                                                </td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
             {{-- ════ ROW 4 — TABLE + SIDE PANELS ════ --}}
             <div class="row g-3 mb-4">
 

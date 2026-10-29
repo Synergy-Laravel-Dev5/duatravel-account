@@ -377,6 +377,12 @@
                                 </a>
                             </li>
                             <li>
+                                <a class="tp-link" href="{{ route('meal-plans.index') }}">
+                                    <i data-feather="coffee"></i>
+                                    <span>Meal Plans</span>
+                                </a>
+                            </li>
+                            <li>
                                 <a class="tp-link" href="{{ route('quotation.index') }}">
                                     <i data-feather="file-text"></i>
                                     <span>Quotations</span>
@@ -477,12 +483,12 @@
                                 </a>
                             </li>
 
-                            {{-- <li>
+                            <li>
                                 <a class="tp-link" href="{{ route('account.index') }}">
-                                    <i data-feather="credit-card"></i>
-                                    <span>Accounts</span>
+                                    <i data-feather="dollar-sign"></i>
+                                    <span>Cash Accounts</span>
                                 </a>
-                            </li> --}}
+                            </li>
 
                             <li>
                                 <a class="tp-link" href="{{ route('report.profit-loss', ['package_type' => $isHajjPackage ? 'hajj' : 'umrah']) }}">
@@ -523,6 +529,12 @@
                             </li>
                             @endif
                             <li>
+                                <a class="tp-link" href="{{ route('reports.daily') }}">
+                                    <i data-feather="clock"></i>
+                                    <span>Daily Sales & Transactions</span>
+                                </a>
+                            </li>
+                            <li>
                                 <a class="tp-link" href="{{ route('reports.transactions') }}">
                                     <i data-feather="file-text"></i>
                                     <span>All Transactions Report</span>
@@ -537,7 +549,14 @@
                             <li>
                                 <a class="tp-link" href="{{ route('expense.transaction.report.filter') }}">
                                     <i data-feather="pie-chart"></i>
-                                    <span>Expense Category Reports</span>
+                                    <span>All Reports</span>
+                                </a>
+                            </li>
+
+                             <li>
+                                <a class="tp-link" href="{{ route('supplier.ledger.filter') }}">
+                                    <i data-feather="book-open"></i>
+                                    <span>Supplier Ledger</span>
                                 </a>
                             </li>
                             <li>
@@ -575,6 +594,12 @@
                                 <a class="tp-link" href="{{ route('staff.index') }}">
                                     <i data-feather="user"></i>
                                     <span>Staff</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="tp-link" href="{{ route('payroll.index') }}">
+                                    <i data-feather="dollar-sign"></i>
+                                    <span>Payroll / Salary</span>
                                 </a>
                             </li>
                         </ul>

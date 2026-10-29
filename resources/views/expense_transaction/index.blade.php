@@ -109,10 +109,42 @@
                                                         <span class="badge" style="background-color: #ede9fe; color: #6d28d9; border: 1px solid #ddd6fe;">
                                                             <i class="mdi mdi-book-open-page-variant me-1"></i> JV Voucher
                                                         </span>
-                                                        @if($t->client)
-                                                            <small class="text-muted d-block fs-11">Party: {{ $t->client->name }} (Client)</small>
+                                                        @php
+                                                            $contraParty = null;
+                                                            if (!empty($t->reference_no)) {
+                                                                if ($t->client_id && !$t->supplier_id) {
+                                                                    $sib = \App\Models\ExpenseTransaction::where('payee_type', 'jv')
+                                                                        ->where('reference_no', $t->reference_no)
+                                                                        ->whereNotNull('supplier_id')
+                                                                        ->with('supplier')
+                                                                        ->first();
+                                                                    if ($sib && $sib->supplier) {
+                                                                        $contraParty = '⇄ ' . $sib->supplier->name . ' (Supplier)';
+                                                                    }
+                                                                } elseif ($t->supplier_id && !$t->client_id) {
+                                                                    $sib = \App\Models\ExpenseTransaction::where('payee_type', 'jv')
+                                                                        ->where('reference_no', $t->reference_no)
+                                                                        ->whereNotNull('client_id')
+                                                                        ->with('client')
+                                                                        ->first();
+                                                                    if ($sib && $sib->client) {
+                                                                        $contraParty = '⇄ ' . $sib->client->name . ' (Client)';
+                                                                    }
+                                                                }
+                                                            }
+                                                        @endphp
+                                                        @if($t->client && $t->supplier)
+                                                            <small class="text-muted d-block fs-11">
+                                                                <strong>Client:</strong> {{ $t->client->name }} ⇄ <strong>Supplier:</strong> {{ $t->supplier->name }}
+                                                            </small>
+                                                        @elseif($t->client)
+                                                            <small class="text-muted d-block fs-11">
+                                                                Party: {{ $t->client->name }} (Client) {{ $contraParty ? ' ' . $contraParty : '' }}
+                                                            </small>
                                                         @elseif($t->supplier)
-                                                            <small class="text-muted d-block fs-11">Party: {{ $t->supplier->name }} (Supplier)</small>
+                                                            <small class="text-muted d-block fs-11">
+                                                                Party: {{ $t->supplier->name }} (Supplier) {{ $contraParty ? ' ' . $contraParty : '' }}
+                                                            </small>
                                                         @else
                                                             <small class="text-muted d-block fs-11">Journal Adjustment</small>
                                                         @endif

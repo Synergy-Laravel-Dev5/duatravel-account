@@ -33,7 +33,8 @@ class BookingTransport extends Model
         'selling_rate',
         'selling_amount',
         'notes',
-        'transport_ticket'
+        'transport_ticket',
+        'voucher_no'
     ];
 
     protected $casts = [

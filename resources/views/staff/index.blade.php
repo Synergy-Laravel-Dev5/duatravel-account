@@ -7,6 +7,9 @@
                 <div class="py-3 d-flex align-items-center justify-content-between">
                     <h4 class="fs-18 fw-semibold m-0">Staff Members</h4>
                     <div class="d-flex gap-2">
+                        <a href="{{ route('payroll.create') }}" class="btn btn-outline-success btn-sm">
+                            <i class="mdi mdi-cash-multiple me-1"></i> + Generate Payroll
+                        </a>
                         <a href="{{ route('staff.create') }}" class="btn btn-primary btn-sm">
                             + Add Staff
                         </a>
@@ -51,13 +54,16 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                <a href="{{ route('staff.edit', $emp->id) }}" class="btn btn-sm btn-info">
+                                                <a href="{{ route('payroll.create', ['staff_id' => $emp->id]) }}" class="btn btn-sm btn-soft-success" title="Generate Monthly Payroll">
+                                                    <i class="mdi mdi-cash-check me-1"></i> Pay
+                                                </a>
+                                                <a href="{{ route('staff.edit', $emp->id) }}" class="btn btn-sm btn-info" title="Edit Staff">
                                                     <i class="mdi mdi-pencil"></i>
                                                 </a>
                                                 <form action="{{ route('staff.destroy', $emp->id) }}" method="POST" class="d-inline">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
+                                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this staff member?')" title="Delete Staff">
                                                         <i class="mdi mdi-delete"></i>
                                                     </button>
                                                 </form>

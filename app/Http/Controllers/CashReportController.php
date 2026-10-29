@@ -8,6 +8,7 @@ use App\Models\Expense;
 use App\Models\ExpenseTransaction;
 use App\Models\Supplier;
 use App\Models\Transaction;
+use App\Models\Account;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -176,6 +177,59 @@ class CashReportController extends Controller
 
         $allRecords = [];
 
+        // 0. Gather Cash Account Opening Balances (INFLOWS - PKR & SAR)
+        if ($flow === 'all' || $flow === 'inflow') {
+            if ($category === 'all' || $category === 'opening_balance') {
+                $cashAccounts = Account::where('status', 'active')
+                    ->where('account_type', 'cash')
+                    ->get();
+
+                foreach ($cashAccounts as $acc) {
+                    $obPkr = (float) $acc->opening_balance_pkr;
+                    $obSar = (float) $acc->opening_balance_sar;
+                    if ($obPkr <= 0 && $obSar <= 0) continue;
+
+                    $effectiveDate = $acc->created_at ? $acc->created_at->format('Y-m-d') : '2026-01-01';
+                    $ts = $acc->created_at ? $acc->created_at->startOfDay()->timestamp : 0;
+
+                    if (!empty($dateFrom) && $effectiveDate < $dateFrom) {
+                        $effectiveDate = $dateFrom;
+                        $ts = Carbon::parse($dateFrom)->startOfDay()->timestamp - 10;
+                    }
+
+                    if (!empty($dateTo) && $effectiveDate > $dateTo) {
+                        continue;
+                    }
+
+                    $allRecords[] = [
+                        'source'         => 'account_opening_balance',
+                        'id'             => $acc->id,
+                        'date'           => $effectiveDate,
+                        'timestamp'      => $ts,
+                        'flow'           => 'inflow',
+                        'flow_badge'     => 'bg-soft-primary text-primary border border-primary border-opacity-25',
+                        'category'       => 'opening_balance',
+                        'category_label' => 'Cash Account Opening Balance',
+                        'voucher_no'     => 'OB-CASH-' . str_pad($acc->id, 3, '0', STR_PAD_LEFT),
+                        'party_name'     => $acc->account_name . ' (Opening Balance)',
+                        'party_type'     => 'Cash Account',
+                        'party_link'     => route('account.edit', $acc->id),
+                        'cash_in_pkr'    => $obPkr,
+                        'cash_out_pkr'   => 0.00,
+                        'cash_in_sar'    => $obSar,
+                        'cash_out_sar'   => 0.00,
+                        'cash_in'        => $obPkr,
+                        'cash_out'       => 0.00,
+                        'currency'       => 'PKR',
+                        'raw_amount'     => $obPkr,
+                        'exchange_rate'  => (float) ($acc->opening_balance_roe ?: 1),
+                        'description'    => 'Opening Balance of Cash Account "' . $acc->account_name . '" (PKR ' . number_format($obPkr, 2) . ' / SAR ' . number_format($obSar, 2) . ' @ ROE ' . number_format($acc->opening_balance_roe ?: 75, 2) . ')',
+                        'proof'          => null,
+                    ];
+                }
+            }
+        }
+
         // 1. Gather Cash Payments from `transactions` table (INFLOWS - PKR)
         if ($flow === 'all' || $flow === 'inflow') {
             if ($category === 'all' || $category === 'booking_payment') {
@@ -306,6 +360,9 @@ class CashReportController extends Controller
         // 3. Gather Cash Transactions from `expense_transactions` table (BOTH INFLOW & OUTFLOW, PKR & SAR)
         $etQ = ExpenseTransaction::with(['bank', 'supplier', 'client', 'staff', 'expense'])
             ->where('payment_type', 'cash')
+            ->where(function ($q) {
+                $q->whereNull('payee_type')->orWhere('payee_type', '!=', 'jv');
+            })
             ->whereNull('deleted_at');
 
         if ($packageType === 'hajj') {

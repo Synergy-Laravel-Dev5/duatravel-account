@@ -156,16 +156,29 @@
                                     @enderror
                                 </div>
 
-                                <!-- Amount -->
+                                <!-- Amount (PKR) & ROE Currency Conversion -->
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label fw-medium">Amount (PKR) <span
                                             class="text-danger">*</span></label>
-                                    <input type="number" name="amount" value="{{ old('amount', $transaction->amount) }}"
-                                        class="form-control @error('amount') is-invalid @enderror" placeholder="0"
+                                    <input type="number" step="0.01" name="amount" id="tx_amount" value="{{ old('amount', $transaction->amount) }}"
+                                        class="form-control @error('amount') is-invalid @enderror" placeholder="0.00"
                                         min="1" required>
                                     @error('amount')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-medium">Exchange Rate (ROE: 1 SAR in PKR)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">1 SAR =</span>
+                                        <input type="number" step="0.0001" name="exchange_rate" id="tx_roe" value="{{ old('exchange_rate', $transaction->exchange_rate ?? '75.00') }}"
+                                            class="form-control" placeholder="75.00">
+                                        <span class="input-group-text">PKR</span>
+                                    </div>
+                                    <small class="text-success fw-semibold mt-1 d-block" id="tx_sar_hint">
+                                        ≈ {{ number_format($transaction->sar_amount ?? 0, 2) }} SAR
+                                    </small>
                                 </div>
 
                                 <!-- Payment Date -->
@@ -361,6 +374,24 @@
             });
 
             toggleFields(true);
+
+            // Live SAR Equivalent calculation
+            const txAmt = document.getElementById('tx_amount');
+            const txRoe = document.getElementById('tx_roe');
+            const txHint = document.getElementById('tx_sar_hint');
+            function calcTxSar() {
+                const pkr = parseFloat(txAmt?.value) || 0;
+                const roe = parseFloat(txRoe?.value) || 75;
+                if (pkr > 0 && roe > 0) {
+                    const sar = (pkr / roe).toFixed(2);
+                    if (txHint) txHint.textContent = `≈ ${sar} SAR (at 1 SAR = ${roe} PKR)`;
+                } else {
+                    if (txHint) txHint.textContent = '≈ 0.00 SAR';
+                }
+            }
+            if (txAmt) txAmt.addEventListener('input', calcTxSar);
+            if (txRoe) txRoe.addEventListener('input', calcTxSar);
+            calcTxSar();
         });
     </script>
 

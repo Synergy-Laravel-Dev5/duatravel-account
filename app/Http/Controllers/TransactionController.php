@@ -87,10 +87,6 @@ class TransactionController extends Controller
             'booking_for'      => 'required|in:client,company',
             'client_id'        => 'required_if:booking_for,client|nullable|exists:clients,id',
             'company_id'       => 'required_if:booking_for,company|nullable|exists:companies,id',
-            // booking_id is now required: the create form always shows a visible
-            // booking selector, so the user must explicitly pick which booking
-            // this payment belongs to. This prevents payments being silently
-            // applied to the wrong booking when a client/company has multiple.
             'booking_id'       => 'required|exists:bookings,id',
             'payment_type'     => 'required|in:cash,bank_transfer,cheque,online',
             'amount'           => 'required|numeric|min:1',
@@ -117,12 +113,19 @@ class TransactionController extends Controller
         // straight from the user's selection now — no more auto-pick fallback.
         $bookingId = $request->booking_id;
 
+        $roe = (float) ($request->exchange_rate ?: 75.0);
+        $amountPkr = (float) $request->amount;
+        $sarAmount = ($roe > 0) ? round($amountPkr / $roe, 2) : 0.00;
+
         $transaction = Transaction::create([
             'client_id'        => $clientId,
             'company_id'       => $companyId,
             'booking_id'       => $bookingId,
             'payment_type'     => $request->payment_type,
-            'amount'           => $request->amount,
+            'amount'           => $amountPkr,
+            'currency'         => 'PKR',
+            'exchange_rate'    => $roe,
+            'sar_amount'       => $sarAmount,
             'payment_date'     => $request->payment_date,
             'reference_number' => $request->reference_number,
             'proof_of_payment' => $proofPath,
@@ -199,12 +202,19 @@ class TransactionController extends Controller
 
         $oldBookingId = $transaction->booking_id;
 
+        $roe = (float) ($request->exchange_rate ?: 75.0);
+        $amountPkr = (float) $request->amount;
+        $sarAmount = ($roe > 0) ? round($amountPkr / $roe, 2) : 0.00;
+
         $transaction->update([
             'client_id'        => $clientId,
             'company_id'       => $companyId,
             'booking_id'       => $bookingId,
             'payment_type'     => $request->payment_type,
-            'amount'           => $request->amount,
+            'amount'           => $amountPkr,
+            'currency'         => 'PKR',
+            'exchange_rate'    => $roe,
+            'sar_amount'       => $sarAmount,
             'payment_date'     => $request->payment_date,
             'reference_number' => $request->reference_number,
             'notes'            => $request->notes,
@@ -294,11 +304,133 @@ class TransactionController extends Controller
             }
         }
 
-        // 1. Calculate Opening Balance prior to from_date (Dual Currency: PKR & SAR)
-        $openingBalancePkr = 0;
-        $openingBalanceSar = 0;
+        // Define reusable calculation closure for Booking SAR
+        $calcBookingSar = function ($b) {
+            $cur = strtoupper($b->currency ?: 'PKR');
+            $roe = (float) ($b->flight_sale_roe > 1 ? $b->flight_sale_roe : ($b->flight_roe > 1 ? $b->flight_roe : 75));
+            $totAmt = (float) $b->total_amount;
+            $recAmt = (float) $b->total_received;
+
+            if ($cur === 'SAR') {
+                return [
+                    'debit_sar'  => $totAmt,
+                    'credit_sar' => $recAmt,
+                    'roe'        => $roe,
+                ];
+            }
+
+            // Attempt component-based SAR calculation
+            $compSar = 0;
+
+            // Hotels
+            if ($b->relationLoaded('hotels')) {
+                foreach ($b->hotels as $h) {
+                    $hSaleRoe = (float) ($h->sale_roe > 0 ? $h->sale_roe : ($h->roe > 0 ? $h->roe : $roe));
+                    $nights = max(1, (int) ($h->no_of_nights ?: 1));
+                    $rooms = max(1, (int) ($h->no_of_rooms ?: 1));
+                    $hSpn = (float) $h->selling_per_night;
+                    if ($hSpn > 0) {
+                        $compSar += ($hSpn * $nights * $rooms);
+                    } elseif ((float) $h->selling_amount > 0 && $hSaleRoe > 0) {
+                        $compSar += round((float) $h->selling_amount / $hSaleRoe, 2);
+                    }
+                }
+            }
+
+            // Flights
+            $fRoe = (float) ($b->flight_sale_roe > 0 ? $b->flight_sale_roe : ($b->flight_roe > 0 ? $b->flight_roe : $roe));
+            $fCharges = (float) $b->flight_charges;
+            $fSellRate = (float) $b->flight_selling_rate;
+            if ($fCharges > 0 && $fRoe > 0) {
+                $compSar += round($fCharges / $fRoe, 2);
+            } elseif ($fSellRate > 0) {
+                $compSar += $fSellRate;
+            }
+
+            // Visas
+            if ($b->relationLoaded('visas')) {
+                foreach ($b->visas as $v) {
+                    $vRoe = (float) ($v->sale_roe > 0 ? $v->sale_roe : ($v->roe > 0 ? $v->roe : $roe));
+                    if ((float) $v->selling_rate > 0) {
+                        $compSar += (float) $v->selling_rate;
+                    } elseif ((float) $v->selling_amount > 0 && $vRoe > 0) {
+                        $compSar += round((float) $v->selling_amount / $vRoe, 2);
+                    }
+                }
+            }
+
+            // Transports
+            if ($b->relationLoaded('transports')) {
+                foreach ($b->transports as $tr) {
+                    $trRoe = (float) ($tr->sale_roe > 0 ? $tr->sale_roe : ($tr->roe > 0 ? $tr->roe : $roe));
+                    if ((float) $tr->selling_rate > 0) {
+                        $compSar += (float) $tr->selling_rate;
+                    } elseif ((float) $tr->selling_amount > 0 && $trRoe > 0) {
+                        $compSar += round((float) $tr->selling_amount / $trRoe, 2);
+                    }
+                }
+            }
+
+            if ($compSar > 0) {
+                $debSar = round($compSar, 2);
+                $effRoe = ($debSar > 0 && $totAmt > 0) ? round($totAmt / $debSar, 2) : $roe;
+            } else {
+                $debSar = ($roe > 1) ? round($totAmt / $roe, 2) : 0.00;
+                $effRoe = $roe;
+            }
+
+            $crdSar = 0.00;
+            if ($recAmt > 0) {
+                if ($totAmt > 0 && $debSar > 0) {
+                    $crdSar = round($recAmt * ($debSar / $totAmt), 2);
+                } elseif ($effRoe > 1) {
+                    $crdSar = round($recAmt / $effRoe, 2);
+                }
+            }
+
+            return [
+                'debit_sar'  => $debSar,
+                'credit_sar' => $crdSar,
+                'roe'        => $effRoe,
+            ];
+        };
+
+        // 1. Calculate Initial Client Opening Balance (from client profile) + prior to from_date
+        $clientInitialOpPkr = 0;
+        $clientInitialOpSar = 0;
+        $defaultRoe = 75.0;
+        if ($client && $clientId !== 'all') {
+            $pkrSign = ($client->opening_balance_pkr_type === 'credit') ? -1 : 1;
+            $sarSign = ($client->opening_balance_sar_type === 'credit') ? -1 : 1;
+            $clientInitialOpPkr = $pkrSign * (float) ($client->opening_balance_pkr ?? 0);
+            $clientInitialOpSar = $sarSign * (float) ($client->opening_balance_sar ?? 0);
+
+            if ((float)($client->opening_balance_roe ?? 0) > 0) {
+                $defaultRoe = (float) $client->opening_balance_roe;
+            } elseif ($client->bookings()->exists()) {
+                $latestB = $client->bookings()->latest('id')->first();
+                if ($latestB) {
+                    $defaultRoe = (float) ($latestB->flight_sale_roe > 1 ? $latestB->flight_sale_roe : ($latestB->flight_roe > 1 ? $latestB->flight_roe : 75.0));
+                }
+            }
+
+            // If opening balance was provided in PKR but not in SAR (or vice-versa), auto-sync so both currencies match ONLY if ROE > 1
+            $clientRoe = (float)($client->opening_balance_roe ?? 0);
+            if ($clientRoe > 1) {
+                if ($clientInitialOpSar == 0 && $clientInitialOpPkr != 0) {
+                    $clientInitialOpSar = round($clientInitialOpPkr / $defaultRoe, 2);
+                } elseif ($clientInitialOpPkr == 0 && $clientInitialOpSar != 0) {
+                    $clientInitialOpPkr = round($clientInitialOpSar * $defaultRoe, 2);
+                }
+            } else {
+                $clientInitialOpSar = 0.00;
+            }
+        }
+
+        $openingBalancePkr = $clientInitialOpPkr;
+        $openingBalanceSar = $clientInitialOpSar;
         if ($fromDate) {
-            $priorBookings = Booking::where(function ($q) use ($clientId) {
+            $priorBookings = Booking::with(['hotels', 'visas', 'transports'])->where(function ($q) use ($clientId) {
                 if ($clientId !== 'all') $q->where('client_id', $clientId);
             })->whereDate('booking_date', '<', $fromDate)->get();
 
@@ -309,15 +441,16 @@ class TransactionController extends Controller
 
             foreach ($priorBookings as $pb) {
                 $cur = strtoupper($pb->currency ?: 'PKR');
-                $roe = (float) ($pb->flight_roe > 1 ? $pb->flight_roe : 75);
                 $totAmt = (float) $pb->total_amount;
                 $recAmt = (float) $pb->total_received;
 
+                $sarInfo = $calcBookingSar($pb);
+                $priorBookingDebitsSar += $sarInfo['debit_sar'];
+                $priorBookingCreditsSar += $sarInfo['credit_sar'];
+
                 if ($cur === 'SAR') {
-                    $priorBookingDebitsSar += $totAmt;
-                    $priorBookingDebitsPkr += round($totAmt * $roe, 2);
-                    $priorBookingCreditsSar += $recAmt;
-                    $priorBookingCreditsPkr += round($recAmt * $roe, 2);
+                    $priorBookingDebitsPkr += round($totAmt * $sarInfo['roe'], 2);
+                    $priorBookingCreditsPkr += round($recAmt * $sarInfo['roe'], 2);
                 } else {
                     $priorBookingDebitsPkr += $totAmt;
                     $priorBookingCreditsPkr += $recAmt;
@@ -328,8 +461,13 @@ class TransactionController extends Controller
                 ->where(function ($q) use ($clientId) {
                     if ($clientId !== 'all') $q->where('client_id', $clientId);
                 })->whereDate('payment_date', '<', $fromDate)->sum('amount');
+            $priorTxnCreditsSar = round($priorTxnCreditsPkr / 75, 2);
 
-            $priorEtList = ExpenseTransaction::where('payee_type', 'client')
+            $priorEtList = ExpenseTransaction::where(function ($q) {
+                    $q->where('payee_type', 'client')
+                      ->orWhere('payee_type', 'jv');
+                })
+                ->whereNotNull('client_id')
                 ->where(function ($q) use ($clientId) {
                     if ($clientId !== 'all') $q->where('client_id', $clientId);
                 })->whereDate('date', '<', $fromDate)->get();
@@ -341,10 +479,15 @@ class TransactionController extends Controller
 
             foreach ($priorEtList as $pet) {
                 $cur = strtoupper($pet->currency ?: 'PKR');
-                $rate = (float) ($pet->exchange_rate > 0 ? $pet->exchange_rate : 1);
+                $rate = (float) ($pet->exchange_rate > 0 ? $pet->exchange_rate : 75);
                 $raw = (float) $pet->amount;
-                $pkrVal = ($cur === 'PKR') ? $raw : round($raw * $rate, 2);
-                $sarVal = ($cur === 'SAR') ? $raw : 0.00;
+                if ($cur === 'SAR') {
+                    $pkrVal = round($raw * $rate, 2);
+                    $sarVal = $raw;
+                } else {
+                    $pkrVal = $raw;
+                    $sarVal = ($rate > 1) ? round($raw / $rate, 2) : 0.00;
+                }
 
                 if ($pet->transaction_type === 'debit') {
                     $priorEtDebitsPkr += $pkrVal;
@@ -355,8 +498,8 @@ class TransactionController extends Controller
                 }
             }
 
-            $openingBalancePkr = ($priorBookingDebitsPkr + $priorEtDebitsPkr) - ($priorBookingCreditsPkr + $priorTxnCreditsPkr + $priorEtCreditsPkr);
-            $openingBalanceSar = ($priorBookingDebitsSar + $priorEtDebitsSar) - ($priorBookingCreditsSar + $priorEtCreditsSar);
+            $openingBalancePkr = $clientInitialOpPkr + (($priorBookingDebitsPkr + $priorEtDebitsPkr) - ($priorBookingCreditsPkr + $priorTxnCreditsPkr + $priorEtCreditsPkr));
+            $openingBalanceSar = $clientInitialOpSar + (($priorBookingDebitsSar + $priorEtDebitsSar) - ($priorBookingCreditsSar + $priorTxnCreditsSar + $priorEtCreditsSar));
         }
         $openingBalance = $openingBalancePkr;
 
@@ -382,20 +525,20 @@ class TransactionController extends Controller
             $bTimestamp = $b->booking_date ? Carbon::parse($b->booking_date)->startOfDay()->timestamp : Carbon::parse($b->created_at)->timestamp;
 
             $bCurrency = strtoupper($b->currency ?: 'PKR');
-            $bRoe = (float) ($b->flight_roe > 1 ? $b->flight_roe : 75);
             $totalAmount = (float) $b->total_amount;
             $advanceAmount = (float) $b->total_received;
 
+            $sarData = $calcBookingSar($b);
+            $bDebSar = $sarData['debit_sar'];
+            $bCrdSar = $sarData['credit_sar'];
+            $bEffectiveRoe = $sarData['roe'];
+
             if ($bCurrency === 'SAR') {
-                $bDebPkr = round($totalAmount * $bRoe, 2);
-                $bDebSar = $totalAmount;
-                $bCrdPkr = round($advanceAmount * $bRoe, 2);
-                $bCrdSar = $advanceAmount;
+                $bDebPkr = round($totalAmount * $bEffectiveRoe, 2);
+                $bCrdPkr = round($advanceAmount * $bEffectiveRoe, 2);
             } else {
                 $bDebPkr = $totalAmount;
-                $bDebSar = 0.00;
                 $bCrdPkr = $advanceAmount;
-                $bCrdSar = 0.00;
             }
 
             $totalBooking += $bDebPkr;
@@ -416,7 +559,7 @@ class TransactionController extends Controller
                 'client_name'      => $b->client->name ?? '—',
                 'booking_id'       => $b->id,
                 'currency'         => $bCurrency,
-                'exchange_rate'    => $bCurrency === 'SAR' ? $bRoe : 1.00,
+                'exchange_rate'    => $bEffectiveRoe,
                 'original_amount'  => $totalAmount,
                 'debit'            => $bDebPkr,
                 'credit'           => 0.00,
@@ -445,7 +588,7 @@ class TransactionController extends Controller
                     'client_name'      => $b->client->name ?? '—',
                     'booking_id'       => $b->id,
                     'currency'         => $bCurrency,
-                    'exchange_rate'    => $bCurrency === 'SAR' ? $bRoe : 1.00,
+                    'exchange_rate'    => $bEffectiveRoe,
                     'original_amount'  => $advanceAmount,
                     'debit'            => 0.00,
                     'credit'           => $bCrdPkr,
@@ -484,6 +627,19 @@ class TransactionController extends Controller
                 $transactionsPaid += $amt;
             }
 
+            $txRoe = 75.0;
+            if ($t->exchange_rate > 1) {
+                $txRoe = (float) $t->exchange_rate;
+            } elseif ($t->booking) {
+                $txRoe = (float) ($t->booking->flight_sale_roe > 1 ? $t->booking->flight_sale_roe : ($t->booking->flight_roe > 1 ? $t->booking->flight_roe : 75));
+            } elseif ($client && $client->id !== 'all' && $client->bookings()->exists()) {
+                $latestB = $client->bookings()->latest('id')->first();
+                if ($latestB) {
+                    $txRoe = (float) ($latestB->flight_sale_roe > 1 ? $latestB->flight_sale_roe : ($latestB->flight_roe > 1 ? $latestB->flight_roe : 75));
+                }
+            }
+            $txSar = ($t->sar_amount > 0) ? (float) $t->sar_amount : (($txRoe > 1) ? round($amt / $txRoe, 2) : 0.00);
+
             $contra = match(strtolower($t->payment_type)) {
                 'cash' => 'Cash in Hand',
                 'bank', 'bank_transfer' => 'Bank Account',
@@ -506,14 +662,14 @@ class TransactionController extends Controller
                 'client_name'      => $t->client->name ?? '—',
                 'booking_id'       => $t->booking_id,
                 'currency'         => 'PKR',
-                'exchange_rate'    => 1.00,
+                'exchange_rate'    => $txRoe,
                 'original_amount'  => $amt,
                 'debit'            => 0.00,
                 'credit'           => $t->status === 'confirmed' ? $amt : 0.00,
                 'debit_pkr'        => 0.00,
                 'credit_pkr'       => $t->status === 'confirmed' ? $amt : 0.00,
                 'debit_sar'        => 0.00,
-                'credit_sar'       => 0.00,
+                'credit_sar'       => $t->status === 'confirmed' ? $txSar : 0.00,
                 'payment_method'   => ucwords(str_replace('_', ' ', $t->payment_type)),
                 'status'           => $t->status,
                 'proof'            => $t->proof_of_payment ? asset('assets/images/transaction_proofs/' . $t->proof_of_payment) : null,
@@ -521,7 +677,12 @@ class TransactionController extends Controller
         }
 
         // 4. Retrieve Client ExpenseTransactions (Receipts & Debits from expense_transactions)
-        $etQuery = ExpenseTransaction::with(['client', 'bank', 'account'])->where('payee_type', 'client');
+        $etQuery = ExpenseTransaction::with(['client', 'supplier', 'bank', 'account'])
+            ->where(function ($q) {
+                $q->where('payee_type', 'client')
+                  ->orWhere('payee_type', 'jv');
+            })
+            ->whereNotNull('client_id');
         if ($clientId !== 'all') {
             $etQuery->where('client_id', $clientId);
         }
@@ -538,12 +699,16 @@ class TransactionController extends Controller
             $etTimestamp = Carbon::parse($et->date)->startOfDay()->timestamp + 3;
 
             $currency = strtoupper($et->currency ?: 'PKR');
-            $exchangeRate = (float) ($et->exchange_rate > 0 ? $et->exchange_rate : 1);
+            $exchangeRate = (float) ($et->exchange_rate > 0 ? $et->exchange_rate : 75);
             $rawAmount = (float) $et->amount;
-            $pkrAmount = ($currency === 'PKR') ? $rawAmount : round($rawAmount * $exchangeRate, 2);
+
+            // Transaction amount is ALWAYS entered and stored in PKR.
+            // When an exchange rate > 1 is present (e.g. currency is SAR with ROE),
+            // the ledger records the PKR amount directly and calculates SAR equivalent via ROE.
+            $pkrAmount = $rawAmount;
+            $sarAmount = ($exchangeRate > 1) ? round($rawAmount / $exchangeRate, 2) : 0.00;
 
             $isDebit = ($et->transaction_type === 'debit');
-            $sarAmount = ($currency === 'SAR') ? $rawAmount : 0.00;
 
             if ($isDebit) {
                 $debitPkr = $pkrAmount;
@@ -558,19 +723,37 @@ class TransactionController extends Controller
                 $transactionsPaid += $pkrAmount;
             }
 
-            // Determine Contra Account (Bank name, Account name, or Cash)
+            // Determine Contra Account (Bank name, Account name, Supplier, or Cash)
+            $isJv = ($et->payee_type === 'jv');
             $contraAccount = '—';
             if ($et->bank) {
                 $contraAccount = $et->bank->name . ($et->bank->account_name ? ' (' . $et->bank->account_name . ')' : '');
             } elseif ($et->account) {
                 $contraAccount = $et->account->account_name;
+            } elseif ($isJv) {
+                if ($et->supplier) {
+                    $contraAccount = 'Supplier: ' . $et->supplier->name;
+                } elseif (!empty($et->reference_no)) {
+                    $siblingSup = ExpenseTransaction::where('payee_type', 'jv')
+                        ->where('reference_no', $et->reference_no)
+                        ->whereNotNull('supplier_id')
+                        ->with('supplier')
+                        ->first();
+                    if ($siblingSup && $siblingSup->supplier) {
+                        $contraAccount = 'Supplier: ' . $siblingSup->supplier->name;
+                    } else {
+                        $contraAccount = 'Journal Voucher Adjustment';
+                    }
+                } else {
+                    $contraAccount = 'Journal Voucher Adjustment';
+                }
             } else {
                 $contraAccount = match(strtolower($et->payment_type)) {
                     'cash' => 'Cash in Hand',
                     'bank', 'bank_transfer' => 'Bank Account',
                     'cheque' => 'Cheque Clearance',
                     'online' => 'Online Banking',
-                    default => ucwords(str_replace('_', ' ', $et->payment_type ?? 'Cash in Hand'))
+                    default => $isJv ? 'Journal Voucher Adjustment' : ucwords(str_replace('_', ' ', $et->payment_type ?? 'Cash in Hand'))
                 };
             }
 
@@ -578,11 +761,11 @@ class TransactionController extends Controller
                 'date'             => $etDate,
                 'timestamp'        => $etTimestamp,
                 'entry_type'       => $isDebit ? 'charge' : 'receipt',
-                'badge_class'      => $isDebit ? 'bg-soft-danger text-danger' : 'bg-soft-info text-info',
-                'type_label'       => $isDebit ? 'Client Debit / Charge' : 'Client Receipt',
-                'voucher_no'       => 'REC-' . $et->id,
+                'badge_class'      => $isJv ? 'bg-soft-purple text-purple' : ($isDebit ? 'bg-soft-danger text-danger' : 'bg-soft-info text-info'),
+                'type_label'       => $isJv ? 'JV Voucher' : ($isDebit ? 'Client Debit / Charge' : 'Client Receipt'),
+                'voucher_no'       => $et->reference_no ?: ('REC-' . $et->id),
                 'ref_no'           => $et->reference_no ?: ('#REC-' . $et->id),
-                'description'      => ($isDebit ? 'Charge / Payment to Client via ' : 'Payment Received via ') . ucwords(str_replace('_', ' ', $et->payment_type)) . ($et->description ? ' — ' . $et->description : ''),
+                'description'      => ($isJv ? 'JV: ' : ($isDebit ? 'Charge / Payment to Client via ' : 'Payment Received via ')) . ($isJv ? ($et->description ?: 'Journal Adjustment') : (ucwords(str_replace('_', ' ', $et->payment_type)) . ($et->description ? ' — ' . $et->description : ''))),
                 'contra_account'   => $contraAccount,
                 'client_id'        => $et->client_id,
                 'client_name'      => $et->client->name ?? '—',
@@ -632,6 +815,17 @@ class TransactionController extends Controller
             $periodDebitsSar += $debSar;
             $periodCreditsSar += $crdSar;
             $runningBalanceSar += ($debSar - $crdSar);
+
+            // Synchronize SAR running balance with PKR running balance:
+            // In a unified client account, a client who owes PKR (Dr) cannot simultaneously have an advance in SAR (Cr)
+            $rowRoe = (!empty($row['exchange_rate']) && $row['exchange_rate'] > 1) ? (float)$row['exchange_rate'] : ($defaultRoe ?? 75.0);
+            if ($runningBalancePkr != 0) {
+                if (($runningBalancePkr > 0 && $runningBalanceSar < 0) || ($runningBalancePkr < 0 && $runningBalanceSar > 0) || $runningBalanceSar == 0) {
+                    $runningBalanceSar = round($runningBalancePkr / $rowRoe, 2);
+                }
+            } elseif ($runningBalancePkr == 0) {
+                $runningBalanceSar = 0.00;
+            }
 
             $row['debit_pkr']            = $debPkr;
             $row['credit_pkr']           = $crdPkr;

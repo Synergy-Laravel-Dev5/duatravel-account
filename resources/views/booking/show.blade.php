@@ -510,6 +510,9 @@
             </div>
 
             <div class="d-flex gap-2 flex-wrap">
+                <a href="{{ route('booking.umrah-invoice', $booking->id) }}" target="_blank" class="btn-action" style="background: #e65100; border-color: #e65100; color: #fff;">
+                    <i class="mdi mdi-receipt"></i> Umrah Invoice
+                </a>
                 <a href="{{ route('pilgrim.bulk-badges', $booking->id) }}" target="_blank" class="btn-action btn-action-secondary">
                     <i class="mdi mdi-card-account-details-outline"></i> Print Badges
                 </a>
@@ -1047,6 +1050,9 @@
             </td>
             <td class="text-center no-print">
                 <div class="d-flex justify-content-center gap-1">
+                    <a href="{{ route('booking.umrah-invoice', ['booking' => $booking->id, 'person_id' => $person->id]) }}" target="_blank" class="doc-thumb-mini" title="Print Person Umrah Invoice">
+                        <i class="mdi mdi-receipt text-warning"></i> Invoice
+                    </a>
                     <a href="{{ route('pilgrim.badge', $person->id) }}" target="_blank" class="doc-thumb-mini" title="Print Lanyard Badge">
                         <i class="mdi mdi-card-account-details-outline text-primary"></i> Badge
                     </a>

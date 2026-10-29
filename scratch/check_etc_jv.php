@@ -1,0 +1,7 @@
+<?php
+$etc = file_get_contents('app/Http/Controllers/ExpenseTransactionController.php');
+// Find jv handling in store
+$pos = strpos($etc, 'if ($payeeType === \'jv\')');
+if ($pos !== false) {
+    echo substr($etc, $pos, 2000);
+}

@@ -361,4 +361,12 @@ class PackageController extends Controller
 
         $package->trainingSessions()->sync($data['trainingSessions']);
     }
+
+    public function jsonList()
+    {
+        $packages = Package::with(['accommodations.hotel', 'transports', 'transportFlights'])
+            ->latest()
+            ->get();
+        return response()->json($packages);
+    }
 }

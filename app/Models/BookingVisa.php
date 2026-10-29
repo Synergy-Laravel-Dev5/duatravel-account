@@ -28,6 +28,7 @@ class BookingVisa extends Model
         'selling_amount',
         'status',
         'visa_attachment',
+        'voucher_no',
     ];
 
     public function supplier()

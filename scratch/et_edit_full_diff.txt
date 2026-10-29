@@ -1,0 +1,550 @@
+diff --git a/resources/views/expense_transaction/edit.blade.php b/resources/views/expense_transaction/edit.blade.php
+index 96aa19e..2dd8fac 100644
+--- a/resources/views/expense_transaction/edit.blade.php
++++ b/resources/views/expense_transaction/edit.blade.php
+@@ -54,151 +54,7 @@
+                         @csrf
+                         @method('PUT')
+ 
+-                        <!-- ROW 1: Date, Season, Payment Type -->
+-                        <div class="row g-3 mb-3">
+-                            <div class="col-md-4">
+-                                <label class="form-label fs-13 fw-semibold">Transaction Date <span class="text-danger">*</span></label>
+-                                <div class="input-group input-group-sm">
+-                                    <input type="text" name="date" id="trans_date"
+-                                        value="{{ old('date', $transaction->date ? date('Y-m-d', strtotime($transaction->date)) : date('Y-m-d')) }}"
+-                                        class="form-control form-control-sm flatpickr-date" placeholder="YYYY-MM-DD" required>
+-                                    <span class="input-group-text"><i class="mdi mdi-calendar"></i></span>
+-                                </div>
+-                            </div>
+-
+-                            <div class="col-md-4">
+-                                <label class="form-label fs-13 fw-semibold">Hajj / Umrah Season <span class="text-danger">*</span></label>
+-                                <div class="row g-1">
+-                                    <div class="col-6">
+-                                        <select name="hajj_umrah" id="hajj_umrah_select" class="form-select form-select-sm" required>
+-                                            <option value="hajj" {{ old('hajj_umrah', $transaction->hajj_umrah) == 'hajj' ? 'selected' : '' }}>Hajj</option>
+-                                            <option value="umrah" {{ old('hajj_umrah', $transaction->hajj_umrah) == 'umrah' ? 'selected' : '' }}>Umrah</option>
+-                                        </select>
+-                                    </div>
+-                                    <div class="col-6">
+-                                        <input type="number" name="year" id="year_input"
+-                                            value="{{ old('year', $transaction->year) }}"
+-                                            class="form-control form-control-sm" placeholder="Year" min="2000" max="2100" required>
+-                                    </div>
+-                                </div>
+-                            </div>
+-
+-                            <div class="col-md-4">
+-                                <label class="form-label fs-13 fw-semibold">Payment Type <span class="text-danger">*</span></label>
+-                                <div class="d-flex gap-3 pt-1">
+-                                    <div class="form-check">
+-                                        <input class="form-check-input" type="radio" name="payment_type" id="pay_bank" value="bank"
+-                                            {{ old('payment_type', $transaction->payment_type) == 'bank' || old('payment_type', $transaction->payment_type) == 'accounts' ? 'checked' : '' }}>
+-                                        <label class="form-check-label fs-13" for="pay_bank">Bank Transfer</label>
+-                                    </div>
+-                                    <div class="form-check">
+-                                        <input class="form-check-input" type="radio" name="payment_type" id="pay_cash" value="cash"
+-                                            {{ old('payment_type', $transaction->payment_type) == 'cash' ? 'checked' : '' }}>
+-                                        <label class="form-check-label fs-13" for="pay_cash">Cash</label>
+-                                    </div>
+-                                    <div class="form-check">
+-                                        <input class="form-check-input" type="radio" name="payment_type" id="pay_cheque" value="cheque"
+-                                            {{ old('payment_type', $transaction->payment_type) == 'cheque' ? 'checked' : '' }}>
+-                                        <label class="form-check-label fs-13" for="pay_cheque">Cheque</label>
+-                                    </div>
+-                                    <div class="form-check">
+-                                        <input class="form-check-input" type="radio" name="payment_type" id="pay_online" value="online"
+-                                            {{ old('payment_type', $transaction->payment_type) == 'online' ? 'checked' : '' }}>
+-                                        <label class="form-check-label fs-13" for="pay_online">Online</label>
+-                                    </div>
+-                                </div>
+-                            </div>
+-                        </div>
+-
+-                        <!-- ROW 2: Bank, Currency, Exchange Rate -->
+-                        <div class="row g-3 mb-3">
+-                            <div class="col-md-6">
+-                                <label class="form-label fs-13 fw-semibold">Bank</label>
+-                                <select name="bank_id" class="form-select form-select-sm">
+-                                    <option value="">-- Select Bank --</option>
+-                                    @foreach ($banks as $b)
+-                                        <option value="{{ $b->id }}" {{ old('bank_id', $transaction->bank_id) == $b->id ? 'selected' : '' }}>
+-                                            {{ $b->name }}{{ !empty($b->account_name) ? ' - ' . $b->account_name : '' }}{{ !empty($b->account_number) && $b->account_number !== '0' ? ' (' . $b->account_number . ')' : '' }}
+-                                        </option>
+-                                    @endforeach
+-                                </select>
+-                            </div>
+-
+-                            <div class="col-md-6">
+-                                <label class="form-label fs-13 fw-semibold">Currency <span class="text-danger">*</span></label>
+-                                <div class="row g-1">
+-                                    <div class="col-6">
+-                                        <select name="currency" id="currency_select" class="form-select form-select-sm" required>
+-                                            <option value="PKR" {{ old('currency', $transaction->currency) == 'PKR' ? 'selected' : '' }}>PKR</option>
+-                                            <option value="SAR" {{ old('currency', $transaction->currency) == 'SAR' ? 'selected' : '' }}>SAR</option>
+-                                            <option value="USD" {{ old('currency', $transaction->currency) == 'USD' ? 'selected' : '' }}>USD</option>
+-                                        </select>
+-                                    </div>
+-                                    <div class="col-6">
+-                                        <input type="number" step="0.0001" name="exchange_rate" id="exchange_rate_input"
+-                                            value="{{ old('exchange_rate', $transaction->exchange_rate ?? 1) }}"
+-                                            class="form-control form-control-sm {{ ($transaction->currency ?? 'PKR') == 'PKR' ? 'bg-light' : '' }}"
+-                                            placeholder="Ex. Rate" {{ ($transaction->currency ?? 'PKR') == 'PKR' ? 'readonly' : '' }} required>
+-                                    </div>
+-                                </div>
+-                            </div>
+-                        </div>
+-
+-                        <!-- ROW 3: Total Amount, Transaction Type, Reference -->
+-                        <div class="row g-3 mb-3">
+-                            <div class="col-md-4">
+-                                <label class="form-label fs-13 fw-semibold">Total Amount <span class="text-danger">*</span></label>
+-                                <div class="input-group input-group-sm">
+-                                    <span class="input-group-text currency-symbol">{{ $transaction->currency ?? 'PKR' }}</span>
+-                                    <input type="number" step="any" name="amount" id="main_total_amount"
+-                                        value="{{ old('amount', $transaction->amount) }}"
+-                                        class="form-control form-control-sm fw-bold text-dark" placeholder="Enter Total Amount" required>
+-                                </div>
+-                            </div>
+-
+-                            <div class="col-md-4">
+-                                <label class="form-label fs-13 fw-semibold">Transaction Type</label>
+-                                <select name="transaction_type" class="form-select form-select-sm">
+-                                    <option value="debit" {{ old('transaction_type', $transaction->transaction_type) == 'debit' ? 'selected' : '' }}>Debit (Payment Out / Expense / Supplier Pay)</option>
+-                                    <option value="credit" {{ old('transaction_type', $transaction->transaction_type) == 'credit' ? 'selected' : '' }}>Credit (Payment In / Client Receipt / Income)</option>
+-                                </select>
+-                            </div>
+-
+-                            <div class="col-md-4">
+-                                <label class="form-label fs-13 fw-semibold">Reference</label>
+-                                <input type="text" name="reference_no"
+-                                    value="{{ old('reference_no', $transaction->reference_no) }}"
+-                                    class="form-control form-control-sm" placeholder="DT-EXP-000001">
+-                            </div>
+-                        </div>
+-
+-                        <!-- ROW 4: Proof of Payment -->
+-                        <div class="row g-3 mb-3">
+-                            <div class="col-md-12">
+-                                <label class="form-label fs-13 fw-semibold">Proof of Payment</label>
+-                                <div class="d-flex gap-3 align-items-center">
+-                                    <input type="file" name="proof" class="form-control form-control-sm" accept=".jpg,.jpeg,.png,.pdf">
+-                                    @if ($transaction->proof)
+-                                        <a href="{{ asset('assets/images/expense_proofs/' . $transaction->proof) }}"
+-                                            target="_blank" class="btn btn-sm btn-outline-info text-nowrap">
+-                                            <i class="mdi mdi-eye me-1"></i> View Current Proof
+-                                        </a>
+-                                    @endif
+-                                </div>
+-                                <small class="text-muted fs-11">Supported formats: JPG, PNG, PDF (Max 5MB)</small>
+-                            </div>
+-                        </div>
+-
+-                        <!-- ROW 5: Description -->
+-                        <div class="row g-3 mb-4">
+-                            <div class="col-md-12">
+-                                <label class="form-label fs-13 fw-semibold">Description / Notes</label>
+-                                <textarea name="description" class="form-control" rows="2"
+-                                    placeholder="Reason for Payment / Notes">{{ old('description', $transaction->description) }}</textarea>
+-                            </div>
+-                        </div>
+-
+-                        <!-- PAYEE / CATEGORY SELECTOR -->
++<!-- PAYEE / CATEGORY SELECTOR -->
+                         @php
+                             $currentPayee = old('payee_type', $transaction->payee_type ?? ($transaction->supplier_id ? 'supplier' : ($transaction->client_id ? 'client' : ($transaction->staff_id ? 'staff' : ($transaction->company_id ? 'company' : ($transaction->expense_id ? 'expense' : 'supplier'))))));
+                         @endphp
+@@ -251,6 +107,13 @@ class="form-control form-control-sm" placeholder="DT-EXP-000001">
+                                                 <i class="mdi mdi-book-open-page-variant me-1"></i> JV Voucher
+                                             </label>
+                                         </div>
++                                        <div class="form-check">
++                                            <input class="form-check-input payee-type-radio" type="radio" name="payee_type"
++                                                id="payee_loan" value="loan" {{ $currentPayee == 'loan' ? 'checked' : '' }}>
++                                            <label class="form-check-label fs-13 fw-semibold text-warning" for="payee_loan">
++                                                <i class="mdi mdi-hand-coin me-1"></i> Loan (Asset / Liability)
++                                            </label>
++                                        </div>
+                                     </div>
+                                 </div>
+                             </div>
+@@ -425,19 +288,94 @@ class="form-control form-control-sm" placeholder="DT-EXP-000001">
+                                     </p>
+                                 </div>
+ 
++                                <!-- 6.5. LOAN SECTION -->
++                                <div id="loanSection" class="{{ $currentPayee == 'loan' ? '' : 'd-none' }}">
++                                    <div class="row g-3 align-items-end">
++                                        <div class="col-md-6">
++                                            <label class="form-label fs-13 fw-semibold">Select Loan Account <span class="text-danger">*</span></label>
++                                            <select name="loan_account_id" id="loan_account_id_select" class="form-select form-select-sm">
++                                                <option value="">-- Choose Loan Account --</option>
++                                                @foreach ($cashAccounts->filter(fn($a) => in_array($a->account_type, ['loan_asset', 'loan_liability'])) as $la)
++                                                    <option value="{{ $la->id }}" {{ old('loan_account_id', $transaction->account_id) == $la->id ? 'selected' : '' }}>
++                                                        {{ $la->account_name }} ({{ $la->account_type === 'loan_asset' ? 'Loan Asset / Receivable' : 'Loan Liability / Payable' }}) — Opening: PKR {{ number_format($la->opening_balance_pkr, 2) }}
++                                                    </option>
++                                                @endforeach
++                                            </select>
++                                        </div>
++                                        <div class="col-md-6">
++                                            <a href="{{ route('account.create') }}" target="_blank" class="btn btn-outline-warning btn-sm">
++                                                <i class="mdi mdi-plus-circle me-1"></i> + Create New Loan Account
++                                            </a>
++                                            <small class="text-muted d-block mt-1">Record loans given (Assets) or loans borrowed (Liabilities).</small>
++                                        </div>
++                                    </div>
++                                </div>
++
+                                 <!-- 7. JV VOUCHER SECTION -->
+                                 <div id="jvSection" class="{{ $currentPayee == 'jv' ? '' : 'd-none' }}">
+                                     <div class="p-3 bg-white border rounded">
++                                        @if(isset($relatedJvEntries) && $relatedJvEntries->count() > 0)
++                                            <div class="alert alert-soft-primary py-2 px-3 fs-12 border-0 mb-3">
++                                                <i class="mdi mdi-link-variant me-1"></i>
++                                                <strong>Linked JV Voucher Ref:</strong> <code>{{ $transaction->reference_no }}</code>
++                                                <div class="mt-2 table-responsive">
++                                                    <table class="table table-sm table-bordered bg-white mb-0 fs-12">
++                                                        <thead class="table-light">
++                                                            <tr>
++                                                                <th>Party</th>
++                                                                <th>Type</th>
++                                                                <th>Amount</th>
++                                                                <th>Description</th>
++                                                                <th>Action</th>
++                                                            </tr>
++                                                        </thead>
++                                                        <tbody>
++                                                            <tr class="table-info">
++                                                                <td>
++                                                                    <strong>Current Leg:</strong>
++                                                                    @if($transaction->client) Client: {{ $transaction->client->name }}
++                                                                    @elseif($transaction->supplier) Supplier: {{ $transaction->supplier->name }}
++                                                                    @else General Journal @endif
++                                                                </td>
++                                                                <td><span class="badge {{ $transaction->transaction_type === 'debit' ? 'bg-danger' : 'bg-success' }}">{{ strtoupper($transaction->transaction_type) }}</span></td>
++                                                                <td><strong>{{ number_format($transaction->amount, 2) }} {{ $transaction->currency }}</strong></td>
++                                                                <td>{{ $transaction->description }}</td>
++                                                                <td><span class="badge bg-primary">Editing This</span></td>
++                                                            </tr>
++                                                            @foreach($relatedJvEntries as $rj)
++                                                                <tr>
++                                                                    <td>
++                                                                        @if($rj->client) Client: {{ $rj->client->name }}
++                                                                        @elseif($rj->supplier) Supplier: {{ $rj->supplier->name }}
++                                                                        @else General Journal @endif
++                                                                    </td>
++                                                                    <td><span class="badge {{ $rj->transaction_type === 'debit' ? 'bg-danger' : 'bg-success' }}">{{ strtoupper($rj->transaction_type) }}</span></td>
++                                                                    <td>{{ number_format($rj->amount, 2) }} {{ $rj->currency }}</td>
++                                                                    <td>{{ $rj->description }}</td>
++                                                                    <td>
++                                                                        <a href="{{ route('expense.transaction.edit', $rj->id) }}" class="btn btn-xs btn-outline-primary py-0 px-1 fs-11">
++                                                                            <i class="mdi mdi-pencil"></i> Edit Leg
++                                                                        </a>
++                                                                    </td>
++                                                                </tr>
++                                                            @endforeach
++                                                        </tbody>
++                                                    </table>
++                                                </div>
++                                            </div>
++                                        @endif
++
+                                         <div class="row g-3 align-items-center mb-2">
+                                             <div class="col-md-4">
+-                                                <label class="form-label fs-12 fw-semibold mb-1">JV Party Link (Optional)</label>
++                                                <label class="form-label fs-12 fw-semibold mb-1">JV Party Link</label>
+                                                 <select id="jv_party_toggle" class="form-select form-select-sm">
+                                                     <option value="none" {{ !$transaction->client_id && !$transaction->supplier_id ? 'selected' : '' }}>General Journal / No Party</option>
+-                                                    <option value="client" {{ $transaction->client_id ? 'selected' : '' }}>Client</option>
+-                                                    <option value="supplier" {{ $transaction->supplier_id ? 'selected' : '' }}>Supplier</option>
++                                                    <option value="client" {{ $transaction->client_id && !$transaction->supplier_id ? 'selected' : '' }}>Client Only</option>
++                                                    <option value="supplier" {{ $transaction->supplier_id && !$transaction->client_id ? 'selected' : '' }}>Supplier Only</option>
++                                                    <option value="both" {{ $transaction->client_id && $transaction->supplier_id ? 'selected' : '' }}>Both Client & Supplier</option>
+                                                 </select>
+                                             </div>
+-                                            <div class="col-md-8 {{ $transaction->client_id ? '' : 'd-none' }}" id="jv_client_container">
++                                            <div class="col-md-4 {{ $transaction->client_id ? '' : 'd-none' }}" id="jv_client_container">
+                                                 <label class="form-label fs-12 fw-semibold mb-1">Select Client</label>
+                                                 <select name="jv_client_id" class="form-select form-select-sm">
+                                                     <option value="">-- Select Client --</option>
+@@ -448,7 +386,7 @@ class="form-control form-control-sm" placeholder="DT-EXP-000001">
+                                                     @endforeach
+                                                 </select>
+                                             </div>
+-                                            <div class="col-md-8 {{ $transaction->supplier_id ? '' : 'd-none' }}" id="jv_supplier_container">
++                                            <div class="col-md-4 {{ $transaction->supplier_id ? '' : 'd-none' }}" id="jv_supplier_container">
+                                                 <label class="form-label fs-12 fw-semibold mb-1">Select Supplier</label>
+                                                 <select name="jv_supplier_id" class="form-select form-select-sm">
+                                                     <option value="">-- Select Supplier --</option>
+@@ -470,6 +408,178 @@ class="form-control form-control-sm" placeholder="DT-EXP-000001">
+                             </div>
+                         </div>
+ 
++                        
++
++                        <!-- ROW 1: Date, Season, Payment Type -->
++                        <div class="row g-3 mb-3">
++                            <div class="col-md-4">
++                                <label class="form-label fs-13 fw-semibold">Transaction Date <span class="text-danger">*</span></label>
++                                <div class="input-group input-group-sm">
++                                    <input type="text" name="date" id="trans_date"
++                                        value="{{ old('date', $transaction->date ? date('Y-m-d', strtotime($transaction->date)) : date('Y-m-d')) }}"
++                                        class="form-control form-control-sm flatpickr-date" placeholder="YYYY-MM-DD" required>
++                                    <span class="input-group-text"><i class="mdi mdi-calendar"></i></span>
++                                </div>
++                            </div>
++
++                            <div class="col-md-4">
++                                <label class="form-label fs-13 fw-semibold">Hajj / Umrah Season <span class="text-danger">*</span></label>
++                                <div class="row g-1">
++                                    <div class="col-6">
++                                        <select name="hajj_umrah" id="hajj_umrah_select" class="form-select form-select-sm" required>
++                                            <option value="hajj" {{ old('hajj_umrah', $transaction->hajj_umrah) == 'hajj' ? 'selected' : '' }}>Hajj</option>
++                                            <option value="umrah" {{ old('hajj_umrah', $transaction->hajj_umrah) == 'umrah' ? 'selected' : '' }}>Umrah</option>
++                                        </select>
++                                    </div>
++                                    <div class="col-6">
++                                        <input type="number" name="year" id="year_input"
++                                            value="{{ old('year', $transaction->year) }}"
++                                            class="form-control form-control-sm" placeholder="Year" min="2000" max="2100" required>
++                                    </div>
++                                </div>
++                            </div>
++
++                            <div class="col-md-4">
++                                <label class="form-label fs-13 fw-semibold">Payment Type <span class="text-danger">*</span></label>
++                                <div class="d-flex gap-3 pt-1">
++                                    <div class="form-check">
++                                        <input class="form-check-input" type="radio" name="payment_type" id="pay_bank" value="bank"
++                                            {{ old('payment_type', $transaction->payment_type) == 'bank' || old('payment_type', $transaction->payment_type) == 'accounts' ? 'checked' : '' }}>
++                                        <label class="form-check-label fs-13" for="pay_bank">Bank Transfer</label>
++                                    </div>
++                                    <div class="form-check">
++                                        <input class="form-check-input" type="radio" name="payment_type" id="pay_cash" value="cash"
++                                            {{ old('payment_type', $transaction->payment_type) == 'cash' ? 'checked' : '' }}>
++                                        <label class="form-check-label fs-13" for="pay_cash">Cash</label>
++                                    </div>
++                                    <div class="form-check">
++                                        <input class="form-check-input" type="radio" name="payment_type" id="pay_cheque" value="cheque"
++                                            {{ old('payment_type', $transaction->payment_type) == 'cheque' ? 'checked' : '' }}>
++                                        <label class="form-check-label fs-13" for="pay_cheque">Cheque</label>
++                                    </div>
++                                    <div class="form-check">
++                                        <input class="form-check-input" type="radio" name="payment_type" id="pay_online" value="online"
++                                            {{ old('payment_type', $transaction->payment_type) == 'online' ? 'checked' : '' }}>
++                                        <label class="form-check-label fs-13" for="pay_online">Online</label>
++                                    </div>
++                                </div>
++                            </div>
++                        </div>
++
++                        <!-- ROW 2: Bank, Cash Account, Currency, Exchange Rate -->
++                        <div class="row g-3 mb-3">
++                            <div class="col-md-6" id="bank_select_group" style="{{ old('payment_type', $transaction->payment_type) === 'cash' ? 'display:none;' : '' }}">
++                                <label class="form-label fs-13 fw-semibold">Bank</label>
++                                <select name="bank_id" id="bank_id_select" class="form-select form-select-sm">
++                                    <option value="">-- Select Bank --</option>
++                                    @foreach ($banks as $b)
++                                        <option value="{{ $b->id }}" {{ old('bank_id', $transaction->bank_id) == $b->id ? 'selected' : '' }}>
++                                            {{ $b->name }}{{ !empty($b->account_name) ? ' - ' . $b->account_name : '' }}{{ !empty($b->account_number) && $b->account_number !== '0' ? ' (' . $b->account_number . ')' : '' }}
++                                        </option>
++                                    @endforeach
++                                </select>
++                            </div>
++
++                            <div class="col-md-6" id="cash_account_group" style="{{ old('payment_type', $transaction->payment_type) === 'cash' ? '' : 'display:none;' }}">
++                                <label class="form-label fs-13 fw-semibold">
++                                    <i class="mdi mdi-cash-multiple text-success me-1"></i> Cash / Counter Account <span class="text-danger">*</span>
++                                </label>
++                                <select name="account_id" id="cash_account_id_select" class="form-select form-select-sm">
++                                    <option value="">-- Select Cash Account --</option>
++                                    @foreach ($cashAccounts->filter(fn($a) => in_array($a->account_type, ['cash', 'general'])) as $ca)
++                                        <option value="{{ $ca->id }}" {{ old('account_id', $transaction->account_id) == $ca->id ? 'selected' : ($ca->account_name === 'Cash' ? 'selected' : '') }}>
++                                            {{ $ca->account_name }} — Opening: PKR {{ number_format($ca->opening_balance_pkr, 2) }} / SAR {{ number_format($ca->opening_balance_sar, 2) }}
++                                        </option>
++                                    @endforeach
++                                </select>
++                                <small class="text-muted fs-11">Transactions will impact this cash account balance.</small>
++                            </div>
++
++                            <div class="col-md-6">
++                                <label class="form-label fs-13 fw-semibold">Currency <span class="text-danger">*</span></label>
++                                <div class="row g-1">
++                                    <div class="col-6">
++                                        <select name="currency" id="currency_select" class="form-select form-select-sm" required>
++                                            <option value="PKR" {{ old('currency', $transaction->currency) == 'PKR' ? 'selected' : '' }}>PKR</option>
++                                            <option value="SAR" {{ old('currency', $transaction->currency) == 'SAR' ? 'selected' : '' }}>SAR</option>
++                                            <option value="USD" {{ old('currency', $transaction->currency) == 'USD' ? 'selected' : '' }}>USD</option>
++                                        </select>
++                                    </div>
++                                    <div class="col-6">
++                                        <input type="number" step="0.0001" name="exchange_rate" id="exchange_rate_input"
++                                            value="{{ old('exchange_rate', $transaction->exchange_rate ?? 1) }}"
++                                            class="form-control form-control-sm {{ ($transaction->currency ?? 'PKR') == 'PKR' ? 'bg-light' : '' }}"
++                                            placeholder="Ex. Rate" {{ ($transaction->currency ?? 'PKR') == 'PKR' ? 'readonly' : '' }} required>
++                                    </div>
++                                </div>
++                            </div>
++
++                            <!-- Live ROE Preview Box -->
++                            <div class="col-12" id="roe_live_preview_box" style="display: none;">
++                                <div class="p-2 px-3 rounded border border-info bg-soft-info d-flex align-items-center gap-2 fs-13">
++                                    <i class="mdi mdi-calculator text-info fs-18"></i>
++                                    <div>
++                                        <strong class="text-dark">Currency Conversion Preview:</strong>
++                                        <span id="roe_live_preview_text" class="fw-bold text-primary ms-1"></span>
++                                    </div>
++                                </div>
++                            </div>
++                        </div>
++
++                        <!-- ROW 3: Total Amount, Transaction Type, Reference -->
++                        <div class="row g-3 mb-3">
++                            <div class="col-md-4">
++                                <label class="form-label fs-13 fw-semibold">Total Amount <span class="text-danger">*</span></label>
++                                <div class="input-group input-group-sm">
++                                    <span class="input-group-text currency-symbol">{{ $transaction->currency ?? 'PKR' }}</span>
++                                    <input type="number" step="any" name="amount" id="main_total_amount"
++                                        value="{{ old('amount', $transaction->amount) }}"
++                                        class="form-control form-control-sm fw-bold text-dark" placeholder="Enter Total Amount" required>
++                                </div>
++                            </div>
++
++                            <div class="col-md-4">
++                                <label class="form-label fs-13 fw-semibold">Transaction Type</label>
++                                <select name="transaction_type" class="form-select form-select-sm">
++                                    <option value="debit" {{ old('transaction_type', $transaction->transaction_type) == 'debit' ? 'selected' : '' }}>Debit (Payment Out / Expense / Supplier Pay)</option>
++                                    <option value="credit" {{ old('transaction_type', $transaction->transaction_type) == 'credit' ? 'selected' : '' }}>Credit (Payment In / Client Receipt / Income)</option>
++                                </select>
++                            </div>
++
++                            <div class="col-md-4">
++                                <label class="form-label fs-13 fw-semibold">Reference</label>
++                                <input type="text" name="reference_no"
++                                    value="{{ old('reference_no', $transaction->reference_no) }}"
++                                    class="form-control form-control-sm" placeholder="DT-EXP-000001">
++                            </div>
++                        </div>
++
++                        <!-- ROW 4: Proof of Payment -->
++                        <div class="row g-3 mb-3">
++                            <div class="col-md-12">
++                                <label class="form-label fs-13 fw-semibold">Proof of Payment</label>
++                                <div class="d-flex gap-3 align-items-center">
++                                    <input type="file" name="proof" class="form-control form-control-sm" accept=".jpg,.jpeg,.png,.pdf">
++                                    @if ($transaction->proof)
++                                        <a href="{{ asset('assets/images/expense_proofs/' . $transaction->proof) }}"
++                                            target="_blank" class="btn btn-sm btn-outline-info text-nowrap">
++                                            <i class="mdi mdi-eye me-1"></i> View Current Proof
++                                        </a>
++                                    @endif
++                                </div>
++                                <small class="text-muted fs-11">Supported formats: JPG, PNG, PDF (Max 5MB)</small>
++                            </div>
++                        </div>
++
++                        <!-- ROW 5: Description -->
++                        <div class="row g-3 mb-4">
++                            <div class="col-md-12">
++                                <label class="form-label fs-13 fw-semibold">Description / Notes</label>
++                                <textarea name="description" class="form-control" rows="2"
++                                    placeholder="Reason for Payment / Notes">{{ old('description', $transaction->description) }}</textarea>
++                            </div>
++                        </div>
++
+                         <!-- SUBMIT BUTTONS -->
+                         <div class="d-flex gap-2">
+                             <button type="submit" class="btn btn-primary px-4">
+@@ -525,6 +635,7 @@ function updateCurrency() {
+         const expenseSec = document.getElementById('expenseHeadSection');
+         const selfSec = document.getElementById('selfSection');
+         const jvSec = document.getElementById('jvSection');
++        const loanSec = document.getElementById('loanSection');
+ 
+         payeeRadios.forEach(radio => {
+             radio.addEventListener('change', function() {
+@@ -534,6 +645,7 @@ function updateCurrency() {
+                 if (expenseSec) expenseSec.classList.add('d-none');
+                 if (selfSec) selfSec.classList.add('d-none');
+                 if (jvSec) jvSec.classList.add('d-none');
++                if (loanSec) loanSec.classList.add('d-none');
+ 
+                 if (this.value === 'supplier' && supplierSec) {
+                     supplierSec.classList.remove('d-none');
+@@ -547,9 +659,12 @@ function updateCurrency() {
+                     selfSec.classList.remove('d-none');
+                 } else if (this.value === 'jv' && jvSec) {
+                     jvSec.classList.remove('d-none');
++                } else if (this.value === 'loan' && loanSec) {
++                    loanSec.classList.remove('d-none');
+                 }
+             });
+         });
++        });
+ 
+         // JV Party Toggle
+         const jvToggle = document.getElementById('jv_party_toggle');
+@@ -563,6 +678,9 @@ function updateCurrency() {
+                     jvClientBox.classList.remove('d-none');
+                 } else if (this.value === 'supplier' && jvSupplierBox) {
+                     jvSupplierBox.classList.remove('d-none');
++                } else if (this.value === 'both') {
++                    if (jvClientBox) jvClientBox.classList.remove('d-none');
++                    if (jvSupplierBox) jvSupplierBox.classList.remove('d-none');
+                 }
+             });
+         }
+@@ -654,5 +772,52 @@ function updateStaffCard() {
+             }
+         });
+     });
++
++        // Payment Type Toggle (Bank vs Cash Account)
++        const paymentTypeRadios = document.querySelectorAll('input[name="payment_type"]');
++        const bankSelectGroup = document.getElementById('bank_select_group');
++        const cashAccountGroup = document.getElementById('cash_account_group');
++
++        function updatePaymentMode(type) {
++            if (type === 'cash') {
++                if (bankSelectGroup) bankSelectGroup.style.display = 'none';
++                if (cashAccountGroup) cashAccountGroup.style.display = 'block';
++            } else {
++                if (bankSelectGroup) bankSelectGroup.style.display = 'block';
++                if (cashAccountGroup) cashAccountGroup.style.display = 'none';
++            }
++        }
++        paymentTypeRadios.forEach(r => {
++            r.addEventListener('change', function() { updatePaymentMode(this.value); });
++        });
++
++        // Live ROE Calculation Preview
++        const amountInput = document.getElementById('main_total_amount');
++        const roePreviewBox = document.getElementById('roe_live_preview_box');
++        const roePreviewText = document.getElementById('roe_live_preview_text');
++
++        function updateLiveRoePreview() {
++            if (!amountInput || !roePreviewBox || !roePreviewText) return;
++            const amt = parseFloat(amountInput.value) || 0;
++            const curr = currencySelect ? currencySelect.value : 'PKR';
++            const rate = parseFloat(rateInput ? rateInput.value : 1) || 1;
++
++            if (amt > 0 && curr === 'SAR' && rate > 0) {
++                const equivPkr = amt * rate;
++                roePreviewText.textContent = `${amt.toLocaleString('en-US', {minimumFractionDigits: 2})} SAR × ${rate.toFixed(2)} ROE = PKR ${equivPkr.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
++                roePreviewBox.style.display = 'block';
++            } else if (amt > 0 && curr === 'PKR' && rate > 1) {
++                const equivSar = amt / rate;
++                roePreviewText.textContent = `PKR ${amt.toLocaleString('en-US', {minimumFractionDigits: 2})} ÷ ${rate.toFixed(2)} ROE = ${equivSar.toLocaleString('en-US', {minimumFractionDigits: 2})} SAR`;
++                roePreviewBox.style.display = 'block';
++            } else {
++                roePreviewBox.style.display = 'none';
++            }
++        }
++
++        if (amountInput) amountInput.addEventListener('input', updateLiveRoePreview);
++        if (rateInput) rateInput.addEventListener('input', updateLiveRoePreview);
++        if (currencySelect) currencySelect.addEventListener('change', updateLiveRoePreview);
++        updateLiveRoePreview();
+ </script>
+ @endsection

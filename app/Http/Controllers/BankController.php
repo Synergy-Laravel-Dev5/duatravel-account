@@ -21,12 +21,38 @@ class BankController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required',
-            'status' => 'required|in:active,inactive',
+            'name'                => 'required|string|max:255',
+            'account_name'        => 'nullable|string|max:255',
+            'account_number'      => 'nullable|string|max:100',
+            'branch'              => 'nullable|string|max:255',
+            'account_type'        => 'nullable|in:bank,cash',
+            'opening_balance_pkr' => 'nullable|numeric',
+            'opening_balance_sar' => 'nullable|numeric',
+            'opening_balance_roe' => 'nullable|numeric',
+            'status'              => 'required|in:active,inactive',
         ]);
         
-        Bank::create($request->all());
-        return redirect()->route('bank.index')->with('success', 'Bank created successfully.');
+        $obPkr = (float)($request->opening_balance_pkr ?? 0);
+        $obSar = (float)($request->opening_balance_sar ?? 0);
+        $obRoe = (float)($request->opening_balance_roe > 0 ? $request->opening_balance_roe : 75.0);
+        if ($obSar == 0 && $obPkr != 0) {
+            $obSar = round($obPkr / $obRoe, 2);
+        } elseif ($obPkr == 0 && $obSar != 0) {
+            $obPkr = round($obSar * $obRoe, 2);
+        }
+
+        Bank::create([
+            'name'                => $request->name,
+            'account_name'        => $request->account_name,
+            'account_number'      => $request->account_number,
+            'branch'              => $request->branch,
+            'account_type'        => $request->account_type ?? 'bank',
+            'opening_balance_pkr' => $obPkr,
+            'opening_balance_sar' => $obSar,
+            'opening_balance_roe' => $obRoe,
+            'status'              => $request->status,
+        ]);
+        return redirect()->route('bank.index')->with('success', 'Account created successfully.');
     }
 
     public function edit(Bank $bank)
@@ -37,12 +63,38 @@ class BankController extends Controller
     public function update(Request $request, Bank $bank)
     {
         $request->validate([
-            'name' => 'required',
-            'status' => 'required|in:active,inactive',
+            'name'                => 'required|string|max:255',
+            'account_name'        => 'nullable|string|max:255',
+            'account_number'      => 'nullable|string|max:100',
+            'branch'              => 'nullable|string|max:255',
+            'account_type'        => 'nullable|in:bank,cash',
+            'opening_balance_pkr' => 'nullable|numeric',
+            'opening_balance_sar' => 'nullable|numeric',
+            'opening_balance_roe' => 'nullable|numeric',
+            'status'              => 'required|in:active,inactive',
         ]);
+
+        $obPkr = (float)($request->opening_balance_pkr ?? 0);
+        $obSar = (float)($request->opening_balance_sar ?? 0);
+        $obRoe = (float)($request->opening_balance_roe > 0 ? $request->opening_balance_roe : 75.0);
+        if ($obSar == 0 && $obPkr != 0) {
+            $obSar = round($obPkr / $obRoe, 2);
+        } elseif ($obPkr == 0 && $obSar != 0) {
+            $obPkr = round($obSar * $obRoe, 2);
+        }
         
-        $bank->update($request->all());
-        return redirect()->route('bank.index')->with('success', 'Bank updated successfully.');
+        $bank->update([
+            'name'                => $request->name,
+            'account_name'        => $request->account_name,
+            'account_number'      => $request->account_number,
+            'branch'              => $request->branch,
+            'account_type'        => $request->account_type ?? 'bank',
+            'opening_balance_pkr' => $obPkr,
+            'opening_balance_sar' => $obSar,
+            'opening_balance_roe' => $obRoe,
+            'status'              => $request->status,
+        ]);
+        return redirect()->route('bank.index')->with('success', 'Account updated successfully.');
     }
 
     public function destroy(Bank $bank)
