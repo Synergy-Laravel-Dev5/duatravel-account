@@ -39,38 +39,13 @@
                                     <input type="text" name="branch" class="form-control" placeholder="e.g. Clifton Branch, Karachi" value="{{ old('branch') }}">
                                 </div>
 
-                                {{-- Multi-Currency Opening Balance (PKR & SAR) --}}
-                                <div class="col-12">
-                                    <div class="p-3 border rounded bg-light">
-                                        <h6 class="text-primary fw-bold mb-2">
-                                            <i class="mdi mdi-cash-multiple me-1"></i> Multi-Currency Opening Balance (PKR & SAR)
-                                        </h6>
-                                        <p class="text-muted small mb-3">Enter opening balance in PKR and conversion ROE. The SAR equivalent will auto-calculate based on ROE.</p>
-                                        <div class="row g-3 align-items-end">
-                                            <div class="col-md-5">
-                                                <label class="form-label fw-semibold">Opening Balance (PKR)</label>
-                                                <div class="input-group">
-                                                    <span class="input-group-text bg-white">PKR</span>
-                                                    <input type="number" step="0.01" name="opening_balance_pkr" id="opening_balance_pkr" class="form-control" placeholder="0.00" value="{{ old('opening_balance_pkr', 0) }}">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-2">
-                                                <label class="form-label fw-semibold">Rate of Exchange (ROE)</label>
-                                                <div class="input-group">
-                                                    <span class="input-group-text bg-white"><i class="mdi mdi-swap-horizontal"></i></span>
-                                                    <input type="number" step="0.0001" name="opening_balance_roe" id="opening_balance_roe" class="form-control text-center fw-bold" placeholder="75.00" value="{{ old('opening_balance_roe', '75.00') }}">
-                                                </div>
-                                                <small class="text-muted d-block mt-1">1 SAR = X PKR</small>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <label class="form-label fw-semibold">Opening Balance (SAR)</label>
-                                                <div class="input-group">
-                                                    <span class="input-group-text bg-white">SAR</span>
-                                                    <input type="number" step="0.01" name="opening_balance_sar" id="opening_balance_sar" class="form-control" placeholder="0.00" value="{{ old('opening_balance_sar', 0) }}">
-                                                </div>
-                                            </div>
-                                        </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Opening Balance (PKR)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white fw-bold">PKR</span>
+                                        <input type="number" step="0.01" name="opening_balance_pkr" id="opening_balance_pkr" class="form-control fw-bold" placeholder="0.00" value="{{ old('opening_balance_pkr', 0) }}">
                                     </div>
+                                    <small class="text-muted fs-11">Bank opening balance is maintained in PKR only.</small>
                                 </div>
 
                                 <div class="col-md-6">
@@ -90,25 +65,4 @@
             </div>
         </div>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const pkrInput = document.getElementById('opening_balance_pkr');
-            const roeInput = document.getElementById('opening_balance_roe');
-            const sarInput = document.getElementById('opening_balance_sar');
-
-            function calculateSarFromPkr() {
-                const pkr = parseFloat(pkrInput.value) || 0;
-                const roe = parseFloat(roeInput.value) || 75;
-                if (roe > 0) {
-                    sarInput.value = (pkr / roe).toFixed(2);
-                }
-            }
-
-            if (pkrInput && roeInput && sarInput) {
-                pkrInput.addEventListener('input', calculateSarFromPkr);
-                roeInput.addEventListener('input', calculateSarFromPkr);
-            }
-        });
-    </script>
 @endsection

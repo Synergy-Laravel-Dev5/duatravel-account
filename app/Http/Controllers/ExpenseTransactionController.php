@@ -79,6 +79,12 @@ class ExpenseTransactionController extends Controller
             'payee_type'       => 'nullable|in:supplier,client,staff,expense,general,self,jv,loan',
             'currency'         => 'required|string|max:10',
             'exchange_rate'    => 'nullable|numeric|min:0.0001',
+            'from_roe'         => 'nullable|numeric|min:0.0001',
+            'to_roe'           => 'nullable|numeric|min:0.0001',
+            'jv_from_roe'      => 'nullable|numeric|min:0.0001',
+            'jv_to_roe'        => 'nullable|numeric|min:0.0001',
+            'jv_contra_client_roe'   => 'nullable|numeric|min:0.0001',
+            'jv_contra_supplier_roe' => 'nullable|numeric|min:0.0001',
             'date'             => 'required|date',
             'reference_no'     => 'nullable|string|max:100',
             'proof'            => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
@@ -191,11 +197,16 @@ class ExpenseTransactionController extends Controller
                     $mapEntity($fromType, $fromId, $fromFields, $fromName);
                     $mapEntity($toType, $toId, $toFields, $toName);
 
-                    $userNotes = $request->description ? (' — ' . $request->description) : '';
-                    $fromDesc = "JV Transfer TO [{$toName}]{$userNotes}";
-                    $toDesc   = "JV Transfer FROM [{$fromName}]{$userNotes}";
+                    $fromRoe = (float) ($request->input('jv_from_roe') ?: ($request->input('from_roe') ?: $exchangeRate));
+                    $toRoe   = (float) ($request->input('jv_to_roe') ?: ($request->input('to_roe') ?: $exchangeRate));
+                    if ($fromRoe <= 0) $fromRoe = ($exchangeRate > 0 ? $exchangeRate : 76.00);
+                    if ($toRoe <= 0) $toRoe = ($exchangeRate > 0 ? $exchangeRate : 75.00);
 
-                    // Leg 1: Outgoing / Credit from From-Account
+                    $userNotes = $request->description ? (' — ' . $request->description) : '';
+                    $fromDesc = "JV Transfer TO [{$toName}] @ ROE {$fromRoe}{$userNotes}";
+                    $toDesc   = "JV Transfer FROM [{$fromName}] @ ROE {$toRoe}{$userNotes}";
+
+                    // Leg 1: Outgoing / Credit from From-Account (Leg 1 ROE)
                     $t1 = ExpenseTransaction::create(array_merge($fromFields, [
                         'hajj_umrah'       => $request->hajj_umrah,
                         'year'             => $request->year,
@@ -204,14 +215,14 @@ class ExpenseTransactionController extends Controller
                         'transaction_type' => 'credit',
                         'payee_type'       => 'jv',
                         'currency'         => $currency,
-                        'exchange_rate'    => $exchangeRate,
+                        'exchange_rate'    => $fromRoe,
                         'reference_no'     => $refNo,
                         'proof'            => $proofPath,
                         'date'             => $dateFormatted,
                         'description'      => $fromDesc,
                     ]));
 
-                    // Leg 2: Incoming / Debit to To-Account
+                    // Leg 2: Incoming / Debit to To-Account (Leg 2 ROE)
                     $t2 = ExpenseTransaction::create(array_merge($toFields, [
                         'hajj_umrah'       => $request->hajj_umrah,
                         'year'             => $request->year,
@@ -220,7 +231,7 @@ class ExpenseTransactionController extends Controller
                         'transaction_type' => 'debit',
                         'payee_type'       => 'jv',
                         'currency'         => $currency,
-                        'exchange_rate'    => $exchangeRate,
+                        'exchange_rate'    => $toRoe,
                         'reference_no'     => $refNo,
                         'proof'            => $proofPath,
                         'date'             => $dateFormatted,
@@ -293,11 +304,16 @@ class ExpenseTransactionController extends Controller
                         $clientType = ($direction === 'supplier_to_client') ? 'debit' : 'credit';
                         $supplierType = ($direction === 'supplier_to_client') ? 'credit' : 'debit';
 
+                        $clientRoe   = (float) ($request->input('jv_contra_client_roe') ?: ($request->input('jv_from_roe') ?: $exchangeRate));
+                        $supplierRoe = (float) ($request->input('jv_contra_supplier_roe') ?: ($request->input('jv_to_roe') ?: $exchangeRate));
+                        if ($clientRoe <= 0) $clientRoe = ($exchangeRate > 0 ? $exchangeRate : 76.00);
+                        if ($supplierRoe <= 0) $supplierRoe = ($exchangeRate > 0 ? $exchangeRate : 75.00);
+
                         $dirLabel = ($direction === 'supplier_to_client') ? 'Supplier Refund to Client' : 'Client Payment to Supplier';
                         $userDesc = $request->description ? (' — ' . $request->description) : '';
 
-                        $clientDesc = "JV Contra [Supplier: {$supplierName}] ({$dirLabel}){$userDesc}";
-                        $supplierDesc = "JV Contra [Client: {$clientName}] ({$dirLabel}){$userDesc}";
+                        $clientDesc = "JV Contra [Supplier: {$supplierName}] ({$dirLabel}) @ ROE {$clientRoe}{$userDesc}";
+                        $supplierDesc = "JV Contra [Client: {$clientName}] ({$dirLabel}) @ ROE {$supplierRoe}{$userDesc}";
 
                         // Leg 1: Client side (client_id set, supplier_id null so supplier ledger doesn't double-count)
                         $t1 = ExpenseTransaction::create([
@@ -315,7 +331,7 @@ class ExpenseTransactionController extends Controller
                             'transaction_type' => $clientType,
                             'payee_type'       => 'jv',
                             'currency'         => $currency,
-                            'exchange_rate'    => $exchangeRate,
+                            'exchange_rate'    => $clientRoe,
                             'reference_no'     => $refNo,
                             'proof'            => $proofPath,
                             'date'             => $dateFormatted,
@@ -338,7 +354,7 @@ class ExpenseTransactionController extends Controller
                             'transaction_type' => $supplierType,
                             'payee_type'       => 'jv',
                             'currency'         => $currency,
-                            'exchange_rate'    => $exchangeRate,
+                            'exchange_rate'    => $supplierRoe,
                             'reference_no'     => $refNo,
                             'proof'            => $proofPath,
                             'date'             => $dateFormatted,
@@ -479,6 +495,12 @@ class ExpenseTransactionController extends Controller
             'payee_type'       => 'nullable|in:supplier,client,staff,expense,general,self,jv,loan',
             'currency'         => 'required|string|max:10',
             'exchange_rate'    => 'nullable|numeric|min:0.0001',
+            'from_roe'         => 'nullable|numeric|min:0.0001',
+            'to_roe'           => 'nullable|numeric|min:0.0001',
+            'jv_from_roe'      => 'nullable|numeric|min:0.0001',
+            'jv_to_roe'        => 'nullable|numeric|min:0.0001',
+            'jv_contra_client_roe'   => 'nullable|numeric|min:0.0001',
+            'jv_contra_supplier_roe' => 'nullable|numeric|min:0.0001',
             'date'             => 'required|date',
             'reference_no'     => 'nullable|string|max:100',
             'proof'            => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',

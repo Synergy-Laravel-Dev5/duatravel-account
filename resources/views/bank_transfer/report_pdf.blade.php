@@ -93,8 +93,8 @@
             </td>
             <td style="width: 50%; text-align: right;">
                 <strong>Date Range:</strong> {{ $fromDate ? date('d M Y', strtotime($fromDate)) : 'Start' }} to {{ $toDate ? date('d M Y', strtotime($toDate)) : 'Present' }}<br>
-                <strong>PKR:</strong> Cr {{ number_format($totalDepositsPkr, 2) }} | Dr {{ number_format($totalWithdrawalsPkr, 2) }} | Net {{ number_format($netMovementPkr, 2) }}<br>
-                <strong>SAR:</strong> Cr {{ number_format($totalDepositsSar, 2) }} | Dr {{ number_format($totalWithdrawalsSar, 2) }} | Net {{ number_format($netMovementSar, 2) }}
+                <strong>PKR:</strong> Opening {{ number_format($totalOpeningBalancePkr ?? 0, 2) }} | Cr {{ number_format($totalPeriodDepositsPkr ?? 0, 2) }} | Dr {{ number_format($totalWithdrawalsPkr, 2) }} | Net {{ number_format($netMovementPkr, 2) }}<br>
+                <strong>SAR:</strong> Opening {{ number_format($totalOpeningBalanceSar ?? 0, 2) }} | Cr {{ number_format($totalPeriodDepositsSar ?? 0, 2) }} | Dr {{ number_format($totalWithdrawalsSar, 2) }} | Net {{ number_format($netMovementSar, 2) }}
             </td>
         </tr>
     </table>

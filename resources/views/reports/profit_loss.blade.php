@@ -292,6 +292,11 @@
                                 <i class="mdi mdi-calendar-month me-1 text-success"></i> Monthly & Annual P&L Summary ({{ count($monthlyData) }} Months)
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link py-3 px-4 fw-bold fs-13" data-bs-toggle="tab" href="#tab-formal-statement" role="tab">
+                                <i class="mdi mdi-file-document-outline me-1 text-warning"></i> Profit & Loss Summary Statement
+                            </a>
+                        </li>
                     </ul>
                 </div>
 
@@ -697,6 +702,208 @@
                             </div>
                         </div>
 
+                        <!-- ════════════════ TAB 3: PROFIT & LOSS SUMMARY STATEMENT (FORMAL FORMAT) ════════════════ -->
+                        <div class="tab-pane" id="tab-formal-statement" role="tabpanel">
+                            
+                            <!-- Action Bar (hidden on print) -->
+                            <div class="d-flex justify-content-between align-items-center p-3 bg-light border-bottom no-print">
+                                <div class="fs-13 text-muted">
+                                    <i class="mdi mdi-information-outline me-1"></i> Standard accounting profit & loss summary statement matching official report layout.
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-sm btn-primary fw-semibold" onclick="printFormalStatement()">
+                                        <i class="mdi mdi-printer me-1"></i> Print Formal Statement
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-success fw-semibold" onclick="exportStatementToCSV()">
+                                        <i class="mdi mdi-file-excel me-1"></i> Export Statement CSV
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- FORMAL STATEMENT CONTAINER -->
+                            <div class="p-4 p-md-5 bg-white" id="printableFormalStatement" style="max-width: 950px; margin: 0 auto; color: #2d3436; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                                
+                                <!-- COMPANY HEADER -->
+                                <div class="row align-items-center mb-2">
+                                    <div class="col-12">
+                                        <h1 class="fw-bold mb-1" style="font-family: 'Impact', 'Arial Black', sans-serif; color: #d35400; font-size: 32px; letter-spacing: 0.5px;">
+                                            Dua Travels and Tours
+                                        </h1>
+                                        <div class="fs-12 text-dark fw-semibold" style="line-height: 1.45;">
+                                            Office # 01 Plot # A-14 Block - 4 Saadabad CHS, Gulistan-e-Johar Karachi<br>
+                                            Phone #: 021-34774262 / 021-34774263, Cell #: 0321-8259646<br>
+                                            Email: dua.travel2012@gmail.com / dua.travel2012@hotmail.com
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- ORANGE TITLE BAR -->
+                                <div class="py-2 px-3 mb-2 text-end text-white fw-bold fs-16 text-uppercase" style="background-color: #d35400; letter-spacing: 0.5px;">
+                                    Profit and Loss Summary
+                                </div>
+
+                                <!-- DATE RANGE BAR -->
+                                <div class="py-2 px-3 mb-3 bg-light border-top border-bottom text-dark fw-bold fs-13">
+                                    {{ $statementPeriod }}
+                                </div>
+
+                                <!-- STATEMENT TABLE -->
+                                <table class="table table-bordered table-sm align-middle fs-13 mb-0 statement-table" style="border-collapse: collapse; border: 1px solid #ddd;">
+                                    <thead style="background-color: #f2f2f2;">
+                                        <tr class="fw-bold" style="color: #c0392b;">
+                                            <th style="width: 150px;" class="py-2 px-3">Account Code</th>
+                                            <th class="py-2 px-3">Account Title</th>
+                                            <th style="width: 180px;" class="text-end py-2 px-3">Amount (PKR)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- 40-10-000 SYSTEM ACCOUNTS (INCOME) -->
+                                        @if(count($systemIncomeItems) > 0)
+                                        <tr style="background-color: #fbfbfb;">
+                                            <td class="px-3 fw-bold" style="color: #d35400;">40-10-000</td>
+                                            <td class="px-3 fw-bold" style="color: #d35400;">System Accounts</td>
+                                            <td></td>
+                                        </tr>
+                                        @foreach($systemIncomeItems as $inc)
+                                        <tr>
+                                            <td class="px-4 text-muted">{{ $inc['code'] }}</td>
+                                            <td class="px-4">{{ $inc['title'] }}</td>
+                                            <td class="text-end px-3 fw-semibold">{{ number_format($inc['amount'], 2) }}</td>
+                                        </tr>
+                                        @endforeach
+                                        <tr class="fw-bold" style="background-color: #fafafa; border-bottom: 2px solid #ddd;">
+                                            <td colspan="2" class="text-end px-3" style="color: #d35400;">Total System Accounts:</td>
+                                            <td class="text-end px-3" style="color: #d35400;">{{ number_format($totalSystemIncomePkr, 2) }}</td>
+                                        </tr>
+                                        @endif
+
+                                        <!-- 50-00-000 DIRECT SERVICE COSTS -->
+                                        @if(count($directCostItems) > 0)
+                                        <tr style="background-color: #fbfbfb;">
+                                            <td class="px-3 fw-bold" style="color: #d35400;">50-00-000</td>
+                                            <td class="px-3 fw-bold" style="color: #d35400;">Direct Service Costs</td>
+                                            <td></td>
+                                        </tr>
+                                        @foreach($directCostItems as $dci)
+                                        <tr>
+                                            <td class="px-4 text-muted">{{ $dci['code'] }}</td>
+                                            <td class="px-4">{{ $dci['title'] }}</td>
+                                            <td class="text-end px-3">{{ number_format($dci['amount'], 2) }}</td>
+                                        </tr>
+                                        @endforeach
+                                        <tr class="fw-bold" style="background-color: #fafafa; border-bottom: 2px solid #ddd;">
+                                            <td colspan="2" class="text-end px-3" style="color: #d35400;">Total Direct Service Costs:</td>
+                                            <td class="text-end px-3 text-danger">{{ number_format($totalDirectCostPkr, 2) }}</td>
+                                        </tr>
+                                        @endif
+
+                                        <!-- 50-01-000 UTILITIES EXPENSES -->
+                                        @if(count($utilItems) > 0)
+                                        <tr style="background-color: #fbfbfb;">
+                                            <td class="px-3 fw-bold" style="color: #d35400;">50-01-000</td>
+                                            <td class="px-3 fw-bold" style="color: #d35400;">Utilities Expenses</td>
+                                            <td></td>
+                                        </tr>
+                                        @foreach($utilItems as $ui)
+                                        <tr>
+                                            <td class="px-4 text-muted">{{ $ui['code'] }}</td>
+                                            <td class="px-4">{{ $ui['title'] }}</td>
+                                            <td class="text-end px-3">{{ number_format($ui['amount'], 2) }}</td>
+                                        </tr>
+                                        @endforeach
+                                        <tr class="fw-bold" style="background-color: #fafafa; border-bottom: 2px solid #ddd;">
+                                            <td colspan="2" class="text-end px-3" style="color: #d35400;">Total Utilities Expenses:</td>
+                                            <td class="text-end px-3" style="color: #d35400;">{{ number_format($totalUtilitiesPkr, 2) }}</td>
+                                        </tr>
+                                        @endif
+
+                                        <!-- 50-02-000 EXPENSE -->
+                                        @if(count($genItems) > 0)
+                                        <tr style="background-color: #fbfbfb;">
+                                            <td class="px-3 fw-bold" style="color: #d35400;">50-02-000</td>
+                                            <td class="px-3 fw-bold" style="color: #d35400;">EXPENSE / Operating Expenses</td>
+                                            <td></td>
+                                        </tr>
+                                        @foreach($genItems as $gi)
+                                        <tr>
+                                            <td class="px-4 text-muted">{{ $gi['code'] }}</td>
+                                            <td class="px-4">{{ $gi['title'] }}</td>
+                                            <td class="text-end px-3">{{ number_format($gi['amount'], 2) }}</td>
+                                        </tr>
+                                        @endforeach
+                                        <tr class="fw-bold" style="background-color: #fafafa; border-bottom: 2px solid #ddd;">
+                                            <td colspan="2" class="text-end px-3" style="color: #d35400;">Total EXPENSE:</td>
+                                            <td class="text-end px-3" style="color: #d35400;">{{ number_format($totalGeneralPkr, 2) }}</td>
+                                        </tr>
+                                        @endif
+
+                                        <!-- 55-01-000 SALARIES AND WAGES EXPENSE -->
+                                        @if(count($salaryItems) > 0)
+                                        <tr style="background-color: #fbfbfb;">
+                                            <td class="px-3 fw-bold" style="color: #d35400;">55-01-000</td>
+                                            <td class="px-3 fw-bold" style="color: #d35400;">Salaries and Wages Expense</td>
+                                            <td></td>
+                                        </tr>
+                                        @foreach($salaryItems as $si)
+                                        <tr>
+                                            <td class="px-4 text-muted">{{ $si['code'] }}</td>
+                                            <td class="px-4">{{ $si['title'] }}</td>
+                                            <td class="text-end px-3">{{ number_format($si['amount'], 2) }}</td>
+                                        </tr>
+                                        @endforeach
+                                        <tr class="fw-bold" style="background-color: #fafafa; border-bottom: 2px solid #ddd;">
+                                            <td colspan="2" class="text-end px-3" style="color: #d35400;">Total Salaries and Wages Expense:</td>
+                                            <td class="text-end px-3" style="color: #d35400;">{{ number_format($totalSalariesPkr, 2) }}</td>
+                                        </tr>
+                                        @endif
+
+                                        @if(count($utilItems) == 0 && count($genItems) == 0 && count($salaryItems) == 0)
+                                        <tr style="background-color: #fbfbfb;">
+                                            <td class="px-3 fw-bold" style="color: #d35400;">50-02-000</td>
+                                            <td class="px-3 fw-bold" style="color: #d35400;">Operating & Administrative Expenses</td>
+                                            <td class="text-end px-3 text-muted">0.00</td>
+                                        </tr>
+                                        @endif
+
+                                        <!-- GRAND TOTAL ROW -->
+                                        <tr class="fw-bold fs-14" style="background-color: #f1f2f6; border-top: 2px solid #333;">
+                                            <td colspan="2" class="text-end px-3 text-uppercase" style="color: #d35400;">Grand Total Expenses:</td>
+                                            <td class="text-end px-3 text-danger">PKR {{ number_format($statementTotalExpenses, 2) }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <!-- BOTTOM SUMMARY BOX (EXACT DESIGN MATCH) -->
+                                <div class="row justify-content-end mt-4">
+                                    <div class="col-md-5 col-sm-8 col-12">
+                                        <table class="table table-bordered table-sm mb-0 shadow-sm" style="border: 2px solid #bbb;">
+                                            <tbody>
+                                                <tr>
+                                                    <td class="px-3 py-2 fw-bold" style="color: #d35400; width: 50%;">Total Income</td>
+                                                    <td class="px-3 py-2 text-end fw-bold text-dark fs-14">
+                                                        PKR {{ number_format($statementTotalIncome, 2) }}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="px-3 py-2 fw-bold" style="color: #d35400;">Total Expenses</td>
+                                                    <td class="px-3 py-2 text-end fw-bold text-dark fs-14">
+                                                        PKR {{ number_format($statementTotalExpenses, 2) }}
+                                                    </td>
+                                                </tr>
+                                                <tr style="background-color: #e8f5e9;">
+                                                    <td class="px-3 py-2 fw-bold fs-14" style="color: #2e7d32;">Net Profit</td>
+                                                    <td class="px-3 py-2 text-end fw-bold fs-15 {{ $statementNetProfit >= 0 ? 'text-success' : 'text-danger' }}">
+                                                        PKR {{ number_format($statementNetProfit, 2) }}
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -705,7 +912,70 @@
     </div>
 </div>
 
+<style>
+@media print {
+    body * {
+        visibility: hidden !important;
+    }
+    #printableFormalStatement, #printableFormalStatement * {
+        visibility: visible !important;
+    }
+    #printableFormalStatement {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 10px !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+    .no-print {
+        display: none !important;
+    }
+}
+</style>
+
 <script>
+function printFormalStatement() {
+    let formalTabLink = document.querySelector('a[href="#tab-formal-statement"]');
+    if (formalTabLink && typeof bootstrap !== 'undefined') {
+        bootstrap.Tab.getOrCreateInstance(formalTabLink).show();
+    }
+    setTimeout(function() {
+        window.print();
+    }, 250);
+}
+
+function exportStatementToCSV() {
+    let table = document.querySelector('#printableFormalStatement table');
+    if (!table) return;
+    let csv = [];
+    let rows = table.querySelectorAll('tr');
+    
+    for (let i = 0; i < rows.length; i++) {
+        let row = [], cols = rows[i].querySelectorAll('td, th');
+        for (let j = 0; j < cols.length; j++) {
+            let text = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, ' ').replace(/\s+/g, ' ').trim();
+            text = text.replace(/"/g, '""');
+            row.push('"' + text + '"');
+        }
+        if (row.length > 0) {
+            csv.push(row.join(','));
+        }
+    }
+
+    let csvFile = new Blob([csv.join('\n')], {type: 'text/csv;charset=utf-8;'});
+    let downloadLink = document.createElement('a');
+    downloadLink.download = 'Profit_and_Loss_Summary_Statement.csv';
+    downloadLink.href = window.URL.createObjectURL(csvFile);
+    downloadLink.style.display = 'none';
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+}
+
 function exportTableToCSV(filename) {
     let activeTab = document.querySelector('.tab-pane.active');
     let table = activeTab.querySelector('table');

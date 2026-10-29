@@ -173,7 +173,32 @@
 
             {{-- 4 Metric Summary Cards with Dual Currency (PKR & SAR) --}}
             <div class="row g-3 mb-4">
-                {{-- Total Deposits / Credits --}}
+                {{-- 1. Bank Opening Balance --}}
+                <div class="col-md-3">
+                    <div class="bt-stat-card border-start border-4 border-primary">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="bt-icon-box bg-soft-primary text-primary">
+                                <i class="ri-bank-line"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="text-muted fs-11 fw-bold text-uppercase">Bank Opening Balance</div>
+                                <div class="fs-17 fw-bold text-primary mt-1">
+                                    PKR {{ number_format($totalOpeningBalancePkr ?? 0, 2) }}
+                                </div>
+                                <div class="mt-1 d-flex align-items-center gap-2">
+                                    @if(($totalOpeningBalanceSar ?? 0) > 0)
+                                        <span class="badge bg-soft-primary text-primary border border-primary border-opacity-25 fs-11">
+                                            SAR {{ number_format($totalOpeningBalanceSar, 2) }}
+                                        </span>
+                                    @endif
+                                    <span class="fs-10 text-muted">{{ $selectedBank ? $selectedBank->name : count($allBanks) . ' Bank Account(s)' }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- 2. Total Period Deposits / Credits --}}
                 <div class="col-md-3">
                     <div class="bt-stat-card border-start border-4 border-success">
                         <div class="d-flex align-items-center gap-3">
@@ -183,11 +208,11 @@
                             <div class="flex-grow-1">
                                 <div class="text-muted fs-11 fw-bold text-uppercase">Total Deposits (Cr / Inflow)</div>
                                 <div class="fs-17 fw-bold text-success mt-1">
-                                    PKR {{ number_format($totalDepositsPkr, 2) }}
+                                    PKR {{ number_format($totalPeriodDepositsPkr ?? 0, 2) }}
                                 </div>
                                 <div class="mt-1 d-flex align-items-center gap-2">
                                     <span class="badge bg-soft-success text-success border border-success border-opacity-25 fs-11">
-                                        SAR {{ number_format($totalDepositsSar, 2) }}
+                                        SAR {{ number_format($totalPeriodDepositsSar ?? 0, 2) }}
                                     </span>
                                     <span class="fs-10 text-muted">{{ number_format($depositCount) }} deposits</span>
                                 </div>
@@ -196,7 +221,7 @@
                     </div>
                 </div>
 
-                {{-- Total Withdrawals / Debits --}}
+                {{-- 3. Total Withdrawals / Debits --}}
                 <div class="col-md-3">
                     <div class="bt-stat-card border-start border-4 border-danger">
                         <div class="d-flex align-items-center gap-3">
@@ -219,39 +244,24 @@
                     </div>
                 </div>
 
-                {{-- Net Bank Movement --}}
+                {{-- 4. Current Net Balance --}}
                 <div class="col-md-3">
-                    <div class="bt-stat-card border-start border-4 {{ $netMovementPkr >= 0 ? 'border-primary' : 'border-warning' }}">
+                    <div class="bt-stat-card border-start border-4 {{ ($closingBalancePkr ?? $netMovementPkr) >= 0 ? 'border-info' : 'border-warning' }}">
                         <div class="d-flex align-items-center gap-3">
-                            <div class="bt-icon-box {{ $netMovementPkr >= 0 ? 'bg-soft-primary text-primary' : 'bg-soft-warning text-warning' }}">
+                            <div class="bt-icon-box {{ ($closingBalancePkr ?? $netMovementPkr) >= 0 ? 'bg-soft-info text-info' : 'bg-soft-warning text-warning' }}">
                                 <i class="ri-wallet-3-line"></i>
                             </div>
                             <div class="flex-grow-1">
-                                <div class="text-muted fs-11 fw-bold text-uppercase">Net Bank Balance Movement</div>
-                                <div class="fs-17 fw-bold {{ $netMovementPkr >= 0 ? 'text-primary' : 'text-danger' }} mt-1">
-                                    {{ $netMovementPkr >= 0 ? '+' : '' }} PKR {{ number_format($netMovementPkr, 2) }}
+                                <div class="text-muted fs-11 fw-bold text-uppercase">Current / Net Balance</div>
+                                <div class="fs-17 fw-bold {{ ($closingBalancePkr ?? $netMovementPkr) >= 0 ? 'text-dark' : 'text-danger' }} mt-1">
+                                    {{ ($closingBalancePkr ?? $netMovementPkr) >= 0 ? '+' : '' }} PKR {{ number_format($closingBalancePkr ?? $netMovementPkr, 2) }}
                                 </div>
-                                <div class="mt-1">
-                                    <span class="badge {{ $netMovementSar >= 0 ? 'bg-soft-primary text-primary border border-primary border-opacity-25' : 'bg-soft-danger text-danger border border-danger border-opacity-25' }} fs-11">
-                                        {{ $netMovementSar >= 0 ? '+' : '' }} SAR {{ number_format($netMovementSar, 2) }}
+                                <div class="mt-1 d-flex align-items-center gap-2">
+                                    <span class="badge {{ ($closingBalanceSar ?? $netMovementSar) >= 0 ? 'bg-soft-info text-dark border border-info border-opacity-25' : 'bg-soft-danger text-danger border border-danger border-opacity-25' }} fs-11">
+                                        {{ ($closingBalanceSar ?? $netMovementSar) >= 0 ? '+' : '' }} SAR {{ number_format($closingBalanceSar ?? $netMovementSar, 2) }}
                                     </span>
+                                    <span class="fs-10 text-muted">Closing Position</span>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Total Records --}}
-                <div class="col-md-3">
-                    <div class="bt-stat-card border-start border-4 border-info">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="bt-icon-box bg-soft-info text-info">
-                                <i class="ri-bank-line"></i>
-                            </div>
-                            <div class="flex-grow-1">
-                                <div class="text-muted fs-11 fw-bold text-uppercase">Active Bank Accounts</div>
-                                <div class="fs-17 fw-bold text-dark mt-1">{{ count($bankBreakdown) }} Bank(s)</div>
-                                <div class="fs-11 text-muted mt-1">{{ number_format($totalCount) }} Total Transactions logged</div>
                             </div>
                         </div>
                     </div>
@@ -273,12 +283,15 @@
                                 <thead class="table-light fs-12 text-uppercase">
                                     <tr>
                                         <th rowspan="2" class="align-middle">Bank Account</th>
+                                        <th colspan="2" class="text-center text-primary bg-soft-primary py-1 border-bottom-0">Opening Balance</th>
                                         <th colspan="2" class="text-center text-success bg-soft-success py-1 border-bottom-0">Incoming (Cr / Deposits)</th>
                                         <th colspan="2" class="text-center text-danger bg-soft-danger py-1 border-bottom-0">Outgoing (Dr / Withdrawals)</th>
-                                        <th colspan="2" class="text-center text-dark bg-light py-1 border-bottom-0">Net Position</th>
+                                        <th colspan="2" class="text-center text-dark bg-light py-1 border-bottom-0">Current / Net Balance</th>
                                         <th rowspan="2" class="text-center align-middle" style="width: 80px;">Activity</th>
                                     </tr>
                                     <tr>
+                                        <th class="text-end text-primary py-1">PKR</th>
+                                        <th class="text-end text-primary py-1">SAR</th>
                                         <th class="text-end text-success py-1">PKR</th>
                                         <th class="text-end text-success py-1">SAR</th>
                                         <th class="text-end text-danger py-1">PKR</th>
@@ -296,6 +309,12 @@
                                                 @if(!empty($bData['bank']->account_number))
                                                     <span class="text-muted fs-11 ms-1">({{ $bData['bank']->account_number }})</span>
                                                 @endif
+                                            </td>
+                                            <td class="text-end text-primary fw-semibold">
+                                                {{ number_format($bData['opening_balance_pkr'] ?? 0, 2) }}
+                                            </td>
+                                            <td class="text-end text-primary fw-semibold">
+                                                {{ number_format($bData['opening_balance_sar'] ?? 0, 2) }}
                                             </td>
                                             <td class="text-end text-success fw-semibold">
                                                 + {{ number_format($bData['incoming_pkr'], 2) }}
@@ -368,7 +387,7 @@
                             </thead>
                             <tbody>
                                 @forelse($transactions as $t)
-                                    <tr>
+                                    <tr class="{{ $t['source'] === 'bank_opening_balance' ? 'table-warning bg-opacity-25' : '' }}">
                                         <td class="text-center text-muted fs-11">{{ $loop->iteration }}</td>
                                         <td>
                                             <span class="fw-semibold text-dark text-nowrap">
@@ -376,13 +395,22 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <span class="badge bg-light text-dark border font-monospace fs-11">
-                                                {{ $t['voucher_no'] }}
-                                            </span>
-                                            @if($t['currency'] === 'SAR')
+                                            @if($t['source'] === 'bank_opening_balance')
+                                                <span class="badge bg-warning text-dark border font-monospace fs-11">
+                                                    {{ $t['voucher_no'] }}
+                                                </span>
                                                 <div class="mt-1">
-                                                    <span class="curr-pill-sar">SAR @ ROE {{ number_format($t['exchange_rate'], 2) }}</span>
+                                                    <span class="badge bg-soft-warning text-dark border border-warning border-opacity-25 fs-10">OPENING BAL</span>
                                                 </div>
+                                            @else
+                                                <span class="badge bg-light text-dark border font-monospace fs-11">
+                                                    {{ $t['voucher_no'] }}
+                                                </span>
+                                                @if($t['currency'] === 'SAR')
+                                                    <div class="mt-1">
+                                                        <span class="curr-pill-sar">SAR @ ROE {{ number_format($t['exchange_rate'], 2) }}</span>
+                                                    </div>
+                                                @endif
                                             @endif
                                         </td>
                                         <td>
@@ -402,7 +430,11 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <span class="badge bg-soft-secondary text-dark">{{ $t['payment_mode'] }}</span>
+                                            @if($t['source'] === 'bank_opening_balance')
+                                                <span class="badge bg-soft-warning text-dark border border-warning border-opacity-25">Opening Balance</span>
+                                            @else
+                                                <span class="badge bg-soft-secondary text-dark">{{ $t['payment_mode'] }}</span>
+                                            @endif
                                         </td>
                                         {{-- PKR Deposit (Cr) --}}
                                         <td class="text-end fw-bold text-success fs-13">
@@ -441,6 +473,10 @@
                                                         <i class="mdi mdi-trash-can-outline"></i>
                                                     </button>
                                                 </form>
+                                            @elseif($t['source'] === 'bank_opening_balance')
+                                                <a href="{{ route('bank.edit', $t['id']) }}" class="btn btn-outline-secondary btn-xs" title="Edit Bank Opening Balance">
+                                                    <i class="mdi mdi-pencil"></i>
+                                                </a>
                                             @endif
                                         </td>
                                     </tr>

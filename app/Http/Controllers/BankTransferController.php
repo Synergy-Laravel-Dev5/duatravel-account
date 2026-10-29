@@ -95,6 +95,116 @@ class BankTransferController extends Controller
         $allBanks = Bank::where('status', 'active')->orderBy('name')->get();
         $allRecords = [];
 
+        // 0. Gather Bank Opening Balances (INFLOWS / DEPOSITS - PKR & SAR)
+        if ($activityType !== 'withdrawal' && $activityType !== 'transfer') {
+            $banksQuery = Bank::where('status', 'active');
+            if ($bankId) {
+                $banksQuery->where('id', $bankId);
+            } elseif ($fromBankId) {
+                $banksQuery->where('id', $fromBankId);
+            } elseif ($toBankId) {
+                $banksQuery->where('id', $toBankId);
+            }
+
+            $opBanks = $banksQuery->get();
+
+            foreach ($opBanks as $b) {
+                $obPkr = (float) ($b->opening_balance_pkr ?? 0);
+                $obSar = (float) ($b->opening_balance_sar ?? 0);
+                if ($obPkr <= 0 && $obSar <= 0) {
+                    continue;
+                }
+
+                $effectiveDate = $b->created_at ? $b->created_at->format('Y-m-d') : '2026-01-01';
+                $dTs = $b->created_at ? ($b->created_at->startOfDay()->timestamp - 100) : 0;
+                $effectiveObPkr = $obPkr;
+                $effectiveObSar = $obSar;
+                $categoryLabel = 'Bank Opening Balance';
+                $voucherPrefix = 'OB-BANK-';
+
+                if ($fromDate) {
+                    // Prior expense transactions before from_date
+                    $priorEt = ExpenseTransaction::where('bank_id', $b->id)
+                        ->whereNull('deleted_at')
+                        ->whereDate('date', '<', $fromDate)
+                        ->get();
+                    $priorDepositsPkr = 0; $priorWithdrawalsPkr = 0;
+                    $priorDepositsSar = 0; $priorWithdrawalsSar = 0;
+                    foreach ($priorEt as $pet) {
+                        $cur = strtoupper($pet->currency ?: 'PKR');
+                        $rate = (float) ($pet->exchange_rate > 0 ? $pet->exchange_rate : 1);
+                        $rawAmt = (float) $pet->amount;
+                        $pAmt = ($cur === 'PKR') ? $rawAmt : round($rawAmt * $rate, 2);
+                        $sAmt = ($cur === 'SAR') ? $rawAmt : 0.00;
+                        if ($pet->transaction_type === 'credit') {
+                            $priorDepositsPkr += $pAmt;
+                            $priorDepositsSar += $sAmt;
+                        } else {
+                            $priorWithdrawalsPkr += $pAmt;
+                            $priorWithdrawalsSar += $sAmt;
+                        }
+                    }
+
+                    // Prior bank transfers before from_date
+                    $priorBtIn = (float) BankTransfer::where('to_bank_id', $b->id)
+                        ->whereDate('transfer_date', '<', $fromDate)
+                        ->sum('amount');
+                    $priorBtOut = (float) BankTransfer::where('from_bank_id', $b->id)
+                        ->whereDate('transfer_date', '<', $fromDate)
+                        ->sum('amount');
+
+                    $priorDepositsPkr += $priorBtIn;
+                    $priorWithdrawalsPkr += $priorBtOut;
+
+                    $effectiveObPkr = $obPkr + $priorDepositsPkr - $priorWithdrawalsPkr;
+                    $effectiveObSar = $obSar + $priorDepositsSar - $priorWithdrawalsSar;
+
+                    $effectiveDate = $fromDate;
+                    $dTs = Carbon::parse($fromDate)->startOfDay()->timestamp - 100;
+                    $categoryLabel = 'Opening Balance Brought Forward';
+                    $voucherPrefix = 'OB-BF-';
+                }
+
+                if ($toDate && $effectiveDate > $toDate) {
+                    continue;
+                }
+
+                $depositPkr    = $effectiveObPkr >= 0 ? $effectiveObPkr : 0.00;
+                $withdrawalPkr = $effectiveObPkr < 0 ? abs($effectiveObPkr) : 0.00;
+                $depositSar    = $effectiveObSar >= 0 ? $effectiveObSar : 0.00;
+                $withdrawalSar = $effectiveObSar < 0 ? abs($effectiveObSar) : 0.00;
+
+                $allRecords[] = [
+                    'source'         => 'bank_opening_balance',
+                    'id'             => $b->id,
+                    'date'           => $effectiveDate,
+                    'timestamp'      => $dTs,
+                    'voucher_no'     => $voucherPrefix . str_pad($b->id, 3, '0', STR_PAD_LEFT),
+                    'bank_id'        => $b->id,
+                    'bank_name'      => $b->name,
+                    'bank_account'   => $b->account_number,
+                    'flow'           => $effectiveObPkr >= 0 ? 'deposit' : 'withdrawal',
+                    'type'           => $effectiveObPkr >= 0 ? 'credit' : 'debit',
+                    'type_badge'     => $effectiveObPkr >= 0 ? 'bg-soft-success text-success' : 'bg-soft-danger text-danger',
+                    'category_label' => $categoryLabel,
+                    'party_name'     => $b->name . ' (' . ($fromDate ? 'Opening Balance B/F' : 'Opening Balance') . ')',
+                    'party_type'     => 'Bank Account',
+                    'payment_mode'   => 'Opening Balance',
+                    'currency'       => 'PKR',
+                    'raw_amount'     => abs($effectiveObPkr),
+                    'exchange_rate'  => (float) ($b->opening_balance_roe ?: 1),
+                    'deposit_pkr'    => $depositPkr,
+                    'withdrawal_pkr' => $withdrawalPkr,
+                    'deposit_sar'    => $depositSar,
+                    'withdrawal_sar' => $withdrawalSar,
+                    'deposit'        => $depositPkr,
+                    'withdrawal'     => $withdrawalPkr,
+                    'description'    => ($fromDate ? 'Opening Balance Brought Forward as of ' . Carbon::parse($fromDate)->format('d M Y') : 'Initial Opening Balance') . ' of ' . $b->name . (!empty($b->account_number) ? ' (' . $b->account_number . ')' : ''),
+                    'proof'          => null,
+                ];
+            }
+        }
+
         // 1. Gather ExpenseTransactions associated with bank accounts
         if ($activityType !== 'transfer') {
             $etQ = ExpenseTransaction::with(['bank', 'supplier', 'client', 'staff', 'expense'])
@@ -311,6 +421,12 @@ class BankTransferController extends Controller
         // Sort chronologically ascending to compute Running Balances for both PKR and SAR
         usort($allRecords, function ($a, $b) {
             if ($a['date'] === $b['date']) {
+                if ($a['source'] === 'bank_opening_balance' && $b['source'] !== 'bank_opening_balance') {
+                    return -1;
+                }
+                if ($b['source'] === 'bank_opening_balance' && $a['source'] !== 'bank_opening_balance') {
+                    return 1;
+                }
                 return $a['timestamp'] <=> $b['timestamp'];
             }
             return strcmp($a['date'], $b['date']);
@@ -335,11 +451,16 @@ class BankTransferController extends Controller
                        (isset($it['bank_name']) && str_contains($it['bank_name'], $b->name));
             });
 
+            $bOpPkr = (float) ($b->opening_balance_pkr ?? 0);
+            $bOpSar = (float) ($b->opening_balance_sar ?? 0);
             $inPkr = 0;  $outPkr = 0;
             $inSar = 0;  $outSar = 0;
             $inCount = 0; $outCount = 0;
 
             foreach ($bTxns as $tx) {
+                if ($tx['source'] === 'bank_opening_balance') {
+                    continue; // Opening balance tracked separately in matrix column
+                }
                 if ($tx['deposit_pkr'] > 0 || $tx['deposit_sar'] > 0) {
                     $inPkr += $tx['deposit_pkr'];
                     $inSar += $tx['deposit_sar'];
@@ -352,38 +473,51 @@ class BankTransferController extends Controller
                 }
             }
 
-            if ($inPkr > 0 || $outPkr > 0 || $inSar > 0 || $outSar > 0) {
+            if ($bOpPkr > 0 || $bOpSar > 0 || $inPkr > 0 || $outPkr > 0 || $inSar > 0 || $outSar > 0) {
                 $bankBreakdown[] = [
-                    'bank'         => $b,
-                    'incoming_pkr' => $inPkr,
-                    'outgoing_pkr' => $outPkr,
-                    'net_pkr'      => $inPkr - $outPkr,
-                    'incoming_sar' => $inSar,
-                    'outgoing_sar' => $outSar,
-                    'net_sar'      => $inSar - $outSar,
-                    'in_count'     => $inCount,
-                    'out_count'    => $outCount,
-                    'total_tx'     => count($bTxns),
+                    'bank'                => $b,
+                    'opening_balance_pkr' => $bOpPkr,
+                    'opening_balance_sar' => $bOpSar,
+                    'incoming_pkr'        => $inPkr,
+                    'outgoing_pkr'        => $outPkr,
+                    'net_pkr'             => $bOpPkr + $inPkr - $outPkr,
+                    'incoming_sar'        => $inSar,
+                    'outgoing_sar'        => $outSar,
+                    'net_sar'             => $bOpSar + $inSar - $outSar,
+                    'in_count'            => $inCount,
+                    'out_count'           => $outCount,
+                    'total_tx'            => count($bTxns),
                 ];
             }
         }
 
         // Compute Grand Totals for both PKR and SAR
-        $totalDepositsPkr    = 0;
-        $totalWithdrawalsPkr = 0;
-        $totalDepositsSar    = 0;
-        $totalWithdrawalsSar = 0;
-        $depositCount        = 0;
-        $withdrawalCount     = 0;
+        $totalOpeningBalancePkr = 0;
+        $totalOpeningBalanceSar = 0;
+        $totalPeriodDepositsPkr = 0;
+        $totalPeriodDepositsSar = 0;
+        $totalWithdrawalsPkr    = 0;
+        $totalWithdrawalsSar    = 0;
+        $depositCount           = 0;
+        $withdrawalCount        = 0;
 
         foreach ($allRecords as $r) {
-            $totalDepositsPkr    += $r['deposit_pkr'];
+            if ($r['source'] === 'bank_opening_balance') {
+                $totalOpeningBalancePkr += $r['deposit_pkr'];
+                $totalOpeningBalanceSar += $r['deposit_sar'];
+            } else {
+                $totalPeriodDepositsPkr += $r['deposit_pkr'];
+                $totalPeriodDepositsSar += $r['deposit_sar'];
+                if ($r['deposit_pkr'] > 0 || $r['deposit_sar'] > 0) $depositCount++;
+            }
+
             $totalWithdrawalsPkr += $r['withdrawal_pkr'];
-            $totalDepositsSar    += $r['deposit_sar'];
             $totalWithdrawalsSar += $r['withdrawal_sar'];
-            if ($r['deposit_pkr'] > 0 || $r['deposit_sar'] > 0) $depositCount++;
             if ($r['withdrawal_pkr'] > 0 || $r['withdrawal_sar'] > 0) $withdrawalCount++;
         }
+
+        $totalDepositsPkr = $totalOpeningBalancePkr + $totalPeriodDepositsPkr;
+        $totalDepositsSar = $totalOpeningBalanceSar + $totalPeriodDepositsSar;
 
         $netMovementPkr = $totalDepositsPkr - $totalWithdrawalsPkr;
         $netMovementSar = $totalDepositsSar - $totalWithdrawalsSar;
@@ -396,34 +530,40 @@ class BankTransferController extends Controller
         $selectedToBank   = $toBankId ? Bank::find($toBankId) : null;
 
         return [
-            'transactions'        => $displayRecords,
-            'allBanks'            => $allBanks,
-            'banks'               => $allBanks,
-            'bankBreakdown'       => $bankBreakdown,
-            'totalDepositsPkr'    => $totalDepositsPkr,
-            'totalWithdrawalsPkr' => $totalWithdrawalsPkr,
-            'netMovementPkr'      => $netMovementPkr,
-            'totalDepositsSar'    => $totalDepositsSar,
-            'totalWithdrawalsSar' => $totalWithdrawalsSar,
-            'netMovementSar'      => $netMovementSar,
-            'totalDeposits'       => $totalDepositsPkr, // backward compatibility
-            'totalWithdrawals'    => $totalWithdrawalsPkr,
-            'netMovement'         => $netMovementPkr,
-            'depositCount'        => $depositCount,
-            'withdrawalCount'     => $withdrawalCount,
-            'totalCount'          => count($allRecords),
-            'selectedBank'        => $selectedBank,
-            'selectedFromBank'    => $selectedFromBank,
-            'selectedToBank'      => $selectedToBank,
-            'fromBankId'          => $fromBankId,
-            'toBankId'            => $toBankId,
-            'bankId'              => $bankId,
-            'fromDate'            => $fromDate,
-            'toDate'              => $toDate,
-            'minAmount'           => $minAmount,
-            'maxAmount'           => $maxAmount,
-            'search'              => $search,
-            'activityType'        => $activityType,
+            'transactions'           => $displayRecords,
+            'allBanks'               => $allBanks,
+            'banks'                  => $allBanks,
+            'bankBreakdown'          => $bankBreakdown,
+            'totalOpeningBalancePkr' => $totalOpeningBalancePkr,
+            'totalOpeningBalanceSar' => $totalOpeningBalanceSar,
+            'totalPeriodDepositsPkr' => $totalPeriodDepositsPkr,
+            'totalPeriodDepositsSar' => $totalPeriodDepositsSar,
+            'totalDepositsPkr'       => $totalDepositsPkr,
+            'totalWithdrawalsPkr'    => $totalWithdrawalsPkr,
+            'netMovementPkr'         => $netMovementPkr,
+            'closingBalancePkr'      => $netMovementPkr,
+            'totalDepositsSar'       => $totalDepositsSar,
+            'totalWithdrawalsSar'    => $totalWithdrawalsSar,
+            'netMovementSar'         => $netMovementSar,
+            'closingBalanceSar'      => $netMovementSar,
+            'totalDeposits'          => $totalDepositsPkr, // backward compatibility
+            'totalWithdrawals'       => $totalWithdrawalsPkr,
+            'netMovement'            => $netMovementPkr,
+            'depositCount'           => $depositCount,
+            'withdrawalCount'        => $withdrawalCount,
+            'totalCount'             => count($allRecords),
+            'selectedBank'           => $selectedBank,
+            'selectedFromBank'       => $selectedFromBank,
+            'selectedToBank'         => $selectedToBank,
+            'fromBankId'             => $fromBankId,
+            'toBankId'               => $toBankId,
+            'bankId'                 => $bankId,
+            'fromDate'               => $fromDate,
+            'toDate'                 => $toDate,
+            'minAmount'              => $minAmount,
+            'maxAmount'              => $maxAmount,
+            'search'                 => $search,
+            'activityType'           => $activityType,
         ];
     }
 }

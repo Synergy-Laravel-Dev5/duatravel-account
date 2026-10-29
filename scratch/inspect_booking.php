@@ -1,43 +1,26 @@
 <?php
-require_once __DIR__ . '/../vendor/autoload.php';
-$app = require_once __DIR__ . '/../bootstrap/app.php';
+require 'vendor/autoload.php';
+$app = require_once 'bootstrap/app.php';
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 
 use App\Models\Booking;
 
-$b = Booking::with(['hotels', 'visas', 'transports', 'client'])->find(1);
-if (!$b) {
-    $b = Booking::with(['hotels', 'visas', 'transports', 'client'])->first();
-}
-
+$b = Booking::with(['hotels', 'visas', 'transports', 'flightSupplier'])->first();
 if ($b) {
-    echo "BOOKING ID: " . $b->id . "\n";
-    echo "currency: " . ($b->currency ?? 'NULL') . "\n";
-    echo "total_amount: " . ($b->total_amount ?? '0') . "\n";
-    echo "total_received: " . ($b->total_received ?? '0') . "\n";
-    echo "flight_roe: " . ($b->flight_roe ?? 'NULL') . "\n";
-    echo "flight_cost: " . ($b->flight_cost ?? 'NULL') . "\n";
-    echo "flight_sell: " . ($b->flight_sell ?? 'NULL') . "\n";
-    echo "flight_currency: " . ($b->flight_currency ?? 'NULL') . "\n";
-    
-    echo "\nHOTELS:\n";
+    echo "Booking ID: {$b->id}\n";
+    echo "Total Booking Selling (PKR): {$b->selling_price}\n";
+    echo "Hotels count: " . $b->hotels->count() . "\n";
     foreach ($b->hotels as $h) {
-        echo "  - Hotel: {$h->hotel_name}, sell_currency: {$h->selling_currency}, buy_currency: {$h->buying_currency}, total_price: {$h->total_price}, buy_price: {$h->buy_price}, roe: {$h->roe}\n";
+        echo "  Hotel: selling_amount={$h->selling_amount}, selling_rate={$h->selling_rate}, sale_roe={$h->sale_roe}\n";
     }
-
-    echo "\nTRANSPORTS:\n";
-    foreach ($b->transports as $t) {
-        echo "  - Transport: {$t->transport_type}, sell_currency: {$t->selling_currency}, buy_currency: {$t->buying_currency}, total_price: {$t->total_price}, buy_price: {$t->buy_price}, roe: {$t->roe}\n";
-    }
-
-    echo "\nVISAS:\n";
+    echo "Visas count: " . $b->visas->count() . "\n";
     foreach ($b->visas as $v) {
-        echo "  - Visa: {$v->visa_type}, sell_currency: {$v->selling_currency}, buy_currency: {$v->buying_currency}, total_price: {$v->total_price}, buy_price: {$v->buy_price}, roe: {$v->roe}\n";
+        echo "  Visa: selling_amount={$v->selling_amount}, selling_rate={$v->selling_rate}, sale_roe={$v->sale_roe}\n";
     }
-
-    echo "\nALL BOOKING COLUMNS:\n";
-    print_r($b->getAttributes());
-} else {
-    echo "No booking found.\n";
+    echo "Transports count: " . $b->transports->count() . "\n";
+    foreach ($b->transports as $t) {
+        echo "  Transport: selling_amount={$t->selling_amount}, selling_rate={$t->selling_rate}, sale_roe={$t->sale_roe}\n";
+    }
+    echo "Flight: flight_selling_amount={$b->flight_selling_amount}, flight_selling_rate={$b->flight_selling_rate}, flight_sale_roe={$b->flight_sale_roe}\n";
 }

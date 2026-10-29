@@ -21,15 +21,14 @@
                 <div class="card">
                     <div class="card-body">
                         <div class="table-responsive">
-                            <table id="datatable" class="table table-bordered dt-responsive nowrap align-middle">
+                            <table class="table table-bordered table-hover align-middle mb-0" id="bankTable">
                                 <thead class="table-light">
                                     <tr>
                                         <th>S:NO</th>
                                         <th>Account / Bank Name</th>
                                         <th>Type</th>
                                         <th>Account # / Branch</th>
-                                        <th class="text-end">Opening (PKR)</th>
-                                        <th class="text-end">Opening (SAR)</th>
+                                        <th class="text-end">Opening Balance (PKR)</th>
                                         <th>Status</th>
                                         <th>Action</th>
                                     </tr>
@@ -57,11 +56,8 @@
                                                     <small class="d-block text-muted">{{ $bank->branch }}</small>
                                                 @endif
                                             </td>
-                                            <td class="text-end fw-semibold text-danger">
+                                            <td class="text-end fw-semibold text-primary">
                                                 PKR {{ number_format($bank->opening_balance_pkr ?? 0, 2) }}
-                                            </td>
-                                            <td class="text-end fw-semibold text-success">
-                                                SAR {{ number_format($bank->opening_balance_sar ?? 0, 2) }}
                                             </td>
                                             <td>
                                                 @if ($bank->status == 'active')
@@ -71,6 +67,9 @@
                                                 @endif
                                             </td>
                                             <td>
+                                                <a href="{{ route('bank-transfer.report', ['bank_id' => $bank->id]) }}" class="btn btn-sm btn-outline-primary" title="View Statement Report">
+                                                    <i class="mdi mdi-file-document-outline"></i>
+                                                </a>
                                                 <a href="{{ route('bank.edit', $bank->id) }}" class="btn btn-sm btn-info" title="Edit">
                                                     <i class="mdi mdi-pencil"></i>
                                                 </a>

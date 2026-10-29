@@ -546,12 +546,26 @@ class ProfitLossReportController extends Controller
             $expenseQuery->whereDate('date', '<=', $dateTo);
         }
 
+        // Only overhead expenses (expense heads, staff, or general debit expenses)
+        $expenseQuery->where(function ($q) {
+            $q->whereNotNull('expense_id')
+              ->orWhereIn('payee_type', ['expense', 'staff'])
+              ->orWhere(function ($sq) {
+                  $sq->whereIn('payee_type', ['general', 'office'])->where('transaction_type', 'debit');
+              });
+        })->with(['expense', 'staff']);
+
         $expenseTransactions = $expenseQuery->get();
         $totalOverheadExpensesPkr = 0;
 
+        $groupedUtilities = [];
+        $groupedGeneral = [];
+        $groupedSalaries = [];
+
         foreach ($expenseTransactions as $exp) {
-            $rate = (float) ($exp->exchange_rate > 0 ? $exp->exchange_rate : 1);
-            $expPkr = (float) $exp->amount * $rate;
+            $isPkr = strtoupper($exp->currency ?? 'PKR') === 'PKR';
+            $rate = (float) ($exp->exchange_rate > 0 ? $exp->exchange_rate : 75);
+            $expPkr = $isPkr ? (float) $exp->amount : ((float) $exp->amount * $rate);
             $totalOverheadExpensesPkr += $expPkr;
 
             $eDate = $exp->date ? Carbon::parse($exp->date) : Carbon::now();
@@ -576,7 +590,170 @@ class ProfitLossReportController extends Controller
                 ];
             }
             $monthlyData[$mKey]['expenses_pkr'] += $expPkr;
+
+            // Group for Formal Statement
+            $name = $exp->expense->name ?? ($exp->staff ? ($exp->staff->first_name . ' ' . $exp->staff->last_name . ' SALARY A/C') : ($exp->description ?: 'Miscellaneous Expense'));
+            $lower = strtolower($name);
+
+            if (str_contains($lower, 'telephone') || str_contains($lower, 'phone') || str_contains($lower, 'fee') || str_contains($lower, 'subscription') || str_contains($lower, 'internet') || str_contains($lower, 'electric') || str_contains($lower, 'utility')) {
+                $groupedUtilities[$name] = ($groupedUtilities[$name] ?? 0) + $expPkr;
+            } elseif ($exp->payee_type === 'staff' || !empty($exp->staff_id) || str_contains($lower, 'salary')) {
+                $groupedSalaries[$name] = ($groupedSalaries[$name] ?? 0) + $expPkr;
+            } else {
+                $groupedGeneral[$name] = ($groupedGeneral[$name] ?? 0) + $expPkr;
+            }
         }
+
+        // 1. Dynamic System Income Accounts (40-10-000) - Only titles that actually exist/have revenue
+        $systemIncomeItems = [];
+        $sysCode = 1;
+
+        if ($totalHotelSellPkr > 0) {
+            $systemIncomeItems[] = [
+                'code' => '40-10-' . str_pad($sysCode++, 3, '0', STR_PAD_LEFT),
+                'title' => 'Hotel Service Revenue',
+                'amount' => (float)$totalHotelSellPkr,
+            ];
+        }
+
+        if ($totalFlightSellPkr > 0) {
+            $systemIncomeItems[] = [
+                'code' => '40-10-' . str_pad($sysCode++, 3, '0', STR_PAD_LEFT),
+                'title' => 'Flight Service Revenue',
+                'amount' => (float)$totalFlightSellPkr,
+            ];
+        }
+
+        if ($totalTransSellPkr > 0) {
+            $systemIncomeItems[] = [
+                'code' => '40-10-' . str_pad($sysCode++, 3, '0', STR_PAD_LEFT),
+                'title' => 'Other Services / Transport Income',
+                'amount' => (float)$totalTransSellPkr,
+            ];
+        }
+
+        if ($totalVisaSellPkr > 0) {
+            $systemIncomeItems[] = [
+                'code' => '40-10-' . str_pad($sysCode++, 3, '0', STR_PAD_LEFT),
+                'title' => 'Visa Income',
+                'amount' => (float)$totalVisaSellPkr,
+            ];
+        }
+
+        // If there is residual package selling (e.g. Package lump-sum or margin not allocated to services)
+        $servicesSellSum = $totalHotelSellPkr + $totalFlightSellPkr + $totalTransSellPkr + $totalVisaSellPkr;
+        $residualPkgSell = round($totalSellingPkr - $servicesSellSum, 2);
+
+        if ($residualPkgSell > 0 || empty($systemIncomeItems)) {
+            $pkgTitle = ($packageType === 'hajj') ? 'Hajj Package Sales' : (($packageType === 'umrah') ? 'Umrah Package Sales' : 'Package Sales Revenue');
+            $pkgAmt = ($residualPkgSell > 0) ? $residualPkgSell : (float)$totalSellingPkr;
+            $systemIncomeItems[] = [
+                'code' => '40-10-' . str_pad($sysCode++, 3, '0', STR_PAD_LEFT),
+                'title' => $pkgTitle,
+                'amount' => (float)$pkgAmt,
+            ];
+        }
+        $totalSystemIncomePkr = array_sum(array_column($systemIncomeItems, 'amount'));
+
+        // 2. Direct Service Costs (50-00-000) - Only titles that actually have cost
+        $directCostItems = [];
+        $costCode = 1;
+        if ($totalHotelCostPkr > 0) {
+            $directCostItems[] = [
+                'code' => '50-00-' . str_pad($costCode++, 3, '0', STR_PAD_LEFT),
+                'title' => 'Hotel Direct Cost',
+                'amount' => (float)$totalHotelCostPkr,
+            ];
+        }
+        if ($totalFlightCostPkr > 0) {
+            $directCostItems[] = [
+                'code' => '50-00-' . str_pad($costCode++, 3, '0', STR_PAD_LEFT),
+                'title' => 'Flight Direct Cost',
+                'amount' => (float)$totalFlightCostPkr,
+            ];
+        }
+        if ($totalVisaCostPkr > 0) {
+            $directCostItems[] = [
+                'code' => '50-00-' . str_pad($costCode++, 3, '0', STR_PAD_LEFT),
+                'title' => 'Visa Direct Cost',
+                'amount' => (float)$totalVisaCostPkr,
+            ];
+        }
+        if ($totalTransCostPkr > 0) {
+            $directCostItems[] = [
+                'code' => '50-00-' . str_pad($costCode++, 3, '0', STR_PAD_LEFT),
+                'title' => 'Transport Direct Cost',
+                'amount' => (float)$totalTransCostPkr,
+            ];
+        }
+
+        // 3. Dynamic Overhead Expenses - Only titles that were actually added/recorded
+        // Utilities Expenses (50-01-000)
+        $utilItems = [];
+        $utilCodeCounter = 1;
+        foreach ($groupedUtilities as $uName => $uAmt) {
+            if ($uAmt > 0) {
+                $utilItems[] = [
+                    'code' => '50-01-' . str_pad($utilCodeCounter++, 3, '0', STR_PAD_LEFT),
+                    'title' => $uName,
+                    'amount' => (float)$uAmt,
+                ];
+            }
+        }
+        $totalUtilitiesPkr = array_sum(array_column($utilItems, 'amount'));
+
+        // Operating EXPENSE (50-02-000)
+        $genItems = [];
+        $genCounter = 1;
+        foreach ($groupedGeneral as $gName => $gAmt) {
+            if ($gAmt > 0) {
+                $genItems[] = [
+                    'code' => '50-02-' . str_pad($genCounter++, 3, '0', STR_PAD_LEFT),
+                    'title' => $gName,
+                    'amount' => (float)$gAmt,
+                ];
+            }
+        }
+        $totalGeneralPkr = array_sum(array_column($genItems, 'amount'));
+
+        // Salaries and Wages Expense (55-01-000)
+        $salaryItems = [];
+        $salCounter = 1;
+        foreach ($groupedSalaries as $sName => $sAmt) {
+            if ($sAmt > 0) {
+                $salaryItems[] = [
+                    'code' => '55-01-' . str_pad($salCounter++, 3, '0', STR_PAD_LEFT),
+                    'title' => $sName,
+                    'amount' => (float)$sAmt,
+                ];
+            }
+        }
+        $totalSalariesPkr = array_sum(array_column($salaryItems, 'amount'));
+
+        // Overall statement totals:
+        $statementTotalIncome = (float)$totalSystemIncomePkr;
+        $statementTotalExpenses = (float)$totalDirectCostPkr + $totalUtilitiesPkr + $totalGeneralPkr + $totalSalariesPkr;
+        $statementNetProfit = $statementTotalIncome - $statementTotalExpenses;
+
+        // Date range label for formal statement header
+        if (!empty($dateFrom) && !empty($dateTo)) {
+            $stmtFrom = Carbon::parse($dateFrom)->format('d-m-Y');
+            $stmtTo = Carbon::parse($dateTo)->format('d-m-Y');
+        } elseif (!empty($dateFrom)) {
+            $stmtFrom = Carbon::parse($dateFrom)->format('d-m-Y');
+            $stmtTo = date('d-m-Y');
+        } elseif ($year !== 'all' && $month !== 'all') {
+            $carbonMonth = Carbon::createFromDate($year, $month, 1);
+            $stmtFrom = $carbonMonth->startOfMonth()->format('d-m-Y');
+            $stmtTo = $carbonMonth->endOfMonth()->format('d-m-Y');
+        } elseif ($year !== 'all') {
+            $stmtFrom = "01-01-{$year}";
+            $stmtTo = "31-12-{$year}";
+        } else {
+            $stmtFrom = "01-01-" . date('Y');
+            $stmtTo = date('d-m-Y');
+        }
+        $statementPeriod = "From {$stmtFrom}    To {$stmtTo}";
 
         // Calculate Net Profit for Monthly Table
         krsort($monthlyData); // Sort months descending
@@ -628,7 +805,20 @@ class ProfitLossReportController extends Controller
             'dateFrom',
             'dateTo',
             'clientId',
-            'search'
+            'search',
+            'utilItems',
+            'genItems',
+            'salaryItems',
+            'systemIncomeItems',
+            'totalSystemIncomePkr',
+            'directCostItems',
+            'totalUtilitiesPkr',
+            'totalGeneralPkr',
+            'totalSalariesPkr',
+            'statementTotalIncome',
+            'statementTotalExpenses',
+            'statementNetProfit',
+            'statementPeriod'
         ));
     }
 

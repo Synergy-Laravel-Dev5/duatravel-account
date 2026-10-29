@@ -428,6 +428,19 @@
                                                     @endforeach
                                                 </optgroup>
                                             </select>
+                                            <div class="mt-2 p-2 rounded bg-light border border-danger border-opacity-25">
+                                                <label class="form-label fs-11 fw-bold text-danger mb-1">
+                                                    <i class="mdi mdi-currency-usd me-1"></i> From Account ROE (SAR / PKR Rate) <span class="text-danger">*</span>
+                                                </label>
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-white text-danger fw-bold fs-11">1 SAR =</span>
+                                                    <input type="number" step="0.0001" name="jv_from_roe" id="jv_from_roe"
+                                                        value="{{ old('jv_from_roe', 76.00) }}"
+                                                        class="form-control form-control-sm text-center fw-bold" placeholder="76.00">
+                                                    <span class="input-group-text bg-white fs-11">PKR</span>
+                                                </div>
+                                                <div id="from_account_sar_hint" class="fs-11 fw-semibold text-danger mt-1"></div>
+                                            </div>
                                         </div>
 
                                         <div class="col-md-2 text-center pt-3">
@@ -513,6 +526,19 @@
                                                     @endforeach
                                                 </optgroup>
                                             </select>
+                                            <div class="mt-2 p-2 rounded bg-light border border-success border-opacity-25">
+                                                <label class="form-label fs-11 fw-bold text-success mb-1">
+                                                    <i class="mdi mdi-currency-usd me-1"></i> To Account ROE (SAR / PKR Rate) <span class="text-danger">*</span>
+                                                </label>
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-white text-success fw-bold fs-11">1 SAR =</span>
+                                                    <input type="number" step="0.0001" name="jv_to_roe" id="jv_to_roe"
+                                                        value="{{ old('jv_to_roe', 75.00) }}"
+                                                        class="form-control form-control-sm text-center fw-bold" placeholder="75.00">
+                                                    <span class="input-group-text bg-white fs-11">PKR</span>
+                                                </div>
+                                                <div id="to_account_sar_hint" class="fs-11 fw-semibold text-success mt-1"></div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -561,7 +587,7 @@
                                     </div>
                                     <div class="row g-3">
                                         <div class="col-md-4">
-                                            <label class="form-label fs-13 fw-semibold">Select Client <span class="text-danger">*</span></label>
+                                            <label class="form-label fs-13 fw-semibold text-primary">Select Client <span class="text-danger">*</span></label>
                                             <select name="jv_client_id" id="jv_contra_client" class="form-select form-select-sm select2">
                                                 <option value="">-- Select Client --</option>
                                                 @foreach ($clients as $c)
@@ -570,9 +596,22 @@
                                                     </option>
                                                 @endforeach
                                             </select>
+                                            <div class="mt-2 p-2 rounded bg-light border border-primary border-opacity-25">
+                                                <label class="form-label fs-11 fw-bold text-primary mb-1">
+                                                    <i class="mdi mdi-currency-usd me-1"></i> Client ROE (SAR / PKR Rate) <span class="text-danger">*</span>
+                                                </label>
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-white text-primary fw-bold fs-11">1 SAR =</span>
+                                                    <input type="number" step="0.0001" name="jv_contra_client_roe" id="jv_contra_client_roe"
+                                                        value="{{ old('jv_contra_client_roe', 76.00) }}"
+                                                        class="form-control form-control-sm text-center fw-bold" placeholder="76.00">
+                                                    <span class="input-group-text bg-white fs-11">PKR</span>
+                                                </div>
+                                                <div id="contra_client_sar_hint" class="fs-11 fw-semibold text-primary mt-1"></div>
+                                            </div>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label fs-13 fw-semibold">Select Supplier <span class="text-danger">*</span></label>
+                                            <label class="form-label fs-13 fw-semibold text-warning">Select Supplier <span class="text-danger">*</span></label>
                                             <select name="jv_supplier_id" id="jv_contra_supplier" class="form-select form-select-sm select2">
                                                 <option value="">-- Select Supplier --</option>
                                                 @foreach ($suppliers as $s)
@@ -581,6 +620,19 @@
                                                     </option>
                                                 @endforeach
                                             </select>
+                                            <div class="mt-2 p-2 rounded bg-light border border-warning border-opacity-25">
+                                                <label class="form-label fs-11 fw-bold text-warning mb-1">
+                                                    <i class="mdi mdi-currency-usd me-1"></i> Supplier ROE (SAR / PKR Rate) <span class="text-danger">*</span>
+                                                </label>
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-white text-warning fw-bold fs-11">1 SAR =</span>
+                                                    <input type="number" step="0.0001" name="jv_contra_supplier_roe" id="jv_contra_supplier_roe"
+                                                        value="{{ old('jv_contra_supplier_roe', 75.00) }}"
+                                                        class="form-control form-control-sm text-center fw-bold" placeholder="75.00">
+                                                    <span class="input-group-text bg-white fs-11">PKR</span>
+                                                </div>
+                                                <div id="contra_supplier_sar_hint" class="fs-11 fw-semibold text-warning mt-1"></div>
+                                            </div>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label fs-13 fw-semibold">Adjustment Flow</label>
@@ -743,7 +795,7 @@
                                 <div id="cash_account_balance_hint" class="mt-1 fs-12 fw-semibold text-success"></div>
                             </div>
 
-                            <div class="col-md-6">
+                            <div class="col-md-6 {{ old('payee_type') === 'jv' ? 'd-none' : '' }}" id="currency_roe_group">
                                 <label class="form-label fs-13 fw-semibold">Currency & Exchange Rate (ROE) <span class="text-danger">*</span></label>
                                 <div class="row g-1">
                                     <div class="col-6">
@@ -758,7 +810,7 @@
                                             <span class="input-group-text bg-white">1 SAR =</span>
                                             <input type="number" step="0.0001" name="exchange_rate" id="exchange_rate_input"
                                                 value="{{ old('exchange_rate', 76.00) }}" class="form-control form-control-sm text-center fw-bold"
-                                                placeholder="76.00" required>
+                                                placeholder="76.00" {{ old('payee_type') === 'jv' ? '' : 'required' }}>
                                             <span class="input-group-text bg-white">PKR</span>
                                         </div>
                                     </div>
@@ -910,8 +962,71 @@
         const currencySelect = document.getElementById('currency_select');
         const rateInput = document.getElementById('exchange_rate_input');
         const roeHelper = document.getElementById('roe_live_helper');
+        const currencyRoeGroup = document.getElementById('currency_roe_group');
 
         function updateCurrencyAndLiveROE() {
+            const isJv = document.querySelector('input[name="payee_type"]:checked')?.value === 'jv';
+
+            // Hide the redundant bottom ROE input when JV is selected:
+            if (currencyRoeGroup) {
+                if (isJv) {
+                    currencyRoeGroup.classList.add('d-none');
+                    if (rateInput) {
+                        rateInput.removeAttribute('required');
+                        const fRoe = parseFloat(document.getElementById('jv_from_roe')?.value) || 76.0;
+                        rateInput.value = fRoe;
+                    }
+                } else {
+                    currencyRoeGroup.classList.remove('d-none');
+                    if (rateInput) rateInput.setAttribute('required', 'required');
+                }
+            }
+
+            const amtPkr = parseFloat(mainAmountInput?.value) || 0;
+
+            if (isJv) {
+                const jvMode = document.querySelector('input[name="jv_mode"]:checked')?.value || 'universal';
+                if (jvMode === 'universal') {
+                    const fromRoe = parseFloat(document.getElementById('jv_from_roe')?.value) || 76.0;
+                    const toRoe = parseFloat(document.getElementById('jv_to_roe')?.value) || 75.0;
+                    const fromSar = fromRoe > 0 ? (amtPkr / fromRoe).toFixed(2) : '0.00';
+                    const toSar = toRoe > 0 ? (amtPkr / toRoe).toFixed(2) : '0.00';
+
+                    const fromHint = document.getElementById('from_account_sar_hint');
+                    const toHint = document.getElementById('to_account_sar_hint');
+                    if (fromHint) fromHint.innerHTML = amtPkr > 0 ? `<i class="mdi mdi-calculator me-1"></i>≈ <strong>${Number(fromSar).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR</strong>` : '';
+                    if (toHint) toHint.innerHTML = amtPkr > 0 ? `<i class="mdi mdi-calculator me-1"></i>≈ <strong>${Number(toSar).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR</strong>` : '';
+
+                    if (roeHelper) {
+                        if (amtPkr <= 0) {
+                            roeHelper.innerHTML = `<span class="badge bg-soft-info text-dark fs-12 px-2 py-1 border border-info border-opacity-25">Universal JV Dual ROE (From: ${fromRoe} | To: ${toRoe})</span>`;
+                        } else {
+                            roeHelper.innerHTML = `<span class="badge bg-soft-info text-dark fs-12 px-2 py-1 border border-info border-opacity-25"><i class="mdi mdi-swap-horizontal me-1 text-primary"></i> From A/C: <strong class="text-danger">${Number(fromSar).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR</strong> (@ ${fromRoe}) &nbsp;|&nbsp; To A/C: <strong class="text-success">${Number(toSar).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR</strong> (@ ${toRoe})</span>`;
+                        }
+                    }
+                    return;
+                } else if (jvMode === 'client_supplier') {
+                    const clientRoe = parseFloat(document.getElementById('jv_contra_client_roe')?.value) || 76.0;
+                    const supplierRoe = parseFloat(document.getElementById('jv_contra_supplier_roe')?.value) || 75.0;
+                    const clientSar = clientRoe > 0 ? (amtPkr / clientRoe).toFixed(2) : '0.00';
+                    const supplierSar = supplierRoe > 0 ? (amtPkr / supplierRoe).toFixed(2) : '0.00';
+
+                    const clientHint = document.getElementById('contra_client_sar_hint');
+                    const supplierHint = document.getElementById('contra_supplier_sar_hint');
+                    if (clientHint) clientHint.innerHTML = amtPkr > 0 ? `<i class="mdi mdi-calculator me-1"></i>≈ <strong>${Number(clientSar).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR</strong>` : '';
+                    if (supplierHint) supplierHint.innerHTML = amtPkr > 0 ? `<i class="mdi mdi-calculator me-1"></i>≈ <strong>${Number(supplierSar).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR</strong>` : '';
+
+                    if (roeHelper) {
+                        if (amtPkr <= 0) {
+                            roeHelper.innerHTML = `<span class="badge bg-soft-info text-dark fs-12 px-2 py-1 border border-info border-opacity-25">Contra Dual ROE (Client: ${clientRoe} | Supplier: ${supplierRoe})</span>`;
+                        } else {
+                            roeHelper.innerHTML = `<span class="badge bg-soft-info text-dark fs-12 px-2 py-1 border border-info border-opacity-25"><i class="mdi mdi-account-switch me-1 text-primary"></i> Client: <strong class="text-primary">${Number(clientSar).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR</strong> (@ ${clientRoe}) &nbsp;|&nbsp; Supplier: <strong class="text-warning text-dark">${Number(supplierSar).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR</strong> (@ ${supplierRoe})</span>`;
+                        }
+                    }
+                    return;
+                }
+            }
+
             const curr = currencySelect.value;
 
             if (curr === 'PKR') {
@@ -925,7 +1040,6 @@
             }
 
             // Calculate live conversion preview (Amount is ALWAYS PKR)
-            const amtPkr = parseFloat(mainAmountInput?.value) || 0;
             const roe = parseFloat(rateInput?.value) || 76.0;
 
             if (roeHelper) {
@@ -943,6 +1057,10 @@
         currencySelect.addEventListener('change', updateCurrencyAndLiveROE);
         if (mainAmountInput) mainAmountInput.addEventListener('input', updateCurrencyAndLiveROE);
         if (rateInput) rateInput.addEventListener('input', updateCurrencyAndLiveROE);
+        ['jv_from_roe', 'jv_to_roe', 'jv_contra_client_roe', 'jv_contra_supplier_roe'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', updateCurrencyAndLiveROE);
+        });
         updateCurrencyAndLiveROE();
 
         // Payee Type Toggle
@@ -987,6 +1105,7 @@
                     jvSec.classList.remove('d-none');
                     if (refInput) refInput.value = jvRef;
                 }
+                updateCurrencyAndLiveROE();
             });
         });
 
@@ -1008,6 +1127,8 @@
                 else if (this.value === 'single_party' && jvBoxSingle) jvBoxSingle.classList.remove('d-none');
                 else if (this.value === 'client_supplier' && jvBoxContra) jvBoxContra.classList.remove('d-none');
                 else if (this.value === 'multi_client' && jvBoxMulti) jvBoxMulti.classList.remove('d-none');
+
+                updateCurrencyAndLiveROE();
             });
         });
 

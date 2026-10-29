@@ -766,7 +766,7 @@ class SupplierController extends Controller
             $tRate = (float) ($t->exchange_rate > 0 ? $t->exchange_rate : $defaultRoe);
             $typeLabel = $isJv ? ($isCredit ? 'JV Credit Entry' : 'JV Adjustment') : ($isCredit ? 'Supplier Credit' : 'Payment Paid');
             $badgeClass = $isJv 
-                ? 'bg-soft-purple text-purple border border-purple border-opacity-25' 
+                ? 'bg-soft-primary text-primary border border-primary border-opacity-25' 
                 : ($isCredit ? 'bg-soft-success text-success border border-success border-opacity-25' : 'bg-soft-danger text-danger border border-danger border-opacity-25');
 
             $statementRows[] = [

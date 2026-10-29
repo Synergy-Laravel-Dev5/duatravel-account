@@ -27,19 +27,10 @@ class BankController extends Controller
             'branch'              => 'nullable|string|max:255',
             'account_type'        => 'nullable|in:bank,cash',
             'opening_balance_pkr' => 'nullable|numeric',
-            'opening_balance_sar' => 'nullable|numeric',
-            'opening_balance_roe' => 'nullable|numeric',
             'status'              => 'required|in:active,inactive',
         ]);
         
         $obPkr = (float)($request->opening_balance_pkr ?? 0);
-        $obSar = (float)($request->opening_balance_sar ?? 0);
-        $obRoe = (float)($request->opening_balance_roe > 0 ? $request->opening_balance_roe : 75.0);
-        if ($obSar == 0 && $obPkr != 0) {
-            $obSar = round($obPkr / $obRoe, 2);
-        } elseif ($obPkr == 0 && $obSar != 0) {
-            $obPkr = round($obSar * $obRoe, 2);
-        }
 
         Bank::create([
             'name'                => $request->name,
@@ -48,8 +39,8 @@ class BankController extends Controller
             'branch'              => $request->branch,
             'account_type'        => $request->account_type ?? 'bank',
             'opening_balance_pkr' => $obPkr,
-            'opening_balance_sar' => $obSar,
-            'opening_balance_roe' => $obRoe,
+            'opening_balance_sar' => 0.00,
+            'opening_balance_roe' => 1.0000,
             'status'              => $request->status,
         ]);
         return redirect()->route('bank.index')->with('success', 'Account created successfully.');
@@ -69,19 +60,10 @@ class BankController extends Controller
             'branch'              => 'nullable|string|max:255',
             'account_type'        => 'nullable|in:bank,cash',
             'opening_balance_pkr' => 'nullable|numeric',
-            'opening_balance_sar' => 'nullable|numeric',
-            'opening_balance_roe' => 'nullable|numeric',
             'status'              => 'required|in:active,inactive',
         ]);
 
         $obPkr = (float)($request->opening_balance_pkr ?? 0);
-        $obSar = (float)($request->opening_balance_sar ?? 0);
-        $obRoe = (float)($request->opening_balance_roe > 0 ? $request->opening_balance_roe : 75.0);
-        if ($obSar == 0 && $obPkr != 0) {
-            $obSar = round($obPkr / $obRoe, 2);
-        } elseif ($obPkr == 0 && $obSar != 0) {
-            $obPkr = round($obSar * $obRoe, 2);
-        }
         
         $bank->update([
             'name'                => $request->name,
@@ -90,8 +72,8 @@ class BankController extends Controller
             'branch'              => $request->branch,
             'account_type'        => $request->account_type ?? 'bank',
             'opening_balance_pkr' => $obPkr,
-            'opening_balance_sar' => $obSar,
-            'opening_balance_roe' => $obRoe,
+            'opening_balance_sar' => 0.00,
+            'opening_balance_roe' => 1.0000,
             'status'              => $request->status,
         ]);
         return redirect()->route('bank.index')->with('success', 'Account updated successfully.');
