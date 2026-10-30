@@ -56,49 +56,53 @@ class ProfitLossReportController extends Controller
         if ($year !== 'all' && !empty($year)) {
             $bookingQuery->where(function ($q) use ($year) {
                 $q->where('package_year', $year)
+                  ->orWhereRaw("YEAR(booking_date) = ?", [$year])
                   ->orWhereHas('hotels', function ($hq) use ($year) {
                       $hq->whereRaw("YEAR(COALESCE(booking_date, check_in)) = ?", [$year]);
                   })->orWhereHas('visas', function ($vq) use ($year) {
                       $vq->whereRaw("YEAR(booking_date) = ?", [$year]);
                   })->orWhereHas('transports', function ($tq) use ($year) {
                       $tq->whereRaw("YEAR(COALESCE(booking_date, travel_date)) = ?", [$year]);
-                  })->orWhereRaw("YEAR(COALESCE(flight_booking_date, booking_date, DATE(created_at))) = ?", [$year]);
+                  })->orWhereRaw("YEAR(COALESCE(booking_date, flight_booking_date, DATE(created_at))) = ?", [$year]);
             });
         }
 
         if ($month !== 'all' && !empty($month)) {
             $bookingQuery->where(function ($q) use ($month) {
-                $q->whereHas('hotels', function ($hq) use ($month) {
-                    $hq->whereRaw("MONTH(COALESCE(booking_date, check_in)) = ?", [$month]);
-                })->orWhereHas('visas', function ($vq) use ($month) {
-                    $vq->whereRaw("MONTH(booking_date) = ?", [$month]);
-                })->orWhereHas('transports', function ($tq) use ($month) {
-                    $tq->whereRaw("MONTH(COALESCE(booking_date, travel_date)) = ?", [$month]);
-                })->orWhereRaw("MONTH(COALESCE(flight_booking_date, booking_date, DATE(created_at))) = ?", [$month]);
+                $q->whereRaw("MONTH(booking_date) = ?", [$month])
+                  ->orWhereHas('hotels', function ($hq) use ($month) {
+                      $hq->whereRaw("MONTH(COALESCE(booking_date, check_in)) = ?", [$month]);
+                  })->orWhereHas('visas', function ($vq) use ($month) {
+                      $vq->whereRaw("MONTH(booking_date) = ?", [$month]);
+                  })->orWhereHas('transports', function ($tq) use ($month) {
+                      $tq->whereRaw("MONTH(COALESCE(booking_date, travel_date)) = ?", [$month]);
+                  })->orWhereRaw("MONTH(COALESCE(booking_date, flight_booking_date, DATE(created_at))) = ?", [$month]);
             });
         }
 
         if (!empty($dateFrom)) {
             $bookingQuery->where(function ($q) use ($dateFrom) {
-                $q->whereHas('hotels', function ($hq) use ($dateFrom) {
-                    $hq->whereRaw("DATE(COALESCE(booking_date, check_in)) >= ?", [$dateFrom]);
-                })->orWhereHas('visas', function ($vq) use ($dateFrom) {
-                    $vq->whereRaw("DATE(booking_date) >= ?", [$dateFrom]);
-                })->orWhereHas('transports', function ($tq) use ($dateFrom) {
-                    $tq->whereRaw("DATE(COALESCE(booking_date, travel_date)) >= ?", [$dateFrom]);
-                })->orWhereRaw("DATE(COALESCE(flight_booking_date, booking_date, DATE(created_at))) >= ?", [$dateFrom]);
+                $q->whereRaw("DATE(booking_date) >= ?", [$dateFrom])
+                  ->orWhereHas('hotels', function ($hq) use ($dateFrom) {
+                      $hq->whereRaw("DATE(COALESCE(booking_date, check_in)) >= ?", [$dateFrom]);
+                  })->orWhereHas('visas', function ($vq) use ($dateFrom) {
+                      $vq->whereRaw("DATE(booking_date) >= ?", [$dateFrom]);
+                  })->orWhereHas('transports', function ($tq) use ($dateFrom) {
+                      $tq->whereRaw("DATE(COALESCE(booking_date, travel_date)) >= ?", [$dateFrom]);
+                  })->orWhereRaw("DATE(COALESCE(booking_date, flight_booking_date, DATE(created_at))) >= ?", [$dateFrom]);
             });
         }
 
         if (!empty($dateTo)) {
             $bookingQuery->where(function ($q) use ($dateTo) {
-                $q->whereHas('hotels', function ($hq) use ($dateTo) {
-                    $hq->whereRaw("DATE(COALESCE(booking_date, check_in)) <= ?", [$dateTo]);
-                })->orWhereHas('visas', function ($vq) use ($dateTo) {
-                    $vq->whereRaw("DATE(booking_date) <= ?", [$dateTo]);
-                })->orWhereHas('transports', function ($tq) use ($dateTo) {
-                    $tq->whereRaw("DATE(COALESCE(booking_date, travel_date)) <= ?", [$dateTo]);
-                })->orWhereRaw("DATE(COALESCE(flight_booking_date, booking_date, DATE(created_at))) <= ?", [$dateTo]);
+                $q->whereRaw("DATE(booking_date) <= ?", [$dateTo])
+                  ->orWhereHas('hotels', function ($hq) use ($dateTo) {
+                      $hq->whereRaw("DATE(COALESCE(booking_date, check_in)) <= ?", [$dateTo]);
+                  })->orWhereHas('visas', function ($vq) use ($dateTo) {
+                      $vq->whereRaw("DATE(booking_date) <= ?", [$dateTo]);
+                  })->orWhereHas('transports', function ($tq) use ($dateTo) {
+                      $tq->whereRaw("DATE(COALESCE(booking_date, travel_date)) <= ?", [$dateTo]);
+                  })->orWhereRaw("DATE(COALESCE(booking_date, flight_booking_date, DATE(created_at))) <= ?", [$dateTo]);
             });
         }
 
@@ -450,6 +454,8 @@ class ProfitLossReportController extends Controller
                 $bSellingPkr = $bHotelSellPkr + $bFlightSellPkr + $bVisaSellPkr + $bTransSellPkr;
                 if ($allServiceSellSum == 0 && $totalBookingSellPkr > 0) {
                     $bSellingPkr = $totalBookingSellPkr;
+                } elseif ($residualSell > 0 && (!$hasFilter || $isDateInFilter($mainDate))) {
+                    $bSellingPkr += $residualSell;
                 }
                 $bDirectCostPkr = $bHotelCostPkr + $bFlightCostPkr + $bVisaCostPkr + $bTransCostPkr;
                 $bGrossProfitPkr = $bSellingPkr - $bDirectCostPkr;

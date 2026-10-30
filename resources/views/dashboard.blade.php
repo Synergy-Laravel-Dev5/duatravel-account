@@ -181,7 +181,8 @@
     }
 
     .stat-value {
-        font-family: 'Playfair Display', serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        font-variant-numeric: tabular-nums;
         font-size: 26px;
         font-weight: 700;
         color: var(--text-dark);
@@ -553,204 +554,185 @@
                 </a>
             </div>
 
-            {{-- ════ ROW 1 — STAT CARDS ════ --}}
+            {{-- ════ ROW 1 — FINANCIAL PERFORMANCE (REVENUE, DIRECT COSTS, OVERHEADS, PROFIT) ════ --}}
             <div class="row g-3 mb-3">
-
-                {{-- Total Users --}}
-                <div class="col-6 col-md-4 anim anim-1">
-                    <div class="stat-card gold">
-                        <div class="d-flex align-items-center gap-3 mb-3">
-                            <div class="stat-icon-wrap gold">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"
-                                    viewBox="0 0 24 24">
-                                    <path fill="#fff"
-                                        d="M12 4a4 4 0 0 1 4 4a4 4 0 0 1-4 4a4 4 0 0 1-4-4a4 4 0 0 1 4-4m0 10c4.42 0 8 1.79 8 4v2H4v-2c0-2.21 3.58-4 8-4" />
-                                </svg>
-                            </div>
-                            <p class="stat-label mb-0">Total Users</p>
-                        </div>
-                        <div class="stat-value">{{ number_format($totalUsers) }}</div>
-                        <span class="badge-trend {{ $usersTrend >= 0 ? 'up' : 'down' }}">
-                            <i class="mdi mdi-trending-{{ $usersTrend >= 0 ? 'up' : 'down' }}"></i>
-                            {{ abs($usersTrend) }}%
-                        </span>
-                        <span class="ms-2" style="font-size:11.5px;color:var(--text-muted);">Last 7 days</span>
-                    </div>
-                </div>
-
-                {{-- Expenses PKR --}}
-                <div class="col-6 col-md-4 anim anim-2">
-                    <div class="stat-card emerald">
-                        <div class="d-flex align-items-center gap-3 mb-3">
-                            <div class="stat-icon-wrap emerald">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"
-                                    viewBox="0 0 24 24">
-                                    <path fill="#fff"
-                                        d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2m7 3a1 1 0 0 0-1 1v.27A3 3 0 0 0 9 10a3 3 0 0 0 3 3a1 1 0 0 1 0 2a1 1 0 0 1-1-1H9a3 3 0 0 0 2 2.72V17a1 1 0 0 0 2 0v-.27A3 3 0 0 0 15 14a3 3 0 0 0-3-3a1 1 0 0 1 0-2a1 1 0 0 1 1 1h2a3 3 0 0 0-2-2.72V6a1 1 0 0 0-1-1z" />
-                                </svg>
-                            </div>
-                            <p class="stat-label mb-0">Expenses (PKR)</p>
-                        </div>
-                        <div class="stat-value">{{ number_format($totalExpensesPkr) }}</div>
-                        <span class="badge-trend {{ $expensesTrend >= 0 ? 'up' : 'down' }}">
-                            <i class="mdi mdi-trending-{{ $expensesTrend >= 0 ? 'up' : 'down' }}"></i>
-                            {{ abs($expensesTrend) }}%
-                        </span>
-                        <span class="ms-2" style="font-size:11.5px;color:var(--text-muted);">Last 7 days</span>
-                    </div>
-                </div>
-
-                {{-- Expenses SAR --}}
-                <div class="col-6 col-md-4 anim anim-3">
-                    <div class="stat-card" style="border-color:var(--border);">
-                        <div
-                            style="position:absolute;top:0;left:0;right:0;height:3px;border-radius:16px 16px 0 0;background:linear-gradient(90deg,#0f535e,#187280);">
-                        </div>
-                        <div class="d-flex align-items-center gap-3 mb-3">
-                            <div class="stat-icon-wrap" style="background:linear-gradient(135deg,#0f535e,#187280);">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"
-                                    viewBox="0 0 24 24">
-                                    <path fill="#fff"
-                                        d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2m7 3a1 1 0 0 0-1 1v.27A3 3 0 0 0 9 10a3 3 0 0 0 3 3a1 1 0 0 1 0 2a1 1 0 0 1-1-1H9a3 3 0 0 0 2 2.72V17a1 1 0 0 0 2 0v-.27A3 3 0 0 0 15 14a3 3 0 0 0-3-3a1 1 0 0 1 0-2a1 1 0 0 1 1 1h2a3 3 0 0 0-2-2.72V6a1 1 0 0 0-1-1z" />
-                                </svg>
-                            </div>
-                            <p class="stat-label mb-0">Expenses (SAR)</p>
-                        </div>
-                        <div class="stat-value">
-                            {{ number_format($totalExpensesSar) }}
-                            <span style="font-size:14px;font-weight:600;color:var(--text-muted);">SAR</span>
-                        </div>
-                        <div style="font-size:12.5px;font-weight:600;color:#0f535e;margin-bottom:6px;">
-                            ≈ PKR {{ number_format($totalExpensesSarInPkr) }}
-                        </div>
-                        <span class="badge-trend {{ $expensesTrend >= 0 ? 'up' : 'down' }}">
-                            <i class="mdi mdi-trending-{{ $expensesTrend >= 0 ? 'up' : 'down' }}"></i>
-                            {{ abs($expensesTrend) }}%
-                        </span>
-                        <span class="ms-2" style="font-size:11.5px;color:var(--text-muted);">Last 7 days</span>
-                    </div>
-                </div>
-            </div>
-            <div class="row g-3 mb-3">
-
-                <div class="col-6 col-md-3 anim anim-1">
-                    <div class="stat-card emerald">
-                        <div class="d-flex align-items-center gap-3 mb-3">
-                            <div class="stat-icon-wrap emerald">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"
-                                    viewBox="0 0 24 24">
-                                    <path fill="#fff"
-                                        d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2m0 16H5V10h14zm0-12H5V6h14z" />
-                                </svg>
-                            </div>
-                            <p class="stat-label mb-0">{{ ucfirst($package) }} Bookings</p>
-                        </div>
-                        <div class="stat-value">{{ number_format($totalBookings) }}</div>
-                        <span class="badge-trend {{ $bookingsTrend >= 0 ? 'up' : 'down' }}">
-                            <i class="mdi mdi-trending-{{ $bookingsTrend >= 0 ? 'up' : 'down' }}"></i>
-                            {{ abs($bookingsTrend) }}%
-                        </span>
-                        <span class="ms-2" style="font-size:11.5px;color:var(--text-muted);">Last 7 days</span>
-                    </div>
-                </div>
-
-                <div class="col-6 col-md-3 anim anim-2">
-                    <div class="stat-card" style="border-color:var(--border);">
-                        <div
-                            style="position:absolute;top:0;left:0;right:0;height:3px;border-radius:16px 16px 0 0;background:linear-gradient(90deg,#0f535e,#187280);">
-                        </div>
-                        <div class="d-flex align-items-center gap-3 mb-3">
-                            <div class="stat-icon-wrap" style="background:linear-gradient(135deg,#0f535e,#187280);">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"
-                                    viewBox="0 0 24 24">
-                                    <path fill="#fff"
-                                        d="M12 7a4 4 0 1 1 0 8a4 4 0 0 1 0-8m0 10c4.42 0 8 1.79 8 4v2H4v-2c0-2.21 3.58-4 8-4" />
-                                </svg>
-                            </div>
-                            <p class="stat-label mb-0">Companies ({{ $year }})</p>
-                        </div>
-                        <div class="stat-value">{{ number_format($totalCompanies) }}</div>
-                        <span class="badge-trend {{ $companiesTrend >= 0 ? 'up' : 'down' }}">
-                            <i class="mdi mdi-trending-{{ $companiesTrend >= 0 ? 'up' : 'down' }}"></i>
-                            {{ abs($companiesTrend) }}%
-                        </span>
-                        <span class="ms-2" style="font-size:11.5px;color:var(--text-muted);">Last 7 days</span>
-                    </div>
-                </div>
 
                 {{-- Total Revenue --}}
-                <div class="col-6 col-md-3 anim anim-2">
+                <div class="col-6 col-xl-3 col-md-6 anim anim-1">
                     <div class="stat-card emerald">
                         <div class="d-flex align-items-center gap-3 mb-3">
                             <div class="stat-icon-wrap emerald">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"
-                                    viewBox="0 0 24 24">
-                                    <path fill="#fff"
-                                        d="M7 15h2c0 1.08 1.37 2 3 2s3-.92 3-2c0-1.1-1.04-1.5-3.24-2.03C9.64 12.44 7 11.78 7 9c0-1.79 1.47-3.31 3.5-3.82V3h3v2.18C15.53 5.69 17 7.21 17 9h-2c0-1.08-1.37-2-3-2s-3 .92-3 2c0 1.1 1.04 1.5 3.24 2.03C14.36 11.56 17 12.22 17 15c0 1.79-1.47 3.31-3.5 3.82V21h-3v-2.18C8.47 18.31 7 16.79 7 15" />
+                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24">
+                                    <path fill="#fff" d="M7 15h2c0 1.08 1.37 2 3 2s3-.92 3-2c0-1.1-1.04-1.5-3.24-2.03C9.64 12.44 7 11.78 7 9c0-1.79 1.47-3.31 3.5-3.82V3h3v2.18C15.53 5.69 17 7.21 17 9h-2c0-1.08-1.37-2-3-2s-3 .92-3 2c0 1.1 1.04 1.5 3.24 2.03C14.36 11.56 17 12.22 17 15c0 1.79-1.47 3.31-3.5 3.82V21h-3v-2.18C8.47 18.31 7 16.79 7 15" />
                                 </svg>
                             </div>
                             <p class="stat-label mb-0">{{ ucfirst($package) }} Revenue</p>
                         </div>
                         <div class="stat-value">{{ number_format($totalRevenue) }}</div>
-                        <span class="badge-trend {{ $revenueTrend >= 0 ? 'up' : 'down' }}">
-                            <i class="mdi mdi-trending-{{ $revenueTrend >= 0 ? 'up' : 'down' }}"></i>
-                            {{ abs($revenueTrend) }}%
-                        </span>
-                        <span class="ms-2" style="font-size:11.5px;color:var(--text-muted);">Last 7 days</span>
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
+                            <span class="badge-trend {{ $revenueTrend >= 0 ? 'up' : 'down' }}">
+                                <i class="mdi mdi-trending-{{ $revenueTrend >= 0 ? 'up' : 'down' }}"></i>
+                                {{ abs($revenueTrend) }}%
+                            </span>
+                            <span style="font-size:11.5px;color:var(--text-muted);">Last 7 days</span>
+                        </div>
                     </div>
                 </div>
 
-                {{-- Total Received (Payments) --}}
-                <div class="col-6 col-md-3 anim anim-3">
-                    <div class="stat-card" style="border-color:var(--border);">
-                        <div
-                            style="position:absolute;top:0;left:0;right:0;height:3px;border-radius:16px 16px 0 0;background:linear-gradient(90deg,#0f535e,#187280);">
+                {{-- Direct Booking Costs --}}
+                <div class="col-6 col-xl-3 col-md-6 anim anim-2">
+                    <div class="stat-card gold">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="stat-icon-wrap gold">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24">
+                                    <path fill="#fff" d="M19 7h-8v6h8V7m2-2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2m-2 2H5v8h14V7M9 9H7v2h2V9z" />
+                                </svg>
+                            </div>
+                            <p class="stat-label mb-0">Direct Costs</p>
                         </div>
+                        <div class="stat-value">{{ number_format($totalDirectCosts) }}</div>
+                        <div class="text-truncate" style="font-size:11.5px;color:var(--text-muted);" title="Hotels, Flights, Visas & Transport">
+                            Hotels, Flights, Visas & Trans
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Overhead Expenses --}}
+                <div class="col-6 col-xl-3 col-md-6 anim anim-3">
+                    <div class="stat-card" style="border-color:var(--border);">
+                        <div style="position:absolute;top:0;left:0;right:0;height:3px;border-radius:16px 16px 0 0;background:linear-gradient(90deg,#0f535e,#187280);"></div>
                         <div class="d-flex align-items-center gap-3 mb-3">
                             <div class="stat-icon-wrap" style="background:linear-gradient(135deg,#0f535e,#187280);">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"
-                                    viewBox="0 0 24 24">
-                                    <path fill="#fff"
-                                        d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2m0 14H4v-6h16zm0-10H4V6h16z" />
+                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24">
+                                    <path fill="#fff" d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2m7 3a1 1 0 0 0-1 1v.27A3 3 0 0 0 9 10a3 3 0 0 0 3 3a1 1 0 0 1 0 2a1 1 0 0 1-1-1H9a3 3 0 0 0 2 2.72V17a1 1 0 0 0 2 0v-.27A3 3 0 0 0 15 14a3 3 0 0 0-3-3a1 1 0 0 1 0-2a1 1 0 0 1 1 1h2a3 3 0 0 0-2-2.72V6a1 1 0 0 0-1-1z" />
+                                </svg>
+                            </div>
+                            <p class="stat-label mb-0">Overhead Expenses</p>
+                        </div>
+                        <div class="stat-value">{{ number_format($totalOverheadExpenses) }}</div>
+                        <div style="font-size:11.5px;color:var(--text-muted);">
+                            PKR {{ number_format($totalExpensesPkr) }} @if($totalExpensesSar > 0) | SAR {{ number_format($totalExpensesSar) }} @endif
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Profit / Loss --}}
+                <div class="col-6 col-xl-3 col-md-6 anim anim-4">
+                    <div class="stat-card" style="border-color:var(--border);">
+                        <div style="position:absolute;top:0;left:0;right:0;height:3px;border-radius:16px 16px 0 0;background:linear-gradient(90deg,{{ $isProfit ? '#10B981,#059669' : '#EF4444,#DC2626' }});"></div>
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="stat-icon-wrap" style="background:linear-gradient(135deg,{{ $isProfit ? '#0f535e,#187280' : '#D94040,#b91c1c' }});">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24">
+                                    <path fill="#fff" d="{{ $isProfit ? 'M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z' : 'M16 18l2.29-2.29-4.88-4.88-4 4L2 7.41 3.41 6l6 6 4-4 6.3 6.29L22 12v6z' }}" />
+                                </svg>
+                            </div>
+                            <p class="stat-label mb-0">{{ $isProfit ? 'Net Profit' : 'Net Loss' }}</p>
+                        </div>
+                        <div class="stat-value" style="color:{{ $isProfit ? '#0f535e' : '#D94040' }};">
+                            {{ $isProfit ? '' : '-' }}{{ number_format(abs($profit)) }}
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
+                            <span class="badge-trend {{ $isProfit ? 'up' : 'down' }}">
+                                <i class="mdi mdi-{{ $isProfit ? 'check-circle' : 'alert-circle' }}"></i>
+                                {{ $isProfit ? 'Profitable' : 'Loss' }}
+                            </span>
+                            <span style="font-size:11.5px;color:var(--text-muted);">Gross: {{ number_format($grossProfit) }}</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            {{-- ════ ROW 2 — VOLUME & CASH FLOW STATS ════ --}}
+            <div class="row g-3 mb-3">
+
+                {{-- Total Received (Payments) --}}
+                <div class="col-6 col-xl-3 col-md-6 anim anim-1">
+                    <div class="stat-card" style="border-color:var(--border);">
+                        <div style="position:absolute;top:0;left:0;right:0;height:3px;border-radius:16px 16px 0 0;background:linear-gradient(90deg,#0f535e,#187280);"></div>
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="stat-icon-wrap" style="background:linear-gradient(135deg,#0f535e,#187280);">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24">
+                                    <path fill="#fff" d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2m0 14H4v-6h16zm0-10H4V6h16z" />
                                 </svg>
                             </div>
                             <p class="stat-label mb-0">Total Received</p>
                         </div>
                         <div class="stat-value">{{ number_format($totalReceived) }}</div>
-                        <span class="badge-trend {{ $receivedTrend >= 0 ? 'up' : 'down' }}">
-                            <i class="mdi mdi-trending-{{ $receivedTrend >= 0 ? 'up' : 'down' }}"></i>
-                            {{ abs($receivedTrend) }}%
-                        </span>
-                        <span class="ms-2" style="font-size:11.5px;color:var(--text-muted);">Last 7 days</span>
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
+                            <span class="badge-trend {{ $receivedTrend >= 0 ? 'up' : 'down' }}">
+                                <i class="mdi mdi-trending-{{ $receivedTrend >= 0 ? 'up' : 'down' }}"></i>
+                                {{ abs($receivedTrend) }}%
+                            </span>
+                            <span style="font-size:11.5px;color:var(--text-muted);">Collections</span>
+                        </div>
                     </div>
                 </div>
 
-                {{-- Profit / Loss --}}
-                <div class="col-6 col-md-3 anim anim-4">
-                    <div class="stat-card" style="border-color:var(--border);">
-                        <div
-                            style="position:absolute;top:0;left:0;right:0;height:3px;border-radius:16px 16px 0 0;background:linear-gradient(90deg,#0f535e,#187280);">
-                        </div>
+                {{-- Total Bookings --}}
+                <div class="col-6 col-xl-3 col-md-6 anim anim-2">
+                    <div class="stat-card emerald">
                         <div class="d-flex align-items-center gap-3 mb-3">
-                            <div class="stat-icon-wrap"
-                                style="background:linear-gradient(135deg,#0f535e,#187280);">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"
-                                    viewBox="0 0 24 24">
-                                    <path fill="#fff"
-                                        d="{{ $isProfit ? 'M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z' : 'M16 18l2.29-2.29-4.88-4.88-4 4L2 7.41 3.41 6l6 6 4-4 6.3 6.29L22 12v6z' }}" />
+                            <div class="stat-icon-wrap emerald">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24">
+                                    <path fill="#fff" d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2m0 16H5V10h14zm0-12H5V6h14z" />
                                 </svg>
                             </div>
-                            <p class="stat-label mb-0">{{ $isProfit ? 'Net Profit' : 'Net Loss' }}</p>
+                            <p class="stat-label mb-0">{{ ucfirst($package) }} Bookings</p>
                         </div>
-                        <div class="stat-value" style="color:#0f535e;">
-                            {{ $isProfit ? '' : '-' }}{{ number_format(abs($profit)) }}
+                        <div class="stat-value">{{ number_format($totalBookings) }}</div>
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
+                            <span class="badge-trend {{ $bookingsTrend >= 0 ? 'up' : 'down' }}">
+                                <i class="mdi mdi-trending-{{ $bookingsTrend >= 0 ? 'up' : 'down' }}"></i>
+                                {{ abs($bookingsTrend) }}%
+                            </span>
+                            <span style="font-size:11.5px;color:var(--text-muted);">Year {{ $year }}</span>
                         </div>
-                        <span class="badge-trend {{ $isProfit ? 'up' : 'down' }}">
-                            <i class="mdi mdi-{{ $isProfit ? 'check-circle' : 'alert-circle' }}"></i>
-                            {{ $isProfit ? 'Profit' : 'Loss' }}
-                        </span>
-                        <span class="ms-2" style="font-size:11.5px;color:var(--text-muted);">Revenue −
-                            Expenses</span>
+                    </div>
+                </div>
+
+                {{-- Total Companies --}}
+                <div class="col-6 col-xl-3 col-md-6 anim anim-3">
+                    <div class="stat-card" style="border-color:var(--border);">
+                        <div style="position:absolute;top:0;left:0;right:0;height:3px;border-radius:16px 16px 0 0;background:linear-gradient(90deg,#0f535e,#187280);"></div>
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="stat-icon-wrap" style="background:linear-gradient(135deg,#0f535e,#187280);">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24">
+                                    <path fill="#fff" d="M12 7a4 4 0 1 1 0 8a4 4 0 0 1 0-8m0 10c4.42 0 8 1.79 8 4v2H4v-2c0-2.21 3.58-4 8-4" />
+                                </svg>
+                            </div>
+                            <p class="stat-label mb-0">Companies ({{ $year }})</p>
+                        </div>
+                        <div class="stat-value">{{ number_format($totalCompanies) }}</div>
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
+                            <span class="badge-trend {{ $companiesTrend >= 0 ? 'up' : 'down' }}">
+                                <i class="mdi mdi-trending-{{ $companiesTrend >= 0 ? 'up' : 'down' }}"></i>
+                                {{ abs($companiesTrend) }}%
+                            </span>
+                            <span style="font-size:11.5px;color:var(--text-muted);">Partner B2B</span>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Total Users --}}
+                <div class="col-6 col-xl-3 col-md-6 anim anim-4">
+                    <div class="stat-card gold">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="stat-icon-wrap gold">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24">
+                                    <path fill="#fff" d="M12 4a4 4 0 0 1 4 4a4 4 0 0 1-4 4a4 4 0 0 1-4-4a4 4 0 0 1 4-4m0 10c4.42 0 8 1.79 8 4v2H4v-2c0-2.21 3.58-4 8-4" />
+                                </svg>
+                            </div>
+                            <p class="stat-label mb-0">System Users</p>
+                        </div>
+                        <div class="stat-value">{{ number_format($totalUsers) }}</div>
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
+                            <span class="badge-trend {{ $usersTrend >= 0 ? 'up' : 'down' }}">
+                                <i class="mdi mdi-trending-{{ $usersTrend >= 0 ? 'up' : 'down' }}"></i>
+                                {{ abs($usersTrend) }}%
+                            </span>
+                            <span style="font-size:11.5px;color:var(--text-muted);">Active Staff</span>
+                        </div>
                     </div>
                 </div>
 

@@ -215,7 +215,37 @@
     flex-direction: column !important;
     overflow: hidden !important;
     box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.05) !important;
-    transition: all 0.15s ease-out !important;
+    transition: transform 0.2s ease-in-out, width 0.2s ease-in-out, opacity 0.2s ease-in-out !important;
+}
+
+/* Sidebar Hidden / Collapsed State via Hamburger Toggle */
+body[data-sidebar="hidden"] .app-sidebar-menu,
+[data-sidebar="hidden"] .app-sidebar-menu {
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+    transform: translateX(-100%) !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+body[data-sidebar="hidden"] .content-page,
+[data-sidebar="hidden"] .content-page {
+    margin-left: 0 !important;
+}
+
+body[data-sidebar="hidden"] .topbar-custom,
+[data-sidebar="hidden"] .topbar-custom {
+    left: 0 !important;
+}
+
+.content-page {
+    transition: margin-left 0.2s ease-in-out !important;
+}
+
+.topbar-custom {
+    transition: left 0.2s ease-in-out !important;
 }
 
 /* Dedicated Logo Header: Completely outside scroll area, solid #fff background */
@@ -337,4 +367,181 @@ input[type="number"]::-webkit-inner-spin-button {
 input[type="number"] {
     -moz-appearance: textfield !important;
     appearance: textfield !important;
+}
+
+/* ── Currency and ROE Toggle Buttons Styling ── */
+.btn-currency-toggle {
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 5px 14px;
+    border-radius: 50rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    user-select: none;
+}
+.btn-check:checked + .btn-pkr-toggle {
+    background-color: #198754 !important;
+    border-color: #198754 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(25, 135, 84, 0.35) !important;
+}
+.btn-check:not(:checked) + .btn-pkr-toggle {
+    background-color: #ffffff !important;
+    border-color: #86efac !important;
+    color: #15803d !important;
+    opacity: 0.7;
+}
+.btn-check:not(:checked) + .btn-pkr-toggle:hover {
+    opacity: 1;
+    background-color: #f0fdf4 !important;
+}
+.btn-check:checked + .btn-sar-toggle {
+    background-color: #f59e0b !important;
+    border-color: #d97706 !important;
+    color: #1f2937 !important;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.35) !important;
+}
+.btn-check:not(:checked) + .btn-sar-toggle {
+    background-color: #ffffff !important;
+    border-color: #fde68a !important;
+    color: #b45309 !important;
+    opacity: 0.7;
+}
+.btn-check:not(:checked) + .btn-sar-toggle:hover {
+    opacity: 1;
+    background-color: #fffbeb !important;
+}
+.btn-check:checked + .btn-roe-toggle {
+    background-color: #0284c7 !important;
+    border-color: #0369a1 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(2, 132, 199, 0.35) !important;
+}
+.btn-check:not(:checked) + .btn-roe-toggle {
+    background-color: #ffffff !important;
+    border-color: #bae6fd !important;
+    color: #0369a1 !important;
+    opacity: 0.7;
+}
+.btn-check:not(:checked) + .btn-roe-toggle:hover {
+    opacity: 1;
+    background-color: #f0f9ff !important;
+}
+
+/* ==========================================================================
+   GLOBAL PRINT MEDIA OVERHAUL - ELIMINATE SIDEBAR / TOPBAR / BLEEDING
+   ========================================================================== */
+@media print {
+    /* Hide all layout navigation, sidebar, topbar, header, and action buttons */
+    .app-sidebar-menu,
+    .topbar-custom,
+    #sidebar-menu,
+    .sidebar-menu-scroll,
+    .logo-box,
+    .navbar-custom,
+    .left-side-menu,
+    .footer,
+    .no-print,
+    .btn,
+    .btn-group,
+    .nav-pills,
+    .nav-tabs,
+    .dataTables_filter,
+    .dataTables_length,
+    .dataTables_info,
+    .dataTables_paginate,
+    .filter-card,
+    .pagination,
+    .modal,
+    .dropdown,
+    .dropdown-menu,
+    #topnav-menu-content {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        width: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        position: absolute !important;
+        left: -9999px !important;
+        top: -9999px !important;
+    }
+
+    /* Reset root containers to 100% full width and no left margin */
+    html, body {
+        width: 100% !important;
+        min-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-size: 10pt !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    #app-layout,
+    .content-page,
+    .content,
+    .container-fluid {
+        margin: 0 !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        left: 0 !important;
+        position: static !important;
+    }
+
+    .card {
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: none !important;
+        margin-bottom: 12px !important;
+        page-break-inside: avoid;
+    }
+
+    /* Print only the currently active tab-pane, never stack hidden tabs */
+    .tab-content > .tab-pane {
+        display: none !important;
+    }
+    .tab-content > .tab-pane.active {
+        display: block !important;
+        opacity: 1 !important;
+    }
+
+    .table-responsive {
+        overflow: visible !important;
+        display: block !important;
+        width: 100% !important;
+    }
+
+    table.table, table.statement-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        font-size: 8.5pt !important;
+    }
+
+    table.table th, table.table td {
+        padding: 4px 6px !important;
+    }
+
+    /* Hide elements marked hidden by user toggle (PKR, SAR, ROE) */
+    .col-roe.d-none {
+        display: none !important;
+    }
+    .col-pkr.d-none {
+        display: none !important;
+    }
+    .col-sar.d-none {
+        display: none !important;
+    }
+
+    /* Print header display */
+    .d-print-block {
+        display: block !important;
+    }
 }

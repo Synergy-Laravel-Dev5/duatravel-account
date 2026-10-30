@@ -713,7 +713,6 @@
                                 <th class="text-center">Nights</th>
                                 <th>Check In</th>
                                 <th>Check Out</th>
-                                <th>Supplier</th>
                                 <th class="text-center">Voucher</th>
                             </tr>
                         </thead>
@@ -732,7 +731,6 @@
                                     <td class="text-center fw-bold">{{ $hotel->no_of_nights ?? 1 }}</td>
                                     <td>{{ $hotel->check_in ? date('d M Y', strtotime($hotel->check_in)) : '—' }}</td>
                                     <td>{{ $hotel->check_out ? date('d M Y', strtotime($hotel->check_out)) : '—' }}</td>
-                                    <td>{{ $hotel->supplier->name ?? '—' }}</td>
                                     <td class="text-center">
                                         @if($hotel->hotel_voucher)
                                             @php
@@ -782,7 +780,6 @@
                                     <th>Pickup From</th>
                                     <th>Destination</th>
                                     <th>BRN</th>
-                                    <th>Supplier</th>
                                     <th class="text-center">Ticket</th>
                                 </tr>
                             </thead>
@@ -848,7 +845,6 @@
                                                 <span class="text-muted">—</span>
                                             @endif
                                         </td>
-                                        <td>{{ $t->supplier->name ?? '—' }}</td>
                                         <td class="text-center">
                                             @if($t->transport_ticket)
                                                 @php
@@ -920,10 +916,6 @@
                     <div class="kv-item">
                         <span class="kv-key">Arrival PNR / Ticket #</span>
                         <span class="kv-val"><strong>{{ $booking->arrival_pnr ?? '—' }}</strong></span>
-                    </div>
-                    <div class="kv-item">
-                        <span class="kv-key">Flight Supplier / Vendor</span>
-                        <span class="kv-val">{{ $booking->flightSupplier->name ?? '—' }}</span>
                     </div>
                     @if($booking->flight_roe && $booking->flight_roe != 1)
                     <div class="kv-item">
@@ -1086,7 +1078,6 @@
                                 <th>Pilgrim Name</th>
                                 <th>Passport Number</th>
                                 <th>DOB</th>
-                                <th>Visa Supplier / Company</th>
                                 <th>Send To</th>
                                 <th>Status</th>
                                 <th class="text-center">Attachment</th>
@@ -1099,7 +1090,6 @@
                                     <td><strong class="text-dark">{{ $visa->given_name ?? '—' }}</strong></td>
                                     <td>{{ $visa->passport_number ?? '—' }}</td>
                                     <td>{{ $visa->date_of_birth ? date('d M Y', strtotime($visa->date_of_birth)) : '—' }}</td>
-                                    <td>{{ $visa->supplier->name ?? ($visa->company ?? '—') }}</td>
                                     <td>{{ ucfirst($visa->send_to ?? 'Shirka') }}</td>
                                     <td>
                                         <span class="badge bg-soft-success text-success fw-bold">

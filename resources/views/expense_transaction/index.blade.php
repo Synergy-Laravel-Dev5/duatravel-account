@@ -79,7 +79,41 @@
 
                                                 <!-- Category / Payee -->
                                                 <td>
-                                                    @if($t->payee_type === 'supplier' || $t->supplier)
+                                                    @php
+                                                        $isJv = ($t->payee_type === 'jv' || $t->payment_type === 'jv');
+                                                    @endphp
+
+                                                    @if($isJv)
+                                                        <span class="badge" style="background-color: #ede9fe; color: #6d28d9; border: 1px solid #ddd6fe;">
+                                                            <i class="mdi mdi-book-open-page-variant me-1"></i> JV Voucher
+                                                        </span>
+                                                        @php
+                                                            $sibling = (isset($t->jv_siblings) && $t->jv_siblings->count() > 0) ? $t->jv_siblings->first() : null;
+                                                            $getEntityName = function($entity) {
+                                                                if (!$entity) return null;
+                                                                if ($entity->client) return 'Client: ' . $entity->client->name;
+                                                                if ($entity->supplier) return 'Supplier: ' . $entity->supplier->name;
+                                                                if ($entity->staff) return 'Staff: ' . $entity->staff->first_name;
+                                                                if ($entity->expense) return 'Expense: ' . $entity->expense->name;
+                                                                if ($entity->bank) return 'Bank: ' . $entity->bank->name;
+                                                                if ($entity->account) return 'A/C: ' . $entity->account->account_name;
+                                                                return null;
+                                                            };
+                                                            $p1 = $getEntityName($t);
+                                                            $p2 = $getEntityName($sibling);
+                                                            $fromParty = ($t->transaction_type === 'credit') ? $p1 : $p2;
+                                                            $toParty   = ($t->transaction_type === 'credit') ? $p2 : $p1;
+                                                        @endphp
+                                                        @if($fromParty || $toParty)
+                                                            <div class="fs-12 mt-1">
+                                                                <span class="text-danger fw-semibold">{{ $fromParty ?? 'Party 1' }}</span>
+                                                                <span class="text-muted mx-1">➔</span>
+                                                                <span class="text-success fw-semibold">{{ $toParty ?? 'Party 2' }}</span>
+                                                            </div>
+                                                        @else
+                                                            <small class="text-muted d-block fs-11">Journal Adjustment</small>
+                                                        @endif
+                                                    @elseif($t->payee_type === 'supplier' || $t->supplier)
                                                         <span class="badge bg-soft-primary text-primary">
                                                             <i class="mdi mdi-truck-delivery me-1"></i> {{ $t->supplier->name ?? 'Supplier' }}
                                                             @if($t->supplier && $t->supplier->company_name) ({{ $t->supplier->company_name }}) @endif
@@ -105,49 +139,6 @@
                                                             <i class="mdi mdi-office-building me-1"></i> {{ $t->expense->name ?? 'Office Expense' }}
                                                         </span>
                                                         <small class="text-muted d-block fs-11">Expense Head</small>
-                                                    @elseif($t->payee_type === 'jv')
-                                                        <span class="badge" style="background-color: #ede9fe; color: #6d28d9; border: 1px solid #ddd6fe;">
-                                                            <i class="mdi mdi-book-open-page-variant me-1"></i> JV Voucher
-                                                        </span>
-                                                        @php
-                                                            $contraParty = null;
-                                                            if (!empty($t->reference_no)) {
-                                                                if ($t->client_id && !$t->supplier_id) {
-                                                                    $sib = \App\Models\ExpenseTransaction::where('payee_type', 'jv')
-                                                                        ->where('reference_no', $t->reference_no)
-                                                                        ->whereNotNull('supplier_id')
-                                                                        ->with('supplier')
-                                                                        ->first();
-                                                                    if ($sib && $sib->supplier) {
-                                                                        $contraParty = '⇄ ' . $sib->supplier->name . ' (Supplier)';
-                                                                    }
-                                                                } elseif ($t->supplier_id && !$t->client_id) {
-                                                                    $sib = \App\Models\ExpenseTransaction::where('payee_type', 'jv')
-                                                                        ->where('reference_no', $t->reference_no)
-                                                                        ->whereNotNull('client_id')
-                                                                        ->with('client')
-                                                                        ->first();
-                                                                    if ($sib && $sib->client) {
-                                                                        $contraParty = '⇄ ' . $sib->client->name . ' (Client)';
-                                                                    }
-                                                                }
-                                                            }
-                                                        @endphp
-                                                        @if($t->client && $t->supplier)
-                                                            <small class="text-muted d-block fs-11">
-                                                                <strong>Client:</strong> {{ $t->client->name }} ⇄ <strong>Supplier:</strong> {{ $t->supplier->name }}
-                                                            </small>
-                                                        @elseif($t->client)
-                                                            <small class="text-muted d-block fs-11">
-                                                                Party: {{ $t->client->name }} (Client) {{ $contraParty ? ' ' . $contraParty : '' }}
-                                                            </small>
-                                                        @elseif($t->supplier)
-                                                            <small class="text-muted d-block fs-11">
-                                                                Party: {{ $t->supplier->name }} (Supplier) {{ $contraParty ? ' ' . $contraParty : '' }}
-                                                            </small>
-                                                        @else
-                                                            <small class="text-muted d-block fs-11">Journal Adjustment</small>
-                                                        @endif
                                                     @else
                                                         <span class="badge bg-soft-dark text-dark">
                                                             <i class="mdi mdi-account-circle me-1"></i> Self / Transfer
@@ -157,7 +148,12 @@
 
                                                 <!-- Bank / Contra A/C -->
                                                 <td>
-                                                    @if($t->bank)
+                                                    @if($isJv)
+                                                        <span class="badge px-2 py-1" style="background-color: #f3e8ff; color: #7c3aed; border: 1px solid #e9d5ff;">
+                                                            <i class="mdi mdi-swap-horizontal me-1"></i> Non-Cash JV
+                                                        </span>
+                                                        <small class="text-muted d-block fs-11">Internal Transfer</small>
+                                                    @elseif($t->bank)
                                                         <strong class="text-dark">{{ $t->bank->name }}</strong>
                                                         @php
                                                             $hasAcctName = !empty($t->bank->account_name) && trim($t->bank->account_name) !== '' && $t->bank->account_name !== '0';
@@ -193,27 +189,50 @@
                                                         style="background:{{ $t->currency === 'SAR' ? '#be123c' : ($t->currency === 'USD' ? '#16a34a' : '#0e7490') }}">
                                                         {{ $t->currency }}
                                                     </span>
+                                                    @if($isJv)
+                                                        @php
+                                                            $sar1 = ($t->exchange_rate > 1) ? round($t->amount / $t->exchange_rate, 2) : 0;
+                                                            $sibling = (isset($t->jv_siblings) && $t->jv_siblings->count() > 0) ? $t->jv_siblings->first() : null;
+                                                            $sar2 = ($sibling && $sibling->exchange_rate > 1) ? round($sibling->amount / $sibling->exchange_rate, 2) : 0;
+                                                        @endphp
+                                                        @if($sar1 > 0 || $sar2 > 0)
+                                                            <div class="text-muted fs-11 mt-1 font-monospace">
+                                                                @if($sar1 > 0) <span class="text-danger fw-semibold">{{ number_format($sar1, 2) }} SAR</span> @endif
+                                                                @if($sar1 > 0 && $sar2 > 0) <span class="text-muted mx-1">➔</span> @endif
+                                                                @if($sar2 > 0) <span class="text-success fw-semibold">{{ number_format($sar2, 2) }} SAR</span> @endif
+                                                            </div>
+                                                        @endif
+                                                    @endif
                                                 </td>
 
                                                 <!-- Type & Payment -->
                                                 <td>
-                                                    @php
-                                                        $payments = [
-                                                            'cash'    => 'bg-success',
-                                                            'bank'    => 'bg-primary',
-                                                            'cheque'  => 'bg-warning text-dark',
-                                                            'online'  => 'bg-info',
-                                                            'ewallet' => 'bg-secondary',
-                                                        ];
-                                                    @endphp
-
-                                                    <span class="badge {{ $payments[$t->payment_type] ?? 'bg-secondary' }}">
-                                                        {{ ucfirst($t->payment_type) }}
-                                                    </span>
-                                                    @if($t->transaction_type)
-                                                        <span class="badge {{ $t->transaction_type === 'credit' ? 'bg-soft-success text-success' : 'bg-soft-danger text-danger' }} ms-1 fs-10 text-uppercase">
-                                                            {{ $t->transaction_type }}
+                                                    @if($isJv)
+                                                        <span class="badge px-2 py-1 text-white" style="background-color: #7c3aed;">
+                                                            <i class="mdi mdi-book-open-page-variant me-1"></i> JV Voucher
                                                         </span>
+                                                        <span class="badge bg-soft-purple text-purple ms-1 fs-10 text-uppercase" style="background-color: #f3e8ff; color: #7c3aed;">
+                                                            Adjustment
+                                                        </span>
+                                                    @else
+                                                        @php
+                                                            $payments = [
+                                                                'cash'    => 'bg-success',
+                                                                'bank'    => 'bg-primary',
+                                                                'cheque'  => 'bg-warning text-dark',
+                                                                'online'  => 'bg-info',
+                                                                'ewallet' => 'bg-secondary',
+                                                            ];
+                                                        @endphp
+
+                                                        <span class="badge {{ $payments[$t->payment_type] ?? 'bg-secondary' }}">
+                                                            {{ ucfirst($t->payment_type) }}
+                                                        </span>
+                                                        @if($t->transaction_type)
+                                                            <span class="badge {{ $t->transaction_type === 'credit' ? 'bg-soft-success text-success' : 'bg-soft-danger text-danger' }} ms-1 fs-10 text-uppercase">
+                                                                {{ $t->transaction_type }}
+                                                            </span>
+                                                        @endif
                                                     @endif
                                                 </td>
 

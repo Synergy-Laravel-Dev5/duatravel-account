@@ -16,6 +16,7 @@
         transition: all 0.2s ease-in-out;
         position: relative;
         overflow: hidden;
+        height: 100%;
     }
     .hub-metric-card:hover {
         transform: translateY(-3px);
@@ -27,13 +28,13 @@
         box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
     }
     .hub-icon-box {
-        width: 46px;
-        height: 46px;
+        width: 44px;
+        height: 44px;
         border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 22px;
+        font-size: 20px;
         flex-shrink: 0;
     }
     .nav-pills-hub .nav-link {
@@ -91,26 +92,35 @@
                         <i class="ri-dashboard-3-line text-primary me-2"></i> Financial Reports & Ledgers Hub
                     </h4>
                     <span class="text-muted fs-12">
-                        Centralized Filter Center — Bank Statements, Cash Books, Client Ledgers, and Supplier Statements all in one single place.
+                        Centralized Filter Center — Bank Statements, Cash Books, Client Ledgers, Supplier Ledgers & Expense Reports in one single place.
                     </span>
                 </div>
                 <div class="d-flex flex-wrap gap-2">
-                    <a href="{{ route('bank-transfer.report') }}" class="btn btn-outline-primary btn-sm">
-                        <i class="mdi mdi-bank me-1"></i> Quick Bank Report
+                    <a href="{{ route('reports.balance-sheet') }}" class="btn btn-primary btn-sm">
+                        <i class="mdi mdi-book-open-page-variant me-1"></i> Balance Sheet
                     </a>
-                    <a href="{{ route('reports.cash') }}" class="btn btn-outline-success btn-sm">
-                        <i class="mdi mdi-cash-multiple me-1"></i> Quick Cash Book
+                    <a href="{{ route('reports.cash-flow') }}" class="btn btn-outline-primary btn-sm">
+                        <i class="mdi mdi-swap-vertical-circle me-1"></i> Cash Flow
                     </a>
                     <a href="{{ route('report.profit-loss') }}" class="btn btn-outline-info btn-sm">
                         <i class="mdi mdi-chart-line me-1"></i> Profit & Loss (P&L)
                     </a>
+                    <a href="{{ route('reports.cash') }}" class="btn btn-outline-success btn-sm">
+                        <i class="mdi mdi-cash-multiple me-1"></i> Cash Book
+                    </a>
+                    <a href="{{ route('bank-transfer.report') }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="mdi mdi-bank me-1"></i> Bank Report
+                    </a>
+                    <a href="{{ route('expense.transaction.index') }}" class="btn btn-outline-danger btn-sm">
+                        <i class="mdi mdi-receipt me-1"></i> Transactions
+                    </a>
                 </div>
             </div>
 
-            {{-- 4 Metric Switcher Cards --}}
+            {{-- 5 Metric Switcher Cards --}}
             <div class="row g-3 mb-4">
                 {{-- 1. Bank Statements --}}
-                <div class="col-md-3">
+                <div class="col-xl col-md-4 col-sm-6">
                     <div class="hub-metric-card border-start border-4 border-primary {{ $activeTab === 'bank' ? 'active' : '' }}" onclick="switchHubTab('bank')">
                         <div class="d-flex align-items-center gap-3">
                             <div class="hub-icon-box bg-soft-primary text-primary">
@@ -118,7 +128,7 @@
                             </div>
                             <div class="flex-grow-1">
                                 <div class="text-muted fs-11 fw-bold text-uppercase">Bank Statements</div>
-                                <div class="fs-17 fw-bold text-dark mt-1">{{ count($banks) }} Bank Account(s)</div>
+                                <div class="fs-16 fw-bold text-dark mt-1">{{ count($banks) }} Bank Account(s)</div>
                                 <div class="fs-11 text-primary mt-1 fw-semibold">
                                     <i class="ri-filter-3-line me-1"></i> Statement & Transfer Filter
                                 </div>
@@ -128,15 +138,15 @@
                 </div>
 
                 {{-- 2. Cash Book --}}
-                <div class="col-md-3">
+                <div class="col-xl col-md-4 col-sm-6">
                     <div class="hub-metric-card border-start border-4 border-success {{ $activeTab === 'cash' ? 'active' : '' }}" onclick="switchHubTab('cash')">
                         <div class="d-flex align-items-center gap-3">
                             <div class="hub-icon-box bg-soft-success text-success">
                                 <i class="ri-wallet-3-line"></i>
                             </div>
                             <div class="flex-grow-1">
-                                <div class="text-muted fs-11 fw-bold text-uppercase">Cash Book & Cash Report</div>
-                                <div class="fs-17 fw-bold text-dark mt-1">{{ count($cashAccounts) }} Cash Account(s)</div>
+                                <div class="text-muted fs-11 fw-bold text-uppercase">Cash Book & Report</div>
+                                <div class="fs-16 fw-bold text-dark mt-1">{{ count($cashAccounts) }} Cash Account(s)</div>
                                 <div class="fs-11 text-success mt-1 fw-semibold">
                                     <i class="ri-filter-3-line me-1"></i> Inflows, Outflows & Balances
                                 </div>
@@ -146,15 +156,15 @@
                 </div>
 
                 {{-- 3. Client Ledger --}}
-                <div class="col-md-3">
+                <div class="col-xl col-md-4 col-sm-6">
                     <div class="hub-metric-card border-start border-4 border-info {{ $activeTab === 'client' ? 'active' : '' }}" onclick="switchHubTab('client')">
                         <div class="d-flex align-items-center gap-3">
                             <div class="hub-icon-box bg-soft-info text-info">
                                 <i class="ri-user-star-line"></i>
                             </div>
                             <div class="flex-grow-1">
-                                <div class="text-muted fs-11 fw-bold text-uppercase">Client Ledger (Dr / Cr)</div>
-                                <div class="fs-17 fw-bold text-dark mt-1">{{ count($clients) }} Active Client(s)</div>
+                                <div class="text-muted fs-11 fw-bold text-uppercase">Client Ledger (Dr/Cr)</div>
+                                <div class="fs-16 fw-bold text-dark mt-1">{{ count($clients) }} Active Client(s)</div>
                                 <div class="fs-11 text-info mt-1 fw-semibold">
                                     <i class="ri-filter-3-line me-1"></i> Debit / Credit Statement
                                 </div>
@@ -164,7 +174,7 @@
                 </div>
 
                 {{-- 4. Supplier Ledger --}}
-                <div class="col-md-3">
+                <div class="col-xl col-md-6 col-sm-6">
                     <div class="hub-metric-card border-start border-4 border-warning {{ $activeTab === 'supplier' ? 'active' : '' }}" onclick="switchHubTab('supplier')">
                         <div class="d-flex align-items-center gap-3">
                             <div class="hub-icon-box bg-soft-warning text-warning">
@@ -172,9 +182,27 @@
                             </div>
                             <div class="flex-grow-1">
                                 <div class="text-muted fs-11 fw-bold text-uppercase">Supplier Ledger</div>
-                                <div class="fs-17 fw-bold text-dark mt-1">{{ count($suppliers) }} Supplier(s)</div>
+                                <div class="fs-16 fw-bold text-dark mt-1">{{ count($suppliers) }} Supplier(s)</div>
                                 <div class="fs-11 text-warning mt-1 fw-semibold">
                                     <i class="ri-filter-3-line me-1"></i> Payables & Disbursement
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- 5. Staff Ledger --}}
+                <div class="col-xl col-md-6 col-sm-6">
+                    <div class="hub-metric-card border-start border-4 {{ $activeTab === 'staff' ? 'active' : '' }}" onclick="switchHubTab('staff')" style="border-left-color: #8b5cf6 !important;">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="hub-icon-box" style="background: #f5f3ff; color: #8b5cf6;">
+                                <i class="ri-user-settings-line"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="text-muted fs-11 fw-bold text-uppercase">Staff Ledger</div>
+                                <div class="fs-16 fw-bold text-dark mt-1">{{ count($staffMembers) }} Staff Member(s)</div>
+                                <div class="fs-11 mt-1 fw-semibold" style="color: #8b5cf6;">
+                                    <i class="ri-filter-3-line me-1"></i> Salary & Advance Ledger
                                 </div>
                             </div>
                         </div>
@@ -204,6 +232,11 @@
                         <i class="ri-building-line me-1"></i> Search Supplier Ledger
                     </button>
                 </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {{ $activeTab === 'staff' ? 'active' : '' }}" id="tab-btn-staff" data-bs-toggle="pill" data-bs-target="#pane-staff" type="button" role="tab">
+                        <i class="ri-user-settings-line me-1" style="color: #8b5cf6;"></i> Staff Ledger Filter
+                    </button>
+                </li>
             </ul>
 
             {{-- Main Tab Panes Content --}}
@@ -219,72 +252,69 @@
                                 <h5 class="fw-bold text-dark m-0">
                                     <i class="mdi mdi-bank text-primary me-2"></i> Bank Transaction & Statement Reports Filter
                                 </h5>
-                                <p class="text-muted fs-12 mb-0 mt-1">Filter and generate comprehensive dual-currency (PKR & SAR) bank statements, deposits, withdrawals, and inter-bank transfers.</p>
+                                <p class="text-muted fs-12 mb-0 mt-1">Audit bank statement running ledger, inter-bank transfers, client deposits, and supplier disbursements.</p>
                             </div>
                             <span class="badge bg-soft-primary text-primary px-3 py-2 fs-12">
-                                <i class="ri-bank-card-line me-1"></i> Dual-Currency Statement
+                                <i class="ri-bank-line me-1"></i> Bank Module
                             </span>
                         </div>
                         <div class="card-body p-4">
                             <form action="{{ route('bank-transfer.report') }}" method="GET" id="form-bank-report">
                                 <div class="row g-3">
-                                    {{-- Primary Bank --}}
+                                    {{-- Bank Account Selection --}}
                                     <div class="col-md-4">
-                                        <label class="form-label fw-bold fs-13">
-                                            <i class="mdi mdi-bank text-primary me-1"></i> Bank Account (All Activity)
-                                        </label>
-                                        <select name="bank_id" class="form-select form-select-sm" id="hub_bank_id">
-                                            <option value="">-- All Banks (Consolidated Statement) --</option>
+                                        <label class="form-label fw-bold fs-13">Bank Account</label>
+                                        <select name="bank_id" class="form-select form-select-sm">
+                                            <option value="">-- All Bank Accounts --</option>
                                             @foreach ($banks as $b)
                                                 <option value="{{ $b->id }}" {{ request('bank_id') == $b->id ? 'selected' : '' }}>
-                                                    {{ $b->name }} {{ !empty($b->account_number) ? '(' . $b->account_number . ')' : '' }} — Opening: PKR {{ number_format($b->opening_balance_pkr ?? 0, 2) }}
+                                                    {{ $b->name }} @if(!empty($b->account_name)) ({{ $b->account_name }}) @endif - {{ $b->currency ?? 'PKR' }}
                                                 </option>
                                             @endforeach
                                         </select>
-                                        <small class="text-muted fs-11">Leave blank to view all bank accounts consolidated.</small>
                                     </div>
 
-                                    {{-- Activity Type --}}
+                                    {{-- Type Filter --}}
                                     <div class="col-md-4">
-                                        <label class="form-label fw-bold fs-13">Activity Type</label>
-                                        <select name="activity_type" class="form-select form-select-sm">
-                                            <option value="all">All Bank Activity (Credits, Debits & Transfers)</option>
-                                            <option value="deposit">Deposits Only (Credits / Inflows / Opening Balance)</option>
-                                            <option value="withdrawal">Withdrawals Only (Debits / Payments Out)</option>
-                                            <option value="transfer">Internal Inter-Bank Transfers</option>
+                                        <label class="form-label fw-bold fs-13">Transaction Type</label>
+                                        <select name="type" class="form-select form-select-sm">
+                                            <option value="all">All Transactions</option>
+                                            <option value="opening_balance">Opening Balance (PKR)</option>
+                                            <option value="deposit">Deposit (Client Receipt / Inward)</option>
+                                            <option value="transfer">Transfer (Inter-Bank Transfer)</option>
+                                            <option value="withdrawal">Withdrawal / Payment</option>
+                                            <option value="expense">Expense / Supplier Payment</option>
+                                            <option value="jv">JV Adjustment / Journal Voucher</option>
                                         </select>
-                                        <small class="text-muted fs-11">Filter by cash flow direction.</small>
                                     </div>
 
-                                    {{-- Search Keyword --}}
+                                    {{-- Currency Filter --}}
                                     <div class="col-md-4">
-                                        <label class="form-label fw-bold fs-13">Search Keyword</label>
-                                        <input type="text" name="search" class="form-control form-control-sm" placeholder="Voucher #, party name, note, amount...">
-                                        <small class="text-muted fs-11">Searches voucher #, client, supplier, or narration.</small>
+                                        <label class="form-label fw-bold fs-13">Currency</label>
+                                        <select name="currency" class="form-select form-select-sm">
+                                            <option value="">All Currencies</option>
+                                            <option value="PKR" selected>PKR (Pakistani Rupee)</option>
+                                            <option value="SAR">SAR (Saudi Riyal)</option>
+                                            <option value="USD">USD (US Dollar)</option>
+                                        </select>
                                     </div>
 
                                     {{-- From Date --}}
                                     <div class="col-md-3">
                                         <label class="form-label fw-semibold fs-13">From Date</label>
-                                        <input type="date" name="from_date" id="bank_from_date" class="form-control form-control-sm">
+                                        <input type="date" name="from_date" id="bank_from_date" class="form-control form-control-sm" value="{{ request('from_date') }}">
                                     </div>
 
                                     {{-- To Date --}}
                                     <div class="col-md-3">
                                         <label class="form-label fw-semibold fs-13">To Date</label>
-                                        <input type="date" name="to_date" id="bank_to_date" class="form-control form-control-sm">
+                                        <input type="date" name="to_date" id="bank_to_date" class="form-control form-control-sm" value="{{ request('to_date') }}">
                                     </div>
 
-                                    {{-- Min Amount --}}
-                                    <div class="col-md-3">
-                                        <label class="form-label fw-semibold fs-13">Min Amount (PKR)</label>
-                                        <input type="number" step="0.01" name="min_amount" class="form-control form-control-sm" placeholder="Min PKR">
-                                    </div>
-
-                                    {{-- Max Amount --}}
-                                    <div class="col-md-3">
-                                        <label class="form-label fw-semibold fs-13">Max Amount (PKR)</label>
-                                        <input type="number" step="0.01" name="max_amount" class="form-control form-control-sm" placeholder="Max PKR">
+                                    {{-- Search Keyword --}}
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold fs-13">Search Description / Reference</label>
+                                        <input type="text" name="search" class="form-control form-control-sm" placeholder="Ref no, cheque #, remarks, client, supplier..." value="{{ request('search') }}">
                                     </div>
 
                                     {{-- Quick Date Presets Bar --}}
@@ -302,11 +332,11 @@
                                 </div>
 
                                 <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
-                                    <a href="{{ route('bank-transfer.report') }}" class="btn btn-outline-secondary btn-sm">
-                                        <i class="mdi mdi-eye-outline me-1"></i> View All Unfiltered Records
+                                    <a href="{{ route('bank.index') }}" class="btn btn-outline-secondary btn-sm">
+                                        <i class="mdi mdi-arrow-left me-1"></i> Back to Banks
                                     </a>
                                     <button type="submit" class="btn btn-primary px-4 shadow-sm">
-                                        <i class="mdi mdi-file-document-check me-1"></i> Generate Bank Statement Report
+                                        <i class="mdi mdi-file-document-outline me-1"></i> Generate Bank Statement Report
                                     </button>
                                 </div>
                             </form>
@@ -461,13 +491,13 @@
 
                                     {{-- From Date --}}
                                     <div class="col-md-6">
-                                        <label class="form-label fw-semibold fs-13">From Date <small class="text-muted">(Optional)</small></label>
+                                        <label class="form-label fw-semibold fs-13">From Date</label>
                                         <input type="date" name="from_date" id="client_from_date" class="form-control form-control-sm" value="{{ request('from_date') }}">
                                     </div>
 
                                     {{-- To Date --}}
                                     <div class="col-md-6">
-                                        <label class="form-label fw-semibold fs-13">To Date <small class="text-muted">(Optional)</small></label>
+                                        <label class="form-label fw-semibold fs-13">To Date</label>
                                         <input type="date" name="to_date" id="client_to_date" class="form-control form-control-sm" value="{{ request('to_date') }}">
                                     </div>
 
@@ -489,8 +519,8 @@
                                     <a href="{{ route('transaction.ledger.filter') }}" class="btn btn-outline-secondary btn-sm">
                                         <i class="mdi mdi-filter-variant me-1"></i> Dedicated Client Filter
                                     </a>
-                                    <button type="submit" class="btn btn-info px-4 shadow-sm text-white">
-                                        <i class="mdi mdi-book-open-page-variant me-1"></i> Generate Client Ledger Statement
+                                    <button type="submit" class="btn btn-info px-4 shadow-sm text-white fw-bold">
+                                        <i class="mdi mdi-book-open-page-variant me-1"></i> View Client Ledger Statement
                                     </button>
                                 </div>
                             </form>
@@ -506,44 +536,44 @@
                         <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
                             <div>
                                 <h5 class="fw-bold text-dark m-0">
-                                    <i class="mdi mdi-book-open-variant text-warning me-2"></i> Search Supplier Ledger
+                                    <i class="mdi mdi-truck-delivery text-warning me-2"></i> Search Supplier Ledger
                                 </h5>
-                                <p class="text-muted fs-12 mb-0 mt-1">View complete statement of payables (Hotels, Flights, Visas, Transports) and payments made to the vendor.</p>
+                                <p class="text-muted fs-12 mb-0 mt-1">Detailed vendor payable statements, booking payables, journal voucher adjustments, and debit payments.</p>
                             </div>
-                            <span class="badge bg-soft-warning text-dark px-3 py-2 fs-12">
-                                <i class="ri-building-line me-1"></i> Vendor Payables & Ledger
+                            <span class="badge bg-soft-warning text-warning px-3 py-2 fs-12">
+                                <i class="ri-building-line me-1"></i> Vendor Ledger
                             </span>
                         </div>
                         <div class="card-body p-4">
-                            <form action="{{ route('supplier.ledger.view') }}" method="POST" id="form-supplier-ledger">
-                                @csrf
+                            <form action="{{ route('supplier.ledger.view') }}" method="GET" id="form-supplier-ledger">
                                 <div class="row g-3">
                                     {{-- Supplier Dropdown --}}
                                     <div class="col-md-12">
                                         <label class="form-label fw-bold fs-13">
-                                            Select Supplier / Vendor <span class="text-danger">*</span>
+                                            Select Supplier <span class="text-danger">*</span>
                                         </label>
                                         <select name="supplier_id" class="form-select form-select-sm" required>
-                                            <option value="">-- Choose Supplier / Vendor --</option>
+                                            <option value="">-- Choose Supplier --</option>
+                                            <option value="all">🌟 All Suppliers (Consolidated Statement)</option>
                                             @foreach ($suppliers as $s)
-                                                <option value="{{ $s->id }}" {{ old('supplier_id') == $s->id ? 'selected' : '' }}>
-                                                    {{ $s->name }} {{ $s->company_name ? ' (' . $s->company_name . ')' : '' }} — Service: {{ strtoupper($s->service_type ?? 'All Services') }}
+                                                <option value="{{ $s->id }}" {{ request('supplier_id') == $s->id ? 'selected' : '' }}>
+                                                    {{ $s->name }} @if(!empty($s->contact_person)) ({{ $s->contact_person }}) @endif @if(!empty($s->phone)) — {{ $s->phone }} @endif
                                                 </option>
                                             @endforeach
                                         </select>
-                                        <small class="text-muted fs-11">Choose a supplier to audit hotel, flight, visa, transport cost payables and payments.</small>
+                                        <small class="text-muted fs-11">Filter transaction ledger for an airline, hotel chain, visa provider, or transport supplier.</small>
                                     </div>
 
                                     {{-- From Date --}}
                                     <div class="col-md-6">
-                                        <label class="form-label fw-semibold fs-13">From Date <small class="text-muted">(Optional)</small></label>
-                                        <input type="date" name="from_date" id="supplier_from_date" class="form-control form-control-sm" value="{{ old('from_date') }}">
+                                        <label class="form-label fw-semibold fs-13">From Date</label>
+                                        <input type="date" name="from_date" id="supplier_from_date" class="form-control form-control-sm" value="{{ request('from_date') }}">
                                     </div>
 
                                     {{-- To Date --}}
                                     <div class="col-md-6">
-                                        <label class="form-label fw-semibold fs-13">To Date <small class="text-muted">(Optional)</small></label>
-                                        <input type="date" name="to_date" id="supplier_to_date" class="form-control form-control-sm" value="{{ old('to_date') }}">
+                                        <label class="form-label fw-semibold fs-13">To Date</label>
+                                        <input type="date" name="to_date" id="supplier_to_date" class="form-control form-control-sm" value="{{ request('to_date') }}">
                                     </div>
 
                                     {{-- Quick Date Presets Bar --}}
@@ -573,6 +603,84 @@
                     </div>
                 </div>
 
+                {{-- ======================================================== --}}
+                {{-- TAB 5: STAFF LEDGER FILTER --}}
+                {{-- ======================================================== --}}
+                <div class="tab-pane fade {{ $activeTab === 'staff' ? 'show active' : '' }}" id="pane-staff" role="tabpanel">
+                    <div class="card hub-filter-card">
+                        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="fw-bold text-dark m-0">
+                                    <i class="mdi mdi-badge-account-horizontal text-secondary me-2"></i> Staff Ledger Statement Filter
+                                </h5>
+                                <p class="text-muted fs-12 mb-0 mt-1">Complete statement of salaries accrued, monthly payrolls, salary advances, payments disbursed, and outstanding net balance.</p>
+                            </div>
+                            <span class="badge bg-soft-secondary text-secondary px-3 py-2 fs-12">
+                                <i class="ri-user-star-line me-1"></i> Staff Statement
+                            </span>
+                        </div>
+                        <div class="card-body p-4">
+                            <form action="{{ route('staff.ledger') }}" method="POST" id="form-staff-ledger">
+                                @csrf
+                                <div class="row g-3">
+                                    {{-- Staff Member Dropdown --}}
+                                    <div class="col-md-12">
+                                        <label class="form-label fw-bold fs-13">
+                                            Select Staff Member <span class="text-danger">*</span>
+                                        </label>
+                                        <select name="staff_id" class="form-select form-select-sm" required>
+                                            <option value="">-- Choose Staff Member --</option>
+                                            @foreach ($staffMembers as $s)
+                                                <option value="{{ $s->id }}" {{ request('staff_id') == $s->id ? 'selected' : '' }}>
+                                                    {{ $s->first_name }} {{ $s->last_name }} 
+                                                    @if(!empty($s->employee_id)) [{{ $s->employee_id }}] @endif
+                                                    @if(!empty($s->designation)) — {{ is_object($s->designation) ? $s->designation->name : $s->designation }} @endif
+                                                    @if(!empty($s->department)) ({{ is_object($s->department) ? $s->department->name : $s->department }}) @endif
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <small class="text-muted fs-11">Filter individual employee payroll credits, cash advances, and salary payment ledgers.</small>
+                                    </div>
+
+                                    {{-- From Date --}}
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold fs-13">From Date</label>
+                                        <input type="date" name="from_date" id="staff_from_date" class="form-control form-control-sm" value="{{ request('from_date') }}">
+                                    </div>
+
+                                    {{-- To Date --}}
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold fs-13">To Date</label>
+                                        <input type="date" name="to_date" id="staff_to_date" class="form-control form-control-sm" value="{{ request('to_date') }}">
+                                    </div>
+
+                                    {{-- Quick Date Presets Bar --}}
+                                    <div class="col-12 pt-1">
+                                        <div class="d-flex flex-wrap align-items-center gap-1">
+                                            <span class="fs-11 text-muted fw-bold me-1">Date Presets:</span>
+                                            <button type="button" class="date-preset-btn" onclick="setDatePreset('staff_from_date', 'staff_to_date', 'today')">Today</button>
+                                            <button type="button" class="date-preset-btn" onclick="setDatePreset('staff_from_date', 'staff_to_date', 'this_week')">This Week</button>
+                                            <button type="button" class="date-preset-btn" onclick="setDatePreset('staff_from_date', 'staff_to_date', 'this_month')">This Month</button>
+                                            <button type="button" class="date-preset-btn" onclick="setDatePreset('staff_from_date', 'staff_to_date', 'last_month')">Last Month</button>
+                                            <button type="button" class="date-preset-btn" onclick="setDatePreset('staff_from_date', 'staff_to_date', 'this_year')">This Year</button>
+                                            <button type="button" class="date-preset-btn" onclick="setDatePreset('staff_from_date', 'staff_to_date', 'clear')">All Time</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
+                                    <a href="{{ route('staff.ledger.filter') }}" class="btn btn-outline-secondary btn-sm">
+                                        <i class="mdi mdi-filter-variant me-1"></i> Dedicated Staff Filter
+                                    </a>
+                                    <button type="submit" class="btn btn-secondary px-4 shadow-sm text-white fw-bold">
+                                        <i class="mdi mdi-book-open-page-variant me-1"></i> View Staff Ledger
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
         </div>
@@ -592,7 +700,7 @@
         document.querySelectorAll('.hub-metric-card').forEach(card => {
             card.classList.remove('active');
         });
-        const activeCard = event.currentTarget || document.querySelector(`.hub-metric-card[onclick*="${tabName}"]`);
+        const activeCard = document.querySelector(`.hub-metric-card[onclick*="${tabName}"]`);
         if (activeCard) {
             activeCard.classList.add('active');
         }
@@ -602,6 +710,24 @@
         url.searchParams.set('tab', tabName);
         window.history.replaceState({}, '', url);
     }
+
+    // Keep cards in sync when user clicks on nav pill tabs directly
+    document.addEventListener('DOMContentLoaded', function () {
+        const tabButtons = document.querySelectorAll('#hubTabs button[data-bs-toggle="pill"]');
+        tabButtons.forEach(btn => {
+            btn.addEventListener('shown.bs.tab', function (e) {
+                const targetId = e.target.getAttribute('id'); // e.g. tab-btn-expense
+                const tabName = targetId.replace('tab-btn-', '');
+                document.querySelectorAll('.hub-metric-card').forEach(card => card.classList.remove('active'));
+                const activeCard = document.querySelector(`.hub-metric-card[onclick*="${tabName}"]`);
+                if (activeCard) activeCard.classList.add('active');
+
+                const url = new URL(window.location);
+                url.searchParams.set('tab', tabName);
+                window.history.replaceState({}, '', url);
+            });
+        });
+    });
 
     function setDatePreset(fromId, toId, preset) {
         const fromInput = document.getElementById(fromId);

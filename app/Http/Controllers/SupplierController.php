@@ -191,7 +191,7 @@ class SupplierController extends Controller
 
     public function ledger(Request $request, $id = null)
     {
-        $supplierId = $id ?: $request->supplier_id;
+        $supplierId = ($id && is_numeric($id)) ? $id : ($request->supplier_id ?: $request->id);
         if (!$supplierId) {
             return redirect()->route('supplier.ledger.filter')->with('error', 'Please select a supplier.');
         }

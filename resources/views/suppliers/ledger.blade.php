@@ -4,6 +4,10 @@
 
 @section('content')
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
 <style>
     .ledger-stat-card {
         border-radius: 8px;
@@ -76,19 +80,64 @@
     }
 
     @media print {
+        .app-sidebar-menu,
+        .topbar-custom,
+        #sidebar-menu,
+        .left-side-menu,
+        .navbar-custom,
+        .footer,
+        .page-title-box,
         .no-print {
             display: none !important;
         }
         body {
-            background: #fff;
+            background: #fff !important;
+            font-size: 11px !important;
+            color: #000 !important;
+        }
+        .content-page,
+        .content,
+        .container-fluid {
+            margin: 0 !important;
+            margin-left: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
         }
         .card {
-            border: none !important;
+            border: 1px solid #cbd5e1 !important;
             box-shadow: none !important;
+            margin-bottom: 10px !important;
+            page-break-inside: avoid;
         }
-        .tab-pane {
+        /* CRITICAL FIX: Only print the currently active tab-pane! Do NOT stack both! */
+        .tab-content > .tab-pane {
+            display: none !important;
+        }
+        .tab-content > .tab-pane.active {
             display: block !important;
             opacity: 1 !important;
+        }
+        .table {
+            width: 100% !important;
+            font-size: 10px !important;
+            border-collapse: collapse !important;
+        }
+        .table th, .table td {
+            padding: 4px 6px !important;
+            border: 1px solid #cbd5e1 !important;
+        }
+        .col-roe.d-none {
+            display: none !important;
+        }
+        .col-pkr.d-none {
+            display: none !important;
+        }
+        .col-sar.d-none {
+            display: none !important;
+        }
+        .d-print-block {
+            display: block !important;
         }
     }
 </style>
@@ -109,6 +158,9 @@
                     <a href="{{ route('expense.transaction.create') }}?payee_type=supplier&supplier_id={{ $supplier->id }}" class="btn btn-success btn-sm">
                         <i class="mdi mdi-cash-multiple me-1"></i> + Pay Supplier
                     </a>
+                    <button id="exportExcel" onclick="downloadLedgerExcel()" class="btn btn-success btn-sm shadow-sm">
+                        <i class="mdi mdi-file-excel me-1"></i> Export Excel
+                    </button>
                     <button id="exportPDF" onclick="downloadLedgerPDF()" class="btn btn-danger btn-sm shadow-sm">
                         <i class="mdi mdi-file-pdf-box me-1"></i> Export PDF
                     </button>
@@ -126,6 +178,23 @@
 
             <!-- LEDGER CONTENT (for Print and PDF) -->
             <div id="ledgerBox">
+
+                <!-- PRINT HEADER ONLY -->
+                <div class="d-none d-print-block mb-3 p-3 border-bottom">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="fw-bold mb-1" style="color: #1e293b;">DUA TRAVEL &amp; TOURS</h3>
+                            <p class="text-muted mb-0 fs-12">Hajj, Umrah &amp; Tourism Accounting System</p>
+                        </div>
+                        <div class="text-end fs-12">
+                            <div><strong>Printed On:</strong> {{ now()->format('d M, Y h:i A') }}</div>
+                            <div><strong>Statement:</strong> {{ $supplier->name }} (Supplier Ledger)</div>
+                            @if($fromDate || $toDate)
+                                <div><strong>Period:</strong> {{ $fromDate ? \Carbon\Carbon::parse($fromDate)->format('d M, Y') : 'Start' }} to {{ $toDate ? \Carbon\Carbon::parse($toDate)->format('d M, Y') : 'Today' }}</div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
 
                 <!-- SUPPLIER INFO CARD -->
                 <div class="card border-0 shadow-sm mb-3">
@@ -246,6 +315,11 @@
                             <input type="checkbox" class="btn-check" id="toggleSupplierSarColumns" checked autocomplete="off" onchange="toggleSupplierSar(this.checked)">
                             <label class="btn-currency-toggle btn-sar-toggle shadow-sm border" for="toggleSupplierSarColumns" id="lblToggleSupplierSar" title="Toggle SAR Columns in Ledger">
                                 <i class="mdi mdi-check-circle fs-14" id="iconToggleSupplierSar"></i> Show SAR
+                            </label>
+
+                            <input type="checkbox" class="btn-check" id="toggleSupplierRoeColumns" checked autocomplete="off" onchange="toggleSupplierRoe(this.checked)">
+                            <label class="btn-currency-toggle btn-roe-toggle shadow-sm border" for="toggleSupplierRoeColumns" id="lblToggleSupplierRoe" title="Toggle ROE Column in Ledger">
+                                <i class="mdi mdi-check-circle fs-14" id="iconToggleSupplierRoe"></i> Show ROE
                             </label>
 
                             @if(($totalPayableSar ?? 0) > 0 || ($totalPaidSar ?? 0) > 0)
@@ -748,8 +822,8 @@
                                                 <th rowspan="2" class="align-middle" style="width: 130px;">Contra A/C</th>
                                                 <th rowspan="2" class="align-middle">Particulars / Narration</th>
                                                 <th rowspan="2" class="align-middle" style="width: 90px;">Method</th>
-                                                <th rowspan="2" class="text-center align-middle" style="width: 75px;">ROE</th>
                                                 <th colspan="3" class="text-center bg-soft-primary text-primary border-bottom-0 py-1 col-pkr">PKR (Pakistani Rupee)</th>
+                                                <th rowspan="2" class="text-center align-middle col-roe" style="width: 75px;">ROE</th>
                                                 <th colspan="3" class="text-center bg-soft-warning text-dark border-bottom-0 py-1 col-sar">SAR (Saudi Riyal)</th>
                                                 <th rowspan="2" class="no-print text-center align-middle" style="width: 45px;">Proof</th>
                                             </tr>
@@ -773,7 +847,6 @@
                                                     <td><span class="badge bg-light text-dark border">Opening Balance</span></td>
                                                     <td><strong>Opening Balance Brought Forward</strong></td>
                                                     <td>—</td>
-                                                    <td class="text-center">—</td>
                                                     {{-- PKR Columns: Debit, Credit, Balance --}}
                                                     <td class="text-end text-muted col-pkr">—</td>
                                                     <td class="text-end fw-bold text-danger col-pkr">
@@ -785,6 +858,8 @@
                                                             {{ $openingBalancePkr >= 0 ? 'Cr' : 'Dr' }}
                                                         </small>
                                                     </td>
+                                                    {{-- ROE Column --}}
+                                                    <td class="text-center col-roe">—</td>
                                                     {{-- SAR Columns: Debit, Credit, Balance --}}
                                                     <td class="text-end text-muted col-sar">—</td>
                                                     <td class="text-end fw-bold text-danger col-sar">
@@ -836,30 +911,22 @@
                                                         @endif
                                                     </td>
                                                     <td>
+                                                        @php
+                                                            $cleanSupDesc = preg_replace('/\s*[\(\[]\s*[^)\]]*@\s*ROE[^)\]]*[\)\]]/i', '', $row['description'] ?? '');
+                                                            $cleanSupDesc = preg_replace('/\s*@\s*ROE\s*[0-9]+(\.[0-9]+)?/i', '', $cleanSupDesc);
+                                                        @endphp
                                                         @if(!empty($row['booking_id']))
                                                             <a href="{{ route('booking.show', $row['booking_id']) }}" target="_blank" class="fw-semibold text-primary text-decoration-none">
-                                                                {{ $row['description'] }}
+                                                                {{ $cleanSupDesc }}
                                                             </a>
                                                         @else
-                                                            <span class="text-dark fw-medium">{{ $row['description'] }}</span>
+                                                            <span class="text-dark fw-medium">{{ $cleanSupDesc }}</span>
                                                         @endif
                                                     </td>
                                                     <td>
                                                         <span class="badge bg-light text-secondary border px-2 py-1">
                                                             {{ $row['payment_method'] }}
                                                         </span>
-                                                    </td>
-                                                    <!-- ROE Column -->
-                                                    <td class="text-center">
-                                                        @if(!empty($row['exchange_rate']) && (float)$row['exchange_rate'] > 1)
-                                                            <span class="badge bg-soft-info text-info border border-info border-opacity-25 px-2 py-1 font-monospace fs-11" title="Rate of Exchange">
-                                                                {{ number_format((float)$row['exchange_rate'], 2) }}
-                                                            </span>
-                                                        @elseif(!empty($row['currency']) && $row['currency'] === 'SAR')
-                                                            <span class="badge bg-light text-muted border px-1 font-monospace fs-10">1.00</span>
-                                                        @else
-                                                            <span class="text-muted">—</span>
-                                                        @endif
                                                     </td>
                                                     <!-- PKR Debit (Paid) Column -->
                                                     <td class="text-end fw-bold col-pkr {{ ($row['debit_pkr'] ?? 0) > 0 ? 'text-success' : 'text-muted' }}">
@@ -875,6 +942,18 @@
                                                         <span class="badge {{ ($row['running_balance_pkr'] ?? 0) > 0 ? 'bg-soft-danger text-danger' : (($row['running_balance_pkr'] ?? 0) < 0 ? 'bg-soft-success text-success' : 'bg-light text-muted') }} ms-1" style="font-size: 9px;">
                                                             {{ $row['balance_type'] }}
                                                         </span>
+                                                    </td>
+                                                    <!-- ROE Column -->
+                                                    <td class="text-center col-roe">
+                                                        @if(!empty($row['exchange_rate']) && (float)$row['exchange_rate'] > 1)
+                                                            <span class="badge bg-soft-info text-info border border-info border-opacity-25 px-2 py-1 font-monospace fs-11" title="Rate of Exchange">
+                                                                {{ number_format((float)$row['exchange_rate'], 2) }}
+                                                            </span>
+                                                        @elseif(!empty($row['currency']) && $row['currency'] === 'SAR')
+                                                            <span class="badge bg-light text-muted border px-1 font-monospace fs-10">1.00</span>
+                                                        @else
+                                                            <span class="text-muted">—</span>
+                                                        @endif
                                                     </td>
                                                     <!-- SAR Debit (Paid) Column -->
                                                     <td class="text-end fw-bold col-sar {{ ($row['debit_sar'] ?? 0) > 0 ? 'text-success' : 'text-muted' }}">
@@ -916,17 +995,18 @@
                                         </tbody>
                                         <tfoot class="table-light fw-bold">
                                             <tr style="border-top: 2px solid #cbd5e1;">
-                                                <td colspan="8" class="text-end text-uppercase fs-12">Period Totals:</td>
+                                                <td colspan="7" class="text-end text-uppercase fs-12">Period Totals:</td>
                                                 <td class="text-end text-success fs-13 col-pkr">PKR {{ number_format($periodDebitsPkr ?? 0, 2) }}</td>
                                                 <td class="text-end text-danger fs-13 col-pkr">PKR {{ number_format($periodCreditsPkr ?? 0, 2) }}</td>
                                                 <td class="text-end text-dark fs-13 col-pkr">PKR {{ number_format(abs($balanceDuePkr ?? $balanceDue), 2) }}</td>
+                                                <td class="text-center col-roe">—</td>
                                                 <td class="text-end text-success fs-13 col-sar">SAR {{ number_format($periodDebitsSar ?? 0, 2) }}</td>
                                                 <td class="text-end text-danger fs-13 col-sar">SAR {{ number_format($periodCreditsSar ?? 0, 2) }}</td>
                                                 <td class="text-end text-dark fs-13 col-sar">SAR {{ number_format(abs($balanceDueSar ?? 0), 2) }}</td>
                                                 <td class="no-print"></td>
                                             </tr>
                                             <tr style="background: #f1f5f9; border-top: 1px solid #cbd5e1;">
-                                                <td colspan="8" class="text-end text-uppercase fs-13 text-dark">
+                                                <td colspan="7" class="text-end text-uppercase fs-13 text-dark">
                                                     Net Balance Due (Closing):
                                                 </td>
                                                 <td colspan="3" class="text-end fs-14 col-pkr {{ ($balanceDuePkr ?? $balanceDue) > 0 ? 'text-danger' : 'text-success' }}">
@@ -935,6 +1015,7 @@
                                                         {{ ($balanceDuePkr ?? $balanceDue) > 0 ? 'Cr (Payable)' : (($balanceDuePkr ?? $balanceDue) < 0 ? 'Dr (Advance)' : 'Nil') }}
                                                     </span>
                                                 </td>
+                                                <td class="text-center col-roe">—</td>
                                                 <td colspan="3" class="text-end fs-14 col-sar {{ ($balanceDueSar ?? 0) > 0 ? 'text-danger' : 'text-success' }}">
                                                     @if(($balanceDueSar ?? 0) != 0)
                                                         SAR {{ number_format(abs($balanceDueSar), 2) }}
@@ -978,6 +1059,13 @@
         }
     }
 
+    function updateSupplierRoeButtonUI(show) {
+        const icon = document.getElementById('iconToggleSupplierRoe');
+        if (icon) {
+            icon.className = show ? 'mdi mdi-check-circle fs-14' : 'mdi mdi-eye-off-outline fs-14';
+        }
+    }
+
     function toggleSupplierPkr(show) {
         document.querySelectorAll('.col-pkr').forEach(function(el) {
             if (show) {
@@ -1010,6 +1098,22 @@
         } catch(e) {}
     }
 
+    function toggleSupplierRoe(show) {
+        document.querySelectorAll('.col-roe').forEach(function(el) {
+            if (show) {
+                el.classList.remove('d-none');
+                el.style.display = '';
+            } else {
+                el.classList.add('d-none');
+                el.style.display = 'none';
+            }
+        });
+        updateSupplierRoeButtonUI(show);
+        try {
+            localStorage.setItem('supplier_ledger_show_roe', show ? '1' : '0');
+        } catch(e) {}
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         try {
             const savedPkr = localStorage.getItem('supplier_ledger_show_pkr');
@@ -1031,32 +1135,243 @@
             } else if (toggleSar) {
                 updateSupplierSarButtonUI(toggleSar.checked);
             }
+
+            const savedRoe = localStorage.getItem('supplier_ledger_show_roe');
+            const toggleRoe = document.getElementById('toggleSupplierRoeColumns');
+            if (toggleRoe && savedRoe !== null) {
+                const showRoe = (savedRoe === '1' || savedRoe === 'true');
+                toggleRoe.checked = showRoe;
+                toggleSupplierRoe(showRoe);
+            } else if (toggleRoe) {
+                updateSupplierRoeButtonUI(toggleRoe.checked);
+            }
         } catch(e) {}
     });
 
+    function downloadLedgerExcel() {
+        if (typeof XLSX === 'undefined') {
+            alert('Excel export library is loading, please try again.');
+            return;
+        }
+
+        const wb = XLSX.utils.book_new();
+
+        const showRoe = document.getElementById('toggleSupplierRoeColumns') ? document.getElementById('toggleSupplierRoeColumns').checked : true;
+        const showPkr = document.getElementById('toggleSupplierPkrColumns') ? document.getElementById('toggleSupplierPkrColumns').checked : true;
+        const showSar = document.getElementById('toggleSupplierSarColumns') ? document.getElementById('toggleSupplierSarColumns').checked : true;
+
+        let headers = ["#", "Date", "Voucher #", "Type", "Contra A/C", "Particulars / Narration", "Payment Method"];
+        if (showPkr) headers.push("Debit (Dr) Paid PKR", "Credit (Cr) Cost PKR", "Balance PKR");
+        if (showRoe) headers.push("ROE");
+        if (showSar) headers.push("Debit (Dr) Paid SAR", "Credit (Cr) Cost SAR", "Balance SAR");
+
+        const rows = [];
+
+        @if(($openingBalancePkr ?? 0) != 0 || ($openingBalanceSar ?? 0) != 0)
+        let openRow = ["—", "{{ $fromDate ?? '—' }}", "OPENING", "Opening Balance", "—", "Opening Balance Brought Forward", "—"];
+        if (showPkr) openRow.push(0, {{ $openingBalancePkr >= 0 ? abs($openingBalancePkr) : 0 }}, {{ abs($openingBalancePkr) }});
+        if (showRoe) openRow.push(1.00);
+        if (showSar) openRow.push(0, {{ ($openingBalanceSar ?? 0) >= 0 ? abs($openingBalanceSar ?? 0) : 0 }}, {{ abs($openingBalanceSar ?? 0) }});
+        rows.push(openRow);
+        @endif
+
+        @foreach($statementLines as $row)
+        @php
+            $cleanSupRowDesc = preg_replace('/\s*[\(\[]\s*[^)\]]*@\s*ROE[^)\]]*[\)\]]/i', '', $row['description'] ?? '');
+            $cleanSupRowDesc = preg_replace('/\s*@\s*ROE\s*[0-9]+(\.[0-9]+)?/i', '', $cleanSupRowDesc);
+        @endphp
+        let r{{ $loop->iteration }} = [
+            {{ $loop->iteration }},
+            "{{ $row['date'] }}",
+            "{{ addslashes($row['voucher_no']) }}",
+            "{{ addslashes($row['type_label']) }}",
+            "{{ addslashes($row['contra_account'] ?? '—') }}",
+            "{{ addslashes($cleanSupRowDesc) }}",
+            "{{ addslashes($row['payment_method']) }}"
+        ];
+        if (showPkr) r{{ $loop->iteration }}.push(
+            {{ (float) ($row['debit_pkr'] ?? 0) }},
+            {{ (float) ($row['credit_pkr'] ?? 0) }},
+            {{ (float) abs($row['running_balance_pkr'] ?? 0) }}
+        );
+        if (showRoe) r{{ $loop->iteration }}.push({{ (float) ($row['exchange_rate'] ?? 1) }});
+        if (showSar) r{{ $loop->iteration }}.push(
+            {{ (float) ($row['debit_sar'] ?? 0) }},
+            {{ (float) ($row['credit_sar'] ?? 0) }},
+            {{ (float) abs($row['running_balance_sar'] ?? 0) }}
+        );
+        rows.push(r{{ $loop->iteration }});
+        @endforeach
+
+        rows.push([]);
+        let totRow = ["TOTALS", "", "", "", "", "Period Totals:", ""];
+        if (showPkr) totRow.push(
+            {{ (float) ($periodDebitsPkr ?? 0) }},
+            {{ (float) ($periodCreditsPkr ?? 0) }},
+            {{ (float) abs($balanceDuePkr ?? $balanceDue) }}
+        );
+        if (showRoe) totRow.push("");
+        if (showSar) totRow.push(
+            {{ (float) ($periodDebitsSar ?? 0) }},
+            {{ (float) ($periodCreditsSar ?? 0) }},
+            {{ (float) abs($balanceDueSar ?? 0) }}
+        );
+        rows.push(totRow);
+
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+        XLSX.utils.book_append_sheet(wb, ws, "Statement of Account");
+
+        XLSX.writeFile(wb, "Supplier_Ledger_{{ Str::slug($supplier->name) }}_{{ date('Ymd_His') }}.xlsx");
+    }
+
     function downloadLedgerPDF() {
-        const element = document.getElementById('ledgerBox');
+        if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
+            window.print();
+            return;
+        }
+
         const btn = document.getElementById('exportPDF');
         const originalText = btn.innerHTML;
         btn.innerHTML = '<i class="mdi mdi-loading mdi-spin me-1"></i> Generating...';
         btn.disabled = true;
 
-        const opt = {
-            margin: 0.2,
-            filename: 'Supplier-Ledger-{{ Str::slug($supplier->name) }}-{{ date("Y-m-d") }}.pdf',
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
-            jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' },
-            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-        };
+        try {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+            const pageW = doc.internal.pageSize.getWidth();
 
-        html2pdf().set(opt).from(element).save().then(function() {
+            // Header Banner
+            doc.setFillColor(30, 41, 59);
+            doc.rect(0, 0, pageW, 22, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text("DUA TRAVEL & TOURS — SUPPLIER STATEMENT OF ACCOUNT (LEDGER)", 14, 10);
+            doc.setFontSize(8.5);
+            doc.setFont(undefined, 'normal');
+            doc.text("Supplier: {{ addslashes($supplier->name) }} @if($supplier->company_name)({{ addslashes($supplier->company_name) }})@endif | Service: {{ ucfirst($supplier->service_type ?? 'All Services') }} | Printed: " + new Date().toLocaleString(), 14, 17);
+
+            // Summary Info Line
+            doc.setTextColor(30, 30, 30);
+            doc.setFontSize(8.5);
+            doc.setFont(undefined, 'bold');
+            doc.text("PKR — Total Cost: {{ number_format($totalPayablePkr ?? $totalPayable, 2) }} | Total Paid: {{ number_format($totalPaidPkr ?? $totalPaid, 2) }} | Net Due: {{ number_format(abs($balanceDuePkr ?? $balanceDue), 2) }} ({{ ($balanceDuePkr ?? $balanceDue) >= 0 ? 'Cr Payable' : 'Dr Advance' }})" +
+                     @if(($totalPayableSar ?? 0) > 0 || ($totalPaidSar ?? 0) > 0)
+                     "   |   SAR — Total Cost: {{ number_format($totalPayableSar ?? 0, 2) }} | Total Paid: {{ number_format($totalPaidSar ?? 0, 2) }} | Net Due: {{ number_format(abs($balanceDueSar ?? 0), 2) }} ({{ ($balanceDueSar ?? 0) >= 0 ? 'Cr Payable' : 'Dr Advance' }})"
+                     @else
+                     ""
+                     @endif
+                     , 14, 28);
+
+            const tableRows = [];
+
+            @if(($openingBalancePkr ?? $openingBalance) != 0 || ($openingBalanceSar ?? 0) != 0)
+            tableRows.push([
+                "—",
+                "{{ $fromDate ?? '—' }}",
+                "OPENING",
+                "Opening Balance",
+                "—",
+                "Opening Balance Brought Forward",
+                "—",
+                "{{ ($openingBalancePkr ?? $openingBalance) < 0 ? number_format(abs($openingBalancePkr ?? $openingBalance), 2) : '—' }}",
+                "{{ ($openingBalancePkr ?? $openingBalance) > 0 ? number_format($openingBalancePkr ?? $openingBalance, 2) : '—' }}",
+                "{{ number_format(abs($openingBalancePkr ?? $openingBalance), 2) }} {{ ($openingBalancePkr ?? $openingBalance) >= 0 ? 'Cr' : 'Dr' }}",
+                "—",
+                "{{ ($openingBalanceSar ?? 0) < 0 ? number_format(abs($openingBalanceSar), 2) : '—' }}",
+                "{{ ($openingBalanceSar ?? 0) > 0 ? number_format($openingBalanceSar, 2) : '—' }}",
+                "{{ number_format(abs($openingBalanceSar ?? 0), 2) }} {{ ($openingBalanceSar ?? 0) >= 0 ? 'Cr' : 'Dr' }}"
+            ]);
+            @endif
+
+            @foreach($statementLines as $row)
+            @php
+                $cleanRowDesc = preg_replace('/\s*[\(\[]\s*[^)\]]*@\s*ROE[^)\]]*[\)\]]/i', '', $row['description'] ?? '');
+                $cleanRowDesc = preg_replace('/\s*@\s*ROE\s*[0-9]+(\.[0-9]+)?/i', '', $cleanRowDesc);
+            @endphp
+            tableRows.push([
+                "{{ $loop->iteration }}",
+                "{{ \Carbon\Carbon::parse($row['date'])->format('d M, Y') }}",
+                "{{ addslashes($row['voucher_no']) }}",
+                "{{ addslashes($row['type_label']) }}",
+                "{{ addslashes($row['contra_account'] ?? '—') }}",
+                "{{ addslashes($cleanRowDesc) }}",
+                "{{ addslashes($row['payment_method']) }}",
+                "{{ ($row['debit_pkr'] ?? 0) > 0 ? number_format($row['debit_pkr'], 2) : '—' }}",
+                "{{ ($row['credit_pkr'] ?? 0) > 0 ? number_format($row['credit_pkr'], 2) : '—' }}",
+                "{{ number_format(abs($row['running_balance_pkr'] ?? 0), 2) }} {{ $row['balance_type'] }}",
+                "{{ !empty($row['exchange_rate']) && (float)$row['exchange_rate'] > 1 ? number_format((float)$row['exchange_rate'], 2) : '—' }}",
+                "{{ ($row['debit_sar'] ?? 0) > 0 ? number_format($row['debit_sar'], 2) : '—' }}",
+                "{{ ($row['credit_sar'] ?? 0) > 0 ? number_format($row['credit_sar'], 2) : '—' }}",
+                "{{ number_format(abs($row['running_balance_sar'] ?? 0), 2) }} {{ ($row['running_balance_sar'] ?? 0) != 0 ? ($row['balance_type_sar'] ?? '') : '' }}"
+            ]);
+            @endforeach
+
+            tableRows.push([
+                "", "", "", "", "", "TOTALS:", "",
+                "PKR {{ number_format($periodDebitsPkr ?? 0, 2) }}",
+                "PKR {{ number_format($periodCreditsPkr ?? 0, 2) }}",
+                "PKR {{ number_format(abs($balanceDuePkr ?? $balanceDue), 2) }}",
+                "—",
+                "SAR {{ number_format($periodDebitsSar ?? 0, 2) }}",
+                "SAR {{ number_format($periodCreditsSar ?? 0, 2) }}",
+                "SAR {{ number_format(abs($balanceDueSar ?? 0), 2) }}"
+            ]);
+
+            const showRoePdf = document.getElementById('supplierToggleRoe') ? document.getElementById('supplierToggleRoe').checked : true;
+            const showPkrPdf = document.getElementById('supplierTogglePkr') ? document.getElementById('supplierTogglePkr').checked : true;
+            const showSarPdf = document.getElementById('supplierToggleSar') ? document.getElementById('supplierToggleSar').checked : true;
+
+            let pdfHead = ["#", "Date", "Voucher", "Type", "Contra A/C", "Description", "Method"];
+            if (showPkrPdf) pdfHead.push("Dr Paid (PKR)", "Cr Cost (PKR)", "Bal (PKR)");
+            if (showRoePdf) pdfHead.push("ROE");
+            if (showSarPdf) pdfHead.push("Dr Paid (SAR)", "Cr Cost (SAR)", "Bal (SAR)");
+
+            let colStyles = {};
+            let colIdx = 7;
+            if (showPkrPdf) {
+                colStyles[colIdx] = { halign: 'right', textColor: [0, 130, 0] };
+                colStyles[colIdx + 1] = { halign: 'right', textColor: [180, 0, 0] };
+                colStyles[colIdx + 2] = { halign: 'right', fontStyle: 'bold' };
+                colIdx += 3;
+            }
+            if (showRoePdf) {
+                colStyles[colIdx] = { halign: 'center' };
+                colIdx += 1;
+            }
+            if (showSarPdf) {
+                colStyles[colIdx] = { halign: 'right', textColor: [0, 130, 0] };
+                colStyles[colIdx + 1] = { halign: 'right', textColor: [180, 0, 0] };
+                colStyles[colIdx + 2] = { halign: 'right', fontStyle: 'bold' };
+            }
+
+            const finalPdfRows = tableRows.map(row => {
+                let r = [row[0], row[1], row[2], row[3], row[4], row[5], row[6]];
+                if (showPkrPdf) r.push(row[7], row[8], row[9]);
+                if (showRoePdf) r.push(row[10]);
+                if (showSarPdf) r.push(row[11], row[12], row[13]);
+                return r;
+            });
+
+            doc.autoTable({
+                startY: 32,
+                head: [pdfHead],
+                body: finalPdfRows,
+                theme: 'striped',
+                headStyles: { fillColor: [30, 41, 59], textColor: 255, fontSize: 7.5, fontStyle: 'bold' },
+                bodyStyles: { fontSize: 7 },
+                columnStyles: colStyles,
+                margin: { left: 10, right: 10 }
+            });
+
+            doc.save("Supplier_Ledger_{{ Str::slug($supplier->name) }}_{{ date('Ymd') }}.pdf");
+        } catch(err) {
+            console.error('PDF error:', err);
+            window.print();
+        } finally {
             btn.innerHTML = originalText;
             btn.disabled = false;
-        }).catch(function() {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        });
+        }
     }
 </script>
 

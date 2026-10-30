@@ -121,19 +121,39 @@
         }
 
         @media print {
+            .app-sidebar-menu,
+            .topbar-custom,
+            #sidebar-menu,
+            .left-side-menu,
+            .navbar-custom,
+            .footer,
+            .page-title-box,
             .no-print {
                 display: none !important;
             }
             body {
-                background: #fff;
+                background: #fff !important;
             }
-            .content-page {
+            .content-page,
+            .content,
+            .container-fluid {
                 margin: 0 !important;
+                margin-left: 0 !important;
                 padding: 0 !important;
+                width: 100% !important;
             }
             .card {
-                border: 1px solid #ddd !important;
+                border: 1px solid #cbd5e1 !important;
                 box-shadow: none !important;
+            }
+            .col-roe.d-none {
+                display: none !important;
+            }
+            .col-pkr.d-none {
+                display: none !important;
+            }
+            .col-sar.d-none {
+                display: none !important;
             }
         }
     </style>
@@ -388,6 +408,11 @@
                                 <i class="mdi mdi-check-circle fs-14" id="iconToggleSar"></i> Show SAR
                             </label>
 
+                            <input type="checkbox" class="btn-check" id="toggleRoeCols" checked autocomplete="off" onchange="toggleRoeVisibility(this.checked)">
+                            <label class="btn-currency-toggle btn-roe-toggle shadow-sm border" for="toggleRoeCols" id="lblToggleRoe" title="Toggle ROE Column in Ledger">
+                                <i class="mdi mdi-check-circle fs-14" id="iconToggleRoe"></i> Show ROE
+                            </label>
+
                             @if(($currencySummary['SAR']['received_original'] ?? 0) > 0)
                                 <span class="badge bg-warning text-dark px-3 py-1-5 fs-12 col-sar shadow-sm border border-warning rounded-pill">
                                     <i class="mdi mdi-cash-multiple me-1"></i>SAR Total: {{ number_format($currencySummary['SAR']['received_original'], 2) }}
@@ -427,8 +452,8 @@
                                         <th rowspan="2" class="align-middle" style="width: 120px;">Contra A/C</th>
                                         <th rowspan="2" class="align-middle">Particulars / Narration</th>
                                         <th rowspan="2" class="align-middle" style="width: 90px;">Method</th>
-                                        <th rowspan="2" class="text-center align-middle" style="width: 75px;">ROE</th>
                                         <th colspan="3" class="text-center bg-soft-success text-success border-bottom-0 py-1 col-pkr">PKR (Pakistani Rupee)</th>
+                                        <th rowspan="2" class="text-center align-middle col-roe" style="width: 75px;">ROE</th>
                                         <th colspan="3" class="text-center bg-soft-warning text-dark border-bottom-0 py-1 col-sar">SAR (Saudi Riyal)</th>
                                         <th rowspan="2" class="no-print text-center align-middle" style="width: 45px;">Proof</th>
                                     </tr>
@@ -452,7 +477,6 @@
                                             <td><span class="badge bg-light text-dark border">Opening Balance</span></td>
                                             <td><strong>Opening Balance Brought Forward</strong></td>
                                             <td>—</td>
-                                            <td class="text-center">—</td>
                                             {{-- PKR Columns: Debit, Credit, Balance --}}
                                             <td class="text-end fw-bold text-danger col-pkr">
                                                 {{ ($openingBalancePkr ?? $openingBalance) > 0 ? number_format($openingBalancePkr ?? $openingBalance, 2) : '—' }}
@@ -466,6 +490,8 @@
                                                     {{ ($openingBalancePkr ?? $openingBalance) > 0 ? 'Dr' : 'Cr' }}
                                                 </small>
                                             </td>
+                                            {{-- ROE Column --}}
+                                            <td class="text-center col-roe">—</td>
                                             {{-- SAR Columns: Debit, Credit, Balance --}}
                                             <td class="text-end fw-bold text-danger col-sar">
                                                 {{ ($openingBalanceSar ?? 0) > 0 ? number_format($openingBalanceSar, 2) : '—' }}
@@ -513,12 +539,16 @@
                                                 @endif
                                             </td>
                                             <td>
+                                                @php
+                                                    $cleanDesc = preg_replace('/\s*[\(\[]\s*[^)\]]*@\s*ROE[^)\]]*[\)\]]/i', '', $row['description'] ?? '');
+                                                    $cleanDesc = preg_replace('/\s*@\s*ROE\s*[0-9]+(\.[0-9]+)?/i', '', $cleanDesc);
+                                                @endphp
                                                 @if($row['booking_id'])
                                                     <a href="{{ route('booking.show', $row['booking_id']) }}" target="_blank" class="fw-semibold text-primary text-decoration-none">
-                                                        {{ $row['description'] }}
+                                                        {{ $cleanDesc }}
                                                     </a>
                                                 @else
-                                                    <span class="text-dark fw-medium">{{ $row['description'] }}</span>
+                                                    <span class="text-dark fw-medium">{{ $cleanDesc }}</span>
                                                 @endif
                                                 @if($client->id === 'all' && !empty($row['client_name']))
                                                     <small class="text-muted d-block"><i class="mdi mdi-account me-1"></i>{{ $row['client_name'] }}</small>
@@ -528,18 +558,6 @@
                                                 <span class="badge bg-light text-secondary border px-2 py-1">
                                                     {{ $row['payment_method'] }}
                                                 </span>
-                                            </td>
-                                            <!-- ROE Column -->
-                                            <td class="text-center">
-                                                @if(!empty($row['exchange_rate']) && (float)$row['exchange_rate'] > 1)
-                                                    <span class="badge bg-soft-info text-info border border-info border-opacity-25 px-2 py-1 font-monospace fs-11" title="Rate of Exchange">
-                                                        {{ number_format((float)$row['exchange_rate'], 2) }}
-                                                    </span>
-                                                @elseif(!empty($row['currency']) && $row['currency'] === 'SAR')
-                                                    <span class="badge bg-light text-muted border px-1 font-monospace fs-10">1.00</span>
-                                                @else
-                                                    <span class="text-muted">—</span>
-                                                @endif
                                             </td>
                                             <!-- PKR Debit Column -->
                                             <td class="text-end fw-bold col-pkr {{ ($row['debit_pkr'] ?? $row['debit']) > 0 ? 'text-danger' : 'text-muted' }}">
@@ -556,27 +574,25 @@
                                                     {{ $row['balance_type'] }}
                                                 </span>
                                             </td>
+                                            <!-- ROE Column -->
+                                            <td class="text-center col-roe">
+                                                @if(!empty($row['exchange_rate']) && (float)$row['exchange_rate'] > 1)
+                                                    <span class="badge bg-soft-info text-info border border-info border-opacity-25 px-2 py-1 font-monospace fs-11" title="Rate of Exchange">
+                                                        {{ number_format((float)$row['exchange_rate'], 2) }}
+                                                    </span>
+                                                @elseif(!empty($row['currency']) && $row['currency'] === 'SAR')
+                                                    <span class="badge bg-light text-muted border px-1 font-monospace fs-10">1.00</span>
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
+                                            </td>
                                             <!-- SAR Debit Column -->
                                             <td class="text-end fw-bold col-sar {{ ($row['debit_sar'] ?? 0) > 0 ? 'text-danger' : 'text-muted' }}">
-                                                @if(($row['debit_sar'] ?? 0) > 0)
-                                                    <div>{{ number_format($row['debit_sar'], 2) }}</div>
-                                                    @if(!empty($row['exchange_rate']) && $row['exchange_rate'] > 1)
-                                                        <small class="text-muted d-block fw-normal" style="font-size: 9px;">@ ROE {{ number_format($row['exchange_rate'], 2) }}</small>
-                                                    @endif
-                                                @else
-                                                    —
-                                                @endif
+                                                {{ ($row['debit_sar'] ?? 0) > 0 ? number_format($row['debit_sar'], 2) : '—' }}
                                             </td>
                                             <!-- SAR Credit Column -->
                                             <td class="text-end fw-bold col-sar {{ ($row['credit_sar'] ?? 0) > 0 ? 'text-success' : 'text-muted' }}">
-                                                @if(($row['credit_sar'] ?? 0) > 0)
-                                                    <div>{{ number_format($row['credit_sar'], 2) }}</div>
-                                                    @if(!empty($row['exchange_rate']) && $row['exchange_rate'] > 1)
-                                                        <small class="text-muted d-block fw-normal" style="font-size: 9px;">@ ROE {{ number_format($row['exchange_rate'], 2) }}</small>
-                                                    @endif
-                                                @else
-                                                    —
-                                                @endif
+                                                {{ ($row['credit_sar'] ?? 0) > 0 ? number_format($row['credit_sar'], 2) : '—' }}
                                             </td>
                                             <!-- Running Balance SAR Column -->
                                             <td class="text-end fw-bold text-dark col-sar">
@@ -612,10 +628,11 @@
                                 </tbody>
                                 <tfoot class="table-light fw-bold">
                                     <tr style="border-top: 2px solid #cbd5e1;">
-                                        <td colspan="8" class="text-end text-uppercase fs-12">Period Totals:</td>
+                                        <td colspan="7" class="text-end text-uppercase fs-12">Period Totals:</td>
                                         <td class="text-end text-danger fs-13 col-pkr">PKR {{ number_format($periodDebitsPkr ?? $periodDebits, 2) }}</td>
                                         <td class="text-end text-success fs-13 col-pkr">PKR {{ number_format($periodCreditsPkr ?? $periodCredits, 2) }}</td>
                                         <td class="text-end text-dark fs-13 col-pkr">PKR {{ number_format(abs($closingBalancePkr ?? $closingBalance), 2) }}</td>
+                                        <td class="text-center col-roe">—</td>
                                         <td class="text-end text-danger fs-13 col-sar">SAR {{ number_format($periodDebitsSar ?? 0, 2) }}</td>
                                         <td class="text-end text-success fs-13 col-sar">SAR {{ number_format($periodCreditsSar ?? 0, 2) }}</td>
                                         <td class="text-end text-dark fs-13 col-sar">SAR {{ number_format(abs($closingBalanceSar ?? 0), 2) }}</td>
@@ -623,10 +640,10 @@
                                     </tr>
                                     @if(($currencySummary['SAR']['received_original'] ?? 0) > 0 || ($currencySummary['PKR']['received_original'] ?? 0) > 0)
                                         <tr style="background: #fdfefe; border-top: 1px dashed #cbd5e1;">
-                                            <td colspan="8" class="text-end text-uppercase fs-11 text-muted">
+                                            <td colspan="7" class="text-end text-uppercase fs-11 text-muted">
                                                 <i class="mdi mdi-cash-multiple me-1"></i> Received Currency Breakdown:
                                             </td>
-                                            <td colspan="6" class="fs-12 text-end">
+                                            <td colspan="7" class="fs-12 text-end">
                                                 @foreach($currencySummary as $currCode => $currData)
                                                     @if(($currData['count'] ?? 0) > 0)
                                                         <span class="badge {{ $currCode === 'SAR' ? 'bg-warning text-dark col-sar' : 'bg-light text-dark border col-pkr' }} ms-1 px-2 py-1">
@@ -642,12 +659,13 @@
                                         </tr>
                                     @endif
                                     <tr style="background: #f1f5f9; border-top: 1px solid #cbd5e1;">
-                                        <td colspan="8" class="text-end text-uppercase fs-13 text-dark">
+                                        <td colspan="7" class="text-end text-uppercase fs-13 text-dark">
                                             Net Closing Balance:
                                         </td>
                                         <td colspan="3" class="text-end fs-14 col-pkr {{ $closingBalance > 0 ? 'text-danger' : ($closingBalance < 0 ? 'text-success' : 'text-dark') }}">
                                             PKR {{ number_format($absClosing, 2) }} {{ $closingTag }}
                                         </td>
+                                        <td class="text-center col-roe">—</td>
                                         <td colspan="3" class="text-end fs-14 col-sar {{ ($closingBalanceSar ?? 0) > 0 ? 'text-danger' : (($closingBalanceSar ?? 0) < 0 ? 'text-success' : 'text-dark') }}">
                                             @if(($closingBalanceSar ?? 0) != 0)
                                                 SAR {{ number_format(abs($closingBalanceSar), 2) }} {{ $closingBalanceSar > 0 ? 'Dr' : 'Cr' }}
@@ -1038,38 +1056,70 @@
             @endif
 
             @foreach($statementLines as $row)
+            @php
+                $cleanRowDesc = preg_replace('/\s*[\(\[]\s*[^)\]]*@\s*ROE[^)\]]*[\)\]]/i', '', $row['description'] ?? '');
+                $cleanRowDesc = preg_replace('/\s*@\s*ROE\s*[0-9]+(\.[0-9]+)?/i', '', $cleanRowDesc);
+            @endphp
             ledgerRows.push([
                 {{ $loop->iteration }},
                 "{{ $row['date'] }}",
                 "{{ addslashes($row['voucher_no']) }}",
                 "{{ addslashes($row['type_label']) }}",
                 "{{ addslashes($row['contra_account'] ?? '—') }}",
-                "{{ addslashes($row['description']) }}",
+                "{{ addslashes($cleanRowDesc) }}",
                 "{{ addslashes($row['payment_method']) }}",
                 "{{ $row['currency'] ?? 'PKR' }}",
                 {{ (float) ($row['original_amount'] ?? ($row['credit_pkr'] > 0 ? $row['credit_pkr'] : $row['debit_pkr'])) }},
-                {{ (float) ($row['exchange_rate'] ?? 1) }},
                 {{ (float) ($row['debit_pkr'] ?? $row['debit']) }},
                 {{ (float) ($row['credit_pkr'] ?? $row['credit']) }},
+                {{ (float) abs($row['running_balance_pkr'] ?? $row['running_balance']) }},
+                {{ (float) ($row['exchange_rate'] ?? 1) }},
                 {{ (float) ($row['debit_sar'] ?? 0) }},
                 {{ (float) ($row['credit_sar'] ?? 0) }},
-                {{ (float) abs($row['running_balance_pkr'] ?? $row['running_balance']) }},
                 {{ (float) abs($row['running_balance_sar'] ?? 0) }}
             ]);
             @endforeach
 
             ledgerRows.push([]);
             ledgerRows.push([
-                "TOTALS", "", "", "", "", "", "Period Totals:", "", "", "",
+                "TOTALS", "", "", "", "", "", "Period Totals:", "", "",
                 {{ (float) ($periodDebitsPkr ?? $periodDebits) }},
                 {{ (float) ($periodCreditsPkr ?? $periodCredits) }},
+                {{ (float) abs($closingBalancePkr ?? $closingBalance) }},
+                "",
                 {{ (float) ($periodDebitsSar ?? 0) }},
                 {{ (float) ($periodCreditsSar ?? 0) }},
-                {{ (float) abs($closingBalancePkr ?? $closingBalance) }},
                 {{ (float) abs($closingBalanceSar ?? 0) }}
             ]);
 
-            const ws2 = XLSX.utils.aoa_to_sheet([ledgerHeaders, ...ledgerRows]);
+            const showRoe = document.getElementById('toggleRoeCols') ? document.getElementById('toggleRoeCols').checked : true;
+            const showPkr = document.getElementById('togglePkrCols') ? document.getElementById('togglePkrCols').checked : true;
+            const showSar = document.getElementById('toggleSarCols') ? document.getElementById('toggleSarCols').checked : true;
+
+            // Dynamic Excel Headers
+            let finalHeaders = ["#", "Date", "Voucher #", "Type", "Contra A/C", "Particulars / Description", "Payment Method", "Currency", "Original Amount"];
+            if (showRoe) finalHeaders.push("ROE");
+            if (showPkr) finalHeaders.push("Debit (Dr) PKR", "Credit (Cr) PKR", "Running Balance PKR");
+            if (showSar) finalHeaders.push("Debit (Dr) SAR", "Credit (Cr) SAR", "Running Balance SAR");
+
+            const finalLedgerRows = ledgerRows.map(row => {
+                if (!row.length) return [];
+                if (row[0] === "TOTALS") {
+                    let tr = ["TOTALS", "", "", "", "", "", "Period Totals:", "", ""];
+                    if (showRoe) tr.push("");
+                    if (showPkr) tr.push(row[9], row[10], row[11]);
+                    if (showSar) tr.push(row[13], row[14], row[15]);
+                    return tr;
+                }
+                // row: 0:#, 1:date, 2:voucher, 3:type, 4:contra, 5:desc, 6:method, 7:curr, 8:orig_amt, 9:pkr_dr, 10:pkr_cr, 11:pkr_bal, 12:roe, 13:sar_dr, 14:sar_cr, 15:sar_bal
+                let r = [row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8]];
+                if (showRoe) r.push(row[12]);
+                if (showPkr) r.push(row[9], row[10], row[11]);
+                if (showSar) r.push(row[13], row[14], row[15]);
+                return r;
+            });
+
+            const ws2 = XLSX.utils.aoa_to_sheet([finalHeaders, ...finalLedgerRows]);
             XLSX.utils.book_append_sheet(wb, ws2, "Statement");
 
             XLSX.writeFile(wb, "Client_Ledger_{{ Str::slug($client->name) }}_{{ date('Ymd_His') }}.xlsx");
@@ -1121,27 +1171,33 @@
                 "—",
                 "{{ ($openingBalancePkr ?? $openingBalance) > 0 ? number_format($openingBalancePkr ?? $openingBalance, 2) : '—' }}",
                 "{{ ($openingBalancePkr ?? $openingBalance) < 0 ? number_format(abs($openingBalancePkr ?? $openingBalance), 2) : '—' }}",
+                "{{ number_format(abs($openingBalancePkr ?? $openingBalance), 2) }}",
+                "—",
                 "{{ ($openingBalanceSar ?? 0) > 0 ? number_format($openingBalanceSar, 2) : '—' }}",
                 "{{ ($openingBalanceSar ?? 0) < 0 ? number_format(abs($openingBalanceSar), 2) : '—' }}",
-                "{{ number_format(abs($openingBalancePkr ?? $openingBalance), 2) }}",
                 "{{ number_format(abs($openingBalanceSar ?? 0), 2) }}"
             ]);
             @endif
 
             @foreach($statementLines as $row)
+            @php
+                $cleanRowDesc = preg_replace('/\s*[\(\[]\s*[^)\]]*@\s*ROE[^)\]]*[\)\]]/i', '', $row['description'] ?? '');
+                $cleanRowDesc = preg_replace('/\s*@\s*ROE\s*[0-9]+(\.[0-9]+)?/i', '', $cleanRowDesc);
+            @endphp
             tableRows.push([
                 "{{ $loop->iteration }}",
                 "{{ \Carbon\Carbon::parse($row['date'])->format('d M, Y') }}",
                 "{{ addslashes($row['voucher_no']) }}",
                 "{{ addslashes($row['type_label']) }}",
                 "{{ addslashes($row['contra_account'] ?? '—') }}",
-                "{{ addslashes($row['description']) }}",
+                "{{ addslashes($cleanRowDesc) }}",
                 "{{ addslashes($row['payment_method']) }}",
                 "{{ ($row['debit_pkr'] ?? $row['debit']) > 0 ? number_format($row['debit_pkr'] ?? $row['debit'], 2) : '—' }}",
                 "{{ ($row['credit_pkr'] ?? $row['credit']) > 0 ? number_format($row['credit_pkr'] ?? $row['credit'], 2) : '—' }}",
+                "{{ number_format(abs($row['running_balance_pkr'] ?? $row['running_balance']), 2) }} {{ $row['balance_type'] }}",
+                "{{ !empty($row['exchange_rate']) && (float)$row['exchange_rate'] > 1 ? number_format((float)$row['exchange_rate'], 2) : '—' }}",
                 "{{ ($row['debit_sar'] ?? 0) > 0 ? number_format($row['debit_sar'], 2) : '—' }}",
                 "{{ ($row['credit_sar'] ?? 0) > 0 ? number_format($row['credit_sar'], 2) : '—' }}",
-                "{{ number_format(abs($row['running_balance_pkr'] ?? $row['running_balance']), 2) }} {{ $row['balance_type'] }}",
                 "{{ number_format(abs($row['running_balance_sar'] ?? 0), 2) }} {{ ($row['running_balance_sar'] ?? 0) != 0 ? ($row['balance_type_sar'] ?? '') : '' }}"
             ]);
             @endforeach
@@ -1150,31 +1206,81 @@
                 "", "", "", "", "", "TOTALS:", "",
                 "PKR {{ number_format($periodDebitsPkr ?? $periodDebits, 2) }}",
                 "PKR {{ number_format($periodCreditsPkr ?? $periodCredits, 2) }}",
+                "PKR {{ number_format(abs($closingBalancePkr ?? $closingBalance), 2) }}",
+                "—",
                 "SAR {{ number_format($periodDebitsSar ?? 0, 2) }}",
                 "SAR {{ number_format($periodCreditsSar ?? 0, 2) }}",
-                "PKR {{ number_format(abs($closingBalancePkr ?? $closingBalance), 2) }}",
                 "SAR {{ number_format(abs($closingBalanceSar ?? 0), 2) }}"
             ]);
 
+            const showRoePdf = document.getElementById('toggleRoeCols') ? document.getElementById('toggleRoeCols').checked : true;
+            const showPkrPdf = document.getElementById('togglePkrCols') ? document.getElementById('togglePkrCols').checked : true;
+            const showSarPdf = document.getElementById('toggleSarCols') ? document.getElementById('toggleSarCols').checked : true;
+
+            let pdfHead = ["#", "Date", "Voucher", "Type", "Contra A/C", "Description", "Method"];
+            if (showPkrPdf) pdfHead.push("Dr (PKR)", "Cr (PKR)", "Bal (PKR)");
+            if (showRoePdf) pdfHead.push("ROE");
+            if (showSarPdf) pdfHead.push("Dr (SAR)", "Cr (SAR)", "Bal (SAR)");
+
+            let colStyles = {};
+            let colIdx = 7;
+            if (showPkrPdf) {
+                colStyles[colIdx] = { halign: 'right', textColor: [180, 0, 0] };
+                colStyles[colIdx + 1] = { halign: 'right', textColor: [0, 130, 0] };
+                colStyles[colIdx + 2] = { halign: 'right', fontStyle: 'bold' };
+                colIdx += 3;
+            }
+            if (showRoePdf) {
+                colStyles[colIdx] = { halign: 'center' };
+                colIdx += 1;
+            }
+            if (showSarPdf) {
+                colStyles[colIdx] = { halign: 'right', textColor: [180, 0, 0] };
+                colStyles[colIdx + 1] = { halign: 'right', textColor: [0, 130, 0] };
+                colStyles[colIdx + 2] = { halign: 'right', fontStyle: 'bold' };
+            }
+
+            const finalPdfRows = tableRows.map(row => {
+                let r = [row[0], row[1], row[2], row[3], row[4], row[5], row[6]];
+                if (showPkrPdf) r.push(row[7], row[8], row[9]);
+                if (showRoePdf) r.push(row[10]);
+                if (showSarPdf) r.push(row[11], row[12], row[13]);
+                return r;
+            });
+
             doc.autoTable({
                 startY: 32,
-                head: [["#", "Date", "Voucher", "Type", "Contra A/C", "Description", "Method", "Dr (PKR)", "Cr (PKR)", "Dr (SAR)", "Cr (SAR)", "Bal (PKR)", "Bal (SAR)"]],
-                body: tableRows,
+                head: [pdfHead],
+                body: finalPdfRows,
                 theme: 'striped',
                 headStyles: { fillColor: [30, 41, 59], textColor: 255, fontSize: 7.5, fontStyle: 'bold' },
                 bodyStyles: { fontSize: 7 },
-                columnStyles: {
-                    7: { halign: 'right', textColor: [180, 0, 0] },
-                    8: { halign: 'right', textColor: [0, 130, 0] },
-                    9: { halign: 'right', textColor: [180, 0, 0] },
-                    10: { halign: 'right', textColor: [0, 130, 0] },
-                    11: { halign: 'right', fontStyle: 'bold' },
-                    12: { halign: 'right', fontStyle: 'bold' }
-                },
+                columnStyles: colStyles,
                 margin: { left: 10, right: 10 }
             });
 
             doc.save("Client_Ledger_{{ Str::slug($client->name) }}_{{ date('Ymd') }}.pdf");
+        }
+
+        function updateRoeButtonUI(show) {
+            const icon = document.getElementById('iconToggleRoe');
+            if (icon) {
+                icon.className = show ? 'mdi mdi-check-circle fs-14' : 'mdi mdi-eye-off-outline fs-14';
+            }
+        }
+
+        function toggleRoeVisibility(show) {
+            document.querySelectorAll('.col-roe').forEach(el => {
+                if (show) {
+                    el.classList.remove('d-none');
+                } else {
+                    el.classList.add('d-none');
+                }
+            });
+            updateRoeButtonUI(show);
+            try {
+                localStorage.setItem('ledger_show_roe', show ? '1' : '0');
+            } catch(e) {}
         }
 
         function updatePkrButtonUI(show) {
@@ -1237,6 +1343,15 @@
                     toggleSarVisibility(chkSar.checked);
                 } else if (chkSar) {
                     updateSarButtonUI(chkSar.checked);
+                }
+
+                const savedRoe = localStorage.getItem('ledger_show_roe');
+                const chkRoe = document.getElementById('toggleRoeCols');
+                if (savedRoe !== null && chkRoe) {
+                    chkRoe.checked = (savedRoe === '1');
+                    toggleRoeVisibility(chkRoe.checked);
+                } else if (chkRoe) {
+                    updateRoeButtonUI(chkRoe.checked);
                 }
             } catch(e) {}
         });

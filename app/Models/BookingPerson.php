@@ -45,6 +45,7 @@ class BookingPerson extends Model
         'flight_pnr',
         'flight_date',
         'flight_time',
+        'ticket_status',
     ];
 
     public function booking()

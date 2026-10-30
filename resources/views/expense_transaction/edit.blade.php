@@ -61,8 +61,9 @@
 
             @php
                 $isLoan = $transaction->account_id && in_array($transaction->account?->account_type, ['loan_asset', 'loan_liability']);
-                $currentPayee = old('payee_type', $transaction->payee_type ?? ($isLoan ? 'loan' : ($transaction->supplier_id ? 'supplier' : ($transaction->client_id ? 'client' : ($transaction->staff_id ? 'staff' : ($transaction->expense_id ? 'expense' : 'supplier'))))));
-                if ($isLoan && !old('payee_type')) {
+                $isJv = ($transaction->payee_type === 'jv' || $transaction->payment_type === 'jv' || !empty($jvData['from_account']));
+                $currentPayee = old('payee_type', $isJv ? 'jv' : ($transaction->payee_type ?? ($isLoan ? 'loan' : ($transaction->supplier_id ? 'supplier' : ($transaction->client_id ? 'client' : ($transaction->staff_id ? 'staff' : ($transaction->expense_id ? 'expense' : 'supplier')))))));
+                if ($isLoan && !old('payee_type') && !$isJv) {
                     $currentPayee = 'loan';
                 }
             @endphp
@@ -324,188 +325,308 @@
                                         <i class="mdi mdi-format-list-bulleted-type text-primary me-1"></i> Select JV Voucher Mode:
                                     </label>
                                     <div class="d-flex flex-wrap gap-2">
-                                        <input type="radio" class="btn-check jv-mode-radio" name="jv_mode" id="jv_mode_univ" value="universal" {{ old('jv_mode', 'universal') === 'universal' ? 'checked' : '' }}>
+                                        <input type="radio" class="btn-check jv-mode-radio" name="jv_mode" id="jv_mode_univ" value="universal" {{ old('jv_mode', $jvData['mode'] ?? 'universal') === 'universal' ? 'checked' : '' }}>
                                         <label class="btn btn-sm btn-outline-success" for="jv_mode_univ">
                                             <i class="mdi mdi-arrow-left-right-bold me-1"></i> 🌐 Universal JV (From A/C ➔ To A/C)
                                         </label>
 
-                                        <input type="radio" class="btn-check jv-mode-radio" name="jv_mode" id="jv_mode_sp" value="single_party" {{ old('jv_mode') === 'single_party' ? 'checked' : '' }}>
+                                        <input type="radio" class="btn-check jv-mode-radio" name="jv_mode" id="jv_mode_sp" value="single_party" {{ old('jv_mode', $jvData['mode'] ?? '') === 'single_party' ? 'checked' : '' }}>
                                         <label class="btn btn-sm btn-outline-info" for="jv_mode_sp">
                                             <i class="mdi mdi-account-circle me-1"></i> 👤 Single Party JV Adjustment
                                         </label>
 
-                                        <input type="radio" class="btn-check jv-mode-radio" name="jv_mode" id="jv_mode_cs" value="client_supplier" {{ old('jv_mode') === 'client_supplier' ? 'checked' : '' }}>
+                                        <input type="radio" class="btn-check jv-mode-radio" name="jv_mode" id="jv_mode_cs" value="client_supplier" {{ old('jv_mode', $jvData['mode'] ?? '') === 'client_supplier' ? 'checked' : '' }}>
                                         <label class="btn btn-sm btn-outline-primary" for="jv_mode_cs">
                                             <i class="mdi mdi-account-switch me-1"></i> ⇄ Client & Supplier Contra
                                         </label>
 
-                                        <input type="radio" class="btn-check jv-mode-radio" name="jv_mode" id="jv_mode_mc" value="multi_client" {{ old('jv_mode') === 'multi_client' ? 'checked' : '' }}>
+                                        <input type="radio" class="btn-check jv-mode-radio" name="jv_mode" id="jv_mode_mc" value="multi_client" {{ old('jv_mode', $jvData['mode'] ?? '') === 'multi_client' ? 'checked' : '' }}>
                                         <label class="btn btn-sm btn-outline-purple" style="color: #7c3aed; border-color: #7c3aed;" for="jv_mode_mc">
                                             <i class="mdi mdi-account-multiple me-1"></i> 👥 Multi-Client Adjustment
+                                        </label>
+
+                                        <input type="radio" class="btn-check jv-mode-radio" name="jv_mode" id="jv_mode_cms" value="client_multi_supplier" {{ old('jv_mode', $jvData['mode'] ?? '') === 'client_multi_supplier' ? 'checked' : '' }}>
+                                        <label class="btn btn-sm btn-outline-warning text-dark fw-semibold" for="jv_mode_cms">
+                                            <i class="mdi mdi-call-split me-1 text-warning"></i> 🏢 1 Client ➔ Multi-Supplier Split JV
                                         </label>
                                     </div>
                                 </div>
 
                                 <!-- MODE A: UNIVERSAL SEARCHABLE TRANSFER (FROM ACCOUNT ➔ TO ACCOUNT) -->
-                                <div id="jv_box_universal" class="jv-box {{ old('jv_mode', 'universal') === 'universal' ? '' : 'd-none' }}">
+                                <div id="jv_box_universal" class="jv-box {{ old('jv_mode', $jvData['mode'] ?? 'universal') === 'universal' ? '' : 'd-none' }}">
                                     <div class="alert alert-success py-2 px-3 mb-3 fs-12 border-0 bg-soft-success text-success">
                                         <i class="mdi mdi-check-circle me-1"></i>
                                         <strong>Universal JV Transfer:</strong> Both dropdowns below include <strong>ALL Clients, Suppliers, Expense Heads, Banks, Staff Members, Cash & Loan Accounts</strong>. Easily search and transfer funds or balances between any two entities!
                                     </div>
 
-                                    <div class="row g-3">
+                                    <!-- QUICK SAR CONVERTER BAR -->
+                                    <div class="p-2 mb-3 rounded bg-light border d-flex flex-wrap align-items-center justify-content-between gap-2">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="fs-12 fw-bold text-dark"><i class="mdi mdi-swap-horizontal text-primary me-1"></i> Quick SAR Base Amount:</span>
+                                            <div class="input-group input-group-sm" style="max-width: 170px;">
+                                                <input type="number" step="0.01" id="jv_sar_base_amount" 
+                                                    value="{{ (isset($jvData['from_amount']) && isset($jvData['from_roe']) && $jvData['from_roe'] > 0) ? number_format($jvData['from_amount'] / $jvData['from_roe'], 2, '.', '') : '' }}"
+                                                    class="form-control form-control-sm text-center fw-bold" placeholder="e.g. 100.00">
+                                                <span class="input-group-text bg-white fw-bold">SAR</span>
+                                            </div>
+                                            <small class="text-muted fs-11">(Auto-calculates From &amp; To PKR by each party's ROE)</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-3 align-items-center">
                                         <!-- FROM ACCOUNT -->
-                                        <div class="col-md-6">
+                                        <div class="col-md-5">
                                             <label class="form-label fs-13 fw-bold text-danger">
-                                                <i class="mdi mdi-arrow-up-circle me-1"></i> From Account (Source / Debit Party)
+                                                <i class="mdi mdi-arrow-up-bold-circle me-1"></i> From Account / Entity (Credit / Out) <span class="text-danger">*</span>
                                             </label>
                                             <select name="jv_from_account" id="jv_from_account_select" class="form-select form-select-sm select2">
-                                                <option value="">-- Search & Select Source Account --</option>
+                                                <option value="">-- Search & Select From Account --</option>
                                                 
-                                                <optgroup label="👤 Clients">
-                                                    @foreach ($clients as $c)
-                                                        <option value="client:{{ $c->id }}" {{ old('jv_from_account') == "client:{$c->id}" || ($transaction->client_id == $c->id && $transaction->transaction_type === 'debit') ? 'selected' : '' }}>
-                                                            Client: {{ $c->name }} ({{ $c->phone ?? 'Client' }})
+                                                <optgroup label="👥 Clients">
+                                                    @foreach($clients as $c)
+                                                        <option value="client:{{ $c->id }}" {{ old('jv_from_account', $jvData['from_account'] ?? '') == "client:{$c->id}" ? 'selected' : '' }}>
+                                                            Client: {{ $c->name }}{{ $c->phone ? ' (' . $c->phone . ')' : '' }}
                                                         </option>
                                                     @endforeach
                                                 </optgroup>
 
-                                                <optgroup label="🚚 Suppliers">
-                                                    @foreach ($suppliers as $s)
-                                                        <option value="supplier:{{ $s->id }}" {{ old('jv_from_account') == "supplier:{$s->id}" || ($transaction->supplier_id == $s->id && $transaction->transaction_type === 'debit') ? 'selected' : '' }}>
-                                                            Supplier: {{ $s->name }}{{ $s->company_name ? ' (' . $s->company_name . ')' : '' }} [{{ strtoupper($s->service_type ?? 'Supplier') }}]
+                                                <optgroup label="🏢 Suppliers">
+                                                    @foreach($suppliers as $s)
+                                                        <option value="supplier:{{ $s->id }}" {{ old('jv_from_account', $jvData['from_account'] ?? '') == "supplier:{$s->id}" ? 'selected' : '' }}>
+                                                            Supplier: {{ $s->name }}{{ $s->company_name ? ' (' . $s->company_name . ')' : '' }}
                                                         </option>
                                                     @endforeach
                                                 </optgroup>
 
-                                                <optgroup label="👔 Staff Members">
-                                                    @foreach ($staffMembers as $st)
-                                                        <option value="staff:{{ $st->id }}" {{ old('jv_from_account') == "staff:{$st->id}" || ($transaction->staff_id == $st->id && $transaction->transaction_type === 'debit') ? 'selected' : '' }}>
-                                                            Staff: {{ $st->first_name }} {{ $st->last_name }} ({{ $st->designation->name ?? 'Staff' }})
-                                                        </option>
-                                                    @endforeach
-                                                </optgroup>
-
-                                                <optgroup label="🏦 Bank Accounts">
-                                                    @foreach ($banks as $b)
-                                                        <option value="bank:{{ $b->id }}" {{ old('jv_from_account') == "bank:{$b->id}" || ($transaction->bank_id == $b->id && $transaction->transaction_type === 'debit') ? 'selected' : '' }}>
-                                                            Bank: {{ $b->name }}{{ $b->account_number ? ' (' . $b->account_number . ')' : '' }}
-                                                        </option>
-                                                    @endforeach
-                                                </optgroup>
-
-                                                <optgroup label="🏢 Expense Heads">
-                                                    @foreach ($expenses as $e)
-                                                        <option value="expense:{{ $e->id }}" {{ old('jv_from_account') == "expense:{$e->id}" || ($transaction->expense_id == $e->id && $transaction->transaction_type === 'debit') ? 'selected' : '' }}>
+                                                <optgroup label="💼 Expense Heads">
+                                                    @foreach($expenses as $e)
+                                                        <option value="expense:{{ $e->id }}" {{ old('jv_from_account', $jvData['from_account'] ?? '') == "expense:{$e->id}" ? 'selected' : '' }}>
                                                             Expense: {{ $e->name }}
                                                         </option>
                                                     @endforeach
                                                 </optgroup>
 
-                                                <optgroup label="💵 Cash & Loan Accounts">
-                                                    @foreach ($cashAccounts as $ca)
-                                                        <option value="account:{{ $ca->id }}" {{ old('jv_from_account') == "account:{$ca->id}" || ($transaction->account_id == $ca->id && $transaction->transaction_type === 'debit') ? 'selected' : '' }}>
-                                                            {{ $ca->account_name }} ({{ strtoupper(str_replace('_', ' ', $ca->account_type)) }})
+                                                <optgroup label="🏦 Banks">
+                                                    @foreach($banks as $b)
+                                                        <option value="bank:{{ $b->id }}" {{ old('jv_from_account', $jvData['from_account'] ?? '') == "bank:{$b->id}" ? 'selected' : '' }}>
+                                                            Bank: {{ $b->name }}{{ $b->account_number ? ' (' . $b->account_number . ')' : '' }}
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
+
+                                                <optgroup label="👤 Staff Members">
+                                                    @foreach($staffMembers as $st)
+                                                        <option value="staff:{{ $st->id }}" {{ old('jv_from_account', $jvData['from_account'] ?? '') == "staff:{$st->id}" ? 'selected' : '' }}>
+                                                            Staff: {{ $st->first_name }} {{ $st->last_name }} ({{ $st->designation->name ?? 'Staff' }})
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
+
+                                                <optgroup label="💵 Cash Accounts">
+                                                    @foreach($cashAccounts->where('account_type', 'cash') as $ca)
+                                                        <option value="account:{{ $ca->id }}" {{ old('jv_from_account', $jvData['from_account'] ?? '') == "account:{$ca->id}" ? 'selected' : '' }}>
+                                                            Cash: {{ $ca->account_name }} (Opening: PKR {{ number_format($ca->opening_balance_pkr, 2) }})
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
+
+                                                <optgroup label="📥 Loan Assets (Receivable)">
+                                                    @foreach($cashAccounts->where('account_type', 'loan_asset') as $la)
+                                                        <option value="account:{{ $la->id }}" {{ old('jv_from_account', $jvData['from_account'] ?? '') == "account:{$la->id}" ? 'selected' : '' }}>
+                                                            Loan Asset: {{ $la->account_name }} (Opening: PKR {{ number_format($la->opening_balance_pkr, 2) }})
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
+
+                                                <optgroup label="📤 Loan Liabilities (Payable)">
+                                                    @foreach($cashAccounts->where('account_type', 'loan_liability') as $ll)
+                                                        <option value="account:{{ $ll->id }}" {{ old('jv_from_account', $jvData['from_account'] ?? '') == "account:{$ll->id}" ? 'selected' : '' }}>
+                                                            Loan Liability: {{ $ll->account_name }} (Opening: PKR {{ number_format($ll->opening_balance_pkr, 2) }})
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
+
+                                                <optgroup label="📁 General Accounts">
+                                                    @foreach($cashAccounts->whereNotIn('account_type', ['cash', 'loan_asset', 'loan_liability']) as $ga)
+                                                        <option value="account:{{ $ga->id }}" {{ old('jv_from_account', $jvData['from_account'] ?? '') == "account:{$ga->id}" ? 'selected' : '' }}>
+                                                            General: {{ $ga->account_name }}
                                                         </option>
                                                     @endforeach
                                                 </optgroup>
                                             </select>
+                                            <div class="mt-2 p-2 rounded bg-light border border-danger border-opacity-25">
+                                                <div class="row g-2">
+                                                    <div class="col-6">
+                                                        <label class="form-label fs-11 fw-bold text-danger mb-1">
+                                                            <i class="mdi mdi-currency-usd me-1"></i> From ROE <span class="text-danger">*</span>
+                                                        </label>
+                                                        <div class="input-group input-group-sm">
+                                                            <span class="input-group-text bg-white text-danger fw-bold fs-11">1 SAR=</span>
+                                                            <input type="number" step="0.0001" name="jv_from_roe" id="jv_from_roe"
+                                                                value="{{ old('jv_from_roe', $jvData['from_roe'] ?? 76.00) }}"
+                                                                class="form-control form-control-sm text-center fw-bold" placeholder="76.00">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <label class="form-label fs-11 fw-bold text-danger mb-1">
+                                                            From PKR Amount <span class="text-danger">*</span>
+                                                        </label>
+                                                        <input type="number" step="0.01" name="jv_from_amount" id="jv_from_amount_input"
+                                                            value="{{ old('jv_from_amount', $jvData['from_amount'] ?? '') }}"
+                                                            class="form-control form-control-sm text-end fw-bold" placeholder="0.00">
+                                                    </div>
+                                                </div>
+                                                <div id="from_account_sar_hint" class="fs-11 fw-semibold text-danger mt-1"></div>
+                                            </div>
+                                        </div>
+
+                                        <!-- ARROW -->
+                                        <div class="col-md-2 text-center pt-3">
+                                            <span class="badge bg-primary fs-14 p-2 rounded-circle shadow-sm">➔</span>
                                         </div>
 
                                         <!-- TO ACCOUNT -->
-                                        <div class="col-md-6">
+                                        <div class="col-md-5">
                                             <label class="form-label fs-13 fw-bold text-success">
-                                                <i class="mdi mdi-arrow-down-circle me-1"></i> To Account (Destination / Credit Party)
+                                                <i class="mdi mdi-arrow-down-bold-circle me-1"></i> To Account / Entity (Debit / In) <span class="text-danger">*</span>
                                             </label>
                                             <select name="jv_to_account" id="jv_to_account_select" class="form-select form-select-sm select2">
-                                                <option value="">-- Search & Select Destination Account --</option>
+                                                <option value="">-- Search & Select To Account --</option>
                                                 
-                                                <optgroup label="👤 Clients">
-                                                    @foreach ($clients as $c)
-                                                        <option value="client:{{ $c->id }}" {{ old('jv_to_account') == "client:{$c->id}" || ($transaction->client_id == $c->id && $transaction->transaction_type === 'credit') ? 'selected' : '' }}>
-                                                            Client: {{ $c->name }} ({{ $c->phone ?? 'Client' }})
+                                                <optgroup label="👥 Clients">
+                                                    @foreach($clients as $c)
+                                                        <option value="client:{{ $c->id }}" {{ old('jv_to_account', $jvData['to_account'] ?? '') == "client:{$c->id}" ? 'selected' : '' }}>
+                                                            Client: {{ $c->name }}{{ $c->phone ? ' (' . $c->phone . ')' : '' }}
                                                         </option>
                                                     @endforeach
                                                 </optgroup>
 
-                                                <optgroup label="🚚 Suppliers">
-                                                    @foreach ($suppliers as $s)
-                                                        <option value="supplier:{{ $s->id }}" {{ old('jv_to_account') == "supplier:{$s->id}" || ($transaction->supplier_id == $s->id && $transaction->transaction_type === 'credit') ? 'selected' : '' }}>
-                                                            Supplier: {{ $s->name }}{{ $s->company_name ? ' (' . $s->company_name . ')' : '' }} [{{ strtoupper($s->service_type ?? 'Supplier') }}]
+                                                <optgroup label="🏢 Suppliers">
+                                                    @foreach($suppliers as $s)
+                                                        <option value="supplier:{{ $s->id }}" {{ old('jv_to_account', $jvData['to_account'] ?? '') == "supplier:{$s->id}" ? 'selected' : '' }}>
+                                                            Supplier: {{ $s->name }}{{ $s->company_name ? ' (' . $s->company_name . ')' : '' }}
                                                         </option>
                                                     @endforeach
                                                 </optgroup>
 
-                                                <optgroup label="👔 Staff Members">
-                                                    @foreach ($staffMembers as $st)
-                                                        <option value="staff:{{ $st->id }}" {{ old('jv_to_account') == "staff:{$st->id}" || ($transaction->staff_id == $st->id && $transaction->transaction_type === 'credit') ? 'selected' : '' }}>
-                                                            Staff: {{ $st->first_name }} {{ $st->last_name }} ({{ $st->designation->name ?? 'Staff' }})
-                                                        </option>
-                                                    @endforeach
-                                                </optgroup>
-
-                                                <optgroup label="🏦 Bank Accounts">
-                                                    @foreach ($banks as $b)
-                                                        <option value="bank:{{ $b->id }}" {{ old('jv_to_account') == "bank:{$b->id}" || ($transaction->bank_id == $b->id && $transaction->transaction_type === 'credit') ? 'selected' : '' }}>
-                                                            Bank: {{ $b->name }}{{ $b->account_number ? ' (' . $b->account_number . ')' : '' }}
-                                                        </option>
-                                                    @endforeach
-                                                </optgroup>
-
-                                                <optgroup label="🏢 Expense Heads">
-                                                    @foreach ($expenses as $e)
-                                                        <option value="expense:{{ $e->id }}" {{ old('jv_to_account') == "expense:{$e->id}" || ($transaction->expense_id == $e->id && $transaction->transaction_type === 'credit') ? 'selected' : '' }}>
+                                                <optgroup label="💼 Expense Heads">
+                                                    @foreach($expenses as $e)
+                                                        <option value="expense:{{ $e->id }}" {{ old('jv_to_account', $jvData['to_account'] ?? '') == "expense:{$e->id}" ? 'selected' : '' }}>
                                                             Expense: {{ $e->name }}
                                                         </option>
                                                     @endforeach
                                                 </optgroup>
 
-                                                <optgroup label="💵 Cash & Loan Accounts">
-                                                    @foreach ($cashAccounts as $ca)
-                                                        <option value="account:{{ $ca->id }}" {{ old('jv_to_account') == "account:{$ca->id}" || ($transaction->account_id == $ca->id && $transaction->transaction_type === 'credit') ? 'selected' : '' }}>
-                                                            {{ $ca->account_name }} ({{ strtoupper(str_replace('_', ' ', $ca->account_type)) }})
+                                                <optgroup label="🏦 Banks">
+                                                    @foreach($banks as $b)
+                                                        <option value="bank:{{ $b->id }}" {{ old('jv_to_account', $jvData['to_account'] ?? '') == "bank:{$b->id}" ? 'selected' : '' }}>
+                                                            Bank: {{ $b->name }}{{ $b->account_number ? ' (' . $b->account_number . ')' : '' }}
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
+
+                                                <optgroup label="👤 Staff Members">
+                                                    @foreach($staffMembers as $st)
+                                                        <option value="staff:{{ $st->id }}" {{ old('jv_to_account', $jvData['to_account'] ?? '') == "staff:{$st->id}" ? 'selected' : '' }}>
+                                                            Staff: {{ $st->first_name }} {{ $st->last_name }} ({{ $st->designation->name ?? 'Staff' }})
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
+
+                                                <optgroup label="💵 Cash Accounts">
+                                                    @foreach($cashAccounts->where('account_type', 'cash') as $ca)
+                                                        <option value="account:{{ $ca->id }}" {{ old('jv_to_account', $jvData['to_account'] ?? '') == "account:{$ca->id}" ? 'selected' : '' }}>
+                                                            Cash: {{ $ca->account_name }} (Opening: PKR {{ number_format($ca->opening_balance_pkr, 2) }})
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
+
+                                                <optgroup label="📥 Loan Assets (Receivable)">
+                                                    @foreach($cashAccounts->where('account_type', 'loan_asset') as $la)
+                                                        <option value="account:{{ $la->id }}" {{ old('jv_to_account', $jvData['to_account'] ?? '') == "account:{$la->id}" ? 'selected' : '' }}>
+                                                            Loan Asset: {{ $la->account_name }} (Opening: PKR {{ number_format($la->opening_balance_pkr, 2) }})
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
+
+                                                <optgroup label="📤 Loan Liabilities (Payable)">
+                                                    @foreach($cashAccounts->where('account_type', 'loan_liability') as $ll)
+                                                        <option value="account:{{ $ll->id }}" {{ old('jv_to_account', $jvData['to_account'] ?? '') == "account:{$ll->id}" ? 'selected' : '' }}>
+                                                            Loan Liability: {{ $ll->account_name }} (Opening: PKR {{ number_format($ll->opening_balance_pkr, 2) }})
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
+
+                                                <optgroup label="📁 General Accounts">
+                                                    @foreach($cashAccounts->whereNotIn('account_type', ['cash', 'loan_asset', 'loan_liability']) as $ga)
+                                                        <option value="account:{{ $ga->id }}" {{ old('jv_to_account', $jvData['to_account'] ?? '') == "account:{$ga->id}" ? 'selected' : '' }}>
+                                                            General: {{ $ga->account_name }}
                                                         </option>
                                                     @endforeach
                                                 </optgroup>
                                             </select>
+                                            <div class="mt-2 p-2 rounded bg-light border border-success border-opacity-25">
+                                                <div class="row g-2">
+                                                    <div class="col-6">
+                                                        <label class="form-label fs-11 fw-bold text-success mb-1">
+                                                            <i class="mdi mdi-currency-usd me-1"></i> To ROE <span class="text-danger">*</span>
+                                                        </label>
+                                                        <div class="input-group input-group-sm">
+                                                            <span class="input-group-text bg-white text-success fw-bold fs-11">1 SAR=</span>
+                                                            <input type="number" step="0.0001" name="jv_to_roe" id="jv_to_roe"
+                                                                value="{{ old('jv_to_roe', $jvData['to_roe'] ?? 75.00) }}"
+                                                                class="form-control form-control-sm text-center fw-bold" placeholder="75.00">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <label class="form-label fs-11 fw-bold text-success mb-1">
+                                                            To PKR Amount <span class="text-danger">*</span>
+                                                        </label>
+                                                        <input type="number" step="0.01" name="jv_to_amount" id="jv_to_amount_input"
+                                                            value="{{ old('jv_to_amount', $jvData['to_amount'] ?? '') }}"
+                                                            class="form-control form-control-sm text-end fw-bold" placeholder="0.00">
+                                                    </div>
+                                                </div>
+                                                <div id="to_account_sar_hint" class="fs-11 fw-semibold text-success mt-1"></div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- MODE B: SINGLE PARTY JV ADJUSTMENT -->
-                                <div id="jv_box_single_party" class="jv-box {{ old('jv_mode') === 'single_party' ? '' : 'd-none' }}">
+                                <div id="jv_box_single" class="jv-box {{ old('jv_mode', $jvData['mode'] ?? '') === 'single_party' ? '' : 'd-none' }}">
                                     <div class="alert alert-info py-2 px-3 mb-3 fs-12 border-0 bg-soft-info text-info">
                                         <i class="mdi mdi-information-outline me-1"></i>
-                                        <strong>Single Party JV Adjustment:</strong> Directly adjust opening balances, discounts, or write-offs for any single client, supplier, staff, or general account.
+                                        <strong>Single Party JV:</strong> Record direct write-offs, journal adjustments, or discounts for a single client, supplier, staff, or general account.
                                     </div>
                                     <div class="row g-3">
                                         <div class="col-md-6">
-                                            <label class="form-label fs-13 fw-semibold">Select Account / Party to Adjust <span class="text-danger">*</span></label>
+                                            <label class="form-label fs-13 fw-semibold">Select Single Party / Account <span class="text-danger">*</span></label>
                                             <select name="jv_single_party" id="jv_single_party_select" class="form-select form-select-sm select2">
-                                                <option value="">-- Search Party to Adjust --</option>
-                                                <optgroup label="👤 Clients">
-                                                    @foreach ($clients as $c)
-                                                        <option value="client:{{ $c->id }}" {{ old('jv_single_party') == "client:{$c->id}" || $transaction->client_id == $c->id ? 'selected' : '' }}>Client: {{ $c->name }} ({{ $c->phone ?? 'Client' }})</option>
+                                                <option value="">-- Choose Party / Entity --</option>
+                                                <optgroup label="👥 Clients">
+                                                    @foreach($clients as $c)
+                                                        <option value="client:{{ $c->id }}" {{ old('jv_single_party', $jvData['single_party'] ?? '') == "client:{$c->id}" ? 'selected' : '' }}>Client: {{ $c->name }}</option>
                                                     @endforeach
                                                 </optgroup>
-                                                <optgroup label="🚚 Suppliers">
-                                                    @foreach ($suppliers as $s)
-                                                        <option value="supplier:{{ $s->id }}" {{ old('jv_single_party') == "supplier:{$s->id}" || $transaction->supplier_id == $s->id ? 'selected' : '' }}>Supplier: {{ $s->name }}</option>
+                                                <optgroup label="🏢 Suppliers">
+                                                    @foreach($suppliers as $s)
+                                                        <option value="supplier:{{ $s->id }}" {{ old('jv_single_party', $jvData['single_party'] ?? '') == "supplier:{$s->id}" ? 'selected' : '' }}>Supplier: {{ $s->name }}</option>
                                                     @endforeach
                                                 </optgroup>
-                                                <optgroup label="👔 Staff Members">
-                                                    @foreach ($staffMembers as $st)
-                                                        <option value="staff:{{ $st->id }}" {{ old('jv_single_party') == "staff:{$st->id}" || $transaction->staff_id == $st->id ? 'selected' : '' }}>Staff: {{ $st->first_name }} {{ $st->last_name }}</option>
+                                                <optgroup label="👤 Staff Members">
+                                                    @foreach($staffMembers as $st)
+                                                        <option value="staff:{{ $st->id }}" {{ old('jv_single_party', $jvData['single_party'] ?? '') == "staff:{$st->id}" ? 'selected' : '' }}>Staff: {{ $st->first_name }} {{ $st->last_name }}</option>
                                                     @endforeach
                                                 </optgroup>
-                                                <optgroup label="🏢 Expense Heads">
-                                                    @foreach ($expenses as $e)
-                                                        <option value="expense:{{ $e->id }}" {{ old('jv_single_party') == "expense:{$e->id}" || $transaction->expense_id == $e->id ? 'selected' : '' }}>Expense: {{ $e->name }}</option>
+                                                <optgroup label="💼 Expense Heads">
+                                                    @foreach($expenses as $e)
+                                                        <option value="expense:{{ $e->id }}" {{ old('jv_single_party', $jvData['single_party'] ?? '') == "expense:{$e->id}" ? 'selected' : '' }}>Expense: {{ $e->name }}</option>
                                                     @endforeach
                                                 </optgroup>
                                                 <optgroup label="💵 Cash & Loan Accounts">
-                                                    @foreach ($cashAccounts as $ca)
-                                                        <option value="account:{{ $ca->id }}" {{ old('jv_single_party') == "account:{$ca->id}" || $transaction->account_id == $ca->id ? 'selected' : '' }}>{{ $ca->account_name }}</option>
+                                                    @foreach($cashAccounts as $ca)
+                                                        <option value="account:{{ $ca->id }}" {{ old('jv_single_party', $jvData['single_party'] ?? '') == "account:{$ca->id}" ? 'selected' : '' }}>{{ $ca->account_name }}</option>
                                                     @endforeach
                                                 </optgroup>
                                             </select>
@@ -514,101 +635,253 @@
                                 </div>
 
                                 <!-- MODE C: CLIENT & SUPPLIER CONTRA -->
-                                <div id="jv_box_client_supplier" class="jv-box {{ old('jv_mode') === 'client_supplier' ? '' : 'd-none' }}">
+                                <div id="jv_box_contra" class="jv-box {{ old('jv_mode', $jvData['mode'] ?? '') === 'client_supplier' ? '' : 'd-none' }}">
                                     <div class="alert alert-primary py-2 px-3 mb-3 fs-12 border-0 bg-soft-primary text-primary">
-                                        <i class="mdi mdi-swap-horizontal-bold me-1"></i>
-                                        <strong>Contra Adjustment:</strong> Use when a client directly pays a supplier on your behalf, reducing both client receivable and supplier payable simultaneously.
+                                        <i class="mdi mdi-account-switch me-1"></i>
+                                        <strong>Client & Supplier Contra:</strong> Adjusts Client and Supplier against each other in 1 transaction without touching bank/cash.
                                     </div>
                                     <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <label class="form-label fs-13 fw-semibold">Select Client (Receivable Reducer) <span class="text-danger">*</span></label>
-                                            <select name="jv_client_id" id="jv_client_id_select" class="form-select form-select-sm select2">
-                                                <option value="">-- Choose Client --</option>
+                                        <div class="col-md-4">
+                                            <label class="form-label fs-13 fw-semibold text-primary">Select Client <span class="text-danger">*</span></label>
+                                            <select name="jv_client_id" id="jv_contra_client" class="form-select form-select-sm select2">
+                                                <option value="">-- Select Client --</option>
                                                 @foreach ($clients as $c)
-                                                    <option value="{{ $c->id }}" {{ old('jv_client_id', $transaction->client_id) == $c->id ? 'selected' : '' }}>
-                                                        {{ $c->name }} ({{ $c->phone ?? 'Client' }})
+                                                    <option value="{{ $c->id }}" {{ old('jv_client_id', $jvData['client_id'] ?? '') == $c->id ? 'selected' : '' }}>
+                                                        {{ $c->name }}{{ $c->phone ? ' (' . $c->phone . ')' : '' }}
                                                     </option>
                                                 @endforeach
                                             </select>
+                                            <div class="mt-2 p-2 rounded bg-light border border-primary border-opacity-25">
+                                                <label class="form-label fs-11 fw-bold text-primary mb-1">
+                                                    <i class="mdi mdi-currency-usd me-1"></i> Client ROE (SAR / PKR Rate) <span class="text-danger">*</span>
+                                                </label>
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-white text-primary fw-bold fs-11">1 SAR =</span>
+                                                    <input type="number" step="0.0001" name="jv_contra_client_roe" id="jv_contra_client_roe"
+                                                        value="{{ old('jv_contra_client_roe', $jvData['contra_client_roe'] ?? 76.00) }}"
+                                                        class="form-control form-control-sm text-center fw-bold" placeholder="76.00">
+                                                    <span class="input-group-text bg-white fs-11">PKR</span>
+                                                </div>
+                                                <div id="contra_client_sar_hint" class="fs-11 fw-semibold text-primary mt-1"></div>
+                                            </div>
                                         </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label fs-13 fw-semibold">Select Supplier (Payable Reducer) <span class="text-danger">*</span></label>
-                                            <select name="jv_supplier_id" id="jv_supplier_id_select" class="form-select form-select-sm select2">
-                                                <option value="">-- Choose Supplier --</option>
+                                        <div class="col-md-4">
+                                            <label class="form-label fs-13 fw-semibold text-warning">Select Supplier <span class="text-danger">*</span></label>
+                                            <select name="jv_supplier_id" id="jv_contra_supplier" class="form-select form-select-sm select2">
+                                                <option value="">-- Select Supplier --</option>
                                                 @foreach ($suppliers as $s)
-                                                    <option value="{{ $s->id }}" {{ old('jv_supplier_id', $transaction->supplier_id) == $s->id ? 'selected' : '' }}>
+                                                    <option value="{{ $s->id }}" {{ old('jv_supplier_id', $jvData['supplier_id'] ?? '') == $s->id ? 'selected' : '' }}>
                                                         {{ $s->name }}{{ $s->company_name ? ' (' . $s->company_name . ')' : '' }}
                                                     </option>
                                                 @endforeach
+                                            </select>
+                                            <div class="mt-2 p-2 rounded bg-light border border-warning border-opacity-25">
+                                                <label class="form-label fs-11 fw-bold text-warning mb-1">
+                                                    <i class="mdi mdi-currency-usd me-1"></i> Supplier ROE (SAR / PKR Rate) <span class="text-danger">*</span>
+                                                </label>
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-white text-warning fw-bold fs-11">1 SAR =</span>
+                                                    <input type="number" step="0.0001" name="jv_contra_supplier_roe" id="jv_contra_supplier_roe"
+                                                        value="{{ old('jv_contra_supplier_roe', $jvData['contra_supplier_roe'] ?? 75.00) }}"
+                                                        class="form-control form-control-sm text-center fw-bold" placeholder="75.00">
+                                                    <span class="input-group-text bg-white fs-11">PKR</span>
+                                                </div>
+                                                <div id="contra_supplier_sar_hint" class="fs-11 fw-semibold text-warning mt-1"></div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fs-13 fw-semibold">Adjustment Flow</label>
+                                            <select name="jv_cs_direction" class="form-select form-select-sm">
+                                                <option value="client_to_supplier" selected>Client Payment transferred to Supplier</option>
+                                                <option value="supplier_to_client">Supplier Refund transferred to Client</option>
                                             </select>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- MODE D: MULTI-CLIENT ADJUSTMENT -->
-                                <div id="jv_box_multi_client" class="jv-box {{ old('jv_mode') === 'multi_client' ? '' : 'd-none' }}">
-                                    <div class="alert alert-purple py-2 px-3 mb-3 fs-12 border-0" style="background: #f3e8ff; color: #6b21a8;">
-                                        <i class="mdi mdi-account-multiple-check me-1"></i>
-                                        <strong>Multi-Client Adjustment:</strong> Distribute or record adjustments across multiple clients simultaneously in one voucher.
+                                <div id="jv_box_multi" class="jv-box {{ old('jv_mode', $jvData['mode'] ?? '') === 'multi_client' ? '' : 'd-none' }}">
+                                    <div class="alert alert-purple py-2 px-3 mb-3 fs-12 border-0 bg-soft-purple" style="color: #6b21a8; background-color: #f3e8ff;">
+                                        <i class="mdi mdi-account-multiple me-1"></i>
+                                        <strong>Multi-Client JV:</strong> Add multiple clients in a single voucher with custom amounts and debit/credit sides.
                                     </div>
-                                    <div class="table-responsive">
-                                        <table class="table table-bordered table-sm align-middle fs-13" id="multiClientTable">
-                                            <thead class="table-light">
-                                                <tr>
-                                                    <th style="width: 45%;">Client</th>
-                                                    <th style="width: 25%;">Amount</th>
-                                                    <th style="width: 20%;">Type</th>
-                                                    <th style="width: 10%; text-align: center;">Action</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="multiClientBody">
+                                    <table class="table table-sm table-bordered align-middle mb-2">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Client</th>
+                                                <th style="width: 140px;">Type</th>
+                                                <th style="width: 160px;">Amount</th>
+                                                <th>Remarks / Reason</th>
+                                                <th style="width: 40px;"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="multiClientTbody">
+                                            @php
+                                                $savedMultiClients = old('jv_clients', !empty($jvData['multi_clients']) ? $jvData['multi_clients'] : [['client_id' => '', 'type' => 'credit', 'amount' => '', 'notes' => '']]);
+                                            @endphp
+                                            @foreach($savedMultiClients as $mcIdx => $mcVal)
                                                 <tr>
                                                     <td>
-                                                        <select name="multi_clients[0][client_id]" class="form-select form-select-sm select2">
+                                                        <select name="jv_clients[{{ $mcIdx }}][client_id]" class="form-select form-select-sm">
                                                             <option value="">-- Select Client --</option>
-                                                            @foreach ($clients as $c)
-                                                                <option value="{{ $c->id }}">{{ $c->name }} ({{ $c->phone ?? 'Client' }})</option>
+                                                            @foreach($clients as $c)
+                                                                <option value="{{ $c->id }}" {{ ($mcVal['client_id'] ?? '') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
                                                             @endforeach
                                                         </select>
                                                     </td>
                                                     <td>
-                                                        <input type="number" step="0.01" name="multi_clients[0][amount]" class="form-control form-control-sm" placeholder="Amount">
-                                                    </td>
-                                                    <td>
-                                                        <select name="multi_clients[0][type]" class="form-select form-select-sm">
-                                                            <option value="credit">Credit (Receive / Reduce Due)</option>
-                                                            <option value="debit">Debit (Charge / Increase Due)</option>
+                                                        <select name="jv_clients[{{ $mcIdx }}][type]" class="form-select form-select-sm">
+                                                            <option value="credit" {{ ($mcVal['type'] ?? '') == 'credit' ? 'selected' : '' }}>Credit (Payment Received)</option>
+                                                            <option value="debit" {{ ($mcVal['type'] ?? '') == 'debit' ? 'selected' : '' }}>Debit (Charge / Penalty)</option>
                                                         </select>
                                                     </td>
+                                                    <td>
+                                                        <input type="number" step="0.01" name="jv_clients[{{ $mcIdx }}][amount]" class="form-control form-control-sm text-end fw-bold" placeholder="0.00" value="{{ $mcVal['amount'] ?? '' }}">
+                                                    </td>
+                                                    <td>
+                                                        <input type="text" name="jv_clients[{{ $mcIdx }}][notes]" class="form-control form-control-sm" placeholder="Reason for adjustment" value="{{ $mcVal['notes'] ?? '' }}">
+                                                    </td>
                                                     <td class="text-center">
-                                                        <button type="button" class="btn btn-outline-danger btn-sm py-0 px-1 disabled"><i class="mdi mdi-trash-can"></i></button>
+                                                        @if($mcIdx > 0)
+                                                            <button type="button" class="btn btn-outline-danger btn-sm py-0 px-1 btn-remove-row"><i class="mdi mdi-trash-can"></i></button>
+                                                        @endif
                                                     </td>
                                                 </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                    <button type="button" class="btn btn-outline-purple btn-sm" id="btnAddClientRow" style="color: #7c3aed; border-color: #7c3aed;">
+                                        <i class="mdi mdi-plus-circle me-1"></i> + Add Another Client
+                                    </button>
+                                </div>
+
+                                <!-- MODE E: 1 CLIENT TO MULTIPLE SUPPLIERS SPLIT JV -->
+                                <div id="jv_box_cms" class="jv-box {{ old('jv_mode', $jvData['mode'] ?? '') === 'client_multi_supplier' ? '' : 'd-none' }}">
+                                    <div class="alert alert-warning py-2 px-3 mb-3 fs-12 border-0 bg-soft-warning text-dark">
+                                        <i class="mdi mdi-call-split me-1 text-warning"></i>
+                                        <strong>1 Client ➔ Multi-Supplier Split JV:</strong> Pass JV where 1 Client provides an amount (e.g. PKR 500,000) and it is distributed / split among multiple suppliers with individual ROE and SAR calculations.
+                                    </div>
+
+                                    <!-- Client Source Info Box -->
+                                    <div class="card border border-warning border-opacity-50 bg-light bg-opacity-25 mb-3 shadow-none">
+                                        <div class="card-body p-3">
+                                            <div class="row g-3 align-items-end">
+                                                <div class="col-md-4">
+                                                    <label class="form-label fs-12 fw-bold text-dark">
+                                                        <i class="mdi mdi-account-circle text-primary me-1"></i> Select Client <span class="text-danger">*</span>
+                                                    </label>
+                                                    <select name="jv_cms_client_id" id="jv_cms_client_id" class="form-select form-select-sm select2">
+                                                        <option value="">-- Choose Client --</option>
+                                                        @foreach($clients as $c)
+                                                            <option value="{{ $c->id }}" {{ old('jv_cms_client_id', $jvData['cms_client_id'] ?? '') == $c->id ? 'selected' : '' }}>
+                                                                {{ $c->name }} ({{ $c->phone ?? 'No Phone' }})
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label fs-12 fw-bold text-dark">Transaction Direction</label>
+                                                    <select name="jv_cms_direction" id="jv_cms_direction" class="form-select form-select-sm">
+                                                        <option value="client_to_suppliers" selected>Client Pays ➔ Split to Suppliers</option>
+                                                        <option value="suppliers_to_client">Suppliers Refund ➔ Paid to Client</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="form-label fs-12 fw-bold text-dark">Client ROE</label>
+                                                    <input type="number" step="0.01" min="1" name="jv_cms_client_roe" id="jv_cms_client_roe" class="form-control form-control-sm text-center fw-bold" value="{{ old('jv_cms_client_roe', $jvData['cms_client_roe'] ?? 76.00) }}">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label fs-12 fw-bold text-dark">Total Client Amount (PKR) <span class="text-danger">*</span></label>
+                                                    <input type="number" step="0.01" min="0" name="jv_cms_total_pkr" id="jv_cms_total_pkr" class="form-control form-control-sm text-end fw-bold" placeholder="e.g. 500000.00" value="{{ old('jv_cms_total_pkr', $jvData['cms_total_pkr'] ?? '') }}">
+                                                    <div class="fs-11 text-muted text-end mt-1" id="cms_client_sar_badge">≈ 0.00 SAR</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Supplier Allocation Table -->
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-bordered align-middle mb-2" id="cmsSuppliersTable">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th style="min-width: 220px;">Supplier <span class="text-danger">*</span></th>
+                                                    <th style="width: 170px;" class="text-end">Allocated PKR <span class="text-danger">*</span></th>
+                                                    <th style="width: 110px;" class="text-center">Supplier ROE</th>
+                                                    <th style="width: 140px;" class="text-end">Equivalent SAR</th>
+                                                    <th>Particulars / Notes</th>
+                                                    <th style="width: 40px;" class="text-center">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="cmsSuppliersTbody">
+                                                @php
+                                                    $savedCmsSuppliers = old('jv_suppliers', !empty($jvData['cms_suppliers']) ? $jvData['cms_suppliers'] : [['supplier_id' => '', 'amount' => '', 'roe' => 75.00, 'notes' => '']]);
+                                                @endphp
+                                                @foreach($savedCmsSuppliers as $sIdx => $sVal)
+                                                    <tr class="cms-supplier-row">
+                                                        <td>
+                                                            <select name="jv_suppliers[{{ $sIdx }}][supplier_id]" class="form-select form-select-sm cms-supplier-select">
+                                                                <option value="">-- Select Supplier --</option>
+                                                                @foreach($suppliers as $s)
+                                                                    <option value="{{ $s->id }}" {{ ($sVal['supplier_id'] ?? '') == $s->id ? 'selected' : '' }}>
+                                                                        {{ $s->name }} [{{ strtoupper($s->service_type ?? 'Supplier') }}]
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                        </td>
+                                                        <td>
+                                                            <input type="number" step="0.01" min="0" name="jv_suppliers[{{ $sIdx }}][amount]" class="form-control form-control-sm text-end fw-bold cms-sup-amount" placeholder="0.00" value="{{ $sVal['amount'] ?? '' }}">
+                                                        </td>
+                                                        <td>
+                                                            <input type="number" step="0.01" min="1" name="jv_suppliers[{{ $sIdx }}][roe]" class="form-control form-control-sm text-center fw-bold cms-sup-roe" value="{{ $sVal['roe'] ?? 75.00 }}">
+                                                        </td>
+                                                        <td class="text-end">
+                                                            <span class="badge bg-light text-dark border px-2 py-1 cms-sup-sar">0.00 SAR</span>
+                                                        </td>
+                                                        <td>
+                                                            <input type="text" name="jv_suppliers[{{ $sIdx }}][notes]" class="form-control form-control-sm" placeholder="Service / Note" value="{{ $sVal['notes'] ?? '' }}">
+                                                        </td>
+                                                        <td class="text-center">
+                                                            <button type="button" class="btn btn-outline-danger btn-sm py-0 px-1 btn-remove-cms-row" style="{{ $sIdx > 0 ? '' : 'display:none;' }}"><i class="mdi mdi-trash-can"></i></button>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
                                             </tbody>
+                                            <tfoot class="table-light">
+                                                <tr>
+                                                    <td class="fw-bold">Total Supplier Allocation:</td>
+                                                    <td class="text-end fw-bold text-primary" id="cms_total_allocated_pkr">PKR 0.00</td>
+                                                    <td></td>
+                                                    <td class="text-end fw-bold text-success" id="cms_total_allocated_sar">0.00 SAR</td>
+                                                    <td colspan="2">
+                                                        <span id="cms_balance_status" class="badge bg-soft-secondary text-muted fs-11">Enter Client PKR Amount</span>
+                                                    </td>
+                                                </tr>
+                                            </tfoot>
                                         </table>
-                                        <button type="button" class="btn btn-sm btn-outline-primary" id="btnAddClientRow">
-                                            <i class="mdi mdi-plus me-1"></i> + Add Another Client
+                                        <button type="button" class="btn btn-outline-warning text-dark btn-sm fw-semibold" id="btnAddSupplierRow">
+                                            <i class="mdi mdi-plus-circle me-1 text-warning"></i> + Add Another Supplier
                                         </button>
                                     </div>
                                 </div>
 
                                 @if(isset($relatedJvEntries) && $relatedJvEntries->count() > 0)
-                                    <div class="mt-3 p-2 bg-light border rounded">
+                                    <div class="mt-3 p-3 bg-light border rounded">
                                         <h6 class="fs-12 fw-bold text-muted mb-2 text-uppercase">
                                             <i class="mdi mdi-link-variant me-1"></i> Related Leg(s) in this Voucher (Ref: {{ $transaction->reference_no }}):
                                         </h6>
                                         <ul class="mb-0 fs-12 ps-3">
                                             @foreach($relatedJvEntries as $rje)
-                                                <li>
+                                                <li class="mb-1">
                                                     <strong>Leg #{{ $rje->id }}:</strong> 
-                                                    {{ strtoupper($rje->transaction_type) }} 
-                                                    {{ number_format($rje->amount, 2) }} {{ $rje->currency }} — 
-                                                    @if($rje->client) Client: {{ $rje->client->name }} @endif
-                                                    @if($rje->supplier) Supplier: {{ $rje->supplier->name }} @endif
-                                                    @if($rje->staff) Staff: {{ $rje->staff->first_name }} {{ $rje->staff->last_name }} @endif
-                                                    @if($rje->account) Account: {{ $rje->account->account_name }} @endif
-                                                    @if($rje->bank) Bank: {{ $rje->bank->name }} @endif
-                                                    ({{ $rje->description }})
+                                                    <span class="badge {{ $rje->transaction_type === 'debit' ? 'bg-danger' : 'bg-success' }} me-1">{{ strtoupper($rje->transaction_type) }}</span>
+                                                    <strong>{{ number_format($rje->amount, 2) }} {{ $rje->currency }}</strong>
+                                                    (ROE: {{ number_format($rje->exchange_rate, 2) }}) — 
+                                                    @if($rje->client) <span class="text-info fw-semibold">Client: {{ $rje->client->name }}</span> @endif
+                                                    @if($rje->supplier) <span class="text-primary fw-semibold">Supplier: {{ $rje->supplier->name }}</span> @endif
+                                                    @if($rje->staff) <span class="text-success fw-semibold">Staff: {{ $rje->staff->first_name }} {{ $rje->staff->last_name }}</span> @endif
+                                                    @if($rje->account) <span class="text-secondary fw-semibold">Account: {{ $rje->account->account_name }}</span> @endif
+                                                    @if($rje->bank) <span class="text-dark fw-semibold">Bank: {{ $rje->bank->name }}</span> @endif
+                                                    <span class="text-muted fst-italic">({{ $rje->description }})</span>
                                                 </li>
                                             @endforeach
                                         </ul>
@@ -661,33 +934,43 @@
 
                             <div class="col-md-4">
                                 <label class="form-label fs-13 fw-semibold">Payment Mode <span class="text-danger">*</span></label>
-                                <div class="d-flex gap-3 pt-1">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="payment_type" id="pay_bank" value="bank"
-                                            {{ old('payment_type', $transaction->payment_type) == 'bank' || old('payment_type', $transaction->payment_type) == 'accounts' ? 'checked' : '' }}>
-                                        <label class="form-check-label fs-13" for="pay_bank">Bank Transfer</label>
+                                
+                                <div id="normal_payment_type_radios" class="{{ $currentPayee == 'jv' ? 'd-none' : '' }}">
+                                    <div class="d-flex gap-3 pt-1">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="payment_type" id="pay_bank" value="bank"
+                                                {{ (old('payment_type', $transaction->payment_type) == 'bank' || old('payment_type', $transaction->payment_type) == 'accounts') ? 'checked' : '' }} {{ $currentPayee == 'jv' ? 'disabled' : '' }}>
+                                            <label class="form-check-label fs-13" for="pay_bank">Bank Transfer</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="payment_type" id="pay_cash" value="cash"
+                                                {{ old('payment_type', $transaction->payment_type) == 'cash' ? 'checked' : '' }} {{ $currentPayee == 'jv' ? 'disabled' : '' }}>
+                                            <label class="form-check-label fs-13" for="pay_cash">Cash</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="payment_type" id="pay_cheque" value="cheque"
+                                                {{ old('payment_type', $transaction->payment_type) == 'cheque' ? 'checked' : '' }} {{ $currentPayee == 'jv' ? 'disabled' : '' }}>
+                                            <label class="form-check-label fs-13" for="pay_cheque">Cheque</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="payment_type" id="pay_online" value="online"
+                                                {{ old('payment_type', $transaction->payment_type) == 'online' ? 'checked' : '' }} {{ $currentPayee == 'jv' ? 'disabled' : '' }}>
+                                            <label class="form-check-label fs-13" for="pay_online">Online</label>
+                                        </div>
                                     </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="payment_type" id="pay_cash" value="cash"
-                                            {{ old('payment_type', $transaction->payment_type) == 'cash' ? 'checked' : '' }}>
-                                        <label class="form-check-label fs-13" for="pay_cash">Cash</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="payment_type" id="pay_cheque" value="cheque"
-                                            {{ old('payment_type', $transaction->payment_type) == 'cheque' ? 'checked' : '' }}>
-                                        <label class="form-check-label fs-13" for="pay_cheque">Cheque</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="payment_type" id="pay_online" value="online"
-                                            {{ old('payment_type', $transaction->payment_type) == 'online' ? 'checked' : '' }}>
-                                        <label class="form-check-label fs-13" for="pay_online">Online</label>
-                                    </div>
+                                </div>
+
+                                <div id="jv_payment_type_badge" class="{{ $currentPayee == 'jv' ? '' : 'd-none' }} pt-1">
+                                    <span class="badge px-3 py-2 fs-12 text-white shadow-sm" style="background-color: #7c3aed !important;">
+                                        <i class="mdi mdi-book-open-page-variant me-1"></i> Journal Voucher (JV / Non-Cash)
+                                    </span>
+                                    <input type="hidden" name="payment_type" id="pay_jv_input" value="jv" {{ $currentPayee == 'jv' ? '' : 'disabled' }}>
                                 </div>
                             </div>
                         </div>
 
                         <!-- ROW 2: Bank / Cash Account, Currency & ROE -->
-                        <div class="row g-3 mb-3">
+                        <div class="row g-3 mb-3 {{ $currentPayee == 'jv' ? 'd-none' : '' }}" id="row_bank_currency">
                             <div class="col-md-6" id="bank_select_group">
                                 <label class="form-label fs-13 fw-semibold">Bank</label>
                                 <select name="bank_id" id="bank_id_select" class="form-select form-select-sm select2">
@@ -738,7 +1021,7 @@
 
                         <!-- ROW 3: Amount, Transaction Type & Reference -->
                         <div class="row g-3 mb-3">
-                            <div class="col-md-4">
+                            <div class="{{ $currentPayee == 'jv' ? 'col-md-6' : 'col-md-4' }}" id="col_amount">
                                 <label class="form-label fs-13 fw-semibold">Amount (Always in PKR by Default) <span class="text-danger">*</span></label>
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text fw-bold bg-white text-primary">PKR</span>
@@ -749,17 +1032,17 @@
                                 <div id="roe_live_helper" class="mt-1 d-none"></div>
                             </div>
 
-                            <div class="col-md-4">
+                            <div class="col-md-4 {{ $currentPayee == 'jv' ? 'd-none' : '' }}" id="col_transaction_flow">
                                 <label class="form-label fs-13 fw-semibold">Transaction Flow <span class="text-danger">*</span></label>
-                                <select name="transaction_type" class="form-select form-select-sm">
+                                <select name="transaction_type" id="transaction_type_select" class="form-select form-select-sm" {{ $currentPayee == 'jv' ? 'disabled' : '' }}>
                                     <option value="debit" {{ old('transaction_type', $transaction->transaction_type) == 'debit' ? 'selected' : '' }}>Debit (Payment Out / Expense / Supplier Pay)</option>
                                     <option value="credit" {{ old('transaction_type', $transaction->transaction_type) == 'credit' ? 'selected' : '' }}>Credit (Payment In / Client Receipt / Income)</option>
                                 </select>
                             </div>
 
-                            <div class="col-md-4">
+                            <div class="{{ $currentPayee == 'jv' ? 'col-md-6' : 'col-md-4' }}" id="col_reference">
                                 <label class="form-label fs-13 fw-semibold">Reference / Voucher No.</label>
-                                <input type="text" name="reference_no"
+                                <input type="text" name="reference_no" id="reference_no_input"
                                     value="{{ old('reference_no', $transaction->reference_no) }}"
                                     class="form-control form-control-sm" placeholder="DT-EXP-000001">
                             </div>
@@ -843,7 +1126,7 @@
         });
         togglePaymentTypeFields();
 
-        // Payee Type Sections Toggle
+        // Payee Type Sections & Form Adapters Toggle
         const payeeRadios = document.querySelectorAll('.payee-type-radio');
         const sections = {
             supplier: document.getElementById('supplierSection'),
@@ -865,6 +1148,43 @@
                     }
                 }
             });
+
+            const normalRadios = document.getElementById('normal_payment_type_radios');
+            const jvBadge = document.getElementById('jv_payment_type_badge');
+            const jvInput = document.getElementById('pay_jv_input');
+            const rowBankCurrency = document.getElementById('row_bank_currency');
+            const colFlow = document.getElementById('col_transaction_flow');
+            const flowSelect = document.getElementById('transaction_type_select');
+            const colAmt = document.getElementById('col_amount');
+            const colRef = document.getElementById('col_reference');
+
+            if (selectedType === 'jv') {
+                if (normalRadios) normalRadios.classList.add('d-none');
+                if (normalRadios) normalRadios.querySelectorAll('input[type="radio"]').forEach(r => r.disabled = true);
+                if (jvBadge) jvBadge.classList.remove('d-none');
+                if (jvInput) { jvInput.disabled = false; jvInput.value = 'jv'; }
+                if (rowBankCurrency) rowBankCurrency.classList.add('d-none');
+                if (colFlow) colFlow.classList.add('d-none');
+                if (flowSelect) flowSelect.disabled = true;
+                if (colAmt) { colAmt.classList.remove('col-md-4'); colAmt.classList.add('col-md-6'); }
+                if (colRef) { colRef.classList.remove('col-md-4'); colRef.classList.add('col-md-6'); }
+
+                updateUniversalHints();
+                updateContraHints();
+                updateCmsCalculations();
+            } else {
+                if (normalRadios) normalRadios.classList.remove('d-none');
+                if (normalRadios) normalRadios.querySelectorAll('input[type="radio"]').forEach(r => r.disabled = false);
+                if (jvBadge) jvBadge.classList.add('d-none');
+                if (jvInput) jvInput.disabled = true;
+                if (rowBankCurrency) rowBankCurrency.classList.remove('d-none');
+                if (colFlow) colFlow.classList.remove('d-none');
+                if (flowSelect) flowSelect.disabled = false;
+                if (colAmt) { colAmt.classList.remove('col-md-6'); colAmt.classList.add('col-md-4'); }
+                if (colRef) { colRef.classList.remove('col-md-6'); colRef.classList.add('col-md-4'); }
+
+                togglePaymentTypeFields();
+            }
         }
 
         payeeRadios.forEach(radio => {
@@ -875,35 +1195,146 @@
             });
         });
 
+        // Trigger initially for active payee
+        const checkedPayee = document.querySelector('.payee-type-radio:checked');
+        if (checkedPayee) {
+            showPayeeSection(checkedPayee.value);
+        }
+
         // JV Modes Toggle
         const jvBoxes = {
             universal: document.getElementById('jv_box_universal'),
-            single_party: document.getElementById('jv_box_single_party'),
-            client_supplier: document.getElementById('jv_box_client_supplier'),
-            multi_client: document.getElementById('jv_box_multi_client')
+            single_party: document.getElementById('jv_box_single'),
+            client_supplier: document.getElementById('jv_box_contra'),
+            multi_client: document.getElementById('jv_box_multi'),
+            client_multi_supplier: document.getElementById('jv_box_cms')
         };
+
+        function showJvBox(mode) {
+            Object.keys(jvBoxes).forEach(m => {
+                if (jvBoxes[m]) {
+                    if (m === mode) {
+                        jvBoxes[m].classList.remove('d-none');
+                    } else {
+                        jvBoxes[m].classList.add('d-none');
+                    }
+                }
+            });
+            if (mode === 'universal') updateUniversalHints();
+            if (mode === 'client_supplier') updateContraHints();
+            if (mode === 'client_multi_supplier') updateCmsCalculations();
+        }
+
         document.querySelectorAll('.jv-mode-radio').forEach(r => {
             r.addEventListener('change', function() {
-                Object.keys(jvBoxes).forEach(m => {
-                    if (jvBoxes[m]) {
-                        if (m === this.value) {
-                            jvBoxes[m].classList.remove('d-none');
-                        } else {
-                            jvBoxes[m].classList.add('d-none');
-                        }
-                    }
-                });
+                if (this.checked) {
+                    showJvBox(this.value);
+                }
             });
         });
 
+        // Universal JV ROE & SAR Base Bidirectional Sync
+        const jvSarBaseInput = document.getElementById('jv_sar_base_amount');
+        const jvFromAmtField = document.getElementById('jv_from_amount_input');
+        const jvToAmtField   = document.getElementById('jv_to_amount_input');
+        const mainAmountField = document.getElementById('amount_input');
+
+        function updateUniversalHints() {
+            const fromAmt = parseFloat($('#jv_from_amount_input').val()) || parseFloat($('#amount_input').val()) || 0;
+            const toAmt   = parseFloat($('#jv_to_amount_input').val()) || parseFloat($('#amount_input').val()) || 0;
+            const fromRoe = parseFloat($('#jv_from_roe').val()) || 0;
+            const toRoe   = parseFloat($('#jv_to_roe').val()) || 0;
+
+            if (fromAmt > 0 && fromRoe > 0) {
+                const fromSar = (fromAmt / fromRoe).toFixed(2);
+                $('#from_account_sar_hint').html('≈ <strong>' + fromSar + ' SAR</strong> (PKR ' + Number(fromAmt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ')');
+            } else {
+                $('#from_account_sar_hint').empty();
+            }
+            if (toAmt > 0 && toRoe > 0) {
+                const toSar = (toAmt / toRoe).toFixed(2);
+                $('#to_account_sar_hint').html('≈ <strong>' + toSar + ' SAR</strong> (PKR ' + Number(toAmt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ')');
+            } else {
+                $('#to_account_sar_hint').empty();
+            }
+        }
+
+        if (jvSarBaseInput) {
+            jvSarBaseInput.addEventListener('input', function() {
+                const sarVal = parseFloat(this.value) || 0;
+                if (sarVal > 0) {
+                    const fRoe = parseFloat(document.getElementById('jv_from_roe')?.value) || 76.0;
+                    const tRoe = parseFloat(document.getElementById('jv_to_roe')?.value) || 75.0;
+                    if (jvFromAmtField) jvFromAmtField.value = (sarVal * fRoe).toFixed(2);
+                    if (jvToAmtField) jvToAmtField.value = (sarVal * tRoe).toFixed(2);
+                    if (mainAmountField) mainAmountField.value = (sarVal * fRoe).toFixed(2);
+                }
+                updateUniversalHints();
+            });
+        }
+
+        if (jvFromAmtField) {
+            jvFromAmtField.addEventListener('input', function() {
+                if (mainAmountField) mainAmountField.value = this.value;
+                const fRoe = parseFloat(document.getElementById('jv_from_roe')?.value) || 76.0;
+                const tRoe = parseFloat(document.getElementById('jv_to_roe')?.value) || 75.0;
+                const fAmt = parseFloat(this.value) || 0;
+                if (fAmt > 0 && fRoe > 0) {
+                    const sar = fAmt / fRoe;
+                    if (jvSarBaseInput) jvSarBaseInput.value = sar.toFixed(2);
+                    if (jvToAmtField && jvToAmtField.getAttribute('data-customized') !== 'true') {
+                        jvToAmtField.value = (sar * tRoe).toFixed(2);
+                    }
+                }
+                updateUniversalHints();
+            });
+        }
+
+        if (jvToAmtField) {
+            jvToAmtField.addEventListener('input', function() {
+                this.setAttribute('data-customized', 'true');
+                updateUniversalHints();
+            });
+        }
+
+        $('#amount_input, #jv_from_roe, #jv_to_roe').on('input change', function() {
+            if (this.id === 'amount_input' && jvFromAmtField && !jvFromAmtField.value) {
+                jvFromAmtField.value = this.value;
+            }
+            updateUniversalHints();
+        });
+
+        // Initialize Universal hints on load
+        updateUniversalHints();
+
+        // Client & Supplier Contra Hints
+        function updateContraHints() {
+            const amt = parseFloat($('#amount_input').val()) || 0;
+            const cRoe = parseFloat($('#jv_contra_client_roe').val()) || 0;
+            const sRoe = parseFloat($('#jv_contra_supplier_roe').val()) || 0;
+            if (amt > 0 && cRoe > 0) {
+                const cSar = (amt / cRoe).toFixed(2);
+                $('#contra_client_sar_hint').html('≈ <strong>' + cSar + ' SAR</strong> (PKR ' + Number(amt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ')');
+            } else {
+                $('#contra_client_sar_hint').empty();
+            }
+            if (amt > 0 && sRoe > 0) {
+                const sSar = (amt / sRoe).toFixed(2);
+                $('#contra_supplier_sar_hint').html('≈ <strong>' + sSar + ' SAR</strong> (PKR ' + Number(amt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ')');
+            } else {
+                $('#contra_supplier_sar_hint').empty();
+            }
+        }
+        $('#amount_input, #jv_contra_client_roe, #jv_contra_supplier_roe').on('input change', updateContraHints);
+
         // Multi-Client Add Row
-        let mcIndex = 1;
+        let mcIndex = document.querySelectorAll('#multiClientTbody tr').length;
         document.getElementById('btnAddClientRow')?.addEventListener('click', function() {
-            const tableBody = document.getElementById('multiClientBody');
+            const tableBody = document.getElementById('multiClientTbody');
             const newRow = document.createElement('tr');
             newRow.innerHTML = `
                 <td>
-                    <select name="multi_clients[${mcIndex}][client_id]" class="form-select form-select-sm select2">
+                    <select name="jv_clients[${mcIndex}][client_id]" class="form-select form-select-sm select2">
                         <option value="">-- Select Client --</option>
                         @foreach ($clients as $c)
                             <option value="{{ $c->id }}">{{ $c->name }} ({{ $c->phone ?? 'Client' }})</option>
@@ -911,13 +1342,16 @@
                     </select>
                 </td>
                 <td>
-                    <input type="number" step="0.01" name="multi_clients[${mcIndex}][amount]" class="form-control form-control-sm" placeholder="Amount">
+                    <select name="jv_clients[${mcIndex}][type]" class="form-select form-select-sm">
+                        <option value="credit">Credit (Payment Received)</option>
+                        <option value="debit">Debit (Charge / Penalty)</option>
+                    </select>
                 </td>
                 <td>
-                    <select name="multi_clients[${mcIndex}][type]" class="form-select form-select-sm">
-                        <option value="credit">Credit (Receive / Reduce Due)</option>
-                        <option value="debit">Debit (Charge / Increase Due)</option>
-                    </select>
+                    <input type="number" step="0.01" name="jv_clients[${mcIndex}][amount]" class="form-control form-control-sm text-end fw-bold" placeholder="0.00">
+                </td>
+                <td>
+                    <input type="text" name="jv_clients[${mcIndex}][notes]" class="form-control form-control-sm" placeholder="Reason for adjustment">
                 </td>
                 <td class="text-center">
                     <button type="button" class="btn btn-outline-danger btn-sm py-0 px-1 btn-remove-row"><i class="mdi mdi-trash-can"></i></button>
@@ -925,11 +1359,127 @@
             `;
             tableBody.appendChild(newRow);
             $(newRow).find('.select2').select2({ theme: 'bootstrap-5', width: '100%' });
-            newRow.querySelector('.btn-remove-row').addEventListener('click', function() {
-                newRow.remove();
-            });
             mcIndex++;
         });
+
+        $(document).on('click', '#multiClientTbody .btn-remove-row', function() {
+            $(this).closest('tr').remove();
+        });
+
+        // 1 Client ➔ Multi-Supplier CMS Calculations & Dynamic Rows
+        function updateCmsCalculations() {
+            const clientRoeInput = document.getElementById('jv_cms_client_roe');
+            const clientTotalPkrInput = document.getElementById('jv_cms_total_pkr');
+            const clientSarBadge = document.getElementById('cms_client_sar_badge');
+
+            const clientRoe = parseFloat(clientRoeInput?.value) || 76.0;
+            const clientPkr = parseFloat(clientTotalPkrInput?.value) || 0;
+
+            const clientSar = clientRoe > 0 ? (clientPkr / clientRoe) : 0;
+            if (clientSarBadge) {
+                clientSarBadge.innerHTML = clientPkr > 0
+                    ? `≈ <strong>${Number(clientSar.toFixed(2)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR</strong> (@ ROE ${clientRoe})`
+                    : '≈ 0.00 SAR';
+            }
+
+            if (clientPkr > 0 && $('#amount_input').length) {
+                $('#amount_input').val(clientPkr);
+            }
+
+            let totalAllocatedPkr = 0.0;
+            let totalAllocatedSar = 0.0;
+
+            const rows = document.querySelectorAll('#cmsSuppliersTbody tr');
+            rows.forEach((r) => {
+                const amtInput = r.querySelector('.cms-sup-amount');
+                const roeInput = r.querySelector('.cms-sup-roe');
+                const sarSpan = r.querySelector('.cms-sup-sar');
+                const removeBtn = r.querySelector('.btn-remove-cms-row');
+
+                if (removeBtn) {
+                    removeBtn.style.display = rows.length > 1 ? 'inline-block' : 'none';
+                }
+
+                const rAmt = parseFloat(amtInput?.value) || 0;
+                const rRoe = parseFloat(roeInput?.value) || 75.0;
+                const rSar = rRoe > 0 ? (rAmt / rRoe) : 0;
+
+                if (sarSpan) {
+                    sarSpan.textContent = rAmt > 0 ? (rSar.toFixed(2) + ' SAR') : '0.00 SAR';
+                }
+
+                totalAllocatedPkr += rAmt;
+                totalAllocatedSar += rSar;
+            });
+
+            const totalPkrSpan = document.getElementById('cms_total_allocated_pkr');
+            const totalSarSpan = document.getElementById('cms_total_allocated_sar');
+            const statusSpan = document.getElementById('cms_balance_status');
+
+            if (totalPkrSpan) totalPkrSpan.textContent = 'PKR ' + Number(totalAllocatedPkr.toFixed(2)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            if (totalSarSpan) totalSarSpan.textContent = Number(totalAllocatedSar.toFixed(2)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' SAR';
+
+            if (statusSpan) {
+                const diff = Math.round((clientPkr - totalAllocatedPkr) * 100) / 100;
+                if (clientPkr > 0 && Math.abs(diff) < 0.01) {
+                    statusSpan.className = 'badge bg-soft-success text-success fs-11';
+                    statusSpan.innerHTML = '<i class="mdi mdi-check-circle me-1"></i> Perfectly Balanced: PKR ' + Number(clientPkr.toFixed(2)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                } else if (clientPkr > 0) {
+                    if (diff > 0) {
+                        statusSpan.className = 'badge bg-soft-danger text-danger fs-11';
+                        statusSpan.innerHTML = '<i class="mdi mdi-alert-circle me-1"></i> Remaining to Allocate: PKR ' + Number(diff.toFixed(2)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    } else {
+                        statusSpan.className = 'badge bg-soft-danger text-danger fs-11';
+                        statusSpan.innerHTML = '<i class="mdi mdi-alert-circle me-1"></i> Overallocated by: PKR ' + Number(Math.abs(diff).toFixed(2)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    }
+                } else {
+                    statusSpan.className = 'badge bg-soft-secondary text-muted fs-11';
+                    statusSpan.innerHTML = 'Enter Client PKR Amount';
+                }
+            }
+        }
+
+        let cmsSupCount = document.querySelectorAll('#cmsSuppliersTbody tr').length;
+        document.getElementById('btnAddSupplierRow')?.addEventListener('click', function() {
+            const tableBody = document.getElementById('cmsSuppliersTbody');
+            const newRow = document.createElement('tr');
+            newRow.className = 'cms-supplier-row';
+            newRow.innerHTML = `
+                <td>
+                    <select name="jv_suppliers[${cmsSupCount}][supplier_id]" class="form-select form-select-sm cms-supplier-select">
+                        <option value="">-- Select Supplier --</option>
+                        @foreach($suppliers as $s)
+                            <option value="{{ $s->id }}">{{ $s->name }} [{{ strtoupper($s->service_type ?? 'Supplier') }}]</option>
+                        @endforeach
+                    </select>
+                </td>
+                <td>
+                    <input type="number" step="0.01" min="0" name="jv_suppliers[${cmsSupCount}][amount]" class="form-control form-control-sm text-end fw-bold cms-sup-amount" placeholder="0.00">
+                </td>
+                <td>
+                    <input type="number" step="0.01" min="1" name="jv_suppliers[${cmsSupCount}][roe]" class="form-control form-control-sm text-center fw-bold cms-sup-roe" value="75.00">
+                </td>
+                <td class="text-end">
+                    <span class="badge bg-light text-dark border px-2 py-1 cms-sup-sar">0.00 SAR</span>
+                </td>
+                <td>
+                    <input type="text" name="jv_suppliers[${cmsSupCount}][notes]" class="form-control form-control-sm" placeholder="Service / Note">
+                </td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-outline-danger btn-sm py-0 px-1 btn-remove-cms-row"><i class="mdi mdi-trash-can"></i></button>
+                </td>
+            `;
+            tableBody.appendChild(newRow);
+            cmsSupCount++;
+            updateCmsCalculations();
+        });
+
+        $(document).on('click', '.btn-remove-cms-row', function() {
+            $(this).closest('tr').remove();
+            updateCmsCalculations();
+        });
+
+        $(document).on('input', '.cms-sup-amount, .cms-sup-roe, #jv_cms_total_pkr, #jv_cms_client_roe', updateCmsCalculations);
 
         // ROE Live Preview Helper (Amount is ALWAYS entered in PKR)
         function calcRoeLive() {

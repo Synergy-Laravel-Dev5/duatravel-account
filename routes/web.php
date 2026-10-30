@@ -204,8 +204,8 @@ Route::middleware(['auth:web,company'])->group(function () {
             Route::get('restore/{id}', 'restore')->name('supplier.restore');
             Route::get('json-list', 'jsonList')->name('supplier.json-list');
             Route::get('ledger/filter', 'ledgerFilter')->name('supplier.ledger.filter');
-            Route::get('ledger/{id?}', 'ledger')->name('supplier.ledger.show');
-            Route::post('ledger/view', 'ledger')->name('supplier.ledger.view');
+            Route::match(['get', 'post'], 'ledger/view', 'ledger')->name('supplier.ledger.view');
+            Route::get('ledger/{id?}', 'ledger')->name('supplier.ledger.show')->where('id', '[0-9]+');
         });
 
         Route::controller(PackageController::class)
@@ -301,6 +301,8 @@ Route::middleware(['auth:web,company'])->group(function () {
             Route::get('edit/{staff}', 'edit')->name('staff.edit');
             Route::put('update/{staff}', 'update')->name('staff.update');
             Route::delete('delete/{staff}', 'destroy')->name('staff.destroy');
+            Route::get('ledger/filter', 'ledgerFilter')->name('staff.ledger.filter');
+            Route::match(['get', 'post'], 'ledger/{id?}', 'ledger')->name('staff.ledger');
         });
 
         Route::controller(App\Http\Controllers\PayrollController::class)->prefix('payroll')->group(function () {
@@ -489,6 +491,14 @@ Route::middleware(['auth:web,company'])->group(function () {
         // Profit & Loss Report
         Route::get('reports/profit-loss', [\App\Http\Controllers\ProfitLossReportController::class, 'index'])->name('report.profit-loss');
         Route::get('reports/profit-loss/pdf', [\App\Http\Controllers\ProfitLossReportController::class, 'exportPdf'])->name('report.profit-loss.pdf');
+
+        // Balance Sheet Statement
+        Route::get('reports/balance-sheet', [\App\Http\Controllers\BalanceSheetReportController::class, 'index'])->name('reports.balance-sheet');
+        Route::get('reports/balance-sheet/pdf', [\App\Http\Controllers\BalanceSheetReportController::class, 'exportPdf'])->name('reports.balance-sheet.pdf');
+
+        // Cash Flow Statement
+        Route::get('reports/cash-flow', [\App\Http\Controllers\CashFlowReportController::class, 'index'])->name('reports.cash-flow');
+        Route::get('reports/cash-flow/pdf', [\App\Http\Controllers\CashFlowReportController::class, 'exportPdf'])->name('reports.cash-flow.pdf');
 
         // All Transactions Report
         Route::get('reports/transactions', [\App\Http\Controllers\TransactionReportController::class, 'index'])->name('reports.transactions');

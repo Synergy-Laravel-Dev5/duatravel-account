@@ -533,6 +533,20 @@
                                 </a>
                             </li>
                             <li>
+                                <a class="tp-link {{ request()->routeIs('reports.balance-sheet*') ? 'active' : '' }}"
+                                    href="{{ route('reports.balance-sheet', ['package_type' => $isHajjPackage ? 'hajj' : 'umrah']) }}">
+                                    <i data-feather="book"></i>
+                                    <span>Balance Sheet</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="tp-link {{ request()->routeIs('reports.cash-flow*') ? 'active' : '' }}"
+                                    href="{{ route('reports.cash-flow', ['package_type' => $isHajjPackage ? 'hajj' : 'umrah']) }}">
+                                    <i data-feather="trending-up"></i>
+                                    <span>Cash Flow Statement</span>
+                                </a>
+                            </li>
+                            <li>
                                 <a class="tp-link" href="{{ route('bank-transfer.index') }}">
                                     <i data-feather="repeat"></i>
                                     <span>Bank Transfers</span>

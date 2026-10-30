@@ -248,6 +248,9 @@
 
         @media print {
 
+            .app-sidebar-menu,
+            .topbar-custom,
+            #sidebar-menu,
             .left-side-menu,
             .sidebar-enable,
             .navbar-custom,

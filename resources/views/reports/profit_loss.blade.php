@@ -94,6 +94,9 @@
                     <button type="button" class="btn btn-outline-dark btn-sm" onclick="window.print()">
                         <i class="mdi mdi-printer me-1"></i> Print Report
                     </button>
+                    <a href="{{ route('report.profit-loss.pdf', request()->query()) }}" target="_blank" class="btn btn-outline-danger btn-sm">
+                        <i class="mdi mdi-file-pdf me-1"></i> Export PDF
+                    </a>
                     <button type="button" class="btn btn-outline-success btn-sm" onclick="exportTableToCSV('profit_loss_report.csv')">
                         <i class="mdi mdi-file-excel me-1"></i> Export Excel
                     </button>

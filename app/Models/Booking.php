@@ -49,6 +49,7 @@ class Booking extends Model
         'departure_flight',
         'departure_time',
         'flight_time_format',
+        'flight_trip_type',
         'departure_airline',
         'departure_pnr',
         'arrival_date',

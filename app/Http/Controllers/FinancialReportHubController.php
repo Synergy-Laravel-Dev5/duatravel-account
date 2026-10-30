@@ -6,6 +6,8 @@ use App\Models\Bank;
 use App\Models\Account;
 use App\Models\Client;
 use App\Models\Supplier;
+use App\Models\Expense;
+use App\Models\Staff;
 use Illuminate\Http\Request;
 
 class FinancialReportHubController extends Controller
@@ -17,6 +19,7 @@ class FinancialReportHubController extends Controller
      * 2. Cash Book & Cash Report Filter
      * 3. Client Ledger Filter (Dr / Cr)
      * 4. Search Supplier Ledger Filter
+     * 5. Expense & Transaction Report Filter
      */
     public function index(Request $request)
     {
@@ -33,9 +36,13 @@ class FinancialReportHubController extends Controller
             ->orWhereNull('status')
             ->orderBy('name')
             ->get();
+        $expenses = Expense::orderBy('name')->get();
+        $staffMembers = Staff::where('status', 'active')
+            ->orderBy('first_name')
+            ->get();
 
         $activeTab = $request->get('tab', 'bank');
-        if (!in_array($activeTab, ['bank', 'cash', 'client', 'supplier'])) {
+        if (!in_array($activeTab, ['bank', 'cash', 'client', 'supplier', 'staff'])) {
             $activeTab = 'bank';
         }
 
@@ -44,6 +51,7 @@ class FinancialReportHubController extends Controller
             'cashAccounts',
             'clients',
             'suppliers',
+            'staffMembers',
             'activeTab'
         ));
     }

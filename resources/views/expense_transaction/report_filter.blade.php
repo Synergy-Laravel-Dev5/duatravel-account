@@ -13,13 +13,21 @@
                         <div class="card border-0 shadow-sm mt-3">
                             <div class="card-body p-4">
 
-                                <div class="d-flex justify-content-between align-items-center mb-4">
-                                    <h4 class="fw-bold m-0 text-dark">
-                                        <i class="mdi mdi-file-chart text-primary me-1"></i> Transaction Reports Filter
-                                    </h4>
-                                    <a href="{{ route('expense.transaction.index') }}" class="btn btn-secondary btn-sm">
-                                        <i class="mdi mdi-arrow-left me-1"></i> Back to Transactions
-                                    </a>
+                                <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+                                    <div>
+                                        <h4 class="fw-bold m-0 text-dark">
+                                            <i class="mdi mdi-file-chart text-danger me-1"></i> Transaction & Expense Reports Filter
+                                        </h4>
+                                        <p class="text-muted fs-13 mb-0 mt-1">Generate multi-criteria reports for expenses, suppliers, clients, and staff transactions.</p>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <a href="{{ route('reports.hub', ['tab' => 'expense']) }}" class="btn btn-primary btn-sm">
+                                            <i class="mdi mdi-layers-outline me-1"></i> All-In-One Reports Hub
+                                        </a>
+                                        <a href="{{ route('expense.transaction.index') }}" class="btn btn-secondary btn-sm">
+                                            <i class="mdi mdi-arrow-left me-1"></i> Back to Transactions
+                                        </a>
+                                    </div>
                                 </div>
 
                                 <form action="{{ route('expense.transaction.report') }}" method="POST">

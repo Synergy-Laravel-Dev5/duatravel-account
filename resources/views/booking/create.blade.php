@@ -94,7 +94,7 @@
                                     <label class="form-label fs-12 fw-bold text-dark mb-1">
                                         <i class="mdi mdi-calendar-check text-secondary me-1"></i> Booking Date <span class="text-danger">*</span>
                                     </label>
-                                    <input type="date" class="form-control form-control-sm sync-booking-date" value="{{ old('booking_date', date('Y-m-d')) }}">
+                                    <input type="date" name="booking_date_package_tab" id="booking_date_package_tab" class="form-control form-control-sm sync-booking-date" value="{{ old('booking_date', date('Y-m-d')) }}">
                                     <small class="text-muted fs-11">Synchronized across all tabs</small>
                                 </div>
                                 <div class="col-md-4">
@@ -311,7 +311,7 @@
                                     <label class="form-label fs-12 fw-bold text-dark mb-1">
                                         <i class="mdi mdi-calendar-check text-primary me-1"></i> Booking Date <span class="text-danger">*</span>
                                     </label>
-                                    <input type="date" class="form-control form-control-sm sync-booking-date" value="{{ old('booking_date', date('Y-m-d')) }}">
+                                    <input type="date" name="booking_date_passenger_tab" id="booking_date_passenger_tab" class="form-control form-control-sm sync-booking-date" value="{{ old('booking_date', date('Y-m-d')) }}">
                                     <small class="text-muted fs-11">Synchronized across all tabs</small>
                                 </div>
                                 <div class="col-md-4">
@@ -443,13 +443,55 @@
                                         <input type="hidden" name="flight_booking_date" id="flight_booking_date" class="sync-booking-date" value="{{ old('booking_date', date('Y-m-d')) }}">
                                     </div>
 
-                                    {{-- Hidden fields for Controller compatibility --}}
-                                    <input type="hidden" name="flight_adult_cost" id="flight_adult_cost" value="0">
-                                    <input type="hidden" name="flight_adult_sell" id="flight_adult_sell" value="0">
-                                    <input type="hidden" name="flight_child_cost" id="flight_child_cost" value="0">
-                                    <input type="hidden" name="flight_child_sell" id="flight_child_sell" value="0">
-                                    <input type="hidden" name="flight_infant_cost" id="flight_infant_cost" value="0">
-                                    <input type="hidden" name="flight_infant_sell" id="flight_infant_sell" value="0">
+                                    {{-- Master Flight Rates & Fast Fill Card --}}
+                                    <div class="card bg-soft-primary border border-primary border-opacity-25 rounded-3 mb-3 p-3 shadow-none">
+                                        <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 pb-2 border-bottom border-primary border-opacity-10">
+                                            <div>
+                                                <h6 class="text-primary fw-bold mb-0">
+                                                    <i class="mdi mdi-ticket-percent-outline me-1"></i> Master Flight Rates & Fast Auto-Fill
+                                                </h6>
+                                                <small class="text-muted fs-11">Set standard rates here and click "Apply to All Passengers" to fill all tickets instantly without typing each passenger individually.</small>
+                                            </div>
+                                            <button type="button" class="btn btn-primary btn-sm px-3 shadow-sm fw-semibold" id="btnCascadeFlightRates">
+                                                <i class="mdi mdi-arrow-down-bold-circle me-1"></i> Apply Rates & Details to All Passengers
+                                            </button>
+                                        </div>
+                                        <div class="row g-2">
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-12 fw-bold text-dark mb-1">
+                                                    Adult Ticket Rate (<span class="flight-curr-label">SAR</span>)
+                                                </label>
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-white text-danger fw-semibold">Cost</span>
+                                                    <input type="number" step="0.01" name="flight_adult_cost" id="flight_adult_cost" class="form-control text-end master-flight-rate" placeholder="0.00" value="{{ old('flight_adult_cost', 0) }}">
+                                                    <span class="input-group-text bg-white text-success fw-semibold">Sell</span>
+                                                    <input type="number" step="0.01" name="flight_adult_sell" id="flight_adult_sell" class="form-control text-end master-flight-rate" placeholder="0.00" value="{{ old('flight_adult_sell', 0) }}">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-12 fw-bold text-dark mb-1">
+                                                    Child Ticket Rate (<span class="flight-curr-label">SAR</span>)
+                                                </label>
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-white text-danger fw-semibold">Cost</span>
+                                                    <input type="number" step="0.01" name="flight_child_cost" id="flight_child_cost" class="form-control text-end master-flight-rate" placeholder="0.00" value="{{ old('flight_child_cost', 0) }}">
+                                                    <span class="input-group-text bg-white text-success fw-semibold">Sell</span>
+                                                    <input type="number" step="0.01" name="flight_child_sell" id="flight_child_sell" class="form-control text-end master-flight-rate" placeholder="0.00" value="{{ old('flight_child_sell', 0) }}">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-12 fw-bold text-dark mb-1">
+                                                    Infant Ticket Rate (<span class="flight-curr-label">SAR</span>)
+                                                </label>
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-white text-danger fw-semibold">Cost</span>
+                                                    <input type="number" step="0.01" name="flight_infant_cost" id="flight_infant_cost" class="form-control text-end master-flight-rate" placeholder="0.00" value="{{ old('flight_infant_cost', 0) }}">
+                                                    <span class="input-group-text bg-white text-success fw-semibold">Sell</span>
+                                                    <input type="number" step="0.01" name="flight_infant_sell" id="flight_infant_sell" class="form-control text-end master-flight-rate" placeholder="0.00" value="{{ old('flight_infant_sell', 0) }}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <span id="flight_adult_pax_label" style="display:none;"></span>
                                     <span id="flight_child_pax_label" style="display:none;"></span>
                                     <span id="flight_infant_pax_label" style="display:none;"></span>
@@ -501,18 +543,31 @@
                             {{-- DEPARTURE & TIME FORMAT (Point 6) --}}
                             <div class="row g-3 mb-4">
                                 <div class="col-12 d-flex flex-wrap justify-content-between align-items-center border-bottom pb-2">
-                                    <h6 class="text-muted mb-0">
-                                        <i class="mdi mdi-airplane-takeoff me-1"></i> Flight Schedule (Departure & Arrival)
+                                    <h6 class="text-dark fw-bold mb-0">
+                                        <i class="mdi mdi-airplane-takeoff text-primary me-1"></i> Outbound Flight Schedule (Departure)
                                     </h6>
                                     <div class="d-flex align-items-center gap-3">
-                                        <span class="fw-bold fs-12 text-dark"><i class="mdi mdi-clock-outline me-1"></i> Time Format:</span>
-                                        <div class="form-check form-check-inline mb-0">
-                                            <input class="form-check-input flight-time-format-radio" type="radio" name="flight_time_format" id="time_format_12" value="12" checked>
-                                            <label class="form-check-label fs-12 fw-semibold" for="time_format_12">12-Hour (AM/PM)</label>
+                                        <div class="d-flex align-items-center gap-2 me-2">
+                                            <span class="fw-bold fs-12 text-dark"><i class="mdi mdi-swap-horizontal me-1 text-primary"></i> Trip Type:</span>
+                                            <div class="form-check form-check-inline mb-0">
+                                                <input class="form-check-input flight-trip-type-radio" type="radio" name="flight_trip_type" id="trip_type_round" value="round" checked>
+                                                <label class="form-check-label fs-12 fw-semibold text-primary" for="trip_type_round"><i class="mdi mdi-repeat me-1"></i>Round-Trip</label>
+                                            </div>
+                                            <div class="form-check form-check-inline mb-0">
+                                                <input class="form-check-input flight-trip-type-radio" type="radio" name="flight_trip_type" id="trip_type_oneway" value="oneway">
+                                                <label class="form-check-label fs-12 fw-semibold text-secondary" for="trip_type_oneway"><i class="mdi mdi-arrow-right-bold me-1"></i>One-Way</label>
+                                            </div>
                                         </div>
-                                        <div class="form-check form-check-inline mb-0">
-                                            <input class="form-check-input flight-time-format-radio" type="radio" name="flight_time_format" id="time_format_24" value="24">
-                                            <label class="form-check-label fs-12 fw-semibold" for="time_format_24">24-Hour (23:59)</label>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="fw-bold fs-12 text-dark"><i class="mdi mdi-clock-outline me-1"></i> Time:</span>
+                                            <div class="form-check form-check-inline mb-0">
+                                                <input class="form-check-input flight-time-format-radio" type="radio" name="flight_time_format" id="time_format_12" value="12" checked>
+                                                <label class="form-check-label fs-12 fw-semibold" for="time_format_12">12-Hour</label>
+                                            </div>
+                                            <div class="form-check form-check-inline mb-0">
+                                                <input class="form-check-input flight-time-format-radio" type="radio" name="flight_time_format" id="time_format_24" value="24">
+                                                <label class="form-check-label fs-12 fw-semibold" for="time_format_24">24-Hour</label>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -549,28 +604,31 @@
                                 </div>
                             </div>
 
-                            {{-- ARRIVAL --}}
-                            <div class="row g-3 mb-4">
-                                <div class="col-12">
-                                    <h6 class="text-muted border-bottom pb-2">
-                                        <i class="mdi mdi-airplane-landing me-1"></i> Arrival Info
+                            {{-- RETURN FLIGHT / ARRIVAL SECTION --}}
+                            <div class="row g-3 mb-4" id="returnFlightSection">
+                                <div class="col-12 d-flex justify-content-between align-items-center border-bottom pb-2">
+                                    <h6 class="text-primary fw-bold mb-0">
+                                        <i class="mdi mdi-airplane-landing me-1"></i> Inbound Flight Schedule (Return Flight / Arrival Back)
                                     </h6>
+                                    <span class="badge bg-soft-primary text-primary px-2 py-1 fs-11">
+                                        <i class="mdi mdi-repeat me-1"></i> Return Journey
+                                    </span>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label">Date of Arrival</label>
+                                    <label class="form-label">Date of Return</label>
                                     <input type="date" name="arrival_date" class="form-control">
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label">Arrival Flight #</label>
+                                    <label class="form-label">Return Flight #</label>
                                     <input type="text" name="arrival_flight" class="form-control"
                                         placeholder="PK-302">
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label">Time of Arrival</label>
+                                    <label class="form-label">Time of Return</label>
                                     <input type="time" name="arrival_time" class="form-control">
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label">Airline</label>
+                                    <label class="form-label">Return Airline</label>
                                     <select name="arrival_airline" class="form-select">
                                         <option value="">-- Select Airline --</option>
                                         @if(isset($airlines))
@@ -582,11 +640,11 @@
                                         @endif
                                     </select>
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Arrival PNR / Ticket #</label>
+                                <div class="col-md-6">
+                                    <label class="form-label">Return PNR / Ticket #</label>
                                     <input type="text" name="arrival_pnr" class="form-control" placeholder="XYZ456">
                                 </div>
-                                <div class="col-md-8">
+                                <div class="col-md-6">
                                     <label class="form-label">Upload Air Ticket / Flight Document</label>
                                     <input type="file" name="flight_attachment" class="form-control"
                                         accept="image/*,.pdf">
@@ -752,7 +810,7 @@
                                     <label class="form-label fs-12 fw-bold text-dark mb-1">
                                         <i class="mdi mdi-calendar-check text-warning me-1"></i> Booking Date <span class="text-danger">*</span>
                                     </label>
-                                    <input type="date" class="form-control form-control-sm sync-booking-date" value="{{ old('booking_date', date('Y-m-d')) }}">
+                                    <input type="date" name="booking_date_transport_tab" id="booking_date_transport_tab" class="form-control form-control-sm sync-booking-date" value="{{ old('booking_date', date('Y-m-d')) }}">
                                     <small class="text-muted fs-11">Synchronized across all tabs</small>
                                 </div>
                                 <div class="col-md-4">
@@ -768,6 +826,47 @@
                                     <span class="badge bg-soft-info text-info fs-12 py-2 px-3 border border-info border-opacity-25">
                                         <i class="mdi mdi-sync me-1"></i> Global Date Active
                                     </span>
+                                </div>
+                            </div>
+
+                            {{-- TRANSPORT ROUTES SUMMARY TABLE (As per user request) --}}
+                            <div id="transportRoutesSummaryBox" class="card border mb-3 shadow-sm">
+                                <div class="card-header bg-white py-2 border-bottom d-flex justify-content-between align-items-center">
+                                    <h6 class="m-0 fs-13 fw-bold" style="color: #b45309;">
+                                        <i class="mdi mdi-bus text-warning me-1"></i> 🚌 Transport | Routes & Transfers
+                                    </h6>
+                                    <span class="badge bg-soft-warning text-dark border fs-11" id="transport_summary_badge">Summary View</span>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-sm align-middle mb-0 text-center" style="font-size: 12px;">
+                                        <thead class="fw-bold text-uppercase" style="background-color: #fffbeb; color: #b45309;">
+                                            <tr>
+                                                <th class="text-start" style="color: #b45309;">Route</th>
+                                                <th style="color: #b45309;">Vehicle</th>
+                                                <th style="color: #b45309;">QTY</th>
+                                                <th style="color: #b45309;">Travel Date & Time</th>
+                                                <th style="color: #b45309;">Pax</th>
+                                                <th style="color: #b45309;">Vendor / Supplier</th>
+                                                <th style="color: #b45309;">Status</th>
+                                                <th style="color: #b45309;" class="text-end">Total Cost</th>
+                                                <th style="color: #b45309;" class="text-end">Total Sale</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="transportRoutesSummaryRows">
+                                            <tr>
+                                                <td colspan="9" class="text-muted py-2">No routes added yet.</td>
+                                            </tr>
+                                        </tbody>
+                                        <tfoot class="fw-bold bg-white">
+                                            <tr>
+                                                <td colspan="2" class="text-end pe-3 fw-bold">Total</td>
+                                                <td id="transport_summary_total_qty" class="fw-bold text-dark fs-13">0</td>
+                                                <td colspan="4"></td>
+                                                <td id="transport_summary_total_cost" class="text-end text-danger fw-bold fs-12">0.00 SAR</td>
+                                                <td id="transport_summary_total_sell" class="text-end text-success fw-bold fs-12">0.00 SAR</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
                                 </div>
                             </div>
 
@@ -833,8 +932,8 @@
                                         </div>
                                         <div class="col-md-1">
                                             <label class="form-label">Qty</label>
-                                            <input type="number" name="transports[0][quantity]" class="form-control"
-                                                value="{{ old('transports.0.quantity', 1) }}">
+                                            <input type="number" name="transports[0][quantity]" class="form-control transport-qty"
+                                                value="{{ old('transports.0.quantity', 1) }}" min="1">
                                         </div>
                                         <div class="col-md-2">
                                             <label class="form-label">Type / Status</label>
@@ -994,7 +1093,7 @@
                                     <label class="form-label fs-12 fw-bold text-dark mb-1">
                                         <i class="mdi mdi-calendar-check text-danger me-1"></i> Booking Date <span class="text-danger">*</span>
                                     </label>
-                                    <input type="date" class="form-control form-control-sm sync-booking-date" value="{{ old('booking_date', date('Y-m-d')) }}">
+                                    <input type="date" name="booking_date_visa_tab" id="booking_date_visa_tab" class="form-control form-control-sm sync-booking-date" value="{{ old('booking_date', date('Y-m-d')) }}">
                                     <small class="text-muted fs-11">Synchronized across all tabs</small>
                                 </div>
                                 <div class="col-md-4">
@@ -1119,7 +1218,7 @@
                                     <label class="form-label fs-12 fw-bold text-dark mb-1">
                                         <i class="mdi mdi-calendar-check text-success me-1"></i> Booking Date <span class="text-danger">*</span>
                                     </label>
-                                    <input type="date" class="form-control form-control-sm sync-booking-date" value="{{ old('booking_date', date('Y-m-d')) }}">
+                                    <input type="date" name="booking_date_food_tab" id="booking_date_food_tab" class="form-control form-control-sm sync-booking-date" value="{{ old('booking_date', date('Y-m-d')) }}">
                                     <small class="text-muted fs-11">Synchronized across all tabs</small>
                                 </div>
                                 <div class="col-md-4">
@@ -1357,7 +1456,7 @@
                                     <label class="form-label fs-12 fw-bold text-dark mb-1">
                                         <i class="mdi mdi-calendar-check text-secondary me-1"></i> Booking Date <span class="text-danger">*</span>
                                     </label>
-                                    <input type="date" class="form-control form-control-sm sync-booking-date" value="{{ old('booking_date', date('Y-m-d')) }}">
+                                    <input type="date" name="booking_date_other_tab" id="booking_date_other_tab" class="form-control form-control-sm sync-booking-date" value="{{ old('booking_date', date('Y-m-d')) }}">
                                     <small class="text-muted fs-11">Synchronized across all tabs</small>
                                 </div>
                                 <div class="col-md-4">
@@ -2216,6 +2315,7 @@
                     existingRowData[idx] = {
                         pax_type:           row.querySelector('.person-flight-pax-type')?.value,
                         ticket:             row.querySelector('.person-flight-ticket')?.value,
+                        ticket_status:      row.querySelector('.person-flight-status')?.value,
                         cost:               row.querySelector('.person-flight-cost')?.value,
                         sell:               row.querySelector('.person-flight-sell')?.value,
                         flight_supplier_id: row.querySelector('.person-flight-supplier')?.value,
@@ -2235,6 +2335,7 @@
 
                 let pType   = document.getElementById(`person_pax_type_${i}`)?.value || (inDom ? inDom.pax_type : 'adult');
                 let pTicket = '';
+                let pStatus = 'confirmed';
                 let pCost   = '';
                 let pSell   = '';
                 let pSup    = '';
@@ -2245,6 +2346,7 @@
                 if (inDom) {
                     pType   = document.getElementById(`person_pax_type_${i}`)?.value || inDom.pax_type || 'adult';
                     pTicket = inDom.ticket || '';
+                    pStatus = inDom.ticket_status || 'confirmed';
                     pCost   = inDom.cost !== undefined ? inDom.cost : '';
                     pSell   = inDom.sell !== undefined ? inDom.sell : '';
                     pSup    = inDom.flight_supplier_id || '';
@@ -2263,8 +2365,11 @@
                     supOptionsHtml += suppliersData.map(s => `<option value="${s.id}" ${s.id == effectiveSup ? 'selected' : ''}>${s.name}</option>`).join('');
                 }
 
+                const isCancelled = (pStatus === 'cancelled');
+                const isRefunded = (pStatus === 'refunded');
+
                 rowsHtml += `
-                <tr class="flight-person-row" data-idx="${i}" id="flight_person_row_${i}">
+                <tr class="flight-person-row ${isCancelled ? 'table-danger' : (isRefunded ? 'table-warning' : '')}" data-idx="${i}" id="flight_person_row_${i}" style="${isCancelled ? 'opacity:0.65; text-decoration: line-through;' : ''}">
                     <td class="text-center text-muted fw-bold">${i + 1}</td>
                     <td>
                         <strong class="text-primary person-flight-name-disp">${personName}</strong>
@@ -2300,6 +2405,14 @@
                         </div>
                         <input type="text" name="flight_persons[${i}][flight_time]" class="form-control form-control-sm person-flight-time flight-time-picker" value="${pTime}" placeholder="hh:mm">
                     </td>
+                    {{-- Ticket Status Dropdown & Refund Support --}}
+                    <td>
+                        <select name="flight_persons[${i}][ticket_status]" class="form-select form-select-sm person-flight-status ${isCancelled ? 'bg-soft-danger text-danger border-danger fw-bold' : (isRefunded ? 'bg-soft-warning text-warning border-warning fw-bold' : 'text-success fw-bold')}" onchange="handleTicketStatusChange(this)">
+                            <option value="confirmed" ${pStatus === 'confirmed' ? 'selected' : ''}>🟢 Confirmed</option>
+                            <option value="cancelled" ${pStatus === 'cancelled' ? 'selected' : ''}>🔴 Cancelled</option>
+                            <option value="refunded" ${pStatus === 'refunded' ? 'selected' : ''}>🟡 Refunded</option>
+                        </select>
+                    </td>
                     <td>
                         <input type="number" step="0.01" name="flight_persons[${i}][flight_cost]" class="form-control form-control-sm text-end person-flight-cost flight-rate-calc" value="${pCost}" placeholder="0.00">
                         <small class="text-danger d-block text-end person-flight-cost-pkr-disp" style="font-size:11px;">${(costVal * costRoe).toFixed(2)} PKR</small>
@@ -2333,9 +2446,10 @@
                                 <th style="width: 30px;" class="text-center">#</th>
                                 <th style="width: 17%;">Passenger & Passport</th>
                                 <th style="width: 95px;">Category</th>
-                                <th style="width: 16%;">Flight Supplier</th>
-                                <th style="width: 16%;">Ticket # & PNR</th>
-                                <th style="width: 15%;">Flight Date & Time</th>
+                                <th style="width: 15%;">Flight Supplier</th>
+                                <th style="width: 14%;">Ticket # & PNR</th>
+                                <th style="width: 14%;">Flight Date & Time</th>
+                                <th style="width: 12%;">Ticket Status</th>
                                 <th style="width: 11%;" class="text-danger text-end">Cost (<span class="flight-curr-label">${curr}</span>)</th>
                                 <th style="width: 11%;" class="text-success text-end">Sell (<span class="flight-curr-label">${curr}</span>)</th>
                             </tr>
@@ -2345,7 +2459,7 @@
                         </tbody>
                         <tfoot class="table-light fw-bold fs-12 border-top">
                             <tr>
-                                <td colspan="5" class="text-dark">Total Flight Tickets (${pax} Passengers)</td>
+                                <td colspan="6" class="text-dark">Total Flight Tickets (${pax} Passengers)</td>
                                 <td class="text-end text-muted small">Total:</td>
                                 <td class="text-end text-danger">
                                     <span id="tbl_flight_cost_curr_total">0.00 ${curr}</span>
@@ -2426,7 +2540,7 @@
                 const sendTo = v.send_to || '';
                 const company = v.company || '';
                 const supId = v.supplier_id || '';
-                const vBookingDate = v.booking_date || '{{ date('Y-m-d') }}';
+                const vBookingDate = v.booking_date || document.getElementById('booking_date')?.value || '{{ date('Y-m-d') }}';
 
                 let supplierOptionsHtml = `<option value="">-- Select Supplier --</option>` +
                     (typeof suppliersData !== 'undefined' ? suppliersData.map(s => `<option value="${s.id}" ${s.id == supId ? 'selected' : ''}>${s.name}</option>`).join('') : '');
@@ -2448,6 +2562,7 @@
                                 <i class="mdi mdi-ticket-confirmation me-1"></i>Voucher #: ${vChildVoucher}
                             </span>
                             <input type="hidden" name="visas[${i}][voucher_no]" value="${vChildVoucher}">
+                            <input type="hidden" name="visas[${i}][booking_date]" class="visa-booking-date sync-booking-date" value="${vBookingDate}">
                         </div>
                         <span class="badge bg-warning text-dark">${status.toUpperCase()}</span>
                     </div>
@@ -2583,6 +2698,10 @@
 
             if (personRows.length > 0) {
                 personRows.forEach(row => {
+                    const statusSelect = row.querySelector('.person-flight-status');
+                    const ticketStatus = statusSelect?.value || 'confirmed';
+                    const isCancelled = (ticketStatus === 'cancelled');
+
                     const costInput = row.querySelector('.person-flight-cost');
                     const sellInput = row.querySelector('.person-flight-sell');
                     const costVal = parseFloat(costInput?.value) || 0;
@@ -2590,13 +2709,15 @@
 
                     if (costVal > 0 || sellVal > 0) hasCustomPersonRates = true;
 
-                    totalCostCurr += costVal;
-                    totalSellCurr += sellVal;
+                    if (!isCancelled) {
+                        totalCostCurr += costVal;
+                        totalSellCurr += sellVal;
+                    }
 
                     const costPkrDisp = row.querySelector('.person-flight-cost-pkr-disp');
                     const sellPkrDisp = row.querySelector('.person-flight-sell-pkr-disp');
-                    if (costPkrDisp) costPkrDisp.textContent = (costVal * costRoe).toFixed(2) + ' PKR';
-                    if (sellPkrDisp) sellPkrDisp.textContent = (sellVal * saleRoe).toFixed(2) + ' PKR';
+                    if (costPkrDisp) costPkrDisp.textContent = (costVal * costRoe).toFixed(2) + ' PKR' + (isCancelled ? ' (Void)' : '');
+                    if (sellPkrDisp) sellPkrDisp.textContent = (sellVal * saleRoe).toFixed(2) + ' PKR' + (isCancelled ? ' (Void)' : '');
                 });
             }
 
@@ -2696,6 +2817,107 @@
                 }
             }
             calculateFlight();
+        });
+
+        function handleTicketStatusChange(select) {
+            const row = select.closest('tr');
+            if (!row) return;
+            const val = select.value;
+            select.className = 'form-select form-select-sm person-flight-status ' + 
+                (val === 'cancelled' ? 'bg-soft-danger text-danger border-danger fw-bold' : (val === 'refunded' ? 'bg-soft-warning text-warning border-warning fw-bold' : 'text-success fw-bold'));
+            
+            if (val === 'cancelled') {
+                row.classList.add('table-danger');
+                row.classList.remove('table-warning');
+                row.style.opacity = '0.65';
+                row.style.textDecoration = 'line-through';
+            } else if (val === 'refunded') {
+                row.classList.add('table-warning');
+                row.classList.remove('table-danger');
+                row.style.opacity = '0.85';
+                row.style.textDecoration = 'none';
+            } else {
+                row.classList.remove('table-danger', 'table-warning');
+                row.style.opacity = '1';
+                row.style.textDecoration = 'none';
+            }
+            calculateFlight();
+            if (typeof calcTotal === 'function') calcTotal();
+        }
+
+        // Master Flight Rates Cascade Button Handler
+        document.addEventListener('click', function(e) {
+            if (e.target && (e.target.id === 'btnCascadeFlightRates' || e.target.closest('#btnCascadeFlightRates'))) {
+                e.preventDefault();
+                const adultCost = parseFloat(document.getElementById('flight_adult_cost')?.value) || 0;
+                const adultSell = parseFloat(document.getElementById('flight_adult_sell')?.value) || 0;
+                const childCost = parseFloat(document.getElementById('flight_child_cost')?.value) || 0;
+                const childSell = parseFloat(document.getElementById('flight_child_sell')?.value) || 0;
+                const infantCost = parseFloat(document.getElementById('flight_infant_cost')?.value) || 0;
+                const infantSell = parseFloat(document.getElementById('flight_infant_sell')?.value) || 0;
+
+                const mainSup = document.getElementById('flight_supplier_id')?.value || '';
+                const depDate = document.querySelector('input[name="departure_date"]')?.value || '';
+                const depTime = document.querySelector('input[name="departure_time"]')?.value || '';
+                const depPnr  = document.querySelector('input[name="departure_pnr"]')?.value || '';
+
+                let updatedCount = 0;
+                document.querySelectorAll('.flight-person-row').forEach(row => {
+                    const pType = row.querySelector('.person-flight-pax-type')?.value || 'adult';
+                    const costInp = row.querySelector('.person-flight-cost');
+                    const sellInp = row.querySelector('.person-flight-sell');
+
+                    if (pType === 'adult') {
+                        if (costInp && adultCost > 0) costInp.value = adultCost.toFixed(2);
+                        if (sellInp && adultSell > 0) sellInp.value = adultSell.toFixed(2);
+                    } else if (pType === 'child') {
+                        if (costInp && childCost > 0) costInp.value = childCost.toFixed(2);
+                        if (sellInp && childSell > 0) sellInp.value = childSell.toFixed(2);
+                    } else if (pType === 'infant') {
+                        if (costInp && infantCost > 0) costInp.value = infantCost.toFixed(2);
+                        if (sellInp && infantSell > 0) sellInp.value = infantSell.toFixed(2);
+                    }
+
+                    if (mainSup) {
+                        const supSel = row.querySelector('.person-flight-supplier');
+                        if (supSel && !supSel.value) supSel.value = mainSup;
+                    }
+                    if (depDate) {
+                        const dateInp = row.querySelector('.person-flight-date');
+                        if (dateInp && !dateInp.value) dateInp.value = depDate;
+                    }
+                    if (depTime) {
+                        const timeInp = row.querySelector('.person-flight-time');
+                        if (timeInp && !timeInp.value) timeInp.value = depTime;
+                    }
+                    if (depPnr) {
+                        const pnrInp = row.querySelector('.person-flight-pnr');
+                        if (pnrInp && !pnrInp.value) pnrInp.value = depPnr;
+                    }
+                    updatedCount++;
+                });
+
+                calculateFlight();
+                if (typeof calcTotal === 'function') calcTotal();
+                if (typeof showAutoRefreshToast === 'function') {
+                    showAutoRefreshToast(`Master flight rates, supplier & details applied to ${updatedCount} passengers!`);
+                } else {
+                    alert(`Master flight rates, supplier & details applied to ${updatedCount} passengers!`);
+                }
+            }
+        });
+
+        // Trip Type Toggle (One-Way vs Round-Trip)
+        document.addEventListener('change', function(e) {
+            if (e.target && e.target.classList.contains('flight-trip-type-radio')) {
+                const returnSec = document.getElementById('returnFlightSection');
+                if (!returnSec) return;
+                if (e.target.value === 'oneway') {
+                    returnSec.style.display = 'none';
+                } else {
+                    returnSec.style.display = 'flex';
+                }
+            }
         });
 
         // Hotels Dynamic Management
@@ -3160,33 +3382,33 @@
             let sellCurr = 0;
 
             if (hasPersonRates) {
-                costCurr = Math.round(sumPersonCostForeign * 100) / 100;
-                sellCurr = Math.round(sumPersonSellForeign * 100) / 100;
+                costCurr = Math.round(sumPersonCostForeign * rooms * 100) / 100;
+                sellCurr = Math.round(sumPersonSellForeign * rooms * 100) / 100;
 
                 const crInput = row.querySelector('.hotel-cost-rate');
                 const srInput = row.querySelector('.hotel-sell-rate');
 
-                // If user entered a main costRate, snap sum to exact costRate if difference is rounding cent (< 0.05)
+                // If user entered a main costRate, snap sum to exact costRate * rooms if difference is rounding cent (< 0.05)
                 if (crInput && source === 'costRate') {
                     const enteredCost = parseFloat(crInput.value) || 0;
-                    if (Math.abs(costCurr - (enteredCost * nights)) < 0.05) {
-                        costCurr = enteredCost * nights;
+                    if (Math.abs(costCurr - (enteredCost * nights * rooms)) < 0.05) {
+                        costCurr = enteredCost * nights * rooms;
                     }
                 } else if (crInput && source !== 'costRate') {
-                    if (nights > 0) {
-                        crInput.value = (Math.round((costCurr / nights) * 100) / 100).toFixed(2);
+                    if (nights > 0 && rooms > 0) {
+                        crInput.value = (Math.round((costCurr / (nights * rooms)) * 100) / 100).toFixed(2);
                     }
                 }
 
-                // If user entered a main sellRate, snap sum to exact sellRate if difference is rounding cent (< 0.05)
+                // If user entered a main sellRate, snap sum to exact sellRate * rooms if difference is rounding cent (< 0.05)
                 if (srInput && source === 'sellRate') {
                     const enteredSell = parseFloat(srInput.value) || 0;
-                    if (Math.abs(sellCurr - (enteredSell * nights)) < 0.05) {
-                        sellCurr = enteredSell * nights;
+                    if (Math.abs(sellCurr - (enteredSell * nights * rooms)) < 0.05) {
+                        sellCurr = enteredSell * nights * rooms;
                     }
                 } else if (srInput && source !== 'sellRate') {
-                    if (nights > 0) {
-                        srInput.value = (Math.round((sellCurr / nights) * 100) / 100).toFixed(2);
+                    if (nights > 0 && rooms > 0) {
+                        srInput.value = (Math.round((sellCurr / (nights * rooms)) * 100) / 100).toFixed(2);
                     }
                 }
             } else {
@@ -3362,6 +3584,89 @@
             if (roomsDisp) roomsDisp.textContent = `${totalRooms} Total Rooms`;
         }
 
+        // Transport Routes Summary View
+        function updateTransportSummary() {
+            const blocks = document.querySelectorAll('.route-block');
+            let summaryHtml = '';
+            let totalQty = 0;
+
+            blocks.forEach((b, idx) => {
+                const routeSelect = b.querySelector('.transport-route-select');
+                let routeName = '—';
+                if (routeSelect && routeSelect.value) {
+                    routeName = routeSelect.options[routeSelect.selectedIndex]?.text?.trim() || routeSelect.value;
+                }
+
+                const vehSelect = b.querySelector('.transport-vehicle-select');
+                let vehicle = '—';
+                if (vehSelect && vehSelect.value) {
+                    vehicle = vehSelect.options[vehSelect.selectedIndex]?.text?.trim() || vehSelect.value;
+                }
+
+                const qty = parseFloat(b.querySelector('.transport-qty, input[name*="[quantity]"]')?.value) || 1;
+                totalQty += qty;
+
+                const date = b.querySelector('input[name*="[date]"]')?.value || '—';
+                const time = b.querySelector('input[name*="[time]"]')?.value || '';
+                const dateTime = time ? `${date} ${time}` : date;
+
+                const pax = b.querySelector('input[name*="[pax]"]')?.value || '—';
+
+                const supSelect = b.querySelector('select[name*="[supplier_id]"]');
+                let supName = '—';
+                if (supSelect && supSelect.value) {
+                    supName = supSelect.options[supSelect.selectedIndex]?.text?.trim() || 'Vendor';
+                }
+
+                const status = b.querySelector('select[name*="[status]"]')?.value || 'CONFIRMED';
+
+                const costSarText = b.querySelector('.transport-cost-sar-disp')?.textContent?.trim() || '0.00 SAR';
+                const costPkrText = b.querySelector('.transport-cost-pkr-disp')?.textContent?.trim() || '0.00 PKR';
+                const sellSarText = b.querySelector('.transport-sell-sar-disp')?.textContent?.trim() || '0.00 SAR';
+                const sellPkrText = b.querySelector('.transport-sell-pkr-disp')?.textContent?.trim() || '0.00 PKR';
+
+                summaryHtml += `<tr>
+                    <td class="text-start fw-bold text-dark">${routeName}</td>
+                    <td class="fw-semibold">${vehicle}</td>
+                    <td class="fw-bold text-primary">${qty}</td>
+                    <td>${dateTime}</td>
+                    <td>${pax}</td>
+                    <td>${supName}</td>
+                    <td><span class="badge bg-${status === 'CONFIRMED' ? 'success' : (status === 'CANCELLED' ? 'danger' : 'warning')}">${status}</span></td>
+                    <td class="text-end text-danger fw-semibold">
+                        <span>${costSarText}</span><br>
+                        <small class="text-muted fw-normal">${costPkrText}</small>
+                    </td>
+                    <td class="text-end text-success fw-semibold">
+                        <span>${sellSarText}</span><br>
+                        <small class="text-muted fw-normal">${sellPkrText}</small>
+                    </td>
+                </tr>`;
+            });
+
+            const tbody = document.getElementById('transportRoutesSummaryRows');
+            if (tbody) {
+                if (blocks.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="9" class="text-muted py-2">No routes added yet.</td></tr>';
+                } else {
+                    tbody.innerHTML = summaryHtml;
+                }
+            }
+
+            const qtyDisp = document.getElementById('transport_summary_total_qty');
+            if (qtyDisp) qtyDisp.textContent = totalQty;
+
+            const totCostSarText = document.getElementById('transport_cost_sar_total')?.textContent || '0.00 SAR';
+            const totCostPkrText = document.getElementById('transport_cost_pkr_total')?.textContent || '0.00 PKR';
+            const totSellSarText = document.getElementById('transport_sell_sar_total')?.textContent || '0.00 SAR';
+            const totSellPkrText = document.getElementById('transport_sell_pkr_total')?.textContent || '0.00 PKR';
+
+            const sumCostTotal = document.getElementById('transport_summary_total_cost');
+            const sumSellTotal = document.getElementById('transport_summary_total_sell');
+            if (sumCostTotal) sumCostTotal.innerHTML = `<span>${totCostSarText}</span><br><small class="text-muted fw-normal">${totCostPkrText}</small>`;
+            if (sumSellTotal) sumSellTotal.innerHTML = `<span>${totSellSarText}</span><br><small class="text-muted fw-normal">${totSellPkrText}</small>`;
+        }
+
         // Integer-cent allocation helper so sum ALWAYS matches total exactly (no 99.99 or 200.01)
         function allocateExactAmount(totalAmount, count) {
             if (count <= 0) return [];
@@ -3501,7 +3806,7 @@
                                 ${vehiclesOptions}
                             </select></div>
                         <div class="col-md-1"><label class="form-label">Qty</label>
-                            <input type="number" name="transports[${routeIdx}][quantity]" class="form-control" value="1" min="1"></div>
+                            <input type="number" name="transports[${routeIdx}][quantity]" class="form-control transport-qty" value="1" min="1"></div>
                         <div class="col-md-2"><label class="form-label">Type / Status</label>
                             <select name="transports[${routeIdx}][status]" class="form-select">
                                 <option value="CONFIRMED" selected>CONFIRMED</option>
@@ -3655,6 +3960,7 @@
                 }
                 calculateTransportRow(row);
             }
+            updateTransportSummary();
         });
 
         function calculateTransportRow(row) {
@@ -3683,12 +3989,13 @@
             row.querySelectorAll('.transport-curr-prefix').forEach(el => el.textContent = `1 ${curr} =`);
             row.querySelectorAll('.transport-curr-name').forEach(el => el.textContent = `${curr}:`);
 
+            const qty = parseFloat(row.querySelector('input[name*="[quantity]"], .transport-qty')?.value) || 1;
             const costRate = parseFloat(row.querySelector('.transport-cost-rate')?.value) || 0;
             const sellRate = parseFloat(row.querySelector('.transport-sell-rate')?.value) || 0;
 
-            const costCurr = costRate;
+            const costCurr = costRate * qty;
             const costPkr = costCurr * costRoe;
-            const sellCurr = sellRate;
+            const sellCurr = sellRate * qty;
             const sellPkr = sellCurr * saleRoe;
 
             const costSarDisp = row.querySelector('.transport-cost-sar-disp');
@@ -3719,6 +4026,7 @@
                 document.getElementById('transport_charges').value = totalTransportSelling.toFixed(2);
             }
             calcTotal();
+            updateTransportSummary();
         }
 
         document.getElementById('visasList')?.addEventListener('change', function(e) {
@@ -3983,6 +4291,7 @@
             let transportSellPkr = 0;
             let transportCurrs = new Set();
             document.querySelectorAll('.route-block').forEach(row => {
+                const qty      = parseFloat(row.querySelector('input[name*="[quantity]"], .transport-qty')?.value) || 1;
                 const costRate = parseFloat(row.querySelector('.transport-cost-rate')?.value) || 0;
                 const sellRate = parseFloat(row.querySelector('.transport-sell-rate')?.value) || 0;
                 const curr     = row.querySelector('.transport-currency')?.value || 'SAR';
@@ -3990,11 +4299,14 @@
                 const costRoe  = isPkr ? 1 : (parseFloat(row.querySelector('.transport-cost-roe')?.value) || parseFloat(row.querySelector('.transport-roe')?.value) || 75);
                 const saleRoe  = isPkr ? 1 : (parseFloat(row.querySelector('.transport-sale-roe')?.value) || costRoe || 75);
 
-                transportCostForeign += costRate;
-                transportCostPkr += costRate * costRoe;
+                const lineCost = costRate * qty;
+                const lineSell = sellRate * qty;
 
-                transportSellForeign += sellRate;
-                transportSellPkr += sellRate * saleRoe;
+                transportCostForeign += lineCost;
+                transportCostPkr += lineCost * costRoe;
+
+                transportSellForeign += lineSell;
+                transportSellPkr += lineSell * saleRoe;
                 transportCurrs.add(curr);
             });
             const transportCurrLabel = transportCurrs.size === 1 ? Array.from(transportCurrs)[0] : (transportCurrs.size > 1 ? 'Mix' : 'SAR');
@@ -4165,7 +4477,7 @@
                 const row = e.target.closest('.visa-card');
                 calculateVisaRow(row);
             }
-            if (e.target.matches('.transport-roe, .transport-cost-roe, .transport-sale-roe, .transport-cost-rate, .transport-sell-rate')) {
+            if (e.target.matches('.transport-roe, .transport-cost-roe, .transport-sale-roe, .transport-cost-rate, .transport-sell-rate, .transport-qty, input[name*="[quantity]"]')) {
                 const row = e.target.closest('.route-block');
                 calculateTransportRow(row);
             }
@@ -4203,7 +4515,7 @@
                 const row = e.target.closest('.visa-card');
                 calculateVisaRow(row);
             }
-            if (e.target.matches('.transport-roe, .transport-cost-roe, .transport-sale-roe, .transport-cost-rate, .transport-sell-rate')) {
+            if (e.target.matches('.transport-roe, .transport-cost-roe, .transport-sale-roe, .transport-cost-rate, .transport-sell-rate, .transport-qty, input[name*="[quantity]"]')) {
                 const row = e.target.closest('.route-block');
                 calculateTransportRow(row);
             }
@@ -4350,11 +4662,19 @@
                 const mainDate = document.getElementById('booking_date');
                 const hotelDate = document.getElementById('booking_date_hotel_tab');
                 const flightDate = document.getElementById('booking_date_flight_tab');
+                const flBookingDate = document.getElementById('flight_booking_date');
+                const visaDate = document.getElementById('booking_date_visa_tab');
                 const depDate = document.querySelector('input[name="departure_date"]');
 
                 if (mainDate && mainDate.value !== val) mainDate.value = val;
                 if (hotelDate && hotelDate.value !== val) hotelDate.value = val;
                 if (flightDate && flightDate.value !== val) flightDate.value = val;
+                if (flBookingDate && flBookingDate.value !== val) flBookingDate.value = val;
+                if (visaDate && visaDate.value !== val) visaDate.value = val;
+
+                document.querySelectorAll('.sync-booking-date').forEach(el => {
+                    if (el.value !== val) el.value = val;
+                });
 
                 // Point 3: Flight departure date auto-selects if empty or synced
                 if (depDate && (!depDate.value || depDate.getAttribute('data-synced') === 'true')) {
@@ -4735,5 +5055,8 @@
                 if (saleRoe && saleRoe.value === '1') saleRoe.value = '75';
             }
         });
+        // Initial trigger of summary views
+        if (typeof updateHotelStaySummary === 'function') updateHotelStaySummary();
+        if (typeof updateTransportSummary === 'function') updateTransportSummary();
     </script>
 @endsection

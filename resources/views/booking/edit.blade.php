@@ -118,7 +118,7 @@
                                     <label class="form-label fs-12 fw-bold text-dark mb-1">
                                         <i class="mdi mdi-calendar-check text-secondary me-1"></i> Booking Date <span class="text-danger">*</span>
                                     </label>
-                                    <input type="date" class="form-control form-control-sm sync-booking-date"
+                                    <input type="date" name="booking_date_package_tab" id="booking_date_package_tab" class="form-control form-control-sm sync-booking-date"
                                         value="{{ old('booking_date', $booking->booking_date ? \Carbon\Carbon::parse($booking->booking_date)->format('Y-m-d') : date('Y-m-d')) }}">
                                     <small class="text-muted fs-11">Synchronized across all tabs</small>
                                 </div>
@@ -362,7 +362,7 @@
                                     <label class="form-label fs-12 fw-bold text-dark mb-1">
                                         <i class="mdi mdi-calendar-check text-primary me-1"></i> Booking Date <span class="text-danger">*</span>
                                     </label>
-                                    <input type="date" class="form-control form-control-sm sync-booking-date"
+                                    <input type="date" name="booking_date_package_tab" id="booking_date_package_tab" class="form-control form-control-sm sync-booking-date"
                                         value="{{ old('booking_date', $booking->booking_date ? \Carbon\Carbon::parse($booking->booking_date)->format('Y-m-d') : date('Y-m-d')) }}">
                                     <small class="text-muted fs-11">Synchronized across all tabs</small>
                                 </div>
@@ -513,7 +513,7 @@
                                     <label class="form-label fs-12 fw-bold text-dark mb-1">
                                         <i class="mdi mdi-calendar-check text-info me-1"></i> Booking Date
                                     </label>
-                                    <input type="date" id="booking_date_flight_tab" class="form-control form-control-sm sync-booking-date"
+                                    <input type="date" name="booking_date_flight_tab" id="booking_date_flight_tab" class="form-control form-control-sm sync-booking-date"
                                         value="{{ old('booking_date', $booking->booking_date ? \Carbon\Carbon::parse($booking->booking_date)->format('Y-m-d') : date('Y-m-d')) }}">
                                     <small class="text-muted fs-11">Auto-syncs with Flight Departure Date</small>
                                 </div>
@@ -522,9 +522,9 @@
                                         <i class="mdi mdi-airplane text-info me-1"></i> Flight Voucher No:
                                     </label>
                                     <div>
-                                        <span class="badge bg-info fs-13 px-2 py-1 font-monospace">{{ $booking->flight_voucher_no ?? ('FLT-' . date('Y') . '-' . str_pad($booking->id, 5, '0', STR_PAD_LEFT)) }}</span>
+                                        <span class="badge bg-info fs-13 px-2 py-1 font-monospace">{{ $booking->flight_voucher_no ?? ($defaultVouchers['flight'] ?? ('FLT-' . date('Y') . '-00001')) }}</span>
                                     </div>
-                                    <input type="hidden" name="flight_voucher_no" id="flight_voucher_no" value="{{ $booking->flight_voucher_no ?? ('FLT-' . date('Y') . '-' . str_pad($booking->id, 5, '0', STR_PAD_LEFT)) }}">
+                                    <input type="hidden" name="flight_voucher_no" id="flight_voucher_no" value="{{ $booking->flight_voucher_no ?? ($defaultVouchers['flight'] ?? ('FLT-' . date('Y') . '-00001')) }}">
                                 </div>
                                 <div class="col-md-4 text-md-end">
                                     <span class="badge bg-soft-info text-info fs-12 py-2 px-3 border border-info border-opacity-25">
@@ -597,13 +597,55 @@
                                         <input type="hidden" name="flight_booking_date" id="flight_booking_date" class="sync-booking-date" value="{{ old('flight_booking_date', $booking->flight_booking_date ? \Carbon\Carbon::parse($booking->flight_booking_date)->format('Y-m-d') : ($booking->booking_date ? \Carbon\Carbon::parse($booking->booking_date)->format('Y-m-d') : date('Y-m-d'))) }}">
                                     </div>
 
-                                    {{-- Hidden fields for Controller compatibility --}}
-                                    <input type="hidden" name="flight_adult_cost" id="flight_adult_cost" value="{{ old('flight_adult_cost', $booking->flight_adult_cost ?? $booking->flight_cost_rate ?? 0) }}">
-                                    <input type="hidden" name="flight_adult_sell" id="flight_adult_sell" value="{{ old('flight_adult_sell', $booking->flight_adult_sell ?? $booking->flight_selling_rate ?? 0) }}">
-                                    <input type="hidden" name="flight_child_cost" id="flight_child_cost" value="{{ old('flight_child_cost', $booking->flight_child_cost ?? 0) }}">
-                                    <input type="hidden" name="flight_child_sell" id="flight_child_sell" value="{{ old('flight_child_sell', $booking->flight_child_sell ?? 0) }}">
-                                    <input type="hidden" name="flight_infant_cost" id="flight_infant_cost" value="{{ old('flight_infant_cost', $booking->flight_infant_cost ?? 0) }}">
-                                    <input type="hidden" name="flight_infant_sell" id="flight_infant_sell" value="{{ old('flight_infant_sell', $booking->flight_infant_sell ?? 0) }}">
+                                    {{-- Master Flight Rates & Fast Fill Card --}}
+                                    <div class="card bg-soft-primary border border-primary border-opacity-25 rounded-3 mb-3 p-3 shadow-none">
+                                        <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 pb-2 border-bottom border-primary border-opacity-10">
+                                            <div>
+                                                <h6 class="text-primary fw-bold mb-0">
+                                                    <i class="mdi mdi-ticket-percent-outline me-1"></i> Master Flight Rates & Fast Auto-Fill
+                                                </h6>
+                                                <small class="text-muted fs-11">Set standard rates here and click "Apply to All Passengers" to fill all tickets instantly without typing each passenger individually.</small>
+                                            </div>
+                                            <button type="button" class="btn btn-primary btn-sm px-3 shadow-sm fw-semibold" id="btnCascadeFlightRates">
+                                                <i class="mdi mdi-arrow-down-bold-circle me-1"></i> Apply Rates & Details to All Passengers
+                                            </button>
+                                        </div>
+                                        <div class="row g-2">
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-12 fw-bold text-dark mb-1">
+                                                    Adult Ticket Rate (<span class="flight-curr-label">{{ $flightCurr }}</span>)
+                                                </label>
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-white text-danger fw-semibold">Cost</span>
+                                                    <input type="number" step="0.01" name="flight_adult_cost" id="flight_adult_cost" class="form-control text-end master-flight-rate" placeholder="0.00" value="{{ old('flight_adult_cost', $booking->flight_adult_cost ?? $booking->flight_cost_rate ?? 0) }}">
+                                                    <span class="input-group-text bg-white text-success fw-semibold">Sell</span>
+                                                    <input type="number" step="0.01" name="flight_adult_sell" id="flight_adult_sell" class="form-control text-end master-flight-rate" placeholder="0.00" value="{{ old('flight_adult_sell', $booking->flight_adult_sell ?? $booking->flight_selling_rate ?? 0) }}">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-12 fw-bold text-dark mb-1">
+                                                    Child Ticket Rate (<span class="flight-curr-label">{{ $flightCurr }}</span>)
+                                                </label>
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-white text-danger fw-semibold">Cost</span>
+                                                    <input type="number" step="0.01" name="flight_child_cost" id="flight_child_cost" class="form-control text-end master-flight-rate" placeholder="0.00" value="{{ old('flight_child_cost', $booking->flight_child_cost ?? 0) }}">
+                                                    <span class="input-group-text bg-white text-success fw-semibold">Sell</span>
+                                                    <input type="number" step="0.01" name="flight_child_sell" id="flight_child_sell" class="form-control text-end master-flight-rate" placeholder="0.00" value="{{ old('flight_child_sell', $booking->flight_child_sell ?? 0) }}">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fs-12 fw-bold text-dark mb-1">
+                                                    Infant Ticket Rate (<span class="flight-curr-label">{{ $flightCurr }}</span>)
+                                                </label>
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-white text-danger fw-semibold">Cost</span>
+                                                    <input type="number" step="0.01" name="flight_infant_cost" id="flight_infant_cost" class="form-control text-end master-flight-rate" placeholder="0.00" value="{{ old('flight_infant_cost', $booking->flight_infant_cost ?? 0) }}">
+                                                    <span class="input-group-text bg-white text-success fw-semibold">Sell</span>
+                                                    <input type="number" step="0.01" name="flight_infant_sell" id="flight_infant_sell" class="form-control text-end master-flight-rate" placeholder="0.00" value="{{ old('flight_infant_sell', $booking->flight_infant_sell ?? 0) }}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <span id="flight_adult_pax_label" style="display:none;"></span>
                                     <span id="flight_child_pax_label" style="display:none;"></span>
                                     <span id="flight_infant_pax_label" style="display:none;"></span>
@@ -655,21 +697,34 @@
                             {{-- DEPARTURE & TIME FORMAT (Point 6) --}}
                             <div class="row g-3 mb-4">
                                 <div class="col-12 d-flex flex-wrap justify-content-between align-items-center border-bottom pb-2">
-                                    <h6 class="text-muted mb-0">
-                                        <i class="mdi mdi-airplane-takeoff me-1"></i> Flight Schedule (Departure & Arrival)
+                                    <h6 class="text-dark fw-bold mb-0">
+                                        <i class="mdi mdi-airplane-takeoff text-primary me-1"></i> Outbound Flight Schedule (Departure)
                                         @if(!empty($booking->flight_voucher_no))
                                             <span class="badge bg-soft-info text-info ms-2 fs-12"><i class="mdi mdi-ticket-confirmation me-1"></i>Voucher: {{ $booking->flight_voucher_no }}</span>
                                         @endif
                                     </h6>
                                     <div class="d-flex align-items-center gap-3">
-                                        <span class="fw-bold fs-12 text-dark"><i class="mdi mdi-clock-outline me-1"></i> Time Format:</span>
-                                        <div class="form-check form-check-inline mb-0">
-                                            <input class="form-check-input flight-time-format-radio" type="radio" name="flight_time_format" id="time_format_12" value="12" {{ old('flight_time_format', $booking->flight_time_format ?? '12') == '12' ? 'checked' : '' }}>
-                                            <label class="form-check-label fs-12 fw-semibold" for="time_format_12">12-Hour (AM/PM)</label>
+                                        <div class="d-flex align-items-center gap-2 me-2">
+                                            <span class="fw-bold fs-12 text-dark"><i class="mdi mdi-swap-horizontal me-1 text-primary"></i> Trip Type:</span>
+                                            <div class="form-check form-check-inline mb-0">
+                                                <input class="form-check-input flight-trip-type-radio" type="radio" name="flight_trip_type" id="trip_type_round" value="round" {{ old('flight_trip_type', $booking->flight_trip_type ?? 'round') !== 'oneway' ? 'checked' : '' }}>
+                                                <label class="form-check-label fs-12 fw-semibold text-primary" for="trip_type_round"><i class="mdi mdi-repeat me-1"></i>Round-Trip</label>
+                                            </div>
+                                            <div class="form-check form-check-inline mb-0">
+                                                <input class="form-check-input flight-trip-type-radio" type="radio" name="flight_trip_type" id="trip_type_oneway" value="oneway" {{ old('flight_trip_type', $booking->flight_trip_type ?? 'round') === 'oneway' ? 'checked' : '' }}>
+                                                <label class="form-check-label fs-12 fw-semibold text-secondary" for="trip_type_oneway"><i class="mdi mdi-arrow-right-bold me-1"></i>One-Way</label>
+                                            </div>
                                         </div>
-                                        <div class="form-check form-check-inline mb-0">
-                                            <input class="form-check-input flight-time-format-radio" type="radio" name="flight_time_format" id="time_format_24" value="24" {{ old('flight_time_format', $booking->flight_time_format ?? '12') == '24' ? 'checked' : '' }}>
-                                            <label class="form-check-label fs-12 fw-semibold" for="time_format_24">24-Hour (23:59)</label>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="fw-bold fs-12 text-dark"><i class="mdi mdi-clock-outline me-1"></i> Time:</span>
+                                            <div class="form-check form-check-inline mb-0">
+                                                <input class="form-check-input flight-time-format-radio" type="radio" name="flight_time_format" id="time_format_12" value="12" {{ old('flight_time_format', $booking->flight_time_format ?? '12') == '12' ? 'checked' : '' }}>
+                                                <label class="form-check-label fs-12 fw-semibold" for="time_format_12">12-Hour</label>
+                                            </div>
+                                            <div class="form-check form-check-inline mb-0">
+                                                <input class="form-check-input flight-time-format-radio" type="radio" name="flight_time_format" id="time_format_24" value="24" {{ old('flight_time_format', $booking->flight_time_format ?? '12') == '24' ? 'checked' : '' }}>
+                                                <label class="form-check-label fs-12 fw-semibold" for="time_format_24">24-Hour</label>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -720,31 +775,34 @@
                                 </div>
                             </div>
 
-                            {{-- ARRIVAL --}}
-                            <div class="row g-3 mb-4">
-                                <div class="col-12">
-                                    <h6 class="text-muted border-bottom pb-2">
-                                        <i class="mdi mdi-airplane-landing me-1"></i> Arrival Info
+                            {{-- RETURN FLIGHT / ARRIVAL SECTION --}}
+                            <div class="row g-3 mb-4" id="returnFlightSection" style="{{ old('flight_trip_type', $booking->flight_trip_type ?? 'round') === 'oneway' ? 'display:none;' : '' }}">
+                                <div class="col-12 d-flex justify-content-between align-items-center border-bottom pb-2">
+                                    <h6 class="text-primary fw-bold mb-0">
+                                        <i class="mdi mdi-airplane-landing me-1"></i> Inbound Flight Schedule (Return Flight / Arrival Back)
                                     </h6>
+                                    <span class="badge bg-soft-primary text-primary px-2 py-1 fs-11">
+                                        <i class="mdi mdi-repeat me-1"></i> Return Journey
+                                    </span>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">Date of Arrival</label>
+                                    <label class="form-label">Date of Return</label>
                                     <input type="date" name="arrival_date" class="form-control"
                                         value="{{ old('arrival_date', $booking->arrival_date) }}">
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">Arrival Flight #</label>
+                                    <label class="form-label">Return Flight #</label>
                                     <input type="text" name="arrival_flight" class="form-control"
                                         value="{{ old('arrival_flight', $booking->arrival_flight) }}"
                                         placeholder="PK-302">
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">Time of Arrival</label>
+                                    <label class="form-label">Time of Return</label>
                                     <input type="text" name="arrival_time" id="arrival_time_input" class="form-control flight-time-picker"
                                         value="{{ old('arrival_time', $booking->arrival_time) }}" placeholder="hh:mm AM/PM">
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">Airline</label>
+                                    <label class="form-label">Return Airline</label>
                                     <select name="arrival_airline" class="form-select">
                                         <option value="">-- Select Airline --</option>
                                         @php
@@ -768,7 +826,7 @@
                                     </select>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">Arrival PNR / Ticket #</label>
+                                    <label class="form-label">Return PNR / Ticket #</label>
                                     <input type="text" name="arrival_pnr" class="form-control"
                                         value="{{ old('arrival_pnr', $booking->arrival_pnr) }}" placeholder="XYZ456">
                                 </div>
@@ -815,9 +873,9 @@
                                         <i class="mdi mdi-hotel text-success me-1"></i> Hotel Voucher No:
                                     </label>
                                     <div>
-                                        <span class="badge bg-success fs-13 px-2 py-1 font-monospace">{{ $booking->hotel_voucher_no ?? ('HTL-' . date('Y') . '-' . str_pad($booking->id, 5, '0', STR_PAD_LEFT)) }}</span>
+                                        <span class="badge bg-success fs-13 px-2 py-1 font-monospace">{{ $booking->hotel_voucher_no ?? ($defaultVouchers['hotel'] ?? ('HTL-' . date('Y') . '-00001')) }}</span>
                                     </div>
-                                    <input type="hidden" name="hotel_voucher_no" id="hotel_voucher_no" value="{{ $booking->hotel_voucher_no ?? ('HTL-' . date('Y') . '-' . str_pad($booking->id, 5, '0', STR_PAD_LEFT)) }}">
+                                    <input type="hidden" name="hotel_voucher_no" id="hotel_voucher_no" value="{{ $booking->hotel_voucher_no ?? ($defaultVouchers['hotel'] ?? ('HTL-' . date('Y') . '-00001')) }}">
                                 </div>
                                 <div class="col-md-4 text-md-end">
                                     <span class="badge bg-soft-info text-info fs-12 py-2 px-3 border border-info border-opacity-25">
@@ -851,14 +909,50 @@
                                             </tr>
                                         </thead>
                                         <tbody id="hotelAccommodationSummaryRows">
-                                            <tr>
-                                                <td colspan="10" class="text-muted py-2">No hotels added yet.</td>
-                                            </tr>
+                                            @forelse($booking->hotels as $hotel)
+                                                @php
+                                                    $hName = $hotel->hotel_name ?? '—';
+                                                    $city = strtoupper($hotel->location ?? 'MAKKAH');
+                                                    $cin = $hotel->check_in ? \Carbon\Carbon::parse($hotel->check_in)->format('Y-m-d') : '—';
+                                                    $cout = $hotel->check_out ? \Carbon\Carbon::parse($hotel->check_out)->format('Y-m-d') : '—';
+                                                    $nights = (int)($hotel->no_of_nights ?? 0);
+                                                    $roomType = strtoupper($hotel->room_type ?? 'DOUBLE');
+                                                    $rooms = (int)($hotel->no_of_rooms ?? 1);
+                                                    $mealPlan = strtoupper($hotel->meal_plan ?? 'BB');
+                                                    $curr = $hotel->currency ?? 'SAR';
+                                                    $costForeign = (float)($hotel->cost_per_night ?? 0);
+                                                    $costPkr = (float)($hotel->cost_amount ?? 0);
+                                                    $sellForeign = (float)($hotel->selling_per_night ?? 0);
+                                                    $sellPkr = (float)($hotel->selling_amount ?? 0);
+                                                @endphp
+                                                <tr>
+                                                    <td class="text-start fw-bold text-dark">{{ $hName }}</td>
+                                                    <td class="fw-semibold">{{ $city }}</td>
+                                                    <td>{{ $cin }}</td>
+                                                    <td>{{ $cout }}</td>
+                                                    <td class="fw-bold text-dark">{{ $nights }}</td>
+                                                    <td>{{ $roomType }}</td>
+                                                    <td>{{ $rooms }}</td>
+                                                    <td>{{ $mealPlan }}</td>
+                                                    <td class="text-end text-danger fw-semibold">
+                                                        <span>{{ number_format($costForeign, 2) }} {{ $curr }}</span><br>
+                                                        <small class="text-muted fw-normal">{{ number_format($costPkr, 2) }} PKR</small>
+                                                    </td>
+                                                    <td class="text-end text-success fw-semibold">
+                                                        <span>{{ number_format($sellForeign, 2) }} {{ $curr }}</span><br>
+                                                        <small class="text-muted fw-normal">{{ number_format($sellPkr, 2) }} PKR</small>
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="10" class="text-muted py-2">No hotels added yet.</td>
+                                                </tr>
+                                            @endforelse
                                         </tbody>
                                         <tfoot class="fw-bold bg-white">
                                             <tr>
                                                 <td colspan="4" class="text-end pe-3 fw-bold">Total</td>
-                                                <td id="hotel_summary_total_nights" class="fw-bold text-dark fs-13">0</td>
+                                                <td id="hotel_summary_total_nights" class="fw-bold text-dark fs-13">{{ $booking->hotels->sum('no_of_nights') ?: 0 }}</td>
                                                 <td colspan="3"></td>
                                                 <td id="hotel_summary_total_cost" class="text-end text-danger fw-bold fs-12">0.00 SAR</td>
                                                 <td id="hotel_summary_total_sell" class="text-end text-success fw-bold fs-12">0.00 SAR</td>
@@ -923,7 +1017,7 @@
                                                     {{ $hotel->location === 'makkah' ? 'Makkah Hotel' : ($hotel->location === 'madinah' ? 'Madinah Hotel' : 'Other Hotel') }}
                                                 </h6>
                                                 @php
-                                                    $hChildVoucher = $hotel->voucher_no ?? (($booking->hotel_voucher_no ?: ('HTL-' . date('Y') . '-' . str_pad($booking->id, 5, '0', STR_PAD_LEFT))) . '-' . ($loop->iteration));
+                                                    $hChildVoucher = $hotel->voucher_no ?? (($booking->hotel_voucher_no ?: ($defaultVouchers['hotel'] ?? ('HTL-' . date('Y') . '-00001'))) . '-' . ($loop->iteration));
                                                 @endphp
                                                 <span class="badge bg-soft-success text-success border border-success fs-12 px-2 py-1 font-monospace">
                                                     <i class="mdi mdi-ticket-confirmation me-1"></i>Voucher #: {{ $hChildVoucher }}
@@ -1248,7 +1342,7 @@
                                     <label class="form-label fs-12 fw-bold text-dark mb-1">
                                         <i class="mdi mdi-calendar-check text-warning me-1"></i> Booking Date <span class="text-danger">*</span>
                                     </label>
-                                    <input type="date" class="form-control form-control-sm sync-booking-date"
+                                    <input type="date" name="booking_date_package_tab" id="booking_date_package_tab" class="form-control form-control-sm sync-booking-date"
                                         value="{{ old('booking_date', $booking->booking_date ? \Carbon\Carbon::parse($booking->booking_date)->format('Y-m-d') : date('Y-m-d')) }}">
                                     <small class="text-muted fs-11">Synchronized across all tabs</small>
                                 </div>
@@ -1257,14 +1351,89 @@
                                         <i class="mdi mdi-bus text-warning me-1"></i> Transport Voucher No:
                                     </label>
                                     <div>
-                                        <span class="badge bg-warning text-dark fs-13 px-2 py-1 font-monospace">{{ $booking->transport_voucher_no ?? ('TRN-' . date('Y') . '-' . str_pad($booking->id, 5, '0', STR_PAD_LEFT)) }}</span>
+                                        <span class="badge bg-warning text-dark fs-13 px-2 py-1 font-monospace">{{ $booking->transport_voucher_no ?? ($defaultVouchers['transport'] ?? ('TRN-' . date('Y') . '-00001')) }}</span>
                                     </div>
-                                    <input type="hidden" name="transport_voucher_no" id="transport_voucher_no" value="{{ $booking->transport_voucher_no ?? ('TRN-' . date('Y') . '-' . str_pad($booking->id, 5, '0', STR_PAD_LEFT)) }}">
+                                    <input type="hidden" name="transport_voucher_no" id="transport_voucher_no" value="{{ $booking->transport_voucher_no ?? ($defaultVouchers['transport'] ?? ('TRN-' . date('Y') . '-00001')) }}">
                                 </div>
                                 <div class="col-md-4 text-md-end">
                                     <span class="badge bg-soft-info text-info fs-12 py-2 px-3 border border-info border-opacity-25">
                                         <i class="mdi mdi-sync me-1"></i> Global Date Active
                                     </span>
+                                </div>
+                            </div>
+
+                            {{-- TRANSPORT ROUTES SUMMARY TABLE (As per user request) --}}
+                            <div id="transportRoutesSummaryBox" class="card border mb-3 shadow-sm">
+                                <div class="card-header bg-white py-2 border-bottom d-flex justify-content-between align-items-center">
+                                    <h6 class="m-0 fs-13 fw-bold" style="color: #b45309;">
+                                        <i class="mdi mdi-bus text-warning me-1"></i> 🚌 Transport | Routes & Transfers
+                                    </h6>
+                                    <span class="badge bg-soft-warning text-dark border fs-11" id="transport_summary_badge">Summary View</span>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-sm align-middle mb-0 text-center" style="font-size: 12px;">
+                                        <thead class="fw-bold text-uppercase" style="background-color: #fffbeb; color: #b45309;">
+                                            <tr>
+                                                <th class="text-start" style="color: #b45309;">Route</th>
+                                                <th style="color: #b45309;">Vehicle</th>
+                                                <th style="color: #b45309;">QTY</th>
+                                                <th style="color: #b45309;">Travel Date & Time</th>
+                                                <th style="color: #b45309;">Pax</th>
+                                                <th style="color: #b45309;">Vendor / Supplier</th>
+                                                <th style="color: #b45309;">Status</th>
+                                                <th style="color: #b45309;" class="text-end">Total Cost</th>
+                                                <th style="color: #b45309;" class="text-end">Total Sale</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="transportRoutesSummaryRows">
+                                            @forelse($booking->transports as $t)
+                                                @php
+                                                    $rName = $t->route ?? '—';
+                                                    $vName = $t->vehicle ?? '—';
+                                                    $supName = $t->supplier ? ($t->supplier->name ?? 'Vendor') : '—';
+                                                    $tCurr = $t->currency ?? 'SAR';
+                                                    $qty = (int)($t->quantity ?? 1);
+                                                    $tDate = $t->travel_date ? \Carbon\Carbon::parse($t->travel_date)->format('Y-m-d') : ($t->date ? \Carbon\Carbon::parse($t->date)->format('Y-m-d') : '—');
+                                                    $tTime = $t->travel_time ?? ($t->time ?? '');
+                                                    $costSar = (float)($t->cost_rate ?? 0);
+                                                    $costPkr = (float)($t->cost_amount ?? 0);
+                                                    $sellSar = (float)($t->selling_rate ?? 0);
+                                                    $sellPkr = (float)($t->selling_amount ?? 0);
+                                                    $status = $t->status ?? 'CONFIRMED';
+                                                @endphp
+                                                <tr>
+                                                    <td class="text-start fw-bold text-dark">{{ $rName }}</td>
+                                                    <td class="fw-semibold">{{ $vName }}</td>
+                                                    <td class="fw-bold text-primary">{{ $qty }}</td>
+                                                    <td>{{ $tDate }} {{ $tTime }}</td>
+                                                    <td>{{ $t->pax ?? '—' }}</td>
+                                                    <td>{{ $supName }}</td>
+                                                    <td><span class="badge bg-{{ $status === 'CONFIRMED' ? 'success' : ($status === 'CANCELLED' ? 'danger' : 'warning') }}">{{ $status }}</span></td>
+                                                    <td class="text-end text-danger fw-semibold">
+                                                        <span>{{ number_format($costSar, 2) }} {{ $tCurr }}</span><br>
+                                                        <small class="text-muted fw-normal">{{ number_format($costPkr, 2) }} PKR</small>
+                                                    </td>
+                                                    <td class="text-end text-success fw-semibold">
+                                                        <span>{{ number_format($sellSar, 2) }} {{ $tCurr }}</span><br>
+                                                        <small class="text-muted fw-normal">{{ number_format($sellPkr, 2) }} PKR</small>
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="9" class="text-muted py-2">No routes added yet.</td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                        <tfoot class="fw-bold bg-white">
+                                            <tr>
+                                                <td colspan="2" class="text-end pe-3 fw-bold">Total</td>
+                                                <td id="transport_summary_total_qty" class="fw-bold text-dark fs-13">{{ $booking->transports->sum('quantity') ?: 0 }}</td>
+                                                <td colspan="4"></td>
+                                                <td id="transport_summary_total_cost" class="text-end text-danger fw-bold fs-12">0.00 SAR</td>
+                                                <td id="transport_summary_total_sell" class="text-end text-success fw-bold fs-12">0.00 SAR</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
                                 </div>
                             </div>
 
@@ -1308,7 +1477,7 @@
                                             <div class="d-flex align-items-center gap-2">
                                                 <h6 class="text-dark mb-0 fw-bold"><i class="mdi mdi-bus me-1 text-warning"></i> Route #{{ $loop->iteration }}</h6>
                                                 @php
-                                                    $trnChildVoucher = $t->voucher_no ?? (($booking->transport_voucher_no ?: ('TRN-' . date('Y') . '-' . str_pad($booking->id, 5, '0', STR_PAD_LEFT))) . '-' . ($loop->iteration));
+                                                    $trnChildVoucher = $t->voucher_no ?? (($booking->transport_voucher_no ?: ($defaultVouchers['transport'] ?? ('TRN-' . date('Y') . '-00001'))) . '-' . ($loop->iteration));
                                                 @endphp
                                                 <span class="badge bg-soft-warning text-dark border border-warning fs-12 px-2 py-1 font-monospace">
                                                     <i class="mdi mdi-ticket-confirmation me-1"></i>Voucher #: {{ $trnChildVoucher }}
@@ -1735,7 +1904,7 @@
                                     <label class="form-label fs-12 fw-bold text-dark mb-1">
                                         <i class="mdi mdi-calendar-check text-danger me-1"></i> Booking Date <span class="text-danger">*</span>
                                     </label>
-                                    <input type="date" class="form-control form-control-sm sync-booking-date"
+                                    <input type="date" name="booking_date_package_tab" id="booking_date_package_tab" class="form-control form-control-sm sync-booking-date"
                                         value="{{ old('booking_date', $booking->booking_date ? \Carbon\Carbon::parse($booking->booking_date)->format('Y-m-d') : date('Y-m-d')) }}">
                                     <small class="text-muted fs-11">Synchronized across all tabs</small>
                                 </div>
@@ -1744,9 +1913,9 @@
                                         <i class="mdi mdi-passport text-danger me-1"></i> Visa Voucher No:
                                     </label>
                                     <div>
-                                        <span class="badge bg-danger fs-13 px-2 py-1 font-monospace">{{ $booking->visa_voucher_no ?? ('VIS-' . date('Y') . '-' . str_pad($booking->id, 5, '0', STR_PAD_LEFT)) }}</span>
+                                        <span class="badge bg-danger fs-13 px-2 py-1 font-monospace">{{ $booking->visa_voucher_no ?? ($defaultVouchers['visa'] ?? ('VIS-' . date('Y') . '-00001')) }}</span>
                                     </div>
-                                    <input type="hidden" name="visa_voucher_no" id="visa_voucher_no" value="{{ $booking->visa_voucher_no ?? ('VIS-' . date('Y') . '-' . str_pad($booking->id, 5, '0', STR_PAD_LEFT)) }}">
+                                    <input type="hidden" name="visa_voucher_no" id="visa_voucher_no" value="{{ $booking->visa_voucher_no ?? ($defaultVouchers['visa'] ?? ('VIS-' . date('Y') . '-00001')) }}">
                                 </div>
                                 <div class="col-md-4 text-md-end">
                                     <span class="badge bg-soft-info text-info fs-12 py-2 px-3 border border-info border-opacity-25">
@@ -1872,7 +2041,7 @@
                                                 </strong>
                                                 <span class="badge {{ $vBadgeClass }} person-visa-type-badge" style="font-size:10px;">{{ $vTypeLabel }}</span>
                                                 @php
-                                                    $vChildVoucher = $visa->voucher_no ?? (($booking->visa_voucher_no ?: ('VIS-' . date('Y') . '-' . str_pad($booking->id, 5, '0', STR_PAD_LEFT))) . '-' . ($loop->iteration));
+                                                    $vChildVoucher = $visa->voucher_no ?? (($booking->visa_voucher_no ?: ($defaultVouchers['visa'] ?? ('VIS-' . date('Y') . '-00001'))) . '-' . ($loop->iteration));
                                                 @endphp
                                                 <span class="badge bg-soft-danger text-danger border border-danger fs-11 font-monospace">
                                                     <i class="mdi mdi-ticket-confirmation me-1"></i>Voucher #: {{ $vChildVoucher }}
@@ -2035,7 +2204,7 @@
                                     <label class="form-label fs-12 fw-bold text-dark mb-1">
                                         <i class="mdi mdi-calendar-check text-success me-1"></i> Booking Date <span class="text-danger">*</span>
                                     </label>
-                                    <input type="date" class="form-control form-control-sm sync-booking-date"
+                                    <input type="date" name="booking_date_package_tab" id="booking_date_package_tab" class="form-control form-control-sm sync-booking-date"
                                         value="{{ old('booking_date', $booking->booking_date ? \Carbon\Carbon::parse($booking->booking_date)->format('Y-m-d') : date('Y-m-d')) }}">
                                     <small class="text-muted fs-11">Synchronized across all tabs</small>
                                 </div>
@@ -2376,7 +2545,7 @@
                                     <label class="form-label fs-12 fw-bold text-dark mb-1">
                                         <i class="mdi mdi-calendar-check text-secondary me-1"></i> Booking Date <span class="text-danger">*</span>
                                     </label>
-                                    <input type="date" class="form-control form-control-sm sync-booking-date"
+                                    <input type="date" name="booking_date_package_tab" id="booking_date_package_tab" class="form-control form-control-sm sync-booking-date"
                                         value="{{ old('booking_date', $booking->booking_date ? \Carbon\Carbon::parse($booking->booking_date)->format('Y-m-d') : date('Y-m-d')) }}">
                                     <small class="text-muted fs-11">Synchronized across all tabs</small>
                                 </div>
@@ -3200,6 +3369,7 @@
                     existingRowData[idx] = {
                         pax_type:           row.querySelector('.person-flight-pax-type')?.value,
                         ticket:             row.querySelector('.person-flight-ticket')?.value,
+                        ticket_status:      row.querySelector('.person-flight-status')?.value,
                         cost:               row.querySelector('.person-flight-cost')?.value,
                         sell:               row.querySelector('.person-flight-sell')?.value,
                         flight_supplier_id: row.querySelector('.person-flight-supplier')?.value,
@@ -3221,6 +3391,7 @@
 
                 let pType   = personTypeFromDom || 'adult';
                 let pTicket = '';
+                let pStatus = 'confirmed';
                 let pCost   = '';
                 let pSell   = '';
                 let pSup    = '';
@@ -3231,6 +3402,7 @@
                 if (inDom) {
                     pType   = inDom.pax_type || pType;
                     pTicket = inDom.ticket || '';
+                    pStatus = inDom.ticket_status || 'confirmed';
                     pCost   = inDom.cost !== undefined ? inDom.cost : '';
                     pSell   = inDom.sell !== undefined ? inDom.sell : '';
                     pSup    = inDom.flight_supplier_id || '';
@@ -3240,6 +3412,7 @@
                 } else if (pExisting) {
                     pType   = personTypeFromDom || pExisting.pax_type || 'adult';
                     pTicket = pExisting.flight_ticket || '';
+                    pStatus = pExisting.ticket_status || 'confirmed';
                     pCost   = (pExisting.flight_cost > 0) ? pExisting.flight_cost : '';
                     pSell   = (pExisting.flight_sell > 0) ? pExisting.flight_sell : '';
                     pSup    = pExisting.flight_supplier_id || '';
@@ -3278,8 +3451,11 @@
                     supOptionsHtml += suppliersData.map(s => `<option value="${s.id}" ${s.id == effectiveSup ? 'selected' : ''}>${s.name}</option>`).join('');
                 }
 
+                const isCancelled = (pStatus === 'cancelled');
+                const isRefunded = (pStatus === 'refunded');
+
                 rowsHtml += `
-                <tr class="flight-person-row" data-idx="${i}" id="flight_person_row_${i}">
+                <tr class="flight-person-row ${isCancelled ? 'table-danger' : (isRefunded ? 'table-warning' : '')}" data-idx="${i}" id="flight_person_row_${i}" style="${isCancelled ? 'opacity:0.65; text-decoration: line-through;' : ''}">
                     <td class="text-center text-muted fw-bold">${i + 1}</td>
                     <td>
                         <strong class="text-primary person-flight-name-disp">${personName}</strong>
@@ -3315,6 +3491,14 @@
                         </div>
                         <input type="text" name="flight_persons[${i}][flight_time]" class="form-control form-control-sm person-flight-time flight-time-picker" value="${pTime}" placeholder="hh:mm">
                     </td>
+                    {{-- Ticket Status Dropdown & Refund Support --}}
+                    <td>
+                        <select name="flight_persons[${i}][ticket_status]" class="form-select form-select-sm person-flight-status ${isCancelled ? 'bg-soft-danger text-danger border-danger fw-bold' : (isRefunded ? 'bg-soft-warning text-warning border-warning fw-bold' : 'text-success fw-bold')}" onchange="handleTicketStatusChange(this)">
+                            <option value="confirmed" ${pStatus === 'confirmed' ? 'selected' : ''}>🟢 Confirmed</option>
+                            <option value="cancelled" ${pStatus === 'cancelled' ? 'selected' : ''}>🔴 Cancelled</option>
+                            <option value="refunded" ${pStatus === 'refunded' ? 'selected' : ''}>🟡 Refunded</option>
+                        </select>
+                    </td>
                     <td>
                         <input type="number" step="0.01" name="flight_persons[${i}][flight_cost]" class="form-control form-control-sm text-end person-flight-cost flight-rate-calc" value="${pCost}" placeholder="0.00">
                         <small class="text-danger d-block text-end person-flight-cost-pkr-disp" style="font-size:11px;">${(costVal * costRoe).toFixed(2)} PKR</small>
@@ -3348,9 +3532,10 @@
                                 <th style="width: 30px;" class="text-center">#</th>
                                 <th style="width: 17%;">Passenger & Passport</th>
                                 <th style="width: 95px;">Category</th>
-                                <th style="width: 16%;">Flight Supplier</th>
-                                <th style="width: 16%;">Ticket # & PNR</th>
-                                <th style="width: 15%;">Flight Date & Time</th>
+                                <th style="width: 15%;">Flight Supplier</th>
+                                <th style="width: 14%;">Ticket # & PNR</th>
+                                <th style="width: 14%;">Flight Date & Time</th>
+                                <th style="width: 12%;">Ticket Status</th>
                                 <th style="width: 11%;" class="text-danger text-end">Cost (<span class="flight-curr-label">${curr}</span>)</th>
                                 <th style="width: 11%;" class="text-success text-end">Sell (<span class="flight-curr-label">${curr}</span>)</th>
                             </tr>
@@ -3360,7 +3545,7 @@
                         </tbody>
                         <tfoot class="table-light fw-bold fs-12 border-top">
                             <tr>
-                                <td colspan="5" class="text-dark">Total Flight Tickets (${pax} Passengers)</td>
+                                <td colspan="6" class="text-dark">Total Flight Tickets (${pax} Passengers)</td>
                                 <td class="text-end text-muted small">Total:</td>
                                 <td class="text-end text-danger">
                                     <span id="tbl_flight_cost_curr_total">0.00 ${curr}</span>
@@ -3458,7 +3643,7 @@
                 let supOptions = `<option value="">-- Select Supplier --</option>` +
                     (typeof suppliersData !== 'undefined' ? suppliersData.map(s => `<option value="${s.id}" ${s.id == supId ? 'selected' : ''}>${s.name}</option>`).join('') : '');
 
-                const visaVoucherBase = document.getElementById('visa_voucher_no')?.value || 'VIS-{{ date("Y") }}-{{ str_pad($booking->id, 5, "0", STR_PAD_LEFT) }}';
+                const visaVoucherBase = document.getElementById('visa_voucher_no')?.value || '{{ $booking->visa_voucher_no ?? ($defaultVouchers["visa"] ?? ("VIS-" . date("Y") . "-00001")) }}';
                 const vChildVoucher = v.voucher_no || (visaVoucherBase + '-' + (i + 1));
 
                 container.insertAdjacentHTML('beforeend', `
@@ -3719,6 +3904,107 @@
             calcTotal();
         }
 
+        function handleTicketStatusChange(select) {
+            const row = select.closest('tr');
+            if (!row) return;
+            const val = select.value;
+            select.className = 'form-select form-select-sm person-flight-status ' + 
+                (val === 'cancelled' ? 'bg-soft-danger text-danger border-danger fw-bold' : (val === 'refunded' ? 'bg-soft-warning text-warning border-warning fw-bold' : 'text-success fw-bold'));
+            
+            if (val === 'cancelled') {
+                row.classList.add('table-danger');
+                row.classList.remove('table-warning');
+                row.style.opacity = '0.65';
+                row.style.textDecoration = 'line-through';
+            } else if (val === 'refunded') {
+                row.classList.add('table-warning');
+                row.classList.remove('table-danger');
+                row.style.opacity = '0.85';
+                row.style.textDecoration = 'none';
+            } else {
+                row.classList.remove('table-danger', 'table-warning');
+                row.style.opacity = '1';
+                row.style.textDecoration = 'none';
+            }
+            calculateFlight();
+            if (typeof calcTotal === 'function') calcTotal();
+        }
+
+        // Master Flight Rates Cascade Button Handler
+        document.addEventListener('click', function(e) {
+            if (e.target && (e.target.id === 'btnCascadeFlightRates' || e.target.closest('#btnCascadeFlightRates'))) {
+                e.preventDefault();
+                const adultCost = parseFloat(document.getElementById('flight_adult_cost')?.value) || 0;
+                const adultSell = parseFloat(document.getElementById('flight_adult_sell')?.value) || 0;
+                const childCost = parseFloat(document.getElementById('flight_child_cost')?.value) || 0;
+                const childSell = parseFloat(document.getElementById('flight_child_sell')?.value) || 0;
+                const infantCost = parseFloat(document.getElementById('flight_infant_cost')?.value) || 0;
+                const infantSell = parseFloat(document.getElementById('flight_infant_sell')?.value) || 0;
+
+                const mainSup = document.getElementById('flight_supplier_id')?.value || '';
+                const depDate = document.querySelector('input[name="departure_date"]')?.value || '';
+                const depTime = document.querySelector('input[name="departure_time"]')?.value || '';
+                const depPnr  = document.querySelector('input[name="departure_pnr"]')?.value || '';
+
+                let updatedCount = 0;
+                document.querySelectorAll('.flight-person-row').forEach(row => {
+                    const pType = row.querySelector('.person-flight-pax-type')?.value || 'adult';
+                    const costInp = row.querySelector('.person-flight-cost');
+                    const sellInp = row.querySelector('.person-flight-sell');
+
+                    if (pType === 'adult') {
+                        if (costInp && adultCost > 0) costInp.value = adultCost.toFixed(2);
+                        if (sellInp && adultSell > 0) sellInp.value = adultSell.toFixed(2);
+                    } else if (pType === 'child') {
+                        if (costInp && childCost > 0) costInp.value = childCost.toFixed(2);
+                        if (sellInp && childSell > 0) sellInp.value = childSell.toFixed(2);
+                    } else if (pType === 'infant') {
+                        if (costInp && infantCost > 0) costInp.value = infantCost.toFixed(2);
+                        if (sellInp && infantSell > 0) sellInp.value = infantSell.toFixed(2);
+                    }
+
+                    if (mainSup) {
+                        const supSel = row.querySelector('.person-flight-supplier');
+                        if (supSel && !supSel.value) supSel.value = mainSup;
+                    }
+                    if (depDate) {
+                        const dateInp = row.querySelector('.person-flight-date');
+                        if (dateInp && !dateInp.value) dateInp.value = depDate;
+                    }
+                    if (depTime) {
+                        const timeInp = row.querySelector('.person-flight-time');
+                        if (timeInp && !timeInp.value) timeInp.value = depTime;
+                    }
+                    if (depPnr) {
+                        const pnrInp = row.querySelector('.person-flight-pnr');
+                        if (pnrInp && !pnrInp.value) pnrInp.value = depPnr;
+                    }
+                    updatedCount++;
+                });
+
+                calculateFlight();
+                if (typeof calcTotal === 'function') calcTotal();
+                if (typeof showAutoRefreshToast === 'function') {
+                    showAutoRefreshToast(`Master flight rates, supplier & details applied to ${updatedCount} passengers!`);
+                } else {
+                    alert(`Master flight rates, supplier & details applied to ${updatedCount} passengers!`);
+                }
+            }
+        });
+
+        // Trip Type Toggle (One-Way vs Round-Trip)
+        document.addEventListener('change', function(e) {
+            if (e.target && e.target.classList.contains('flight-trip-type-radio')) {
+                const returnSec = document.getElementById('returnFlightSection');
+                if (!returnSec) return;
+                if (e.target.value === 'oneway') {
+                    returnSec.style.display = 'none';
+                } else {
+                    returnSec.style.display = 'flex';
+                }
+            }
+        });
+
         // Hotels Dynamic Management
         let hotelIdx = {{ $booking->hotels->count() ?: 1 }};
 
@@ -3736,7 +4022,7 @@
             const defaultCostRoe = (flightCurr === 'PKR') ? 1 : (document.getElementById('flight_cost_roe')?.value || 75);
             const defaultSaleRoe = (flightCurr === 'PKR') ? 1 : (document.getElementById('flight_sale_roe')?.value || defaultCostRoe);
             const isPkr = (flightCurr === 'PKR');
-            const hotelVoucherBase = document.getElementById('hotel_voucher_no')?.value || 'HTL-{{ date("Y") }}-{{ str_pad($booking->id, 5, "0", STR_PAD_LEFT) }}';
+            const hotelVoucherBase = document.getElementById('hotel_voucher_no')?.value || '{{ $booking->hotel_voucher_no ?? ($defaultVouchers["hotel"] ?? ("HTL-" . date("Y") . "-00001")) }}';
             const childVoucher = hotelVoucherBase + '-' + (hotelIdx + 1);
 
             const relevantHotelsOptions = buildHotelsOptions(loc === 'makkah' ? 'makkah' : (loc === 'madinah' ? 'madinah' : null));
@@ -4390,6 +4676,98 @@
             if (roomsDisp) roomsDisp.textContent = `${totalRooms} Total Rooms`;
         }
 
+        // Transport Routes Summary View
+        function updateTransportSummary() {
+            const blocks = document.querySelectorAll('.route-block');
+            let summaryHtml = '';
+            let totalQty = 0;
+
+            blocks.forEach((b, idx) => {
+                const routeSelect = b.querySelector('.transport-route-select');
+                let routeName = '—';
+                if (routeSelect && routeSelect.value) {
+                    routeName = routeSelect.options[routeSelect.selectedIndex]?.text?.trim() || routeSelect.value;
+                }
+
+                const vehSelect = b.querySelector('.transport-vehicle-select');
+                let vehicle = '—';
+                if (vehSelect && vehSelect.value) {
+                    vehicle = vehSelect.options[vehSelect.selectedIndex]?.text?.trim() || vehSelect.value;
+                }
+
+                const qty = parseFloat(b.querySelector('input[name*="[quantity]"], .transport-qty')?.value) || 1;
+                totalQty += qty;
+
+                const date = b.querySelector('input[name*="[travel_date]"], input[name*="[date]"]')?.value || '—';
+                const time = b.querySelector('input[name*="[travel_time]"], input[name*="[time]"]')?.value || '';
+                const dateTime = time ? `${date} ${time}` : date;
+
+                const pax = b.querySelector('input[name*="[pax]"]')?.value || '—';
+
+                const supSelect = b.querySelector('select[name*="[supplier_id]"]');
+                let supName = '—';
+                if (supSelect && supSelect.value) {
+                    supName = supSelect.options[supSelect.selectedIndex]?.text?.trim() || 'Vendor';
+                }
+
+                const status = b.querySelector('select[name*="[status]"]')?.value || 'CONFIRMED';
+
+                const curr = b.querySelector('.transport-currency')?.value || 'SAR';
+                const costRate = parseFloat(b.querySelector('.transport-cost-rate')?.value) || 0;
+                const costRoe = parseFloat(b.querySelector('.transport-cost-roe')?.value) || (curr === 'PKR' ? 1 : 75);
+                const costPkr = parseFloat(b.querySelector('.transport-cost-amount')?.value) || (costRate * costRoe);
+
+                const sellRate = parseFloat(b.querySelector('.transport-sell-rate')?.value) || 0;
+                const saleRoe = parseFloat(b.querySelector('.transport-sale-roe')?.value) || costRoe;
+                const sellPkr = parseFloat(b.querySelector('.transport-sell-amount')?.value) || (sellRate * saleRoe);
+
+                const costSarText = b.querySelector('.transport-cost-sar-disp')?.textContent?.trim() || `${costRate.toFixed(2)} ${curr}`;
+                const costPkrText = b.querySelector('.transport-cost-pkr-disp')?.textContent?.trim() || `${costPkr.toFixed(2)} PKR`;
+                const sellSarText = b.querySelector('.transport-sell-sar-disp')?.textContent?.trim() || `${sellRate.toFixed(2)} ${curr}`;
+                const sellPkrText = b.querySelector('.transport-sell-pkr-disp')?.textContent?.trim() || `${sellPkr.toFixed(2)} PKR`;
+
+                summaryHtml += `<tr>
+                    <td class="text-start fw-bold text-dark">${routeName}</td>
+                    <td class="fw-semibold">${vehicle}</td>
+                    <td class="fw-bold text-primary">${qty}</td>
+                    <td>${dateTime}</td>
+                    <td>${pax}</td>
+                    <td>${supName}</td>
+                    <td><span class="badge bg-${status === 'CONFIRMED' ? 'success' : (status === 'CANCELLED' ? 'danger' : 'warning')}">${status}</span></td>
+                    <td class="text-end text-danger fw-semibold">
+                        <span>${costSarText}</span><br>
+                        <small class="text-muted fw-normal">${costPkrText}</small>
+                    </td>
+                    <td class="text-end text-success fw-semibold">
+                        <span>${sellSarText}</span><br>
+                        <small class="text-muted fw-normal">${sellPkrText}</small>
+                    </td>
+                </tr>`;
+            });
+
+            const tbody = document.getElementById('transportRoutesSummaryRows');
+            if (tbody) {
+                if (blocks.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="9" class="text-muted py-2">No routes added yet.</td></tr>';
+                } else {
+                    tbody.innerHTML = summaryHtml;
+                }
+            }
+
+            const qtyDisp = document.getElementById('transport_summary_total_qty');
+            if (qtyDisp) qtyDisp.textContent = totalQty;
+
+            const totCostSarText = document.getElementById('transport_cost_sar_total')?.textContent || '0.00 SAR';
+            const totCostPkrText = document.getElementById('transport_cost_pkr_total')?.textContent || '0.00 PKR';
+            const totSellSarText = document.getElementById('transport_sell_sar_total')?.textContent || '0.00 SAR';
+            const totSellPkrText = document.getElementById('transport_sell_pkr_total')?.textContent || '0.00 PKR';
+
+            const sumCostTotal = document.getElementById('transport_summary_total_cost');
+            const sumSellTotal = document.getElementById('transport_summary_total_sell');
+            if (sumCostTotal) sumCostTotal.innerHTML = `<span>${totCostSarText}</span><br><small class="text-muted fw-normal">${totCostPkrText}</small>`;
+            if (sumSellTotal) sumSellTotal.innerHTML = `<span>${totSellSarText}</span><br><small class="text-muted fw-normal">${totSellPkrText}</small>`;
+        }
+
         // Integer-cent allocation helper so sum ALWAYS matches total exactly (no 99.99 or 200.01)
         function allocateExactAmount(totalAmount, count) {
             if (count <= 0) return [];
@@ -4504,7 +4882,7 @@
             const defaultCostRoe = (flightCurr === 'PKR') ? 1 : (document.getElementById('flight_cost_roe')?.value || 75);
             const defaultSaleRoe = (flightCurr === 'PKR') ? 1 : (document.getElementById('flight_sale_roe')?.value || defaultCostRoe);
             const isPkr = (flightCurr === 'PKR');
-            const trnVoucherBase = document.getElementById('transport_voucher_no')?.value || 'TRN-{{ date("Y") }}-{{ str_pad($booking->id, 5, "0", STR_PAD_LEFT) }}';
+            const trnVoucherBase = document.getElementById('transport_voucher_no')?.value || '{{ $booking->transport_voucher_no ?? ($defaultVouchers["transport"] ?? ("TRN-" . date("Y") . "-00001")) }}';
             const childVoucher = trnVoucherBase + '-' + (routeIdx + 1);
 
             document.getElementById('routesList').insertAdjacentHTML('beforeend', `
@@ -4620,13 +4998,19 @@
                     </div>
                 </div>`);
             routeIdx++;
+            updateTransportSummary();
         });
 
         document.getElementById('routesList')?.addEventListener('click', function(e) {
             if (e.target.classList.contains('remove-route') || e.target.closest('.remove-route')) {
                 e.target.closest('.route-block').remove();
                 calculateAllTransports();
+                updateTransportSummary();
             }
+        });
+
+        document.getElementById('routesList')?.addEventListener('input', function(e) {
+            updateTransportSummary();
         });
 
         document.getElementById('routesList')?.addEventListener('change', function(e) {
@@ -4680,6 +5064,7 @@
                 }
                 calculateTransportRow(row);
             }
+            updateTransportSummary();
         });
 
         function calculateTransportRow(row) {
@@ -4744,6 +5129,7 @@
                 document.getElementById('transport_charges').value = totalTransportSelling.toFixed(2);
             }
             calcTotal();
+            updateTransportSummary();
         }
 
         document.getElementById('visasList')?.addEventListener('change', function(e) {
@@ -5292,20 +5678,34 @@
         document.querySelectorAll('.visa-card').forEach(r => calculateVisaRow(r));
         syncBookingHotelDates();
         updateHotelStaySummary();
+        updateTransportSummary();
         calculateFlight();
         calcTotal();
+
+        // Ensure summary tables refresh whenever tabs are activated
+        $('a[data-bs-toggle="tab"][href="#tab-hotel"]').on('shown.bs.tab', function() {
+            if (typeof updateHotelStaySummary === 'function') updateHotelStaySummary();
+        });
+        $('a[data-bs-toggle="tab"][href="#tab-transport"]').on('shown.bs.tab', function() {
+            if (typeof updateTransportSummary === 'function') updateTransportSummary();
+        });
 
         // Point 1 & Point 3: Global Booking Date Synchronization Across All Tabs & Auto-Fill Flight Date
         function syncGlobalBookingDate(val) {
             if (!val) return;
+            document.querySelectorAll('.sync-booking-date').forEach(el => {
+                if (el.value !== val) el.value = val;
+            });
             const mainDate = document.getElementById('booking_date');
             const hotelDate = document.getElementById('booking_date_hotel_tab');
             const flightDate = document.getElementById('booking_date_flight_tab');
+            const flBookingDate = document.getElementById('flight_booking_date');
             const depDate = document.querySelector('input[name="departure_date"]');
 
             if (mainDate && mainDate.value !== val) mainDate.value = val;
             if (hotelDate && hotelDate.value !== val) hotelDate.value = val;
             if (flightDate && flightDate.value !== val) flightDate.value = val;
+            if (flBookingDate && flBookingDate.value !== val) flBookingDate.value = val;
 
             document.querySelectorAll('.hotel-booking-date').forEach(el => { if (el.value !== val) el.value = val; });
             document.querySelectorAll('.transport-booking-date').forEach(el => { if (el.value !== val) el.value = val; });
@@ -5554,9 +5954,12 @@
             }
         });
 
-        // Trigger initial updateHotelStaySummary on edit page load
+        // Trigger initial updateHotelStaySummary and updateTransportSummary on edit page load
         if (typeof updateHotelStaySummary === 'function') {
             setTimeout(updateHotelStaySummary, 250);
+        }
+        if (typeof updateTransportSummary === 'function') {
+            setTimeout(updateTransportSummary, 250);
         }
     </script>
  

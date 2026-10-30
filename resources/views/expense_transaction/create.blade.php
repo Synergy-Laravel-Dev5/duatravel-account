@@ -338,6 +338,11 @@
                                         <label class="btn btn-sm btn-outline-purple" style="color: #7c3aed; border-color: #7c3aed;" for="jv_mode_mc">
                                             <i class="mdi mdi-account-multiple me-1"></i> 👥 Multi-Client Adjustment
                                         </label>
+
+                                        <input type="radio" class="btn-check jv-mode-radio" name="jv_mode" id="jv_mode_cms" value="client_multi_supplier" {{ old('jv_mode') === 'client_multi_supplier' ? 'checked' : '' }}>
+                                        <label class="btn btn-sm btn-outline-warning text-dark fw-semibold" for="jv_mode_cms">
+                                            <i class="mdi mdi-call-split me-1 text-warning"></i> 🏢 1 Client ➔ Multi-Supplier Split JV
+                                        </label>
                                     </div>
                                 </div>
 
@@ -346,6 +351,18 @@
                                     <div class="alert alert-success py-2 px-3 mb-3 fs-12 border-0 bg-soft-success text-success">
                                         <i class="mdi mdi-check-circle me-1"></i>
                                         <strong>Universal JV Transfer:</strong> Both dropdowns below include <strong>ALL Clients, Suppliers, Expense Heads, Banks, Staff Members, Cash & Loan Accounts</strong>. Easily search and transfer funds or balances between any two entities!
+                                    </div>
+
+                                    <!-- QUICK SAR CONVERTER BAR -->
+                                    <div class="p-2 mb-3 rounded bg-light border d-flex flex-wrap align-items-center justify-content-between gap-2">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="fs-12 fw-bold text-dark"><i class="mdi mdi-swap-horizontal text-primary me-1"></i> Quick SAR Base Amount:</span>
+                                            <div class="input-group input-group-sm" style="max-width: 170px;">
+                                                <input type="number" step="0.01" id="jv_sar_base_amount" class="form-control form-control-sm text-center fw-bold" placeholder="e.g. 100.00">
+                                                <span class="input-group-text bg-white fw-bold">SAR</span>
+                                            </div>
+                                            <small class="text-muted fs-11">(Auto-calculates From &amp; To PKR by each party's ROE)</small>
+                                        </div>
                                     </div>
 
                                     <div class="row g-3 align-items-center">
@@ -429,15 +446,26 @@
                                                 </optgroup>
                                             </select>
                                             <div class="mt-2 p-2 rounded bg-light border border-danger border-opacity-25">
-                                                <label class="form-label fs-11 fw-bold text-danger mb-1">
-                                                    <i class="mdi mdi-currency-usd me-1"></i> From Account ROE (SAR / PKR Rate) <span class="text-danger">*</span>
-                                                </label>
-                                                <div class="input-group input-group-sm">
-                                                    <span class="input-group-text bg-white text-danger fw-bold fs-11">1 SAR =</span>
-                                                    <input type="number" step="0.0001" name="jv_from_roe" id="jv_from_roe"
-                                                        value="{{ old('jv_from_roe', 76.00) }}"
-                                                        class="form-control form-control-sm text-center fw-bold" placeholder="76.00">
-                                                    <span class="input-group-text bg-white fs-11">PKR</span>
+                                                <div class="row g-2">
+                                                    <div class="col-6">
+                                                        <label class="form-label fs-11 fw-bold text-danger mb-1">
+                                                            <i class="mdi mdi-currency-usd me-1"></i> From ROE <span class="text-danger">*</span>
+                                                        </label>
+                                                        <div class="input-group input-group-sm">
+                                                            <span class="input-group-text bg-white text-danger fw-bold fs-11">1 SAR=</span>
+                                                            <input type="number" step="0.0001" name="jv_from_roe" id="jv_from_roe"
+                                                                value="{{ old('jv_from_roe', 76.00) }}"
+                                                                class="form-control form-control-sm text-center fw-bold" placeholder="76.00">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <label class="form-label fs-11 fw-bold text-danger mb-1">
+                                                            From PKR Amount <span class="text-danger">*</span>
+                                                        </label>
+                                                        <input type="number" step="0.01" name="jv_from_amount" id="jv_from_amount_input"
+                                                            value="{{ old('jv_from_amount') }}"
+                                                            class="form-control form-control-sm text-end fw-bold" placeholder="0.00">
+                                                    </div>
                                                 </div>
                                                 <div id="from_account_sar_hint" class="fs-11 fw-semibold text-danger mt-1"></div>
                                             </div>
@@ -527,15 +555,26 @@
                                                 </optgroup>
                                             </select>
                                             <div class="mt-2 p-2 rounded bg-light border border-success border-opacity-25">
-                                                <label class="form-label fs-11 fw-bold text-success mb-1">
-                                                    <i class="mdi mdi-currency-usd me-1"></i> To Account ROE (SAR / PKR Rate) <span class="text-danger">*</span>
-                                                </label>
-                                                <div class="input-group input-group-sm">
-                                                    <span class="input-group-text bg-white text-success fw-bold fs-11">1 SAR =</span>
-                                                    <input type="number" step="0.0001" name="jv_to_roe" id="jv_to_roe"
-                                                        value="{{ old('jv_to_roe', 75.00) }}"
-                                                        class="form-control form-control-sm text-center fw-bold" placeholder="75.00">
-                                                    <span class="input-group-text bg-white fs-11">PKR</span>
+                                                <div class="row g-2">
+                                                    <div class="col-6">
+                                                        <label class="form-label fs-11 fw-bold text-success mb-1">
+                                                            <i class="mdi mdi-currency-usd me-1"></i> To ROE <span class="text-danger">*</span>
+                                                        </label>
+                                                        <div class="input-group input-group-sm">
+                                                            <span class="input-group-text bg-white text-success fw-bold fs-11">1 SAR=</span>
+                                                            <input type="number" step="0.0001" name="jv_to_roe" id="jv_to_roe"
+                                                                value="{{ old('jv_to_roe', 75.00) }}"
+                                                                class="form-control form-control-sm text-center fw-bold" placeholder="75.00">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <label class="form-label fs-11 fw-bold text-success mb-1">
+                                                            To PKR Amount <span class="text-danger">*</span>
+                                                        </label>
+                                                        <input type="number" step="0.01" name="jv_to_amount" id="jv_to_amount_input"
+                                                            value="{{ old('jv_to_amount') }}"
+                                                            class="form-control form-control-sm text-end fw-bold" placeholder="0.00">
+                                                    </div>
                                                 </div>
                                                 <div id="to_account_sar_hint" class="fs-11 fw-semibold text-success mt-1"></div>
                                             </div>
@@ -691,6 +730,115 @@
                                     </button>
                                 </div>
 
+                                <!-- MODE E: 1 CLIENT TO MULTIPLE SUPPLIERS SPLIT JV -->
+                                <div id="jv_box_cms" class="jv-box {{ old('jv_mode') === 'client_multi_supplier' ? '' : 'd-none' }}">
+                                    <div class="alert alert-warning py-2 px-3 mb-3 fs-12 border-0 bg-soft-warning text-dark">
+                                        <i class="mdi mdi-call-split me-1 text-warning"></i>
+                                        <strong>1 Client ➔ Multi-Supplier Split JV:</strong> Pass JV where 1 Client provides an amount (e.g. PKR 500,000) and it is distributed / split among multiple suppliers with individual ROE and SAR calculations.
+                                    </div>
+
+                                    <!-- Client Source Info Box -->
+                                    <div class="card border border-warning border-opacity-50 bg-light bg-opacity-25 mb-3 shadow-none">
+                                        <div class="card-body p-3">
+                                            <div class="row g-3 align-items-end">
+                                                <div class="col-md-4">
+                                                    <label class="form-label fs-12 fw-bold text-dark">
+                                                        <i class="mdi mdi-account-circle text-primary me-1"></i> Select Client <span class="text-danger">*</span>
+                                                    </label>
+                                                    <select name="jv_cms_client_id" id="jv_cms_client_id" class="form-select form-select-sm select2">
+                                                        <option value="">-- Choose Client --</option>
+                                                        @foreach($clients as $c)
+                                                            <option value="{{ $c->id }}" {{ old('jv_cms_client_id') == $c->id ? 'selected' : '' }}>
+                                                                {{ $c->name }} ({{ $c->phone ?? 'No Phone' }})
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label fs-12 fw-bold text-dark">Transaction Direction</label>
+                                                    <select name="jv_cms_direction" id="jv_cms_direction" class="form-select form-select-sm">
+                                                        <option value="client_to_suppliers" selected>Client Pays ➔ Split to Suppliers</option>
+                                                        <option value="suppliers_to_client">Suppliers Refund ➔ Paid to Client</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="form-label fs-12 fw-bold text-dark">Client ROE</label>
+                                                    <input type="number" step="0.01" min="1" name="jv_cms_client_roe" id="jv_cms_client_roe" class="form-control form-control-sm text-center fw-bold" value="{{ old('jv_cms_client_roe', 76.00) }}">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label fs-12 fw-bold text-dark">Total Client Amount (PKR) <span class="text-danger">*</span></label>
+                                                    <input type="number" step="0.01" min="0" name="jv_cms_total_pkr" id="jv_cms_total_pkr" class="form-control form-control-sm text-end fw-bold" placeholder="e.g. 500000.00" value="{{ old('jv_cms_total_pkr') }}">
+                                                    <div class="fs-11 text-muted text-end mt-1" id="cms_client_sar_badge">≈ 0.00 SAR</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Supplier Allocation Table -->
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-bordered align-middle mb-2" id="cmsSuppliersTable">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th style="min-width: 220px;">Supplier <span class="text-danger">*</span></th>
+                                                    <th style="width: 170px;" class="text-end">Allocated PKR <span class="text-danger">*</span></th>
+                                                    <th style="width: 110px;" class="text-center">Supplier ROE</th>
+                                                    <th style="width: 140px;" class="text-end">Equivalent SAR</th>
+                                                    <th>Particulars / Notes</th>
+                                                    <th style="width: 40px;" class="text-center">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="cmsSuppliersTbody">
+                                                <tr>
+                                                    <td>
+                                                        <select name="jv_suppliers[0][supplier_id]" class="form-select form-select-sm cms-supplier-select">
+                                                            <option value="">-- Select Supplier --</option>
+                                                            @foreach($suppliers as $s)
+                                                                <option value="{{ $s->id }}">{{ $s->name }} ({{ ucfirst($s->type ?? 'supplier') }})</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        <input type="number" step="0.01" min="0" name="jv_suppliers[0][amount]" class="form-control form-control-sm text-end fw-bold cms-sup-amount" placeholder="0.00">
+                                                    </td>
+                                                    <td>
+                                                        <input type="number" step="0.01" min="1" name="jv_suppliers[0][roe]" class="form-control form-control-sm text-center fw-bold cms-sup-roe" value="75.00">
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <span class="badge bg-soft-warning text-dark border border-warning fs-12 cms-sup-sar">0.00 SAR</span>
+                                                    </td>
+                                                    <td>
+                                                        <input type="text" name="jv_suppliers[0][notes]" class="form-control form-control-sm" placeholder="Split allocation remark">
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <button type="button" class="btn btn-sm btn-link text-danger p-0 btn-remove-cms-row" style="display: none;"><i class="mdi mdi-close-circle fs-16"></i></button>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                            <tfoot class="table-light fw-bold fs-12">
+                                                <tr>
+                                                    <td class="text-end">Total Split Allocated:</td>
+                                                    <td class="text-end text-primary" id="cms_total_allocated_pkr">PKR 0.00</td>
+                                                    <td class="text-center">—</td>
+                                                    <td class="text-end text-warning" id="cms_total_allocated_sar">0.00 SAR</td>
+                                                    <td colspan="2">
+                                                        <span id="cms_balance_status" class="badge bg-soft-success text-success fs-11">
+                                                            Balanced: PKR 0.00
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <button type="button" class="btn btn-outline-warning text-dark btn-sm fw-semibold" id="btnAddSupplierRow">
+                                            <i class="mdi mdi-plus-circle me-1"></i> + Add Another Supplier
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnAutoDistributeSuppliers">
+                                            <i class="mdi mdi-equal me-1"></i> Distribute Equally
+                                        </button>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
 
@@ -735,9 +883,9 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-4">
+                            <div class="col-md-4" id="col_payment_type">
                                 <label class="form-label fs-13 fw-semibold">Payment Type <span class="text-danger">*</span></label>
-                                <div class="d-flex gap-3 pt-1">
+                                <div id="normal_payment_type_radios" class="d-flex gap-3 pt-1">
                                     <div class="form-check">
                                         <input class="form-check-input" type="radio" name="payment_type" id="pay_bank" value="bank"
                                             {{ old('payment_type', 'bank') == 'bank' ? 'checked' : '' }}>
@@ -759,11 +907,18 @@
                                         <label class="form-check-label fs-13" for="pay_online">Online</label>
                                     </div>
                                 </div>
+                                <div id="jv_payment_type_badge" class="d-none pt-1">
+                                    <input class="form-check-input d-none" type="radio" name="payment_type" id="pay_jv" value="jv"
+                                        {{ old('payment_type') == 'jv' ? 'checked' : '' }}>
+                                    <span class="badge bg-soft-primary text-primary px-3 py-2 fs-12 border border-primary border-opacity-25">
+                                        <i class="mdi mdi-book-open-page-variant me-1"></i> Journal Voucher (Adjustment / Transfer)
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
                         <!-- ROW 2: Bank / Cash Account, Currency, Exchange Rate -->
-                        <div class="row g-3 mb-3">
+                        <div class="row g-3 mb-3" id="row_bank_currency">
                             <div class="col-md-6" id="bank_select_group">
                                 <label class="form-label fs-13 fw-semibold">Bank</label>
                                 <select name="bank_id" id="bank_id_select" class="form-select form-select-sm select2">
@@ -819,21 +974,18 @@
                         </div>
 
                         <!-- ROW 3: Total Amount, Transaction Type, Reference -->
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-4">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <label class="form-label fs-13 fw-semibold mb-0">Total Amount <span class="text-danger">*</span></label>
-                                    <span id="roe_live_helper"></span>
-                                </div>
-                                <div class="input-group input-group-sm mt-1">
+                        <div class="row g-3 mb-3" id="row_amount_type_ref">
+                            <div class="col-md-4" id="col_total_amount">
+                                <label class="form-label fs-13 fw-semibold">Total Amount <span class="text-danger">*</span></label>
+                                <div class="input-group input-group-sm">
                                     <span class="input-group-text fw-bold bg-white text-primary">PKR</span>
                                     <input type="number" step="any" name="amount" id="main_total_amount" value="{{ old('amount') }}"
                                         class="form-control form-control-sm fw-bold text-dark fs-14" placeholder="Enter Total Amount in PKR" required>
                                 </div>
-                                <small class="text-muted fs-11">Total amount goes in PKR. Live ROE calculates SAR equivalent for ledgers.</small>
+                                <small class="text-muted fs-11 d-block mt-1">Total amount goes in PKR. Live ROE calculates SAR equivalent for ledgers.</small>
                             </div>
 
-                            <div class="col-md-4">
+                            <div class="col-md-4" id="col_transaction_type">
                                 <label class="form-label fs-13 fw-semibold">Transaction Type</label>
                                 <select name="transaction_type" class="form-select form-select-sm">
                                     <option value="debit" {{ old('transaction_type', 'debit') == 'debit' ? 'selected' : '' }}>Debit (Payment Out / Expense / Supplier Pay)</option>
@@ -841,10 +993,15 @@
                                 </select>
                             </div>
 
-                            <div class="col-md-4">
+                            <div class="col-md-4" id="col_reference">
                                 <label class="form-label fs-13 fw-semibold">Reference</label>
                                 <input type="text" name="reference_no" id="reference_no_input" value="{{ old('reference_no', $autoRef) }}"
                                     class="form-control form-control-sm" placeholder="DT-EXP-000001">
+                            </div>
+
+                            <!-- Full width ROE conversion container placed cleanly on its own line -->
+                            <div class="col-12 d-none" id="roe_helper_container">
+                                <div id="roe_live_helper" class="p-2 rounded border bg-light fs-12"></div>
                             </div>
                         </div>
 
@@ -957,11 +1114,80 @@
         });
         togglePaymentTypeFields();
 
+        // Helper to safely render ROE conversion message in dedicated full-width container below inputs
+        function setRoeHelperContent(html) {
+            const container = document.getElementById('roe_helper_container');
+            const el = document.getElementById('roe_live_helper');
+            if (!container || !el) return;
+            if (html && html.trim() !== '') {
+                el.innerHTML = html;
+                container.classList.remove('d-none');
+            } else {
+                el.innerHTML = '';
+                container.classList.add('d-none');
+            }
+        }
+
+        // Toggle Payment Details UI according to Payee Type (JV vs Normal)
+        function updatePayeeTypeUI() {
+            const payeeType = document.querySelector('input[name="payee_type"]:checked')?.value || 'supplier';
+            const isJv = (payeeType === 'jv');
+            const normalRadios = document.getElementById('normal_payment_type_radios');
+            const jvBadge = document.getElementById('jv_payment_type_badge');
+            const rowBankCurrency = document.getElementById('row_bank_currency');
+            const colTxType = document.getElementById('col_transaction_type');
+            const colAmount = document.getElementById('col_total_amount');
+            const colRef = document.getElementById('col_reference');
+
+            if (isJv) {
+                if (normalRadios) normalRadios.classList.add('d-none');
+                if (jvBadge) {
+                    jvBadge.classList.remove('d-none');
+                    const payJv = document.getElementById('pay_jv');
+                    if (payJv) payJv.checked = true;
+                }
+                if (rowBankCurrency) rowBankCurrency.classList.add('d-none');
+                if (colTxType) colTxType.classList.add('d-none');
+                if (colAmount) {
+                    colAmount.classList.remove('col-md-4');
+                    colAmount.classList.add('col-md-6');
+                }
+                if (colRef) {
+                    colRef.classList.remove('col-md-4');
+                    colRef.classList.add('col-md-6');
+                }
+                if (refInput && (!refInput.value || refInput.value === expRef)) {
+                    refInput.value = jvRef;
+                }
+            } else {
+                if (normalRadios) normalRadios.classList.remove('d-none');
+                if (jvBadge) jvBadge.classList.add('d-none');
+                const checkedPayType = document.querySelector('input[name="payment_type"]:checked');
+                if (!checkedPayType || checkedPayType.value === 'jv') {
+                    const payBank = document.getElementById('pay_bank');
+                    if (payBank) payBank.checked = true;
+                }
+                if (rowBankCurrency) rowBankCurrency.classList.remove('d-none');
+                if (colTxType) colTxType.classList.remove('d-none');
+                if (colAmount) {
+                    colAmount.classList.remove('col-md-6');
+                    colAmount.classList.add('col-md-4');
+                }
+                if (colRef) {
+                    colRef.classList.remove('col-md-6');
+                    colRef.classList.add('col-md-4');
+                }
+                if (refInput && (!refInput.value || refInput.value === jvRef)) {
+                    refInput.value = expRef;
+                }
+                togglePaymentTypeFields();
+            }
+        }
+
         // Currency Toggle & ROE Helper (Amount is ALWAYS entered in PKR)
         const mainAmountInput = document.getElementById('main_total_amount');
         const currencySelect = document.getElementById('currency_select');
         const rateInput = document.getElementById('exchange_rate_input');
-        const roeHelper = document.getElementById('roe_live_helper');
         const currencyRoeGroup = document.getElementById('currency_roe_group');
 
         function updateCurrencyAndLiveROE() {
@@ -982,6 +1208,7 @@
                 }
             }
 
+            const roundToTwo = (num) => Math.round((num + Number.EPSILON) * 100) / 100;
             const amtPkr = parseFloat(mainAmountInput?.value) || 0;
 
             if (isJv) {
@@ -989,40 +1216,72 @@
                 if (jvMode === 'universal') {
                     const fromRoe = parseFloat(document.getElementById('jv_from_roe')?.value) || 76.0;
                     const toRoe = parseFloat(document.getElementById('jv_to_roe')?.value) || 75.0;
-                    const fromSar = fromRoe > 0 ? (amtPkr / fromRoe).toFixed(2) : '0.00';
-                    const toSar = toRoe > 0 ? (amtPkr / toRoe).toFixed(2) : '0.00';
+
+                    const fromAmtField = document.getElementById('jv_from_amount_input');
+                    const toAmtField   = document.getElementById('jv_to_amount_input');
+
+                    const fromAmt = fromAmtField && fromAmtField.value !== '' ? (parseFloat(fromAmtField.value) || 0) : amtPkr;
+                    const toAmt   = toAmtField && toAmtField.value !== '' ? (parseFloat(toAmtField.value) || 0) : fromAmt;
+
+                    const fromSarVal = fromRoe > 0 ? (fromAmt / fromRoe) : 0;
+                    const toSarVal = toRoe > 0 ? (toAmt / toRoe) : 0;
+
+                    const fromSar = fromSarVal.toFixed(2);
+                    const toSar = toSarVal.toFixed(2);
 
                     const fromHint = document.getElementById('from_account_sar_hint');
                     const toHint = document.getElementById('to_account_sar_hint');
-                    if (fromHint) fromHint.innerHTML = amtPkr > 0 ? `<i class="mdi mdi-calculator me-1"></i>≈ <strong>${Number(fromSar).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR</strong>` : '';
-                    if (toHint) toHint.innerHTML = amtPkr > 0 ? `<i class="mdi mdi-calculator me-1"></i>≈ <strong>${Number(toSar).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR</strong>` : '';
+                    if (fromHint) fromHint.innerHTML = fromAmt > 0 ? `<i class="mdi mdi-calculator me-1"></i>≈ <strong>${Number(fromSar).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR</strong> (PKR ${Number(fromAmt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})})` : '';
+                    if (toHint) toHint.innerHTML = toAmt > 0 ? `<i class="mdi mdi-calculator me-1"></i>≈ <strong>${Number(toSar).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR</strong> (PKR ${Number(toAmt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})})` : '';
 
-                    if (roeHelper) {
-                        if (amtPkr <= 0) {
-                            roeHelper.innerHTML = `<span class="badge bg-soft-info text-dark fs-12 px-2 py-1 border border-info border-opacity-25">Universal JV Dual ROE (From: ${fromRoe} | To: ${toRoe})</span>`;
-                        } else {
-                            roeHelper.innerHTML = `<span class="badge bg-soft-info text-dark fs-12 px-2 py-1 border border-info border-opacity-25"><i class="mdi mdi-swap-horizontal me-1 text-primary"></i> From A/C: <strong class="text-danger">${Number(fromSar).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR</strong> (@ ${fromRoe}) &nbsp;|&nbsp; To A/C: <strong class="text-success">${Number(toSar).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR</strong> (@ ${toRoe})</span>`;
-                        }
+                    if (fromAmt <= 0 && toAmt <= 0) {
+                        setRoeHelperContent(`<span class="badge bg-soft-info text-dark fs-12 px-2 py-1 border border-info border-opacity-25">Universal JV Dual ROE (From: ${fromRoe} | To: ${toRoe})</span>`);
+                    } else {
+                        setRoeHelperContent(`<span class="badge bg-soft-info text-dark fs-12 px-2 py-1 border border-info border-opacity-25"><i class="mdi mdi-swap-horizontal me-1 text-primary"></i> From A/C: <strong class="text-danger">PKR ${Number(fromAmt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong> (${Number(fromSar).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR @ ${fromRoe}) &nbsp;➔&nbsp; To A/C: <strong class="text-success">PKR ${Number(toAmt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong> (${Number(toSar).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR @ ${toRoe})</span>`);
                     }
                     return;
                 } else if (jvMode === 'client_supplier') {
                     const clientRoe = parseFloat(document.getElementById('jv_contra_client_roe')?.value) || 76.0;
                     const supplierRoe = parseFloat(document.getElementById('jv_contra_supplier_roe')?.value) || 75.0;
-                    const clientSar = clientRoe > 0 ? (amtPkr / clientRoe).toFixed(2) : '0.00';
-                    const supplierSar = supplierRoe > 0 ? (amtPkr / supplierRoe).toFixed(2) : '0.00';
+                    const clientSarVal = clientRoe > 0 ? (amtPkr / clientRoe) : 0;
+                    const supplierSarVal = supplierRoe > 0 ? (amtPkr / supplierRoe) : 0;
+
+                    const clientSar = clientSarVal.toFixed(2);
+                    const supplierSar = supplierSarVal.toFixed(2);
 
                     const clientHint = document.getElementById('contra_client_sar_hint');
                     const supplierHint = document.getElementById('contra_supplier_sar_hint');
-                    if (clientHint) clientHint.innerHTML = amtPkr > 0 ? `<i class="mdi mdi-calculator me-1"></i>≈ <strong>${Number(clientSar).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR</strong>` : '';
-                    if (supplierHint) supplierHint.innerHTML = amtPkr > 0 ? `<i class="mdi mdi-calculator me-1"></i>≈ <strong>${Number(supplierSar).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR</strong>` : '';
+                    if (clientHint) clientHint.innerHTML = amtPkr > 0 ? `<i class="mdi mdi-calculator me-1"></i>≈ <strong>${Number(clientSar).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR</strong> (PKR ${Number(amtPkr).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})})` : '';
+                    if (supplierHint) supplierHint.innerHTML = amtPkr > 0 ? `<i class="mdi mdi-calculator me-1"></i>≈ <strong>${Number(supplierSar).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR</strong> (PKR ${Number(amtPkr).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})})` : '';
 
-                    if (roeHelper) {
-                        if (amtPkr <= 0) {
-                            roeHelper.innerHTML = `<span class="badge bg-soft-info text-dark fs-12 px-2 py-1 border border-info border-opacity-25">Contra Dual ROE (Client: ${clientRoe} | Supplier: ${supplierRoe})</span>`;
-                        } else {
-                            roeHelper.innerHTML = `<span class="badge bg-soft-info text-dark fs-12 px-2 py-1 border border-info border-opacity-25"><i class="mdi mdi-account-switch me-1 text-primary"></i> Client: <strong class="text-primary">${Number(clientSar).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR</strong> (@ ${clientRoe}) &nbsp;|&nbsp; Supplier: <strong class="text-warning text-dark">${Number(supplierSar).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR</strong> (@ ${supplierRoe})</span>`;
-                        }
+                    let toAmtHidden = document.getElementById('jv_to_amount');
+                    if (!toAmtHidden) {
+                        toAmtHidden = document.createElement('input');
+                        toAmtHidden.type = 'hidden';
+                        toAmtHidden.name = 'jv_to_amount';
+                        toAmtHidden.id = 'jv_to_amount';
+                        document.querySelector('form').appendChild(toAmtHidden);
                     }
+                    toAmtHidden.value = amtPkr;
+
+                    let fromAmtHidden = document.getElementById('jv_from_amount');
+                    if (!fromAmtHidden) {
+                        fromAmtHidden = document.createElement('input');
+                        fromAmtHidden.type = 'hidden';
+                        fromAmtHidden.name = 'jv_from_amount';
+                        fromAmtHidden.id = 'jv_from_amount';
+                        document.querySelector('form').appendChild(fromAmtHidden);
+                    }
+                    fromAmtHidden.value = amtPkr;
+
+                    if (amtPkr <= 0) {
+                        setRoeHelperContent(`<span class="badge bg-soft-primary text-dark fs-12 px-2 py-1 border border-primary border-opacity-25">Client & Supplier Contra (Client ROE: ${clientRoe} | Supplier ROE: ${supplierRoe})</span>`);
+                    } else {
+                        setRoeHelperContent(`<span class="badge bg-soft-primary text-dark fs-12 px-2 py-1 border border-primary border-opacity-25"><i class="mdi mdi-account-switch me-1 text-primary"></i> Client: <strong class="text-primary">PKR ${Number(amtPkr).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong> (${Number(clientSar).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR @ ${clientRoe}) &nbsp;⇄&nbsp; Supplier: <strong class="text-warning">PKR ${Number(amtPkr).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong> (${Number(supplierSar).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR @ ${supplierRoe})</span>`);
+                    }
+                    return;
+                } else if (jvMode === 'client_multi_supplier') {
+                    updateCmsCalculations();
                     return;
                 }
             }
@@ -1042,24 +1301,83 @@
             // Calculate live conversion preview (Amount is ALWAYS PKR)
             const roe = parseFloat(rateInput?.value) || 76.0;
 
-            if (roeHelper) {
-                if (amtPkr <= 0) {
-                    roeHelper.innerHTML = '';
-                } else if (roe > 1) {
-                    const foreignAmt = (amtPkr / roe).toFixed(2);
-                    roeHelper.innerHTML = `<span class="badge bg-soft-success text-success fs-12 px-2 py-1"><i class="mdi mdi-calculator me-1"></i> ≈ <strong>${Number(foreignAmt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR</strong> (at 1 SAR = ${roe} PKR)</span>`;
-                } else {
-                    roeHelper.innerHTML = `<span class="badge bg-soft-secondary text-secondary fs-12 px-2 py-1">PKR Only</span>`;
-                }
+            if (amtPkr <= 0) {
+                setRoeHelperContent('');
+            } else if (roe > 1) {
+                const foreignAmt = (amtPkr / roe).toFixed(2);
+                setRoeHelperContent(`<span class="badge bg-soft-success text-success fs-12 px-2 py-1"><i class="mdi mdi-calculator me-1"></i> ≈ <strong>${Number(foreignAmt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR</strong> (at 1 SAR = ${roe} PKR)</span>`);
+            } else {
+                setRoeHelperContent(`<span class="badge bg-soft-secondary text-secondary fs-12 px-2 py-1">PKR Only</span>`);
             }
         }
 
         currencySelect.addEventListener('change', updateCurrencyAndLiveROE);
-        if (mainAmountInput) mainAmountInput.addEventListener('input', updateCurrencyAndLiveROE);
+        if (mainAmountInput) mainAmountInput.addEventListener('input', function() {
+            const fField = document.getElementById('jv_from_amount_input');
+            if (fField && (!fField.value || fField.value == 0 || fField.getAttribute('data-linked') !== 'false')) {
+                fField.value = this.value;
+            }
+            updateCurrencyAndLiveROE();
+        });
+
+        // Bidirectional SAR Base Converter & Dual Amount Fields
+        const jvSarBaseInput = document.getElementById('jv_sar_base_amount');
+        const jvFromAmtField = document.getElementById('jv_from_amount_input');
+        const jvToAmtField   = document.getElementById('jv_to_amount_input');
+
+        if (jvSarBaseInput) {
+            jvSarBaseInput.addEventListener('input', function() {
+                const sarVal = parseFloat(this.value) || 0;
+                if (sarVal > 0) {
+                    const fRoe = parseFloat(document.getElementById('jv_from_roe')?.value) || 76.0;
+                    const tRoe = parseFloat(document.getElementById('jv_to_roe')?.value) || 75.0;
+                    if (jvFromAmtField) jvFromAmtField.value = (sarVal * fRoe).toFixed(2);
+                    if (jvToAmtField) jvToAmtField.value = (sarVal * tRoe).toFixed(2);
+                    if (mainAmountInput) mainAmountInput.value = (sarVal * fRoe).toFixed(2);
+                }
+                updateCurrencyAndLiveROE();
+            });
+        }
+
+        if (jvFromAmtField) {
+            jvFromAmtField.addEventListener('input', function() {
+                this.setAttribute('data-linked', 'true');
+                if (mainAmountInput) mainAmountInput.value = this.value;
+                const fRoe = parseFloat(document.getElementById('jv_from_roe')?.value) || 76.0;
+                const tRoe = parseFloat(document.getElementById('jv_to_roe')?.value) || 75.0;
+                const fAmt = parseFloat(this.value) || 0;
+                if (fAmt > 0 && fRoe > 0) {
+                    const sar = fAmt / fRoe;
+                    if (jvSarBaseInput) jvSarBaseInput.value = sar.toFixed(2);
+                    if (jvToAmtField && jvToAmtField.getAttribute('data-customized') !== 'true') {
+                        jvToAmtField.value = (sar * tRoe).toFixed(2);
+                    }
+                }
+                updateCurrencyAndLiveROE();
+            });
+        }
+
+        if (jvToAmtField) {
+            jvToAmtField.addEventListener('input', function() {
+                this.setAttribute('data-customized', 'true');
+                updateCurrencyAndLiveROE();
+            });
+        }
+
         if (rateInput) rateInput.addEventListener('input', updateCurrencyAndLiveROE);
         ['jv_from_roe', 'jv_to_roe', 'jv_contra_client_roe', 'jv_contra_supplier_roe'].forEach(id => {
             const el = document.getElementById(id);
-            if (el) el.addEventListener('input', updateCurrencyAndLiveROE);
+            if (el) el.addEventListener('input', function() {
+                if (jvSarBaseInput && parseFloat(jvSarBaseInput.value) > 0) {
+                    const sarVal = parseFloat(jvSarBaseInput.value);
+                    const fRoe = parseFloat(document.getElementById('jv_from_roe')?.value) || 76.0;
+                    const tRoe = parseFloat(document.getElementById('jv_to_roe')?.value) || 75.0;
+                    if (jvFromAmtField) jvFromAmtField.value = (sarVal * fRoe).toFixed(2);
+                    if (jvToAmtField) jvToAmtField.value = (sarVal * tRoe).toFixed(2);
+                    if (mainAmountInput) mainAmountInput.value = (sarVal * fRoe).toFixed(2);
+                }
+                updateCurrencyAndLiveROE();
+            });
         });
         updateCurrencyAndLiveROE();
 
@@ -1073,41 +1391,55 @@
         const selfSec = document.getElementById('selfSection');
         const jvSec = document.getElementById('jvSection');
 
+        function switchPayeeSection(val) {
+            if (supplierSec) supplierSec.classList.add('d-none');
+            if (clientSec) clientSec.classList.add('d-none');
+            if (staffSec) staffSec.classList.add('d-none');
+            if (expenseSec) expenseSec.classList.add('d-none');
+            if (loanSec) loanSec.classList.add('d-none');
+            if (selfSec) selfSec.classList.add('d-none');
+            if (jvSec) jvSec.classList.add('d-none');
+
+            if (val === 'supplier' && supplierSec) {
+                supplierSec.classList.remove('d-none');
+                if (refInput && (!refInput.value || refInput.value === jvRef)) refInput.value = expRef;
+            } else if (val === 'client' && clientSec) {
+                clientSec.classList.remove('d-none');
+                if (refInput && (!refInput.value || refInput.value === jvRef)) refInput.value = expRef;
+            } else if (val === 'staff' && staffSec) {
+                staffSec.classList.remove('d-none');
+                if (refInput && (!refInput.value || refInput.value === jvRef)) refInput.value = expRef;
+            } else if (val === 'expense' && expenseSec) {
+                expenseSec.classList.remove('d-none');
+                if (refInput && (!refInput.value || refInput.value === jvRef)) refInput.value = expRef;
+            } else if (val === 'loan' && loanSec) {
+                loanSec.classList.remove('d-none');
+                if (refInput && (!refInput.value || refInput.value === jvRef)) refInput.value = expRef;
+            } else if (val === 'self' && selfSec) {
+                selfSec.classList.remove('d-none');
+                if (refInput && (!refInput.value || refInput.value === jvRef)) refInput.value = expRef;
+            } else if (val === 'jv' && jvSec) {
+                jvSec.classList.remove('d-none');
+                if (refInput) refInput.value = jvRef;
+            }
+            updatePayeeTypeUI();
+            updateCurrencyAndLiveROE();
+        }
+
         payeeRadios.forEach(radio => {
             radio.addEventListener('change', function() {
-                if (supplierSec) supplierSec.classList.add('d-none');
-                if (clientSec) clientSec.classList.add('d-none');
-                if (staffSec) staffSec.classList.add('d-none');
-                if (expenseSec) expenseSec.classList.add('d-none');
-                if (loanSec) loanSec.classList.add('d-none');
-                if (selfSec) selfSec.classList.add('d-none');
-                if (jvSec) jvSec.classList.add('d-none');
-
-                if (this.value === 'supplier' && supplierSec) {
-                    supplierSec.classList.remove('d-none');
-                    if (refInput && (!refInput.value || refInput.value === jvRef)) refInput.value = expRef;
-                } else if (this.value === 'client' && clientSec) {
-                    clientSec.classList.remove('d-none');
-                    if (refInput && (!refInput.value || refInput.value === jvRef)) refInput.value = expRef;
-                } else if (this.value === 'staff' && staffSec) {
-                    staffSec.classList.remove('d-none');
-                    if (refInput && (!refInput.value || refInput.value === jvRef)) refInput.value = expRef;
-                } else if (this.value === 'expense' && expenseSec) {
-                    expenseSec.classList.remove('d-none');
-                    if (refInput && (!refInput.value || refInput.value === jvRef)) refInput.value = expRef;
-                } else if (this.value === 'loan' && loanSec) {
-                    loanSec.classList.remove('d-none');
-                    if (refInput && (!refInput.value || refInput.value === jvRef)) refInput.value = expRef;
-                } else if (this.value === 'self' && selfSec) {
-                    selfSec.classList.remove('d-none');
-                    if (refInput && (!refInput.value || refInput.value === jvRef)) refInput.value = expRef;
-                } else if (this.value === 'jv' && jvSec) {
-                    jvSec.classList.remove('d-none');
-                    if (refInput) refInput.value = jvRef;
-                }
-                updateCurrencyAndLiveROE();
+                if (this.checked) switchPayeeSection(this.value);
+            });
+            radio.addEventListener('click', function() {
+                if (this.checked) switchPayeeSection(this.value);
             });
         });
+
+        // Initial trigger for checked payee radio on page load
+        const checkedPayeeOnLoad = document.querySelector('input[name="payee_type"]:checked');
+        if (checkedPayeeOnLoad) {
+            switchPayeeSection(checkedPayeeOnLoad.value);
+        }
 
         // JV Mode Radios Switcher
         const jvModeRadios = document.querySelectorAll('.jv-mode-radio');
@@ -1115,22 +1447,38 @@
         const jvBoxSingle = document.getElementById('jv_box_single');
         const jvBoxContra = document.getElementById('jv_box_contra');
         const jvBoxMulti = document.getElementById('jv_box_multi');
+        const jvBoxCms = document.getElementById('jv_box_cms');
+
+        function switchJvBox(mode) {
+            if (jvBoxUniv) jvBoxUniv.classList.add('d-none');
+            if (jvBoxSingle) jvBoxSingle.classList.add('d-none');
+            if (jvBoxContra) jvBoxContra.classList.add('d-none');
+            if (jvBoxMulti) jvBoxMulti.classList.add('d-none');
+            if (jvBoxCms) jvBoxCms.classList.add('d-none');
+
+            if (mode === 'universal' && jvBoxUniv) jvBoxUniv.classList.remove('d-none');
+            else if (mode === 'single_party' && jvBoxSingle) jvBoxSingle.classList.remove('d-none');
+            else if (mode === 'client_supplier' && jvBoxContra) jvBoxContra.classList.remove('d-none');
+            else if (mode === 'multi_client' && jvBoxMulti) jvBoxMulti.classList.remove('d-none');
+            else if (mode === 'client_multi_supplier' && jvBoxCms) jvBoxCms.classList.remove('d-none');
+
+            updatePayeeTypeUI();
+            updateCurrencyAndLiveROE();
+        }
 
         jvModeRadios.forEach(r => {
             r.addEventListener('change', function() {
-                if (jvBoxUniv) jvBoxUniv.classList.add('d-none');
-                if (jvBoxSingle) jvBoxSingle.classList.add('d-none');
-                if (jvBoxContra) jvBoxContra.classList.add('d-none');
-                if (jvBoxMulti) jvBoxMulti.classList.add('d-none');
-
-                if (this.value === 'universal' && jvBoxUniv) jvBoxUniv.classList.remove('d-none');
-                else if (this.value === 'single_party' && jvBoxSingle) jvBoxSingle.classList.remove('d-none');
-                else if (this.value === 'client_supplier' && jvBoxContra) jvBoxContra.classList.remove('d-none');
-                else if (this.value === 'multi_client' && jvBoxMulti) jvBoxMulti.classList.remove('d-none');
-
-                updateCurrencyAndLiveROE();
+                if (this.checked) switchJvBox(this.value);
+            });
+            r.addEventListener('click', function() {
+                if (this.checked) switchJvBox(this.value);
             });
         });
+
+        const checkedJvModeOnLoad = document.querySelector('input[name="jv_mode"]:checked');
+        if (checkedJvModeOnLoad) {
+            switchJvBox(checkedJvModeOnLoad.value);
+        }
 
         // Multi-Client Add Row
         let clientRowCount = 1;
@@ -1171,6 +1519,157 @@
             multiClientTbody.addEventListener('click', function(e) {
                 if (e.target.closest('.btn-remove-row')) {
                     e.target.closest('tr').remove();
+                }
+            });
+        }
+
+        // ========================================================
+        // 1 CLIENT TO MULTI-SUPPLIER SPLIT JV LOGIC
+        // ========================================================
+        function updateCmsCalculations() {
+            const clientRoeInput = document.getElementById('jv_cms_client_roe');
+            const clientTotalPkrInput = document.getElementById('jv_cms_total_pkr');
+            const clientSarBadge = document.getElementById('cms_client_sar_badge');
+
+            const clientRoe = parseFloat(clientRoeInput?.value) || 76.0;
+            const clientPkr = parseFloat(clientTotalPkrInput?.value) || 0;
+
+            const clientSar = clientRoe > 0 ? (clientPkr / clientRoe) : 0;
+            if (clientSarBadge) {
+                clientSarBadge.innerHTML = clientPkr > 0
+                    ? `≈ <strong>${Number(clientSar.toFixed(2)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR</strong> (@ ROE ${clientRoe})`
+                    : '≈ 0.00 SAR';
+            }
+
+            // Sync with main total amount input
+            if (mainAmountInput && clientPkr > 0) {
+                mainAmountInput.value = clientPkr;
+            }
+
+            let totalAllocatedPkr = 0.0;
+            let totalAllocatedSar = 0.0;
+
+            const rows = document.querySelectorAll('#cmsSuppliersTbody tr');
+            rows.forEach((r, idx) => {
+                const amtInput = r.querySelector('.cms-sup-amount');
+                const roeInput = r.querySelector('.cms-sup-roe');
+                const sarSpan = r.querySelector('.cms-sup-sar');
+                const removeBtn = r.querySelector('.btn-remove-cms-row');
+
+                if (removeBtn) {
+                    removeBtn.style.display = rows.length > 1 ? 'inline-block' : 'none';
+                }
+
+                const rAmt = parseFloat(amtInput?.value) || 0;
+                const rRoe = parseFloat(roeInput?.value) || 75.0;
+                const rSar = rRoe > 0 ? (rAmt / rRoe) : 0;
+
+                if (sarSpan) {
+                    sarSpan.textContent = rAmt > 0 ? (rSar.toFixed(2) + ' SAR') : '0.00 SAR';
+                }
+
+                totalAllocatedPkr += rAmt;
+                totalAllocatedSar += rSar;
+            });
+
+            const totalPkrSpan = document.getElementById('cms_total_allocated_pkr');
+            const totalSarSpan = document.getElementById('cms_total_allocated_sar');
+            const statusSpan = document.getElementById('cms_balance_status');
+
+            if (totalPkrSpan) totalPkrSpan.textContent = 'PKR ' + Number(totalAllocatedPkr.toFixed(2)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            if (totalSarSpan) totalSarSpan.textContent = Number(totalAllocatedSar.toFixed(2)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' SAR';
+
+            if (statusSpan) {
+                const diff = Math.round((clientPkr - totalAllocatedPkr) * 100) / 100;
+                if (clientPkr > 0 && Math.abs(diff) < 0.01) {
+                    statusSpan.className = 'badge bg-soft-success text-success fs-11';
+                    statusSpan.innerHTML = '<i class="mdi mdi-check-circle me-1"></i> Perfectly Balanced: PKR ' + Number(clientPkr.toFixed(2)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                } else if (clientPkr > 0) {
+                    if (diff > 0) {
+                        statusSpan.className = 'badge bg-soft-danger text-danger fs-11';
+                        statusSpan.innerHTML = '<i class="mdi mdi-alert-circle me-1"></i> Remaining to Allocate: PKR ' + Number(diff.toFixed(2)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    } else {
+                        statusSpan.className = 'badge bg-soft-danger text-danger fs-11';
+                        statusSpan.innerHTML = '<i class="mdi mdi-alert-circle me-1"></i> Overallocated by: PKR ' + Number(Math.abs(diff).toFixed(2)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    }
+                } else {
+                    statusSpan.className = 'badge bg-soft-secondary text-muted fs-11';
+                    statusSpan.innerHTML = 'Enter Client PKR Amount';
+                }
+            }
+
+            if (document.querySelector('input[name="payee_type"]:checked')?.value === 'jv' && document.querySelector('input[name="jv_mode"]:checked')?.value === 'client_multi_supplier') {
+                setRoeHelperContent(`<span class="badge bg-soft-warning text-dark border border-warning fs-12 px-2 py-1"><i class="mdi mdi-call-split me-1 text-warning"></i> 1 Client (PKR ${Number(clientPkr.toFixed(2)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}) ➔ Split to ${rows.length} Supplier(s) (Allocated: PKR ${Number(totalAllocatedPkr.toFixed(2)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})})</span>`);
+            }
+        }
+
+        let supRowCount = 1;
+        const btnAddSupplierRow = document.getElementById('btnAddSupplierRow');
+        const cmsSuppliersTbody = document.getElementById('cmsSuppliersTbody');
+        if (btnAddSupplierRow && cmsSuppliersTbody) {
+            btnAddSupplierRow.addEventListener('click', function() {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>
+                        <select name="jv_suppliers[${supRowCount}][supplier_id]" class="form-select form-select-sm cms-supplier-select">
+                            <option value="">-- Select Supplier --</option>
+                            @foreach($suppliers as $s)
+                                <option value="{{ $s->id }}">{{ $s->name }} ({{ ucfirst($s->type ?? 'supplier') }})</option>
+                            @endforeach
+                        </select>
+                    </td>
+                    <td>
+                        <input type="number" step="0.01" min="0" name="jv_suppliers[${supRowCount}][amount]" class="form-control form-control-sm text-end fw-bold cms-sup-amount" placeholder="0.00">
+                    </td>
+                    <td>
+                        <input type="number" step="0.01" min="1" name="jv_suppliers[${supRowCount}][roe]" class="form-control form-control-sm text-center fw-bold cms-sup-roe" value="75.00">
+                    </td>
+                    <td class="text-end">
+                        <span class="badge bg-soft-warning text-dark border border-warning fs-12 cms-sup-sar">0.00 SAR</span>
+                    </td>
+                    <td>
+                        <input type="text" name="jv_suppliers[${supRowCount}][notes]" class="form-control form-control-sm" placeholder="Split allocation remark">
+                    </td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-sm btn-link text-danger p-0 btn-remove-cms-row"><i class="mdi mdi-close-circle fs-16"></i></button>
+                    </td>
+                `;
+                cmsSuppliersTbody.appendChild(tr);
+                supRowCount++;
+                updateCmsCalculations();
+            });
+
+            cmsSuppliersTbody.addEventListener('click', function(e) {
+                if (e.target.closest('.btn-remove-cms-row')) {
+                    e.target.closest('tr').remove();
+                    updateCmsCalculations();
+                }
+            });
+
+            cmsSuppliersTbody.addEventListener('input', function(e) {
+                if (e.target.classList.contains('cms-sup-amount') || e.target.classList.contains('cms-sup-roe')) {
+                    updateCmsCalculations();
+                }
+            });
+        }
+
+        const clientTotalPkrInput = document.getElementById('jv_cms_total_pkr');
+        const clientRoeInput = document.getElementById('jv_cms_client_roe');
+        if (clientTotalPkrInput) clientTotalPkrInput.addEventListener('input', updateCmsCalculations);
+        if (clientRoeInput) clientRoeInput.addEventListener('input', updateCmsCalculations);
+
+        const btnAutoDistribute = document.getElementById('btnAutoDistributeSuppliers');
+        if (btnAutoDistribute && cmsSuppliersTbody) {
+            btnAutoDistribute.addEventListener('click', function() {
+                const totalPkr = parseFloat(document.getElementById('jv_cms_total_pkr')?.value) || 0;
+                const rows = cmsSuppliersTbody.querySelectorAll('tr');
+                if (totalPkr > 0 && rows.length > 0) {
+                    const equalShare = (totalPkr / rows.length).toFixed(2);
+                    rows.forEach((r) => {
+                        const amtInput = r.querySelector('.cms-sup-amount');
+                        if (amtInput) amtInput.value = equalShare;
+                    });
+                    updateCmsCalculations();
                 }
             });
         }

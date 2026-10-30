@@ -9,17 +9,23 @@
             <div class="container">
 
                 <!-- TOP BAR -->
-                <div class="py-3 d-flex justify-content-between align-items-center">
+                <div class="py-3 d-flex justify-content-between align-items-center no-print">
                     <h4 class="fs-18 fw-semibold m-0">
                         <i class="fas fa-building text-primary me-2"></i>
                         Company Ledger — {{ $company->name }}
                     </h4>
                     <div class="d-flex gap-2">
-                        <button id="exportPDF" class="btn btn-danger btn-sm shadow-sm">
-                            <i class="fas fa-file-pdf me-1"></i> Export PDF
+                        <button type="button" onclick="exportCompanyLedgerExcel()" class="btn btn-success btn-sm shadow-sm">
+                            <i class="mdi mdi-file-excel me-1"></i> Export Excel
                         </button>
-                        <a href="{{ route('transaction.company-ledger.filter') }}" class="btn btn-secondary btn-sm">
-                            <i class="fas fa-arrow-left me-1"></i> Back
+                        <button id="exportPDF" class="btn btn-danger btn-sm shadow-sm">
+                            <i class="mdi mdi-file-pdf me-1"></i> Export PDF
+                        </button>
+                        <button type="button" onclick="window.print()" class="btn btn-secondary btn-sm shadow-sm">
+                            <i class="mdi mdi-printer me-1"></i> Print
+                        </button>
+                        <a href="{{ route('transaction.company-ledger.filter') }}" class="btn btn-dark btn-sm">
+                            <i class="mdi mdi-arrow-left me-1"></i> Back
                         </a>
                     </div>
                 </div>
@@ -401,6 +407,31 @@
                 `Company_Ledger_{{ \Illuminate\Support\Str::slug($company->name) }}_{{ \Carbon\Carbon::now()->format('d_M_Y') }}.pdf`
                 );
         });
+
+        function exportCompanyLedgerExcel() {
+            if (typeof XLSX === 'undefined') {
+                alert('Excel library loading, please try again.');
+                return;
+            }
+
+            const wb = XLSX.utils.book_new();
+
+            // Bookings Table
+            const bookingsTable = document.getElementById('bookingsTable');
+            if (bookingsTable) {
+                const ws1 = XLSX.utils.table_to_sheet(bookingsTable);
+                XLSX.utils.book_append_sheet(wb, ws1, "Bookings");
+            }
+
+            // Transactions Table
+            const transTable = document.getElementById('transactionsTable');
+            if (transTable) {
+                const ws2 = XLSX.utils.table_to_sheet(transTable);
+                XLSX.utils.book_append_sheet(wb, ws2, "Transactions");
+            }
+
+            XLSX.writeFile(wb, `Company_Ledger_{{ \Illuminate\Support\Str::slug($company->name) }}_{{ date('Ymd_His') }}.xlsx`);
+        }
     </script>
 
 @endsection

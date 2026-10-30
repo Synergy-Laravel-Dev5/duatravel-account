@@ -60,6 +60,9 @@
                     <a href="{{ route('reports.transactions.export-excel') }}?{{ http_build_query(request()->all()) }}" class="btn btn-success btn-sm shadow-sm">
                         <i class="mdi mdi-file-excel me-1"></i> Export Excel
                     </a>
+                    <button type="button" onclick="exportTransactionReportPDF()" class="btn btn-danger btn-sm shadow-sm">
+                        <i class="mdi mdi-file-pdf-box me-1"></i> Export PDF
+                    </button>
                     <button onclick="window.print()" class="btn btn-secondary btn-sm shadow-sm">
                         <i class="mdi mdi-printer me-1"></i> Print Report
                     </button>
@@ -433,5 +436,79 @@
         </div>
     </div>
 </div>
+
+<script>
+    function exportTransactionReportPDF() {
+        if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
+            window.print();
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+        const pageW = doc.internal.pageSize.getWidth();
+
+        // Header Banner
+        doc.setFillColor(15, 83, 94);
+        doc.rect(0, 0, pageW, 22, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(14);
+        doc.setFont(undefined, 'bold');
+        doc.text("DUA TRAVEL & TOURS — ALL TRANSACTIONS AUDIT REPORT", 14, 10);
+        doc.setFontSize(8.5);
+        doc.setFont(undefined, 'normal');
+        doc.text("Generated: " + new Date().toLocaleString() + " | Records: {{ count($transactions) }}", 14, 17);
+
+        // Summary Line
+        doc.setTextColor(30, 30, 30);
+        doc.setFontSize(8.5);
+        doc.setFont(undefined, 'bold');
+        doc.text("PKR — Inflow: {{ number_format($totalInflowPkr, 2) }} | Outflow: {{ number_format($totalOutflowPkr, 2) }} | Net: {{ number_format($netCashFlowPkr, 2) }}   |   SAR — Inflow: {{ number_format($totalInflowSar, 2) }} | Outflow: {{ number_format($totalOutflowSar, 2) }} | Net: {{ number_format($netCashFlowSar, 2) }}", 14, 28);
+
+        const tableRows = [];
+
+        @foreach($transactions as $t)
+        tableRows.push([
+            "{{ $loop->iteration }}",
+            "{{ \Carbon\Carbon::parse($t['date'])->format('d M, Y') }}",
+            "{{ addslashes($t['voucher_no'] ?: $t['ref_no']) }}",
+            "{{ addslashes($t['flow_label']) }}",
+            "{{ addslashes($t['category']) }}",
+            "{{ addslashes($t['party']) }}",
+            "{{ addslashes($t['method']) }}",
+            "{{ $t['inflow_pkr'] > 0 ? number_format($t['inflow_pkr'], 2) : '—' }}",
+            "{{ $t['outflow_pkr'] > 0 ? number_format($t['outflow_pkr'], 2) : '—' }}",
+            "{{ $t['inflow_sar'] > 0 ? number_format($t['inflow_sar'], 2) : '—' }}",
+            "{{ $t['outflow_sar'] > 0 ? number_format($t['outflow_sar'], 2) : '—' }}"
+        ]);
+        @endforeach
+
+        tableRows.push([
+            "", "", "", "TOTALS:", "", "", "",
+            "+ PKR {{ number_format($totalInflowPkr, 2) }}",
+            "- PKR {{ number_format($totalOutflowPkr, 2) }}",
+            "+ SAR {{ number_format($totalInflowSar, 2) }}",
+            "- SAR {{ number_format($totalOutflowSar, 2) }}"
+        ]);
+
+        doc.autoTable({
+            startY: 32,
+            head: [["#", "Date", "Voucher / Ref", "Flow", "Category", "Party / Payee", "Method", "Inflow (PKR)", "Outflow (PKR)", "Inflow (SAR)", "Outflow (SAR)"]],
+            body: tableRows,
+            theme: 'striped',
+            headStyles: { fillColor: [15, 83, 94], textColor: 255, fontSize: 8, fontStyle: 'bold' },
+            bodyStyles: { fontSize: 7 },
+            columnStyles: {
+                7: { halign: 'right', textColor: [0, 130, 0] },
+                8: { halign: 'right', textColor: [180, 0, 0] },
+                9: { halign: 'right', textColor: [0, 130, 0] },
+                10: { halign: 'right', textColor: [180, 0, 0] }
+            },
+            margin: { left: 10, right: 10 }
+        });
+
+        doc.save("Transactions_Audit_Report_{{ date('Ymd_His') }}.pdf");
+    }
+</script>
 
 @endsection
