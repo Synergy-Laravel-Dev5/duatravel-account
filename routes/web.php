@@ -500,6 +500,14 @@ Route::middleware(['auth:web,company'])->group(function () {
         Route::get('reports/cash-flow', [\App\Http\Controllers\CashFlowReportController::class, 'index'])->name('reports.cash-flow');
         Route::get('reports/cash-flow/pdf', [\App\Http\Controllers\CashFlowReportController::class, 'exportPdf'])->name('reports.cash-flow.pdf');
 
+        // Trial Balance Worksheet
+        Route::get('reports/trial-balance', [\App\Http\Controllers\TrialBalanceReportController::class, 'index'])->name('reports.trial-balance');
+        Route::get('reports/trial-balance/pdf', [\App\Http\Controllers\TrialBalanceReportController::class, 'exportPdf'])->name('reports.trial-balance.pdf');
+
+        // Chart of Accounts (COA)
+        Route::get('reports/chart-of-accounts', [\App\Http\Controllers\ChartOfAccountsController::class, 'index'])->name('reports.chart-of-accounts');
+        Route::get('reports/chart-of-accounts/pdf', [\App\Http\Controllers\ChartOfAccountsController::class, 'exportPdf'])->name('reports.chart-of-accounts.pdf');
+
         // All Transactions Report
         Route::get('reports/transactions', [\App\Http\Controllers\TransactionReportController::class, 'index'])->name('reports.transactions');
         Route::get('reports/transactions/export-excel', [\App\Http\Controllers\TransactionReportController::class, 'exportExcel'])->name('reports.transactions.export-excel');

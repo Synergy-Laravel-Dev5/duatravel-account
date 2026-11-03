@@ -214,21 +214,21 @@ class ExpenseTransactionController extends Controller
                     $mapEntity($fromType, $fromId, $fromFields, $fromName);
                     $mapEntity($toType, $toId, $toFields, $toName);
 
-                    $fromRoe = (float) ($request->input('jv_from_roe') ?: ($request->input('from_roe') ?: $exchangeRate));
-                    $toRoe   = (float) ($request->input('jv_to_roe') ?: ($request->input('to_roe') ?: $exchangeRate));
-                    if ($fromRoe <= 0) $fromRoe = ($exchangeRate > 0 ? $exchangeRate : 76.00);
-                    if ($toRoe <= 0) $toRoe = ($exchangeRate > 0 ? $exchangeRate : 75.00);
+                    $fromRoe = (float) ($request->input('jv_from_roe') ?: ($request->input('from_roe') ?: 1));
+                    $toRoe   = (float) ($request->input('jv_to_roe') ?: ($request->input('to_roe') ?: 1));
+                    if ($fromRoe <= 1) $fromRoe = 1.0;
+                    if ($toRoe <= 1) $toRoe = 1.0;
 
                     $fromAmount = (float) ($request->input('jv_from_amount') ?: $request->amount);
-                    $toAmount   = (float) ($request->input('jv_to_amount') ?: $request->amount);
-                    $fromSar = $fromRoe > 0 ? round($fromAmount / $fromRoe, 2) : 0;
-                    $toSar   = $toRoe > 0 ? round($toAmount / $toRoe, 2) : 0;
+                    $toAmount   = (float) ($request->input('jv_to_amount') ?: ($request->input('jv_from_amount') ?: $request->amount));
+                    $fromSar = $fromRoe > 1 ? round($fromAmount / $fromRoe, 2) : 0;
+                    $toSar   = $toRoe > 1 ? round($toAmount / $toRoe, 2) : 0;
 
-                    $userNotes = $request->description ? (' — ' . $request->description) : '';
-                    $fromSarFmt = number_format($fromSar, 2);
-                    $toSarFmt   = number_format($toSar, 2);
-                    $fromDesc = "JV Transfer TO [{$toName}]" . ($fromSar > 0 ? " ({$fromSarFmt} SAR @ {$fromRoe})" : "") . $userNotes;
-                    $toDesc   = "JV Transfer FROM [{$fromName}]" . ($toSar > 0 ? " ({$toSarFmt} SAR @ {$toRoe})" : "") . $userNotes;
+                    $fromCurr = $fromRoe > 1 ? 'SAR' : 'PKR';
+                    $toCurr   = $toRoe > 1 ? 'SAR' : 'PKR';
+
+                    $fromDesc = $request->description ?: null;
+                    $toDesc   = $request->description ?: null;
 
                     // Leg 1: Outgoing / Credit from From-Account (Leg 1 ROE & Amount)
                     $t1 = ExpenseTransaction::create(array_merge($fromFields, [
@@ -238,7 +238,7 @@ class ExpenseTransactionController extends Controller
                         'payment_type'     => 'jv',
                         'transaction_type' => 'credit',
                         'payee_type'       => 'jv',
-                        'currency'         => $currency,
+                        'currency'         => $fromCurr,
                         'exchange_rate'    => $fromRoe,
                         'reference_no'     => $refNo,
                         'proof'            => $proofPath,
@@ -254,7 +254,7 @@ class ExpenseTransactionController extends Controller
                         'payment_type'     => 'jv',
                         'transaction_type' => 'debit',
                         'payee_type'       => 'jv',
-                        'currency'         => $currency,
+                        'currency'         => $toCurr,
                         'exchange_rate'    => $toRoe,
                         'reference_no'     => $refNo,
                         'proof'            => $proofPath,
@@ -278,7 +278,7 @@ class ExpenseTransactionController extends Controller
                         if (!$cId || $cAmt <= 0) continue;
 
                         $cType = $jc['type'] ?? 'debit';
-                        $cNotes = !empty($jc['notes']) ? $jc['notes'] : ($request->description ?: 'JV Multi-Client Adjustment');
+                        $cNotes = !empty($jc['notes']) ? $jc['notes'] : ($request->description ?: null);
 
                         $t = ExpenseTransaction::create([
                             'bank_id'          => $request->bank_id ?: null,
@@ -334,17 +334,10 @@ class ExpenseTransactionController extends Controller
                         if ($supplierRoe <= 0) $supplierRoe = ($exchangeRate > 0 ? $exchangeRate : 75.00);
 
                         $dirLabel = ($direction === 'supplier_to_client') ? 'Supplier Refund to Client' : 'Client Payment to Supplier';
-                        $userDesc = $request->description ? (' — ' . $request->description) : '';
-
                         $clientAmount = (float) ($request->input('jv_from_amount') ?: $request->amount);
                         $supplierAmount = (float) ($request->input('jv_to_amount') ?: $request->amount);
-                        $clientSar = ($clientRoe > 0) ? round($clientAmount / $clientRoe, 2) : 0;
-                        $supplierSar = ($supplierRoe > 0) ? round($supplierAmount / $supplierRoe, 2) : 0;
-
-                        $clientSarFmt = number_format($clientSar, 2);
-                        $supplierSarFmt = number_format($supplierSar, 2);
-                        $clientDesc = "JV Contra [Supplier: {$supplierName}] ({$dirLabel}" . ($clientSar > 0 ? " - {$clientSarFmt} SAR @ {$clientRoe}" : "") . "){$userDesc}";
-                        $supplierDesc = "JV Contra [Client: {$clientName}] ({$dirLabel}" . ($supplierSar > 0 ? " - {$supplierSarFmt} SAR @ {$supplierRoe}" : "") . "){$userDesc}";
+                        $clientDesc = $request->description ?: null;
+                        $supplierDesc = $request->description ?: null;
 
                         // Leg 1: Client side (client_id set, supplier_id null so supplier ledger doesn't double-count)
                         $t1 = ExpenseTransaction::create([
@@ -461,8 +454,7 @@ class ExpenseTransactionController extends Controller
                                 $supSummaryStr = count($validSuppliers) . " Suppliers";
                             }
 
-                            $dirLabel = ($direction === 'suppliers_to_client') ? 'Refund from Suppliers' : 'Payment to Suppliers';
-                            $clientDesc = "JV Split [{$dirLabel}: {$supSummaryStr}]" . ($totalClientSar > 0 ? " ({$sarFormatted} SAR)" : "") . $userDesc;
+                            $clientDesc = $request->description ?: null;
 
                             // Leg 1: Client side (Full amount)
                             $tClient = ExpenseTransaction::create([
@@ -490,9 +482,7 @@ class ExpenseTransactionController extends Controller
                             // Legs 2..N: Supplier sides (One per supplier)
                             $createdSuppliers = [];
                             foreach ($validSuppliers as $vs) {
-                                $supNote = !empty($vs['notes']) ? (' — ' . $vs['notes']) : $userDesc;
-                                $vsSarFormatted = number_format($vs['amount_sar'], 2);
-                                $supDesc = "JV Split [From Client: {$clientName}]" . ($vs['amount_sar'] > 0 ? " ({$vsSarFormatted} SAR)" : "") . $supNote;
+                                $supDesc = !empty($vs['notes']) ? $vs['notes'] : ($request->description ?: null);
 
                                 $tSup = ExpenseTransaction::create([
                                     'bank_id'          => $request->bank_id ?: null,
@@ -853,8 +843,7 @@ class ExpenseTransactionController extends Controller
 
                         $userClientSar = $clientRoe > 0 ? round($totalClientAmountPkr / $clientRoe, 2) : 0;
                         $sarFormatted = number_format($userClientSar > 0 ? $userClientSar : $totalClientSar, 2);
-                        $supListStr = implode(', ', array_slice($supNamesList, 0, 3)) . (count($supNamesList) > 3 ? ' & others' : '');
-                        $clientDesc = "JV Split TO Suppliers [{$supListStr}] ({$sarFormatted} SAR){$userDesc}";
+                        $clientDesc = $request->description ?: null;
 
                         $existingLegs = ExpenseTransaction::where(function($q) {
                             $q->where('payee_type', 'jv')->orWhere('payment_type', 'jv');
@@ -885,8 +874,7 @@ class ExpenseTransactionController extends Controller
                         $supplierLegs = $existingLegs->where('id', '!=', $clientLeg->id)->values();
 
                         foreach ($validSuppliers as $idx => $vs) {
-                            $sNotes = !empty($vs['notes']) ? (' — ' . $vs['notes']) : $userDesc;
-                            $sDesc = "JV Split FROM Client [{$clientName}] ({$vs['sar']} SAR){$sNotes}";
+                            $sDesc = !empty($vs['notes']) ? $vs['notes'] : ($request->description ?: null);
 
                             $data = [
                                 'bank_id'          => null,
@@ -949,17 +937,10 @@ class ExpenseTransactionController extends Controller
                         if ($supplierRoe <= 0) $supplierRoe = ($exchangeRate > 0 ? $exchangeRate : 75.00);
 
                         $dirLabel = ($direction === 'supplier_to_client') ? 'Supplier Refund to Client' : 'Client Payment to Supplier';
-                        $userDesc = $request->description ? (' — ' . $request->description) : '';
-
                         $clientAmount = (float) ($request->input('jv_from_amount') ?: $request->amount);
                         $supplierAmount = (float) ($request->input('jv_to_amount') ?: $request->amount);
-                        $clientSar = ($clientRoe > 0) ? round($clientAmount / $clientRoe, 2) : 0;
-                        $supplierSar = ($supplierRoe > 0) ? round($supplierAmount / $supplierRoe, 2) : 0;
-
-                        $clientSarFmt = number_format($clientSar, 2);
-                        $supplierSarFmt = number_format($supplierSar, 2);
-                        $clientDesc = "JV Contra [Supplier: {$supplierName}] ({$dirLabel}" . ($clientSar > 0 ? " - {$clientSarFmt} SAR @ {$clientRoe}" : "") . "){$userDesc}";
-                        $supplierDesc = "JV Contra [Client: {$clientName}] ({$dirLabel}" . ($supplierSar > 0 ? " - {$supplierSarFmt} SAR @ {$supplierRoe}" : "") . "){$userDesc}";
+                        $clientDesc = $request->description ?: null;
+                        $supplierDesc = $request->description ?: null;
 
                         $existingLegs = ExpenseTransaction::where(function($q) {
                             $q->where('payee_type', 'jv')->orWhere('payment_type', 'jv');
@@ -1066,21 +1047,21 @@ class ExpenseTransactionController extends Controller
                     $mapEntity($fromType, $fromId, $fromFields, $fromName);
                     $mapEntity($toType, $toId, $toFields, $toName);
 
-                    $fromRoe = (float) ($request->input('jv_from_roe') ?: ($request->input('from_roe') ?: $exchangeRate));
-                    $toRoe   = (float) ($request->input('jv_to_roe') ?: ($request->input('to_roe') ?: $exchangeRate));
-                    if ($fromRoe <= 0) $fromRoe = ($exchangeRate > 0 ? $exchangeRate : 76.00);
-                    if ($toRoe <= 0) $toRoe = ($exchangeRate > 0 ? $exchangeRate : 75.00);
+                    $fromRoe = (float) ($request->input('jv_from_roe') ?: ($request->input('from_roe') ?: 1));
+                    $toRoe   = (float) ($request->input('jv_to_roe') ?: ($request->input('to_roe') ?: 1));
+                    if ($fromRoe <= 1) $fromRoe = 1.0;
+                    if ($toRoe <= 1) $toRoe = 1.0;
 
                     $fromAmount = (float) ($request->input('jv_from_amount') ?: $request->amount);
-                    $toAmount   = (float) ($request->input('jv_to_amount') ?: $request->amount);
-                    $fromSar = $fromRoe > 0 ? round($fromAmount / $fromRoe, 2) : 0;
-                    $toSar   = $toRoe > 0 ? round($toAmount / $toRoe, 2) : 0;
+                    $toAmount   = (float) ($request->input('jv_to_amount') ?: ($request->input('jv_from_amount') ?: $request->amount));
+                    $fromSar = $fromRoe > 1 ? round($fromAmount / $fromRoe, 2) : 0;
+                    $toSar   = $toRoe > 1 ? round($toAmount / $toRoe, 2) : 0;
 
-                    $userNotes = $request->description ? (' — ' . $request->description) : '';
-                    $fromSarFmt = number_format($fromSar, 2);
-                    $toSarFmt   = number_format($toSar, 2);
-                    $fromDesc = "JV Transfer TO [{$toName}]" . ($fromSar > 0 ? " ({$fromSarFmt} SAR @ {$fromRoe})" : "") . $userNotes;
-                    $toDesc   = "JV Transfer FROM [{$fromName}]" . ($toSar > 0 ? " ({$toSarFmt} SAR @ {$toRoe})" : "") . $userNotes;
+                    $fromCurr = $fromRoe > 1 ? 'SAR' : 'PKR';
+                    $toCurr   = $toRoe > 1 ? 'SAR' : 'PKR';
+
+                    $fromDesc = $request->description ?: null;
+                    $toDesc   = $request->description ?: null;
 
                     $existingLegs = ExpenseTransaction::where(function($q) {
                         $q->where('payee_type', 'jv')->orWhere('payment_type', 'jv');
@@ -1095,7 +1076,7 @@ class ExpenseTransactionController extends Controller
                         'payment_type'     => 'jv',
                         'transaction_type' => 'credit',
                         'payee_type'       => 'jv',
-                        'currency'         => $currency,
+                        'currency'         => $fromCurr,
                         'exchange_rate'    => $fromRoe,
                         'reference_no'     => $refNo,
                         'date'             => $dateFormatted,
@@ -1109,7 +1090,7 @@ class ExpenseTransactionController extends Controller
                         'payment_type'     => 'jv',
                         'transaction_type' => 'debit',
                         'payee_type'       => 'jv',
-                        'currency'         => $currency,
+                        'currency'         => $toCurr,
                         'exchange_rate'    => $toRoe,
                         'reference_no'     => $refNo,
                         'date'             => $dateFormatted,

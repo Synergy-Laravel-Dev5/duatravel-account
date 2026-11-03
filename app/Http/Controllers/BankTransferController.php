@@ -275,7 +275,7 @@ class BankTransferController extends Controller
                 $dStr = $et->date ? Carbon::parse($et->date)->format('Y-m-d') : Carbon::parse($et->created_at)->format('Y-m-d');
                 $dTs = $et->date ? Carbon::parse($et->date)->startOfDay()->timestamp : Carbon::parse($et->created_at)->timestamp;
 
-                $desc = $et->description ?: ($categoryLabel . ' via ' . ucfirst($et->payment_type));
+                $desc = $et->description ?: '';
                 if ($cur !== 'PKR') {
                     $desc .= ' [' . $cur . ' ' . number_format($rawAmt, 2) . ' @ ROE ' . number_format($rate, 2) . ']';
                 }

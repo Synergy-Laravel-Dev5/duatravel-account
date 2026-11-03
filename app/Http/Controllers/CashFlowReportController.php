@@ -42,8 +42,8 @@ class CashFlowReportController extends Controller
      */
     private function gatherCashFlowData(Request $request): array
     {
-        $activeDashboardPkg = session('dashboard_package', 'hajj');
-        $packageType = $request->get('package_type', (in_array($activeDashboardPkg, ['hajj', 'umrah']) ? $activeDashboardPkg : 'all'));
+        $activeDashboardPkg = session('dashboard_package', 'all');
+        $packageType = $request->get('package_type', ($activeDashboardPkg ?: 'all'));
         $year        = $request->get('year', session('dashboard_year', Carbon::now()->year));
         $dateFrom    = $request->get('date_from', Carbon::now()->startOfYear()->toDateString());
         $dateTo      = $request->get('date_to', Carbon::now()->toDateString());

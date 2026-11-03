@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
 
             $this->call(PermissionTableSeeder::class);
             $this->call(MasterDataSeeder::class);
+            $this->call(DomesticInternationalHotelSeeder::class);
 
             $adminRole = Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
 

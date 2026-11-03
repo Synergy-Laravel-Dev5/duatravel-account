@@ -10,6 +10,9 @@
                         <p class="text-muted fs-13 mb-0">Manage Cash, Bank, General, Loan Assets (Receivables), and Loan Liabilities (Payables).</p>
                     </div>
                     <div class="d-flex gap-2">
+                        <a href="{{ route('reports.chart-of-accounts') }}" class="btn btn-outline-secondary btn-sm">
+                            <i class="mdi mdi-format-list-bulleted-type me-1"></i> Chart of Accounts
+                        </a>
                         <a href="{{ route('account.create') }}" class="btn btn-primary btn-sm">
                             <i class="mdi mdi-plus-circle me-1"></i> + Add Account
                         </a>
@@ -55,6 +58,18 @@
                                                 @if($account->account_type === 'cash')
                                                     <span class="badge bg-soft-success text-success border border-success border-opacity-25 fs-12">
                                                         <i class="mdi mdi-cash me-1"></i> Cash Account
+                                                    </span>
+                                                @elseif($account->account_type === 'fixed_asset')
+                                                    <span class="badge bg-soft-info text-info border border-info border-opacity-25 fs-12">
+                                                        <i class="mdi mdi-domain me-1"></i> Fixed Asset
+                                                    </span>
+                                                @elseif($account->account_type === 'capital')
+                                                    <span class="badge bg-soft-purple text-purple border border-purple border-opacity-25 fs-12" style="background:#f3e8ff; color:#7e22ce;">
+                                                        <i class="mdi mdi-briefcase-account me-1"></i> Capital (Equity)
+                                                    </span>
+                                                @elseif($account->account_type === 'retained_earnings')
+                                                    <span class="badge bg-soft-warning text-warning border border-warning border-opacity-25 fs-12">
+                                                        <i class="mdi mdi-chart-line me-1"></i> Retained Earnings
                                                     </span>
                                                 @elseif($account->account_type === 'loan_asset')
                                                     <span class="badge bg-soft-primary text-primary border border-primary border-opacity-25 fs-12">

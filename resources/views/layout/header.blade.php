@@ -346,6 +346,13 @@
                                 </a>
                             </li>
 
+                            <li>
+                                <a class="tp-link {{ request()->routeIs('reports.chart-of-accounts*') ? 'active' : '' }}" href="{{ route('reports.chart-of-accounts') }}">
+                                    <i data-feather="list"></i>
+                                    <span>Chart of Accounts</span>
+                                </a>
+                            </li>
+
                             @can('airline_view')
                                 <li>
                                     <a class="tp-link" href="{{ route('airline.index') }}">
@@ -544,6 +551,20 @@
                                     href="{{ route('reports.cash-flow', ['package_type' => $isHajjPackage ? 'hajj' : 'umrah']) }}">
                                     <i data-feather="trending-up"></i>
                                     <span>Cash Flow Statement</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="tp-link {{ request()->routeIs('reports.trial-balance*') ? 'active' : '' }}"
+                                    href="{{ route('reports.trial-balance', ['package_type' => $isHajjPackage ? 'hajj' : 'umrah']) }}">
+                                    <i data-feather="check-square"></i>
+                                    <span>Trial Balance</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="tp-link {{ request()->routeIs('reports.chart-of-accounts*') ? 'active' : '' }}"
+                                    href="{{ route('reports.chart-of-accounts') }}">
+                                    <i data-feather="list"></i>
+                                    <span>Chart of Accounts</span>
                                 </a>
                             </li>
                             <li>

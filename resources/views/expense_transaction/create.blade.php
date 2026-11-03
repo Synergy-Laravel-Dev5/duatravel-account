@@ -437,8 +437,32 @@
                                                     @endforeach
                                                 </optgroup>
 
+                                                <optgroup label="🏢 Fixed Assets">
+                                                    @foreach($cashAccounts->where('account_type', 'fixed_asset') as $fa)
+                                                        <option value="account:{{ $fa->id }}" {{ old('jv_from_account') == "account:{$fa->id}" ? 'selected' : '' }}>
+                                                            Fixed Asset: {{ $fa->account_name }} (Opening: PKR {{ number_format($fa->opening_balance_pkr, 2) }})
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
+
+                                                <optgroup label="💼 Capital & Equity">
+                                                    @foreach($cashAccounts->where('account_type', 'capital') as $cap)
+                                                        <option value="account:{{ $cap->id }}" {{ old('jv_from_account') == "account:{$cap->id}" ? 'selected' : '' }}>
+                                                            Capital: {{ $cap->account_name }} (Opening: PKR {{ number_format($cap->opening_balance_pkr, 2) }})
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
+
+                                                <optgroup label="📈 Retained Earnings">
+                                                    @foreach($cashAccounts->where('account_type', 'retained_earnings') as $re)
+                                                        <option value="account:{{ $re->id }}" {{ old('jv_from_account') == "account:{$re->id}" ? 'selected' : '' }}>
+                                                            Retained Earnings: {{ $re->account_name }} (Opening: PKR {{ number_format($re->opening_balance_pkr, 2) }})
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
+
                                                 <optgroup label="📁 General Accounts">
-                                                    @foreach($cashAccounts->whereNotIn('account_type', ['cash', 'loan_asset', 'loan_liability']) as $ga)
+                                                    @foreach($cashAccounts->whereNotIn('account_type', ['cash', 'loan_asset', 'loan_liability', 'fixed_asset', 'capital', 'retained_earnings']) as $ga)
                                                         <option value="account:{{ $ga->id }}" {{ old('jv_from_account') == "account:{$ga->id}" ? 'selected' : '' }}>
                                                             General: {{ $ga->account_name }}
                                                         </option>
@@ -449,13 +473,13 @@
                                                 <div class="row g-2">
                                                     <div class="col-6">
                                                         <label class="form-label fs-11 fw-bold text-danger mb-1">
-                                                            <i class="mdi mdi-currency-usd me-1"></i> From ROE <span class="text-danger">*</span>
+                                                            <i class="mdi mdi-currency-usd me-1"></i> From ROE (Optional)
                                                         </label>
                                                         <div class="input-group input-group-sm">
                                                             <span class="input-group-text bg-white text-danger fw-bold fs-11">1 SAR=</span>
                                                             <input type="number" step="0.0001" name="jv_from_roe" id="jv_from_roe"
-                                                                value="{{ old('jv_from_roe', 76.00) }}"
-                                                                class="form-control form-control-sm text-center fw-bold" placeholder="76.00">
+                                                                value="{{ old('jv_from_roe') }}"
+                                                                class="form-control form-control-sm text-center fw-bold" placeholder="1.0000">
                                                         </div>
                                                     </div>
                                                     <div class="col-6">
@@ -546,8 +570,32 @@
                                                     @endforeach
                                                 </optgroup>
 
+                                                <optgroup label="🏢 Fixed Assets">
+                                                    @foreach($cashAccounts->where('account_type', 'fixed_asset') as $fa)
+                                                        <option value="account:{{ $fa->id }}" {{ old('jv_to_account') == "account:{$fa->id}" ? 'selected' : '' }}>
+                                                            Fixed Asset: {{ $fa->account_name }} (Opening: PKR {{ number_format($fa->opening_balance_pkr, 2) }})
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
+
+                                                <optgroup label="💼 Capital & Equity">
+                                                    @foreach($cashAccounts->where('account_type', 'capital') as $cap)
+                                                        <option value="account:{{ $cap->id }}" {{ old('jv_to_account') == "account:{$cap->id}" ? 'selected' : '' }}>
+                                                            Capital: {{ $cap->account_name }} (Opening: PKR {{ number_format($cap->opening_balance_pkr, 2) }})
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
+
+                                                <optgroup label="📈 Retained Earnings">
+                                                    @foreach($cashAccounts->where('account_type', 'retained_earnings') as $re)
+                                                        <option value="account:{{ $re->id }}" {{ old('jv_to_account') == "account:{$re->id}" ? 'selected' : '' }}>
+                                                            Retained Earnings: {{ $re->account_name }} (Opening: PKR {{ number_format($re->opening_balance_pkr, 2) }})
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
+
                                                 <optgroup label="📁 General Accounts">
-                                                    @foreach($cashAccounts->whereNotIn('account_type', ['cash', 'loan_asset', 'loan_liability']) as $ga)
+                                                    @foreach($cashAccounts->whereNotIn('account_type', ['cash', 'loan_asset', 'loan_liability', 'fixed_asset', 'capital', 'retained_earnings']) as $ga)
                                                         <option value="account:{{ $ga->id }}" {{ old('jv_to_account') == "account:{$ga->id}" ? 'selected' : '' }}>
                                                             General: {{ $ga->account_name }}
                                                         </option>
@@ -558,13 +606,13 @@
                                                 <div class="row g-2">
                                                     <div class="col-6">
                                                         <label class="form-label fs-11 fw-bold text-success mb-1">
-                                                            <i class="mdi mdi-currency-usd me-1"></i> To ROE <span class="text-danger">*</span>
+                                                            <i class="mdi mdi-currency-usd me-1"></i> To ROE (Optional)
                                                         </label>
                                                         <div class="input-group input-group-sm">
                                                             <span class="input-group-text bg-white text-success fw-bold fs-11">1 SAR=</span>
                                                             <input type="number" step="0.0001" name="jv_to_roe" id="jv_to_roe"
-                                                                value="{{ old('jv_to_roe', 75.00) }}"
-                                                                class="form-control form-control-sm text-center fw-bold" placeholder="75.00">
+                                                                value="{{ old('jv_to_roe') }}"
+                                                                class="form-control form-control-sm text-center fw-bold" placeholder="1.0000">
                                                         </div>
                                                     </div>
                                                     <div class="col-6">
@@ -964,8 +1012,8 @@
                                         <div class="input-group input-group-sm">
                                             <span class="input-group-text bg-white">1 SAR =</span>
                                             <input type="number" step="0.0001" name="exchange_rate" id="exchange_rate_input"
-                                                value="{{ old('exchange_rate', 76.00) }}" class="form-control form-control-sm text-center fw-bold"
-                                                placeholder="76.00" {{ old('payee_type') === 'jv' ? '' : 'required' }}>
+                                                value="{{ old('exchange_rate', 1.00) }}" class="form-control form-control-sm text-center fw-bold"
+                                                placeholder="1.00" {{ old('payee_type') === 'jv' ? '' : 'required' }}>
                                             <span class="input-group-text bg-white">PKR</span>
                                         </div>
                                     </div>
@@ -1042,9 +1090,7 @@
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -1199,12 +1245,15 @@
                     currencyRoeGroup.classList.add('d-none');
                     if (rateInput) {
                         rateInput.removeAttribute('required');
-                        const fRoe = parseFloat(document.getElementById('jv_from_roe')?.value) || 76.0;
-                        rateInput.value = fRoe;
                     }
                 } else {
                     currencyRoeGroup.classList.remove('d-none');
-                    if (rateInput) rateInput.setAttribute('required', 'required');
+                    if (rateInput) {
+                        rateInput.setAttribute('required', 'required');
+                        if (currencySelect && currencySelect.value === 'PKR' && (!rateInput.getAttribute('data-user-custom') || rateInput.value === '76' || rateInput.value === '76.00')) {
+                            rateInput.value = '1.00';
+                        }
+                    }
                 }
             }
 
@@ -1214,8 +1263,10 @@
             if (isJv) {
                 const jvMode = document.querySelector('input[name="jv_mode"]:checked')?.value || 'universal';
                 if (jvMode === 'universal') {
-                    const fromRoe = parseFloat(document.getElementById('jv_from_roe')?.value) || 76.0;
-                    const toRoe = parseFloat(document.getElementById('jv_to_roe')?.value) || 75.0;
+                    const fromRoeInput = document.getElementById('jv_from_roe');
+                    const toRoeInput   = document.getElementById('jv_to_roe');
+                    const fromRoe = parseFloat(fromRoeInput?.value) || 0;
+                    const toRoe   = parseFloat(toRoeInput?.value) || 0;
 
                     const fromAmtField = document.getElementById('jv_from_amount_input');
                     const toAmtField   = document.getElementById('jv_to_amount_input');
@@ -1223,21 +1274,40 @@
                     const fromAmt = fromAmtField && fromAmtField.value !== '' ? (parseFloat(fromAmtField.value) || 0) : amtPkr;
                     const toAmt   = toAmtField && toAmtField.value !== '' ? (parseFloat(toAmtField.value) || 0) : fromAmt;
 
-                    const fromSarVal = fromRoe > 0 ? (fromAmt / fromRoe) : 0;
-                    const toSarVal = toRoe > 0 ? (toAmt / toRoe) : 0;
+                    const fromSarVal = fromRoe > 1 ? (fromAmt / fromRoe) : 0;
+                    const toSarVal   = toRoe > 1 ? (toAmt / toRoe) : 0;
 
-                    const fromSar = fromSarVal.toFixed(2);
-                    const toSar = toSarVal.toFixed(2);
+                    const fromSar = fromSarVal > 0 ? fromSarVal.toFixed(2) : null;
+                    const toSar   = toSarVal > 0 ? toSarVal.toFixed(2) : null;
 
                     const fromHint = document.getElementById('from_account_sar_hint');
-                    const toHint = document.getElementById('to_account_sar_hint');
-                    if (fromHint) fromHint.innerHTML = fromAmt > 0 ? `<i class="mdi mdi-calculator me-1"></i>≈ <strong>${Number(fromSar).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR</strong> (PKR ${Number(fromAmt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})})` : '';
-                    if (toHint) toHint.innerHTML = toAmt > 0 ? `<i class="mdi mdi-calculator me-1"></i>≈ <strong>${Number(toSar).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR</strong> (PKR ${Number(toAmt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})})` : '';
+                    const toHint   = document.getElementById('to_account_sar_hint');
+                    if (fromHint) {
+                        if (fromAmt > 0) {
+                            fromHint.innerHTML = fromSar 
+                                ? `<i class="mdi mdi-calculator me-1"></i>≈ <strong>${Number(fromSar).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR</strong> (PKR ${Number(fromAmt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})})`
+                                : `<i class="mdi mdi-cash text-danger me-1"></i><strong>PKR ${Number(fromAmt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong>`;
+                        } else {
+                            fromHint.innerHTML = '';
+                        }
+                    }
+                    if (toHint) {
+                        if (toAmt > 0) {
+                            toHint.innerHTML = toSar 
+                                ? `<i class="mdi mdi-calculator me-1"></i>≈ <strong>${Number(toSar).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR</strong> (PKR ${Number(toAmt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})})`
+                                : `<i class="mdi mdi-cash text-success me-1"></i><strong>PKR ${Number(toAmt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong>`;
+                        } else {
+                            toHint.innerHTML = '';
+                        }
+                    }
 
                     if (fromAmt <= 0 && toAmt <= 0) {
-                        setRoeHelperContent(`<span class="badge bg-soft-info text-dark fs-12 px-2 py-1 border border-info border-opacity-25">Universal JV Dual ROE (From: ${fromRoe} | To: ${toRoe})</span>`);
+                        const roeText = (fromRoe > 1 || toRoe > 1) ? `Dual ROE (From: ${fromRoe || '1.0'} | To: ${toRoe || '1.0'})` : 'PKR Direct (No Foreign ROE)';
+                        setRoeHelperContent(`<span class="badge bg-soft-info text-dark fs-12 px-2 py-1 border border-info border-opacity-25">${roeText}</span>`);
                     } else {
-                        setRoeHelperContent(`<span class="badge bg-soft-info text-dark fs-12 px-2 py-1 border border-info border-opacity-25"><i class="mdi mdi-swap-horizontal me-1 text-primary"></i> From A/C: <strong class="text-danger">PKR ${Number(fromAmt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong> (${Number(fromSar).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR @ ${fromRoe}) &nbsp;➔&nbsp; To A/C: <strong class="text-success">PKR ${Number(toAmt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong> (${Number(toSar).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR @ ${toRoe})</span>`);
+                        const fromDesc = fromSar ? `${Number(fromSar).toLocaleString()} SAR @ ${fromRoe}` : 'PKR Direct';
+                        const toDesc   = toSar ? `${Number(toSar).toLocaleString()} SAR @ ${toRoe}` : 'PKR Direct';
+                        setRoeHelperContent(`<span class="badge bg-soft-info text-dark fs-12 px-2 py-1 border border-info border-opacity-25"><i class="mdi mdi-swap-horizontal me-1 text-primary"></i> From A/C: <strong class="text-danger">PKR ${Number(fromAmt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong> (${fromDesc}) &nbsp;➔&nbsp; To A/C: <strong class="text-success">PKR ${Number(toAmt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong> (${toDesc})</span>`);
                     }
                     return;
                 } else if (jvMode === 'client_supplier') {
@@ -1286,20 +1356,10 @@
                 }
             }
 
-            const curr = currencySelect.value;
+            const curr = currencySelect?.value || 'PKR';
 
-            if (curr === 'PKR') {
-                if (!rateInput.value || rateInput.value == 1) {
-                    rateInput.value = '76.00';
-                }
-            } else if (curr === 'SAR') {
-                if (!rateInput.value || rateInput.value == 1) {
-                    rateInput.value = '76.00';
-                }
-            }
-
-            // Calculate live conversion preview (Amount is ALWAYS PKR)
-            const roe = parseFloat(rateInput?.value) || 76.0;
+            // Calculate live conversion preview (Amount is ALWAYS PKR) without overwriting rateInput.value during typing
+            const roe = parseFloat(rateInput?.value) || (curr === 'PKR' ? 1.0 : 76.0);
 
             if (amtPkr <= 0) {
                 setRoeHelperContent('');
@@ -1307,11 +1367,30 @@
                 const foreignAmt = (amtPkr / roe).toFixed(2);
                 setRoeHelperContent(`<span class="badge bg-soft-success text-success fs-12 px-2 py-1"><i class="mdi mdi-calculator me-1"></i> ≈ <strong>${Number(foreignAmt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} SAR</strong> (at 1 SAR = ${roe} PKR)</span>`);
             } else {
-                setRoeHelperContent(`<span class="badge bg-soft-secondary text-secondary fs-12 px-2 py-1">PKR Only</span>`);
+                setRoeHelperContent(`<span class="badge bg-soft-secondary text-secondary fs-12 px-2 py-1">PKR Only (ROE: 1.00)</span>`);
             }
         }
 
-        currencySelect.addEventListener('change', updateCurrencyAndLiveROE);
+        if (currencySelect) {
+            currencySelect.addEventListener('change', function() {
+                if (this.value === 'PKR') {
+                    if (rateInput && !rateInput.getAttribute('data-user-custom')) {
+                        rateInput.value = '1.00';
+                    }
+                } else if (this.value === 'SAR') {
+                    if (rateInput && (!rateInput.getAttribute('data-user-custom') || rateInput.value === '1.00' || rateInput.value === '1')) {
+                        rateInput.value = '76.00';
+                    }
+                }
+                updateCurrencyAndLiveROE();
+            });
+        }
+        if (rateInput) {
+            rateInput.addEventListener('input', function() {
+                this.setAttribute('data-user-custom', 'true');
+                updateCurrencyAndLiveROE();
+            });
+        }
         if (mainAmountInput) mainAmountInput.addEventListener('input', function() {
             const fField = document.getElementById('jv_from_amount_input');
             if (fField && (!fField.value || fField.value == 0 || fField.getAttribute('data-linked') !== 'false')) {
@@ -1329,8 +1408,8 @@
             jvSarBaseInput.addEventListener('input', function() {
                 const sarVal = parseFloat(this.value) || 0;
                 if (sarVal > 0) {
-                    const fRoe = parseFloat(document.getElementById('jv_from_roe')?.value) || 76.0;
-                    const tRoe = parseFloat(document.getElementById('jv_to_roe')?.value) || 75.0;
+                    const fRoe = parseFloat(document.getElementById('jv_from_roe')?.value) || 1.0;
+                    const tRoe = parseFloat(document.getElementById('jv_to_roe')?.value) || 1.0;
                     if (jvFromAmtField) jvFromAmtField.value = (sarVal * fRoe).toFixed(2);
                     if (jvToAmtField) jvToAmtField.value = (sarVal * tRoe).toFixed(2);
                     if (mainAmountInput) mainAmountInput.value = (sarVal * fRoe).toFixed(2);
@@ -1343,14 +1422,19 @@
             jvFromAmtField.addEventListener('input', function() {
                 this.setAttribute('data-linked', 'true');
                 if (mainAmountInput) mainAmountInput.value = this.value;
-                const fRoe = parseFloat(document.getElementById('jv_from_roe')?.value) || 76.0;
-                const tRoe = parseFloat(document.getElementById('jv_to_roe')?.value) || 75.0;
+                const fRoe = parseFloat(document.getElementById('jv_from_roe')?.value) || 0;
+                const tRoe = parseFloat(document.getElementById('jv_to_roe')?.value) || 0;
                 const fAmt = parseFloat(this.value) || 0;
-                if (fAmt > 0 && fRoe > 0) {
-                    const sar = fAmt / fRoe;
-                    if (jvSarBaseInput) jvSarBaseInput.value = sar.toFixed(2);
-                    if (jvToAmtField && jvToAmtField.getAttribute('data-customized') !== 'true') {
+
+                // User request: Automatically mirror From PKR Amount to To PKR Amount
+                if (jvToAmtField && jvToAmtField.getAttribute('data-customized') !== 'true') {
+                    if (fRoe > 1 && tRoe > 1) {
+                        const sar = fAmt / fRoe;
+                        if (jvSarBaseInput) jvSarBaseInput.value = sar.toFixed(2);
                         jvToAmtField.value = (sar * tRoe).toFixed(2);
+                    } else {
+                        jvToAmtField.value = this.value;
+                        if (jvSarBaseInput) jvSarBaseInput.value = fRoe > 1 ? (fAmt / fRoe).toFixed(2) : '';
                     }
                 }
                 updateCurrencyAndLiveROE();
@@ -1364,17 +1448,27 @@
             });
         }
 
-        if (rateInput) rateInput.addEventListener('input', updateCurrencyAndLiveROE);
         ['jv_from_roe', 'jv_to_roe', 'jv_contra_client_roe', 'jv_contra_supplier_roe'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.addEventListener('input', function() {
+                const fRoe = parseFloat(document.getElementById('jv_from_roe')?.value) || 0;
+                const tRoe = parseFloat(document.getElementById('jv_to_roe')?.value) || 0;
                 if (jvSarBaseInput && parseFloat(jvSarBaseInput.value) > 0) {
                     const sarVal = parseFloat(jvSarBaseInput.value);
-                    const fRoe = parseFloat(document.getElementById('jv_from_roe')?.value) || 76.0;
-                    const tRoe = parseFloat(document.getElementById('jv_to_roe')?.value) || 75.0;
-                    if (jvFromAmtField) jvFromAmtField.value = (sarVal * fRoe).toFixed(2);
-                    if (jvToAmtField) jvToAmtField.value = (sarVal * tRoe).toFixed(2);
-                    if (mainAmountInput) mainAmountInput.value = (sarVal * fRoe).toFixed(2);
+                    if (jvFromAmtField && fRoe > 1) jvFromAmtField.value = (sarVal * fRoe).toFixed(2);
+                    if (jvToAmtField && tRoe > 1) jvToAmtField.value = (sarVal * tRoe).toFixed(2);
+                    if (mainAmountInput && fRoe > 1) mainAmountInput.value = (sarVal * fRoe).toFixed(2);
+                } else if (jvFromAmtField && parseFloat(jvFromAmtField.value) > 0) {
+                    const fAmt = parseFloat(jvFromAmtField.value);
+                    if (fRoe > 1 && tRoe > 1) {
+                        const sar = fAmt / fRoe;
+                        if (jvSarBaseInput) jvSarBaseInput.value = sar.toFixed(2);
+                        if (jvToAmtField && jvToAmtField.getAttribute('data-customized') !== 'true') {
+                            jvToAmtField.value = (sar * tRoe).toFixed(2);
+                        }
+                    } else if (jvToAmtField && jvToAmtField.getAttribute('data-customized') !== 'true') {
+                        jvToAmtField.value = jvFromAmtField.value;
+                    }
                 }
                 updateCurrencyAndLiveROE();
             });
@@ -1461,6 +1555,10 @@
             else if (mode === 'client_supplier' && jvBoxContra) jvBoxContra.classList.remove('d-none');
             else if (mode === 'multi_client' && jvBoxMulti) jvBoxMulti.classList.remove('d-none');
             else if (mode === 'client_multi_supplier' && jvBoxCms) jvBoxCms.classList.remove('d-none');
+
+            if (typeof $ !== 'undefined' && $.fn.select2) {
+                $('.select2').select2({ theme: 'bootstrap-5', width: '100%' });
+            }
 
             updatePayeeTypeUI();
             updateCurrencyAndLiveROE();

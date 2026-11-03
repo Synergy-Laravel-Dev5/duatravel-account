@@ -776,7 +776,7 @@ class SupplierController extends Controller
                 'type_label'     => $typeLabel,
                 'badge_class'    => $badgeClass,
                 'contra_account' => $contra,
-                'description'    => ($isJv ? 'JV: ' : 'Disbursed / Paid: ') . ($t->description ?: ucwords(str_replace('_', ' ', $t->payment_type))),
+                'description'    => $t->description ?: '',
                 'payment_method' => $isJv ? 'Journal Voucher' : ucwords(str_replace('_', ' ', $t->payment_type ?: 'Cash')),
                 'debit_pkr'      => $isCredit ? 0 : (float) $t->amount_pkr,
                 'credit_pkr'     => $isCredit ? (float) $t->amount_pkr : 0,

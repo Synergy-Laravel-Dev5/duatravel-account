@@ -102,6 +102,12 @@
                     <a href="{{ route('reports.cash-flow') }}" class="btn btn-outline-primary btn-sm">
                         <i class="mdi mdi-swap-vertical-circle me-1"></i> Cash Flow
                     </a>
+                    <a href="{{ route('reports.trial-balance') }}" class="btn btn-outline-dark btn-sm">
+                        <i class="mdi mdi-scale-balance me-1"></i> Trial Balance
+                    </a>
+                    <a href="{{ route('reports.chart-of-accounts') }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="mdi mdi-format-list-bulleted-type me-1"></i> Chart of Accounts
+                    </a>
                     <a href="{{ route('report.profit-loss') }}" class="btn btn-outline-info btn-sm">
                         <i class="mdi mdi-chart-line me-1"></i> Profit & Loss (P&L)
                     </a>

@@ -132,7 +132,7 @@
             {{-- Summary KPI Metric Cards --}}
             <div class="row g-3 mb-3 no-print">
                 {{-- Guests / Check-Ins Count --}}
-                <div class="col-xl-4 col-md-4 col-sm-12">
+                <div class="col-xl-3 col-md-6 col-sm-12">
                     <div class="card metric-card p-3 h-100">
                         <div class="d-flex align-items-center justify-content-between">
                             <div>
@@ -149,7 +149,7 @@
 
                 {{-- Financial Card 1: Operational Cost --}}
                 @if(($viewMode ?? 'full') !== 'sale_only')
-                <div class="{{ ($viewMode ?? 'full') === 'cost_only' ? 'col-xl-8 col-md-8 col-sm-12' : 'col-xl-4 col-md-4 col-sm-6' }}">
+                <div class="col-xl-3 col-md-6 col-sm-12">
                     <div class="card metric-card p-3 h-100 border-start border-4 border-danger">
                         <div class="d-flex align-items-center justify-content-between">
                             <div>
@@ -165,11 +165,47 @@
                         </div>
                     </div>
                 </div>
+
+                {{-- Financial Card 2: Total Paid to Suppliers --}}
+                <div class="col-xl-2 col-md-6 col-sm-12">
+                    <div class="card metric-card p-3 h-100 border-start border-4 border-success">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <span class="fs-11 text-muted fw-bold text-uppercase">Paid to Suppliers</span>
+                                <h3 class="fs-20 fw-bold text-success mb-0 mt-1">Rs {{ number_format($totalPaidPKR, 0) }}</h3>
+                                @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                    <small class="text-muted fw-semibold">SAR {{ number_format($totalPaidSAR, 2) }}</small>
+                                @endif
+                            </div>
+                            <div class="avatar-sm bg-soft-success rounded-circle d-flex align-items-center justify-content-center">
+                                <i class="mdi mdi-check-decagram fs-22 text-success"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Financial Card 3: Remaining Supplier Balance --}}
+                <div class="col-xl-2 col-md-6 col-sm-12">
+                    <div class="card metric-card p-3 h-100 border-start border-4 border-warning">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <span class="fs-11 text-muted fw-bold text-uppercase">Remaining Balance</span>
+                                <h3 class="fs-20 fw-bold text-warning mb-0 mt-1">Rs {{ number_format($totalBalancePKR, 0) }}</h3>
+                                @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                    <small class="text-muted fw-semibold">SAR {{ number_format($totalBalanceSAR, 2) }}</small>
+                                @endif
+                            </div>
+                            <div class="avatar-sm bg-soft-warning rounded-circle d-flex align-items-center justify-content-center">
+                                <i class="mdi mdi-scale-balance fs-22 text-warning"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 @endif
 
-                {{-- Financial Card 2: Selling Revenue --}}
+                {{-- Financial Card 4: Selling Revenue --}}
                 @if(($viewMode ?? 'full') !== 'cost_only')
-                <div class="{{ ($viewMode ?? 'full') === 'sale_only' ? 'col-xl-8 col-md-8 col-sm-12' : 'col-xl-4 col-md-4 col-sm-6' }}">
+                <div class="{{ ($viewMode ?? 'full') === 'sale_only' ? 'col-xl-9 col-md-6 col-sm-12' : 'col-xl-2 col-md-6 col-sm-12' }}">
                     <div class="card metric-card p-3 h-100 border-start border-4 border-info">
                         <div class="d-flex align-items-center justify-content-between">
                             <div>
@@ -345,8 +381,24 @@
                                     Mode: <strong class="text-uppercase text-primary">{{ str_replace('_', ' ', $viewMode ?? 'full') }}</strong> &bull; Currency: <strong class="text-uppercase text-dark">{{ $currencyFilter }}</strong>
                                 </small>
                             </div>
-                            <div class="d-flex gap-2">
+                            <div class="d-flex gap-2 flex-wrap align-items-center">
                                 <span class="badge bg-soft-primary text-primary px-2 py-1 fs-11">{{ $records->count() }} Total Records</span>
+                                @if(($viewMode ?? 'full') !== 'sale_only')
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">
+                                        Total Cost: Rs {{ number_format($totalCostPKR, 0) }} (SAR {{ number_format($totalCostSAR, 2) }})
+                                    </span>
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                        Paid: Rs {{ number_format($totalPaidPKR, 0) }} (SAR {{ number_format($totalPaidSAR, 2) }})
+                                    </span>
+                                    <span class="badge bg-warning-subtle text-danger border border-warning-subtle px-2 py-1 fw-bold">
+                                        Remaining Balance: Rs {{ number_format($totalBalancePKR, 0) }} (SAR {{ number_format($totalBalanceSAR, 2) }})
+                                    </span>
+                                @endif
+                                @if(($viewMode ?? 'full') !== 'cost_only')
+                                    <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1">
+                                        Total Sale: Rs {{ number_format($totalSalePKR, 0) }} (SAR {{ number_format($totalSaleSAR, 2) }})
+                                    </span>
+                                @endif
                             </div>
                         </div>
                         <div class="card-body p-0">
@@ -363,6 +415,8 @@
                                             <th>Transport Route</th>
                                             @if(($viewMode ?? 'full') !== 'sale_only')
                                                 <th class="text-end bg-soft-danger">Total Cost</th>
+                                                <th class="text-end bg-soft-success">Paid</th>
+                                                <th class="text-end bg-soft-warning">Remaining Bal</th>
                                             @endif
                                             @if(($viewMode ?? 'full') !== 'cost_only')
                                                 <th class="text-end bg-soft-info">Total Sale</th>
@@ -470,6 +524,24 @@
                                                         <small class="text-muted">Rs {{ number_format($r->cost_pkr, 0) }}</small>
                                                     @endif
                                                 </td>
+                                                <td class="text-end">
+                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                        <div class="fw-bold text-success">SAR {{ number_format($r->paid_sar, 2) }}</div>
+                                                    @endif
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                        <small class="text-muted">Rs {{ number_format($r->paid_pkr, 0) }}</small>
+                                                    @endif
+                                                </td>
+                                                <td class="text-end">
+                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                        <div class="fw-bold {{ $r->balance_sar > 0 ? 'text-danger' : 'text-success' }}">SAR {{ number_format($r->balance_sar, 2) }}</div>
+                                                    @endif
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                        <span class="badge {{ $r->balance_pkr > 0 ? 'bg-warning-subtle text-danger' : 'bg-success-subtle text-success' }} fs-11">
+                                                            Rs {{ number_format($r->balance_pkr, 0) }}
+                                                        </span>
+                                                    @endif
+                                                </td>
                                                 @endif
 
                                                 {{-- Sale Column --}}
@@ -514,6 +586,50 @@
                                             </tr>
                                         @endforelse
                                     </tbody>
+                                    <tfoot class="table-light fw-bold">
+                                        <tr>
+                                            <td colspan="7" class="text-end">Total:</td>
+                                            @if(($viewMode ?? 'full') !== 'sale_only')
+                                                <td class="text-end text-danger">
+                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                        <div>SAR {{ number_format($totalCostSAR, 2) }}</div>
+                                                    @endif
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                        <small>Rs {{ number_format($totalCostPKR, 0) }}</small>
+                                                    @endif
+                                                </td>
+                                                <td class="text-end text-success">
+                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                        <div>SAR {{ number_format($totalPaidSAR, 2) }}</div>
+                                                    @endif
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                        <small>Rs {{ number_format($totalPaidPKR, 0) }}</small>
+                                                    @endif
+                                                </td>
+                                                <td class="text-end text-danger">
+                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                        <div>SAR {{ number_format($totalBalanceSAR, 2) }}</div>
+                                                    @endif
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                        <span class="badge {{ $totalBalancePKR > 0 ? 'bg-warning-subtle text-danger' : 'bg-success-subtle text-success' }} fs-11">
+                                                            Rs {{ number_format($totalBalancePKR, 0) }}
+                                                        </span>
+                                                    @endif
+                                                </td>
+                                            @endif
+                                            @if(($viewMode ?? 'full') !== 'cost_only')
+                                                <td class="text-end text-info">
+                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                        <div>SAR {{ number_format($totalSaleSAR, 2) }}</div>
+                                                    @endif
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                        <small>Rs {{ number_format($totalSalePKR, 0) }}</small>
+                                                    @endif
+                                                </td>
+                                            @endif
+                                            <td colspan="2" class="no-print"></td>
+                                        </tr>
+                                    </tfoot>
                                 </table>
                             </div>
                         </div>
@@ -532,10 +648,16 @@
                                 </h5>
                                 <small class="text-muted">Total Hotels Allocated: {{ $hotelRecords->count() }} | Rooms: {{ $totalRoomsInReport }}</small>
                             </div>
-                            <div class="d-flex gap-2">
+                            <div class="d-flex gap-2 flex-wrap align-items-center">
                                 @if(($viewMode ?? 'full') !== 'sale_only')
                                     <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">
                                         Hotel Cost: Rs {{ number_format($hotelCostTotalPKR, 0) }} (SAR {{ number_format($hotelCostTotalSAR, 2) }})
+                                    </span>
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                        Paid: Rs {{ number_format($hotelPaidTotalPKR, 0) }} (SAR {{ number_format($hotelPaidTotalSAR, 2) }})
+                                    </span>
+                                    <span class="badge bg-warning-subtle text-danger border border-warning-subtle px-2 py-1 fw-bold">
+                                        Remaining Balance: Rs {{ number_format($hotelBalanceTotalPKR, 0) }} (SAR {{ number_format($hotelBalanceTotalSAR, 2) }})
                                     </span>
                                 @endif
                                 @if(($viewMode ?? 'full') !== 'cost_only')
@@ -562,6 +684,8 @@
                                             <th>Supplier</th>
                                             @if(($viewMode ?? 'full') !== 'sale_only')
                                                 <th class="text-end bg-soft-danger">Hotel Cost</th>
+                                                <th class="text-end bg-soft-success">Paid</th>
+                                                <th class="text-end bg-soft-warning">Remaining Bal</th>
                                             @endif
                                             @if(($viewMode ?? 'full') !== 'cost_only')
                                                 <th class="text-end bg-soft-info">Hotel Sale</th>
@@ -628,6 +752,24 @@
                                                         <small class="text-muted">Rs {{ number_format($hr->cost_pkr, 0) }}</small>
                                                     @endif
                                                 </td>
+                                                <td class="text-end">
+                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                        <div class="fw-bold text-success">SAR {{ number_format($hr->paid_sar, 2) }}</div>
+                                                    @endif
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                        <small class="text-muted">Rs {{ number_format($hr->paid_pkr, 0) }}</small>
+                                                    @endif
+                                                </td>
+                                                <td class="text-end">
+                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                        <div class="fw-bold {{ $hr->balance_sar > 0 ? 'text-danger' : 'text-success' }}">SAR {{ number_format($hr->balance_sar, 2) }}</div>
+                                                    @endif
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                        <span class="badge {{ $hr->balance_pkr > 0 ? 'bg-warning-subtle text-danger' : 'bg-success-subtle text-success' }} fs-11">
+                                                            Rs {{ number_format($hr->balance_pkr, 0) }}
+                                                        </span>
+                                                    @endif
+                                                </td>
                                                 @endif
 
                                                 {{-- Hotel Sale --}}
@@ -656,6 +798,50 @@
                                             </tr>
                                         @endforelse
                                     </tbody>
+                                    <tfoot class="table-light fw-bold">
+                                        <tr>
+                                            <td colspan="10" class="text-end">Total:</td>
+                                            @if(($viewMode ?? 'full') !== 'sale_only')
+                                                <td class="text-end text-danger">
+                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                        <div>SAR {{ number_format($hotelCostTotalSAR, 2) }}</div>
+                                                    @endif
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                        <small>Rs {{ number_format($hotelCostTotalPKR, 0) }}</small>
+                                                    @endif
+                                                </td>
+                                                <td class="text-end text-success">
+                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                        <div>SAR {{ number_format($hotelPaidTotalSAR, 2) }}</div>
+                                                    @endif
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                        <small>Rs {{ number_format($hotelPaidTotalPKR, 0) }}</small>
+                                                    @endif
+                                                </td>
+                                                <td class="text-end text-danger">
+                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                        <div>SAR {{ number_format($hotelBalanceTotalSAR, 2) }}</div>
+                                                    @endif
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                        <span class="badge {{ $hotelBalanceTotalPKR > 0 ? 'bg-warning-subtle text-danger' : 'bg-success-subtle text-success' }} fs-11">
+                                                            Rs {{ number_format($hotelBalanceTotalPKR, 0) }}
+                                                        </span>
+                                                    @endif
+                                                </td>
+                                            @endif
+                                            @if(($viewMode ?? 'full') !== 'cost_only')
+                                                <td class="text-end text-info">
+                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                        <div>SAR {{ number_format($hotelSaleTotalSAR, 2) }}</div>
+                                                    @endif
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                        <small>Rs {{ number_format($hotelSaleTotalPKR, 0) }}</small>
+                                                    @endif
+                                                </td>
+                                            @endif
+                                            <td class="no-print"></td>
+                                        </tr>
+                                    </tfoot>
                                 </table>
                             </div>
                         </div>
@@ -674,10 +860,16 @@
                                 </h5>
                                 <small class="text-muted">Total Flight Bookings: {{ $flightRecords->count() }}</small>
                             </div>
-                            <div class="d-flex gap-2">
+                            <div class="d-flex gap-2 flex-wrap align-items-center">
                                 @if(($viewMode ?? 'full') !== 'sale_only')
                                     <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">
                                         Flight Cost: Rs {{ number_format($flightCostTotalPKR, 0) }} (SAR {{ number_format($flightCostTotalSAR, 2) }})
+                                    </span>
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                        Paid: Rs {{ number_format($flightPaidTotalPKR, 0) }} (SAR {{ number_format($flightPaidTotalSAR, 2) }})
+                                    </span>
+                                    <span class="badge bg-warning-subtle text-danger border border-warning-subtle px-2 py-1 fw-bold">
+                                        Remaining Balance: Rs {{ number_format($flightBalanceTotalPKR, 0) }} (SAR {{ number_format($flightBalanceTotalSAR, 2) }})
                                     </span>
                                 @endif
                                 @if(($viewMode ?? 'full') !== 'cost_only')
@@ -702,6 +894,8 @@
                                             <th>Supplier</th>
                                             @if(($viewMode ?? 'full') !== 'sale_only')
                                                 <th class="text-end bg-soft-danger">Flight Cost</th>
+                                                <th class="text-end bg-soft-success">Paid</th>
+                                                <th class="text-end bg-soft-warning">Remaining Bal</th>
                                             @endif
                                             @if(($viewMode ?? 'full') !== 'cost_only')
                                                 <th class="text-end bg-soft-info">Flight Sale</th>
@@ -758,6 +952,24 @@
                                                         <small class="text-muted">Rs {{ number_format($fr->cost_pkr, 0) }}</small>
                                                     @endif
                                                 </td>
+                                                <td class="text-end">
+                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                        <div class="fw-bold text-success">SAR {{ number_format($fr->paid_sar, 2) }}</div>
+                                                    @endif
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                        <small class="text-muted">Rs {{ number_format($fr->paid_pkr, 0) }}</small>
+                                                    @endif
+                                                </td>
+                                                <td class="text-end">
+                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                        <div class="fw-bold {{ $fr->balance_sar > 0 ? 'text-danger' : 'text-success' }}">SAR {{ number_format($fr->balance_sar, 2) }}</div>
+                                                    @endif
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                        <span class="badge {{ $fr->balance_pkr > 0 ? 'bg-warning-subtle text-danger' : 'bg-success-subtle text-success' }} fs-11">
+                                                            Rs {{ number_format($fr->balance_pkr, 0) }}
+                                                        </span>
+                                                    @endif
+                                                </td>
                                                 @endif
 
                                                 {{-- Flight Sale --}}
@@ -772,8 +984,6 @@
                                                 </td>
                                                 @endif
 
-                                                
-
                                                 <td class="text-center no-print">
                                                     <a href="{{ route('booking.show', $fr->booking_id) }}" class="btn btn-xs btn-outline-info" target="_blank">
                                                         <i class="mdi mdi-eye"></i>
@@ -786,6 +996,50 @@
                                             </tr>
                                         @endforelse
                                     </tbody>
+                                    <tfoot class="table-light fw-bold">
+                                        <tr>
+                                            <td colspan="8" class="text-end">Total:</td>
+                                            @if(($viewMode ?? 'full') !== 'sale_only')
+                                                <td class="text-end text-danger">
+                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                        <div>SAR {{ number_format($flightCostTotalSAR, 2) }}</div>
+                                                    @endif
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                        <small>Rs {{ number_format($flightCostTotalPKR, 0) }}</small>
+                                                    @endif
+                                                </td>
+                                                <td class="text-end text-success">
+                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                        <div>SAR {{ number_format($flightPaidTotalSAR, 2) }}</div>
+                                                    @endif
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                        <small>Rs {{ number_format($flightPaidTotalPKR, 0) }}</small>
+                                                    @endif
+                                                </td>
+                                                <td class="text-end text-danger">
+                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                        <div>SAR {{ number_format($flightBalanceTotalSAR, 2) }}</div>
+                                                    @endif
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                        <span class="badge {{ $flightBalanceTotalPKR > 0 ? 'bg-warning-subtle text-danger' : 'bg-success-subtle text-success' }} fs-11">
+                                                            Rs {{ number_format($flightBalanceTotalPKR, 0) }}
+                                                        </span>
+                                                    @endif
+                                                </td>
+                                            @endif
+                                            @if(($viewMode ?? 'full') !== 'cost_only')
+                                                <td class="text-end text-info">
+                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                        <div>SAR {{ number_format($flightSaleTotalSAR, 2) }}</div>
+                                                    @endif
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                        <small>Rs {{ number_format($flightSaleTotalPKR, 0) }}</small>
+                                                    @endif
+                                                </td>
+                                            @endif
+                                            <td class="no-print"></td>
+                                        </tr>
+                                    </tfoot>
                                 </table>
                             </div>
                         </div>
@@ -804,10 +1058,16 @@
                                 </h5>
                                 <small class="text-muted">Total Transport Movements: {{ $transportRecords->count() }}</small>
                             </div>
-                            <div class="d-flex gap-2">
+                            <div class="d-flex gap-2 flex-wrap align-items-center">
                                 @if(($viewMode ?? 'full') !== 'sale_only')
                                     <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">
                                         Transport Cost: Rs {{ number_format($transportCostTotalPKR, 0) }} (SAR {{ number_format($transportCostTotalSAR, 2) }})
+                                    </span>
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                        Paid: Rs {{ number_format($transportPaidTotalPKR, 0) }} (SAR {{ number_format($transportPaidTotalSAR, 2) }})
+                                    </span>
+                                    <span class="badge bg-warning-subtle text-danger border border-warning-subtle px-2 py-1 fw-bold">
+                                        Remaining Balance: Rs {{ number_format($transportBalanceTotalPKR, 0) }} (SAR {{ number_format($transportBalanceTotalSAR, 2) }})
                                     </span>
                                 @endif
                                 @if(($viewMode ?? 'full') !== 'cost_only')
@@ -831,6 +1091,8 @@
                                             <th>Notes</th>
                                             @if(($viewMode ?? 'full') !== 'sale_only')
                                                 <th class="text-end bg-soft-danger">Transport Cost</th>
+                                                <th class="text-end bg-soft-success">Paid</th>
+                                                <th class="text-end bg-soft-warning">Remaining Bal</th>
                                             @endif
                                             @if(($viewMode ?? 'full') !== 'cost_only')
                                                 <th class="text-end bg-soft-info">Transport Sale</th>
@@ -881,6 +1143,24 @@
                                                         <small class="text-muted">Rs {{ number_format($tr->cost_pkr, 0) }}</small>
                                                     @endif
                                                 </td>
+                                                <td class="text-end">
+                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                        <div class="fw-bold text-success">SAR {{ number_format($tr->paid_sar, 2) }}</div>
+                                                    @endif
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                        <small class="text-muted">Rs {{ number_format($tr->paid_pkr, 0) }}</small>
+                                                    @endif
+                                                </td>
+                                                <td class="text-end">
+                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                        <div class="fw-bold {{ $tr->balance_sar > 0 ? 'text-danger' : 'text-success' }}">SAR {{ number_format($tr->balance_sar, 2) }}</div>
+                                                    @endif
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                        <span class="badge {{ $tr->balance_pkr > 0 ? 'bg-warning-subtle text-danger' : 'bg-success-subtle text-success' }} fs-11">
+                                                            Rs {{ number_format($tr->balance_pkr, 0) }}
+                                                        </span>
+                                                    @endif
+                                                </td>
                                                 @endif
 
                                                 {{-- Transport Sale --}}
@@ -895,8 +1175,6 @@
                                                 </td>
                                                 @endif
 
-                                                
-
                                                 <td class="text-center no-print">
                                                     <a href="{{ route('booking.show', $tr->booking_id) }}" class="btn btn-xs btn-outline-info" target="_blank">
                                                         <i class="mdi mdi-eye"></i>
@@ -909,6 +1187,50 @@
                                             </tr>
                                         @endforelse
                                     </tbody>
+                                    <tfoot class="table-light fw-bold">
+                                        <tr>
+                                            <td colspan="7" class="text-end">Total:</td>
+                                            @if(($viewMode ?? 'full') !== 'sale_only')
+                                                <td class="text-end text-danger">
+                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                        <div>SAR {{ number_format($transportCostTotalSAR, 2) }}</div>
+                                                    @endif
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                        <small>Rs {{ number_format($transportCostTotalPKR, 0) }}</small>
+                                                    @endif
+                                                </td>
+                                                <td class="text-end text-success">
+                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                        <div>SAR {{ number_format($transportPaidTotalSAR, 2) }}</div>
+                                                    @endif
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                        <small>Rs {{ number_format($transportPaidTotalPKR, 0) }}</small>
+                                                    @endif
+                                                </td>
+                                                <td class="text-end text-danger">
+                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                        <div>SAR {{ number_format($transportBalanceTotalSAR, 2) }}</div>
+                                                    @endif
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                        <span class="badge {{ $transportBalanceTotalPKR > 0 ? 'bg-warning-subtle text-danger' : 'bg-success-subtle text-success' }} fs-11">
+                                                            Rs {{ number_format($transportBalanceTotalPKR, 0) }}
+                                                        </span>
+                                                    @endif
+                                                </td>
+                                            @endif
+                                            @if(($viewMode ?? 'full') !== 'cost_only')
+                                                <td class="text-end text-info">
+                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                        <div>SAR {{ number_format($transportSaleTotalSAR, 2) }}</div>
+                                                    @endif
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                        <small>Rs {{ number_format($transportSaleTotalPKR, 0) }}</small>
+                                                    @endif
+                                                </td>
+                                            @endif
+                                            <td class="no-print"></td>
+                                        </tr>
+                                    </tfoot>
                                 </table>
                             </div>
                         </div>
@@ -927,10 +1249,16 @@
                                 </h5>
                                 <small class="text-muted">Total Visas Processed: {{ $visaRecords->count() }}</small>
                             </div>
-                            <div class="d-flex gap-2">
+                            <div class="d-flex gap-2 flex-wrap align-items-center">
                                 @if(($viewMode ?? 'full') !== 'sale_only')
                                     <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">
                                         Visa Cost: Rs {{ number_format($visaCostTotalPKR, 0) }} (SAR {{ number_format($visaCostTotalSAR, 2) }})
+                                    </span>
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                        Paid: Rs {{ number_format($visaPaidTotalPKR, 0) }} (SAR {{ number_format($visaPaidTotalSAR, 2) }})
+                                    </span>
+                                    <span class="badge bg-warning-subtle text-danger border border-warning-subtle px-2 py-1 fw-bold">
+                                        Remaining Balance: Rs {{ number_format($visaBalanceTotalPKR, 0) }} (SAR {{ number_format($visaBalanceTotalSAR, 2) }})
                                     </span>
                                 @endif
                                 @if(($viewMode ?? 'full') !== 'cost_only')
@@ -954,6 +1282,8 @@
                                             <th>Supplier</th>
                                             @if(($viewMode ?? 'full') !== 'sale_only')
                                                 <th class="text-end bg-soft-danger">Visa Cost</th>
+                                                <th class="text-end bg-soft-success">Paid</th>
+                                                <th class="text-end bg-soft-warning">Remaining Bal</th>
                                             @endif
                                             @if(($viewMode ?? 'full') !== 'cost_only')
                                                 <th class="text-end bg-soft-info">Visa Sale</th>
@@ -1001,6 +1331,24 @@
                                                         <small class="text-muted">Rs {{ number_format($vr->cost_pkr, 0) }}</small>
                                                     @endif
                                                 </td>
+                                                <td class="text-end">
+                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                        <div class="fw-bold text-success">SAR {{ number_format($vr->paid_sar, 2) }}</div>
+                                                    @endif
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                        <small class="text-muted">Rs {{ number_format($vr->paid_pkr, 0) }}</small>
+                                                    @endif
+                                                </td>
+                                                <td class="text-end">
+                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                        <div class="fw-bold {{ $vr->balance_sar > 0 ? 'text-danger' : 'text-success' }}">SAR {{ number_format($vr->balance_sar, 2) }}</div>
+                                                    @endif
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                        <span class="badge {{ $vr->balance_pkr > 0 ? 'bg-warning-subtle text-danger' : 'bg-success-subtle text-success' }} fs-11">
+                                                            Rs {{ number_format($vr->balance_pkr, 0) }}
+                                                        </span>
+                                                    @endif
+                                                </td>
                                                 @endif
 
                                                 {{-- Visa Sale --}}
@@ -1015,8 +1363,6 @@
                                                 </td>
                                                 @endif
 
-                                                
-
                                                 <td class="text-center no-print">
                                                     <a href="{{ route('booking.show', $vr->booking_id) }}" class="btn btn-xs btn-outline-info" target="_blank">
                                                         <i class="mdi mdi-eye"></i>
@@ -1029,6 +1375,50 @@
                                             </tr>
                                         @endforelse
                                     </tbody>
+                                    <tfoot class="table-light fw-bold">
+                                        <tr>
+                                            <td colspan="7" class="text-end">Total:</td>
+                                            @if(($viewMode ?? 'full') !== 'sale_only')
+                                                <td class="text-end text-danger">
+                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                        <div>SAR {{ number_format($visaCostTotalSAR, 2) }}</div>
+                                                    @endif
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                        <small>Rs {{ number_format($visaCostTotalPKR, 0) }}</small>
+                                                    @endif
+                                                </td>
+                                                <td class="text-end text-success">
+                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                        <div>SAR {{ number_format($visaPaidTotalSAR, 2) }}</div>
+                                                    @endif
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                        <small>Rs {{ number_format($visaPaidTotalPKR, 0) }}</small>
+                                                    @endif
+                                                </td>
+                                                <td class="text-end text-danger">
+                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                        <div>SAR {{ number_format($visaBalanceTotalSAR, 2) }}</div>
+                                                    @endif
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                        <span class="badge {{ $visaBalanceTotalPKR > 0 ? 'bg-warning-subtle text-danger' : 'bg-success-subtle text-success' }} fs-11">
+                                                            Rs {{ number_format($visaBalanceTotalPKR, 0) }}
+                                                        </span>
+                                                    @endif
+                                                </td>
+                                            @endif
+                                            @if(($viewMode ?? 'full') !== 'cost_only')
+                                                <td class="text-end text-info">
+                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                        <div>SAR {{ number_format($visaSaleTotalSAR, 2) }}</div>
+                                                    @endif
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                        <small>Rs {{ number_format($visaSaleTotalPKR, 0) }}</small>
+                                                    @endif
+                                                </td>
+                                            @endif
+                                            <td class="no-print"></td>
+                                        </tr>
+                                    </tfoot>
                                 </table>
                             </div>
                         </div>

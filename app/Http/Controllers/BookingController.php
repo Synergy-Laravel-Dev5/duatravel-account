@@ -206,22 +206,11 @@ class BookingController extends Controller
             return !empty($t['route']) || !empty($t['supplier_id']) || (float)($t['cost_rate'] ?? 0) > 0 || (float)($t['selling_rate'] ?? 0) > 0;
         })) > 0;
 
-        $resolvedBookingDate = $request->booking_date;
-        $specificServiceDate = null;
-        if ($hasFlight && !empty($request->flight_booking_date)) {
-            $specificServiceDate = $request->flight_booking_date;
-        } elseif ($hasVisas && !empty($request->input('visas.0.booking_date'))) {
-            $specificServiceDate = $request->input('visas.0.booking_date');
-        } elseif ($hasHotels && !empty($request->input('hotels.0.booking_date'))) {
-            $specificServiceDate = $request->input('hotels.0.booking_date');
-        } elseif ($hasTransports && !empty($request->input('transports.0.booking_date'))) {
-            $specificServiceDate = $request->input('transports.0.booking_date');
-        }
-
-        if (empty($resolvedBookingDate)) {
-            $resolvedBookingDate = $specificServiceDate ?: now()->toDateString();
-        }
+        $resolvedBookingDate = $request->booking_date ?: ($request->booking_date_package_tab ?: now()->toDateString());
         $finalBookingDate = date('Y-m-d', strtotime($resolvedBookingDate));
+
+        $flightBkInput = $request->flight_booking_date ?: $request->booking_date_flight_tab;
+        $finalFlightBookingDate = $hasFlight ? (!empty($flightBkInput) ? date('Y-m-d', strtotime($flightBkInput)) : $finalBookingDate) : null;
 
         $calcAdults = 0;
         $calcChildren = 0;
@@ -245,7 +234,7 @@ class BookingController extends Controller
                 'client_id'           => $clientId,
                 'company_id'          => $companyId,
                 'booking_date'        => $finalBookingDate,
-                'flight_booking_date' => $hasFlight ? (!empty($request->flight_booking_date) ? date('Y-m-d', strtotime($request->flight_booking_date)) : $finalBookingDate) : null,
+                'flight_booking_date' => $finalFlightBookingDate,
                 'currency'            => $request->currency ?? 'PKR',
                 'haji_id'             => $hajiId,
                 'room_number'         => $roomNumber,
@@ -290,8 +279,39 @@ class BookingController extends Controller
             $bookingData['flight_attachment'] = $request->file('flight_attachment')->store('bookings/flight_attachment', 'public');
         }
 
-        $bookingCategory = $request->booking_category ?: 'umrah';
-        $bookingData['booking_category'] = $bookingCategory;
+        // Clean date and time fields to prevent MySQL strict mode 1292 errors
+        foreach (['flight_booking_date', 'flight_option_date', 'departure_date', 'arrival_date', 'booking_date'] as $dateCol) {
+            if (isset($bookingData[$dateCol]) && trim((string)$bookingData[$dateCol]) === '') {
+                $bookingData[$dateCol] = null;
+            }
+        }
+        foreach (['departure_time', 'arrival_time'] as $timeCol) {
+            if (isset($bookingData[$timeCol])) {
+                $rawTime = trim((string)$bookingData[$timeCol]);
+                if ($rawTime === '') {
+                    $bookingData[$timeCol] = null;
+                } else {
+                    $parsedTime = strtotime($rawTime);
+                    $bookingData[$timeCol] = $parsedTime !== false ? date('H:i:s', $parsedTime) : null;
+                }
+            }
+        }
+        if (isset($bookingData['package_id']) && empty($bookingData['package_id'])) {
+            $bookingData['package_id'] = null;
+        }
+
+        $sessionPkg = session('dashboard_package', 'hajj');
+        if ($sessionPkg === 'hajj' || $request->package_type === 'hajj' || $request->booking_category === 'hajj') {
+            $bookingCategory = 'hajj';
+            $bookingData['package_type'] = 'hajj';
+            $bookingData['booking_category'] = 'hajj';
+        } else {
+            $bookingCategory = $request->booking_category ?: 'umrah';
+            $bookingData['booking_category'] = $bookingCategory;
+            if (in_array($bookingCategory, ['domestic', 'international'])) {
+                $bookingData['package_type'] = $bookingCategory;
+            }
+        }
 
         // Defensive column check against missing columns on older database schemas
         $existingCols = \Illuminate\Support\Facades\Schema::getColumnListing('bookings');
@@ -337,19 +357,48 @@ class BookingController extends Controller
 
                 $flPerson = $request->input("flight_persons.$idx", []);
                 $paxType  = $person['pax_type'] ?? ($flPerson['pax_type'] ?? 'adult');
-                $flTicket = $person['flight_ticket'] ?? ($flPerson['ticket'] ?? ($flPerson['flight_ticket'] ?? null));
+                $flTripType  = $person['trip_type'] ?? ($flPerson['trip_type'] ?? 'round_trip');
+                $flDepTicket = $person['departure_ticket'] ?? ($flPerson['departure_ticket'] ?? null);
+                $flDepCost   = (float) ($person['departure_cost'] ?? ($flPerson['departure_cost'] ?? 0));
+                $flDepSell   = (float) ($person['departure_sell'] ?? ($flPerson['departure_sell'] ?? 0));
+                $flRetTicket = $person['return_ticket'] ?? ($flPerson['return_ticket'] ?? null);
+                $flRetCost   = (float) ($person['return_cost'] ?? ($flPerson['return_cost'] ?? 0));
+                $flRetSell   = (float) ($person['return_sell'] ?? ($flPerson['return_sell'] ?? 0));
+
+                $flTicket = $person['flight_ticket'] ?? ($flPerson['ticket'] ?? ($flPerson['flight_ticket'] ?? ($flDepTicket ?: $flRetTicket)));
                 $flCost   = (float) ($person['flight_cost'] ?? ($flPerson['cost_rate'] ?? ($flPerson['flight_cost'] ?? 0)));
                 $flSell   = (float) ($person['flight_sell'] ?? ($flPerson['sell_rate'] ?? ($flPerson['flight_sell'] ?? 0)));
+
+                if (($flDepCost > 0 || $flRetCost > 0) && $flCost == 0) {
+                    $flCost = $flDepCost + $flRetCost;
+                }
+                if (($flDepSell > 0 || $flRetSell > 0) && $flSell == 0) {
+                    $flSell = $flDepSell + $flRetSell;
+                }
+
                 $flSupId  = $flPerson['flight_supplier_id'] ?? ($person['flight_supplier_id'] ?? ($request->flight_supplier_id ?: null));
                 $flPnr    = $flPerson['flight_pnr'] ?? ($person['flight_pnr'] ?? ($request->departure_pnr ?: null));
                 $flDate   = $flPerson['flight_date'] ?? ($person['flight_date'] ?? ($request->departure_date ?: null));
                 $flTime   = $flPerson['flight_time'] ?? ($person['flight_time'] ?? ($request->departure_time ?: null));
+                if (!empty($flTime)) {
+                    $parsedFlTime = strtotime(trim((string)$flTime));
+                    $flTime = $parsedFlTime !== false ? date('H:i:s', $parsedFlTime) : null;
+                } else {
+                    $flTime = null;
+                }
                 $flTicketStatus = $flPerson['ticket_status'] ?? ($person['ticket_status'] ?? 'confirmed');
 
                 $personData = [
                     'full_name'          => $paxName,
                     'haji_id'            => $person['haji_id'] ?? ($idx === 0 ? $hajiId : null),
                     'pax_type'           => $paxType,
+                    'trip_type'          => $flTripType,
+                    'departure_ticket'   => $flDepTicket,
+                    'departure_cost'     => $flDepCost,
+                    'departure_sell'     => $flDepSell,
+                    'return_ticket'      => $flRetTicket,
+                    'return_cost'        => $flRetCost,
+                    'return_sell'        => $flRetSell,
                     'flight_ticket'      => $flTicket,
                     'ticket_status'      => $flTicketStatus,
                     'flight_cost'        => $flCost,
@@ -365,7 +414,7 @@ class BookingController extends Controller
                     'gender'             => $person['gender'] ?? null,
                     'city'               => $person['city'] ?? null,
                     'blood_group'        => $person['blood_group'] ?? null,
-                    'passport_number'    => $person['passport_number'] ?? null,
+                    'passport_number'    => !empty($person['passport_number']) ? $person['passport_number'] : (!empty($flPerson['passport']) ? $flPerson['passport'] : ($idx === 0 ? ($booking->passport_number ?: ($booking->client?->passport_number ?? null)) : null)),
                     'room_number'        => $person['room_number'] ?? ($idx === 0 ? $roomNumber : null),
                     'cnic'               => $person['cnic'] ?? null,
                     'phone'              => $person['phone'] ?? null,
@@ -407,9 +456,11 @@ class BookingController extends Controller
                             $hotelData[$dCol] = null;
                         }
                     }
-                    if (empty($hotelData['booking_date'])) {
-                        $hotelData['booking_date'] = !empty($hotelData['check_in']) ? $hotelData['check_in'] : $finalBookingDate;
-                    }
+                    $hotelBkDate = !empty($request->booking_date_hotel_tab) 
+                        ? date('Y-m-d', strtotime($request->booking_date_hotel_tab)) 
+                        : (!empty($hotelData['booking_date']) ? date('Y-m-d', strtotime($hotelData['booking_date'])) : (!empty($hotelData['check_in']) ? date('Y-m-d', strtotime($hotelData['check_in'])) : $finalBookingDate));
+                    $hotelData['booking_date'] = $hotelBkDate;
+
                     if (isset($hotelData['supplier_id']) && empty($hotelData['supplier_id'])) {
                         $hotelData['supplier_id'] = null;
                     }
@@ -421,6 +472,20 @@ class BookingController extends Controller
                     }
                     if (empty($hotelData['room_type'])) {
                         $hotelData['room_type'] = 'double';
+                    }
+
+                    $hNights = (int)$hotelData['no_of_nights'];
+                    $hRooms = (int)$hotelData['no_of_rooms'];
+                    $hCostRate = (float)($hotelData['cost_per_night'] ?? 0);
+                    $hSellRate = (float)($hotelData['selling_per_night'] ?? 0);
+                    $hCostRoe = (float)($hotelData['cost_roe'] ?? ($hotelData['roe'] ?? 1));
+                    $hSaleRoe = (float)($hotelData['sale_roe'] ?? $hCostRoe);
+
+                    if (empty($hotelData['cost_amount']) || (float)$hotelData['cost_amount'] <= 0) {
+                        $hotelData['cost_amount'] = $hNights * $hRooms * $hCostRate * $hCostRoe;
+                    }
+                    if (empty($hotelData['selling_amount']) || (float)$hotelData['selling_amount'] <= 0) {
+                        $hotelData['selling_amount'] = $hNights * $hRooms * $hSellRate * $hSaleRoe;
                     }
 
                     // Point 9: Additional rooms
@@ -451,9 +516,15 @@ class BookingController extends Controller
                             $transportData[$dCol] = null;
                         }
                     }
-                    if (empty($transportData['booking_date'])) {
-                        $transportData['booking_date'] = !empty($transportData['travel_date']) ? $transportData['travel_date'] : $finalBookingDate;
+                    if (!empty($transportData['travel_time'])) {
+                        $parsedTrTime = strtotime(trim((string)$transportData['travel_time']));
+                        $transportData['travel_time'] = $parsedTrTime !== false ? date('H:i:s', $parsedTrTime) : null;
                     }
+                    $trBkDate = !empty($request->booking_date_transport_tab) 
+                        ? date('Y-m-d', strtotime($request->booking_date_transport_tab)) 
+                        : (!empty($transportData['booking_date']) ? date('Y-m-d', strtotime($transportData['booking_date'])) : (!empty($transportData['travel_date']) ? date('Y-m-d', strtotime($transportData['travel_date'])) : $finalBookingDate));
+                    $transportData['booking_date'] = $trBkDate;
+
                     if (isset($transportData['supplier_id']) && empty($transportData['supplier_id'])) {
                         $transportData['supplier_id'] = null;
                     }
@@ -462,6 +533,19 @@ class BookingController extends Controller
                     }
                     if (empty($transportData['pax']) || !is_numeric($transportData['pax'])) {
                         $transportData['pax'] = 1;
+                    }
+
+                    $tQty = (float)$transportData['quantity'];
+                    $tCostRate = (float)($transportData['cost_rate'] ?? 0);
+                    $tSellRate = (float)($transportData['selling_rate'] ?? 0);
+                    $tCostRoe = (float)($transportData['cost_roe'] ?? ($transportData['roe'] ?? 1));
+                    $tSaleRoe = (float)($transportData['sale_roe'] ?? $tCostRoe);
+
+                    if (empty($transportData['cost_amount']) || (float)$transportData['cost_amount'] <= 0) {
+                        $transportData['cost_amount'] = $tCostRate * $tQty * $tCostRoe;
+                    }
+                    if (empty($transportData['selling_amount']) || (float)$transportData['selling_amount'] <= 0) {
+                        $transportData['selling_amount'] = $tSellRate * $tQty * $tSaleRoe;
                     }
                     if (empty($transportData['status'])) {
                         $transportData['status'] = 'CONFIRMED';
@@ -502,9 +586,10 @@ class BookingController extends Controller
                             $visaData[$dCol] = null;
                         }
                     }
-                    if (empty($visaData['booking_date'])) {
-                        $visaData['booking_date'] = $finalBookingDate;
-                    }
+                    $vBkDate = !empty($request->booking_date_visa_tab) 
+                        ? date('Y-m-d', strtotime($request->booking_date_visa_tab)) 
+                        : (!empty($visaData['booking_date']) ? date('Y-m-d', strtotime($visaData['booking_date'])) : $finalBookingDate);
+                    $visaData['booking_date'] = $vBkDate;
                     // Point 23: Child voucher number
                     $visaData['voucher_no'] = $visa['voucher_no'] ?? ($visaVoucher ? ($visaVoucher . '-' . ($idx + 1)) : null);
 
@@ -664,19 +749,12 @@ class BookingController extends Controller
                 return !empty($t['route']) || !empty($t['supplier_id']) || (float)($t['cost_rate'] ?? 0) > 0 || (float)($t['selling_rate'] ?? 0) > 0;
             })) > 0;
 
-            // Date Resolution:
-            // Prioritize primary booking_date submitted by user, or any of the synchronized tab date fields
-            $resolvedBookingDate = $request->booking_date 
-                ?: ($request->booking_date_package_tab 
-                ?: ($request->booking_date_hotel_tab 
-                ?: ($request->booking_date_flight_tab 
-                ?: ($request->booking_date_passenger_tab 
-                ?: ($request->booking_date_transport_tab 
-                ?: ($request->booking_date_visa_tab 
-                ?: ($request->flight_booking_date 
-                ?: ($booking->booking_date ?: now()->toDateString()))))))));
-
+            // Date Resolution: Maintain independent dates per service tab
+            $resolvedBookingDate = $request->booking_date ?: ($request->booking_date_package_tab ?: ($booking->booking_date ?: now()->toDateString()));
             $finalBookingDate = date('Y-m-d', strtotime($resolvedBookingDate));
+
+            $flightBkInput = $request->flight_booking_date ?: $request->booking_date_flight_tab;
+            $finalFlightBookingDate = $hasFlight ? (!empty($flightBkInput) ? date('Y-m-d', strtotime($flightBkInput)) : ($booking->flight_booking_date ?: $finalBookingDate)) : null;
 
             $calcAdults = 0;
             $calcChildren = 0;
@@ -700,7 +778,7 @@ class BookingController extends Controller
                     'client_id'           => $clientId,
                     'company_id'          => $companyId,
                     'booking_date'        => $finalBookingDate,
-                    'flight_booking_date' => $hasFlight ? (!empty($request->flight_booking_date) ? date('Y-m-d', strtotime($request->flight_booking_date)) : $finalBookingDate) : null,
+                    'flight_booking_date' => $finalFlightBookingDate,
                     'currency'            => $request->currency ?? ($booking->currency ?? 'PKR'),
                     'haji_id'             => $hajiId,
                     'room_number'         => $roomNumber,
@@ -746,6 +824,17 @@ class BookingController extends Controller
                     $bookingData[$dateCol] = null;
                 }
             }
+            foreach (['departure_time', 'arrival_time'] as $timeCol) {
+                if (isset($bookingData[$timeCol])) {
+                    $rawTime = trim((string)$bookingData[$timeCol]);
+                    if ($rawTime === '') {
+                        $bookingData[$timeCol] = null;
+                    } else {
+                        $parsedTime = strtotime($rawTime);
+                        $bookingData[$timeCol] = $parsedTime !== false ? date('H:i:s', $parsedTime) : null;
+                    }
+                }
+            }
             if (isset($bookingData['package_id']) && empty($bookingData['package_id'])) {
                 $bookingData['package_id'] = null;
             }
@@ -757,7 +846,18 @@ class BookingController extends Controller
             }
 
             $curYear  = date('Y');
-            $bookingCategory  = $request->booking_category ?: ($booking->booking_category ?: 'umrah');
+            $sessionPkg = session('dashboard_package', 'hajj');
+            if (($booking->package_type ?? '') === 'hajj' || $request->package_type === 'hajj' || $request->booking_category === 'hajj') {
+                $bookingCategory = 'hajj';
+                $bookingData['package_type'] = 'hajj';
+                $bookingData['booking_category'] = 'hajj';
+            } else {
+                $bookingCategory  = $request->booking_category ?: ($booking->booking_category ?: 'umrah');
+                $bookingData['booking_category']     = $bookingCategory;
+                if (in_array($bookingCategory, ['domestic', 'international'])) {
+                    $bookingData['package_type']     = $bookingCategory;
+                }
+            }
             $flightVoucher    = $hasFlight ? ($booking->flight_voucher_no ?: ($request->flight_voucher_no ?: self::getNextVoucherNo('flight', $curYear))) : null;
             $hotelVoucher     = $hasHotels ? ($booking->hotel_voucher_no ?: ($request->hotel_voucher_no ?: self::getNextVoucherNo('hotel', $curYear))) : null;
             $transportVoucher = $hasTransports ? ($booking->transport_voucher_no ?: ($request->transport_voucher_no ?: self::getNextVoucherNo('transport', $curYear))) : null;
@@ -766,7 +866,6 @@ class BookingController extends Controller
             $isFlightOnly = ($bookingCategory === 'domestic' || $bookingCategory === 'international' || (!$hasHotels && $hasFlight && !$hasVisas && !$hasTransports));
             $bookingVoucher   = $request->voucher_number ?: ($booking->voucher_number ?: self::getNextVoucherNo('booking', $curYear));
 
-            $bookingData['booking_category']     = $bookingCategory;
             $bookingData['voucher_number']       = $bookingVoucher;
             $bookingData['flight_voucher_no']    = $flightVoucher;
             $bookingData['hotel_voucher_no']     = $hotelVoucher;
@@ -802,19 +901,48 @@ class BookingController extends Controller
 
                     $flPerson = $request->input("flight_persons.$idx", []);
                     $paxType  = $person['pax_type'] ?? ($flPerson['pax_type'] ?? 'adult');
-                    $flTicket = $person['flight_ticket'] ?? ($flPerson['ticket'] ?? ($flPerson['flight_ticket'] ?? null));
+                    $flTripType  = $person['trip_type'] ?? ($flPerson['trip_type'] ?? 'round_trip');
+                    $flDepTicket = $person['departure_ticket'] ?? ($flPerson['departure_ticket'] ?? null);
+                    $flDepCost   = (float) ($person['departure_cost'] ?? ($flPerson['departure_cost'] ?? 0));
+                    $flDepSell   = (float) ($person['departure_sell'] ?? ($flPerson['departure_sell'] ?? 0));
+                    $flRetTicket = $person['return_ticket'] ?? ($flPerson['return_ticket'] ?? null);
+                    $flRetCost   = (float) ($person['return_cost'] ?? ($flPerson['return_cost'] ?? 0));
+                    $flRetSell   = (float) ($person['return_sell'] ?? ($flPerson['return_sell'] ?? 0));
+
+                    $flTicket = $person['flight_ticket'] ?? ($flPerson['ticket'] ?? ($flPerson['flight_ticket'] ?? ($flDepTicket ?: $flRetTicket)));
                     $flCost   = (float) ($person['flight_cost'] ?? ($flPerson['cost_rate'] ?? ($flPerson['flight_cost'] ?? 0)));
                     $flSell   = (float) ($person['flight_sell'] ?? ($flPerson['sell_rate'] ?? ($flPerson['flight_sell'] ?? 0)));
+
+                    if (($flDepCost > 0 || $flRetCost > 0) && $flCost == 0) {
+                        $flCost = $flDepCost + $flRetCost;
+                    }
+                    if (($flDepSell > 0 || $flRetSell > 0) && $flSell == 0) {
+                        $flSell = $flDepSell + $flRetSell;
+                    }
+
                     $flSupId  = $flPerson['flight_supplier_id'] ?? ($person['flight_supplier_id'] ?? ($request->flight_supplier_id ?: null));
                     $flPnr    = $flPerson['flight_pnr'] ?? ($person['flight_pnr'] ?? ($request->departure_pnr ?: null));
                     $flDate   = $flPerson['flight_date'] ?? ($person['flight_date'] ?? ($request->departure_date ?: null));
                     $flTime   = $flPerson['flight_time'] ?? ($person['flight_time'] ?? ($request->departure_time ?: null));
+                    if (!empty($flTime)) {
+                        $parsedFlTime = strtotime(trim((string)$flTime));
+                        $flTime = $parsedFlTime !== false ? date('H:i:s', $parsedFlTime) : null;
+                    } else {
+                        $flTime = null;
+                    }
                     $flTicketStatus = $flPerson['ticket_status'] ?? ($person['ticket_status'] ?? 'confirmed');
 
                     $personData = [
                         'full_name'          => $paxName,
                         'haji_id'            => $person['haji_id'] ?? ($idx === 0 ? $hajiId : null),
                         'pax_type'           => $paxType,
+                        'trip_type'          => $flTripType,
+                        'departure_ticket'   => $flDepTicket,
+                        'departure_cost'     => $flDepCost,
+                        'departure_sell'     => $flDepSell,
+                        'return_ticket'      => $flRetTicket,
+                        'return_cost'        => $flRetCost,
+                        'return_sell'        => $flRetSell,
                         'flight_ticket'      => $flTicket,
                         'ticket_status'      => $flTicketStatus,
                         'flight_cost'        => $flCost,
@@ -830,7 +958,7 @@ class BookingController extends Controller
                         'gender'             => $person['gender'] ?? null,
                         'city'               => $person['city'] ?? null,
                         'blood_group'        => $person['blood_group'] ?? null,
-                        'passport_number'    => $person['passport_number'] ?? null,
+                        'passport_number'    => !empty($person['passport_number']) ? $person['passport_number'] : (!empty($flPerson['passport']) ? $flPerson['passport'] : ($idx === 0 ? ($booking->passport_number ?: ($booking->client?->passport_number ?? null)) : null)),
                         'room_number'        => $person['room_number'] ?? ($idx === 0 ? $roomNumber : null),
                         'cnic'               => $person['cnic'] ?? null,
                         'phone'              => $person['phone'] ?? null,
@@ -873,9 +1001,11 @@ class BookingController extends Controller
                                 $hotelData[$dCol] = null;
                             }
                         }
-                        if (empty($hotelData['booking_date'])) {
-                            $hotelData['booking_date'] = !empty($hotelData['check_in']) ? $hotelData['check_in'] : $finalBookingDate;
-                        }
+                        $hotelBkDate = !empty($request->booking_date_hotel_tab) 
+                            ? date('Y-m-d', strtotime($request->booking_date_hotel_tab)) 
+                            : (!empty($hotelData['booking_date']) ? date('Y-m-d', strtotime($hotelData['booking_date'])) : (!empty($hotelData['check_in']) ? date('Y-m-d', strtotime($hotelData['check_in'])) : $finalBookingDate));
+                        $hotelData['booking_date'] = $hotelBkDate;
+
                         if (isset($hotelData['supplier_id']) && empty($hotelData['supplier_id'])) {
                             $hotelData['supplier_id'] = null;
                         }
@@ -890,6 +1020,20 @@ class BookingController extends Controller
                         }
                         if (empty($hotelData['room_type'])) {
                             $hotelData['room_type'] = 'double';
+                        }
+
+                        $hNights = (int)$hotelData['no_of_nights'];
+                        $hRooms = (int)$hotelData['no_of_rooms'];
+                        $hCostRate = (float)($hotelData['cost_per_night'] ?? 0);
+                        $hSellRate = (float)($hotelData['selling_per_night'] ?? 0);
+                        $hCostRoe = (float)($hotelData['cost_roe'] ?? ($hotelData['roe'] ?? 1));
+                        $hSaleRoe = (float)($hotelData['sale_roe'] ?? $hCostRoe);
+
+                        if (empty($hotelData['cost_amount']) || (float)$hotelData['cost_amount'] <= 0) {
+                            $hotelData['cost_amount'] = $hNights * $hRooms * $hCostRate * $hCostRoe;
+                        }
+                        if (empty($hotelData['selling_amount']) || (float)$hotelData['selling_amount'] <= 0) {
+                            $hotelData['selling_amount'] = $hNights * $hRooms * $hSellRate * $hSaleRoe;
                         }
 
                         // Point 9: Additional rooms
@@ -925,9 +1069,15 @@ class BookingController extends Controller
                                 $transportData[$dCol] = null;
                             }
                         }
-                        if (empty($transportData['booking_date'])) {
-                            $transportData['booking_date'] = !empty($transportData['travel_date']) ? $transportData['travel_date'] : $finalBookingDate;
+                        if (!empty($transportData['travel_time'])) {
+                            $parsedTrTime = strtotime(trim((string)$transportData['travel_time']));
+                            $transportData['travel_time'] = $parsedTrTime !== false ? date('H:i:s', $parsedTrTime) : null;
                         }
+                        $trBkDate = !empty($request->booking_date_transport_tab) 
+                            ? date('Y-m-d', strtotime($request->booking_date_transport_tab)) 
+                            : (!empty($transportData['booking_date']) ? date('Y-m-d', strtotime($transportData['booking_date'])) : (!empty($transportData['travel_date']) ? date('Y-m-d', strtotime($transportData['travel_date'])) : $finalBookingDate));
+                        $transportData['booking_date'] = $trBkDate;
+
                         if (isset($transportData['supplier_id']) && empty($transportData['supplier_id'])) {
                             $transportData['supplier_id'] = null;
                         }
@@ -936,6 +1086,19 @@ class BookingController extends Controller
                         }
                         if (empty($transportData['pax']) || !is_numeric($transportData['pax'])) {
                             $transportData['pax'] = 1;
+                        }
+
+                        $tQty = (float)$transportData['quantity'];
+                        $tCostRate = (float)($transportData['cost_rate'] ?? 0);
+                        $tSellRate = (float)($transportData['selling_rate'] ?? 0);
+                        $tCostRoe = (float)($transportData['cost_roe'] ?? ($transportData['roe'] ?? 1));
+                        $tSaleRoe = (float)($transportData['sale_roe'] ?? $tCostRoe);
+
+                        if (empty($transportData['cost_amount']) || (float)$transportData['cost_amount'] <= 0) {
+                            $transportData['cost_amount'] = $tCostRate * $tQty * $tCostRoe;
+                        }
+                        if (empty($transportData['selling_amount']) || (float)$transportData['selling_amount'] <= 0) {
+                            $transportData['selling_amount'] = $tSellRate * $tQty * $tSaleRoe;
                         }
                         if (empty($transportData['status'])) {
                             $transportData['status'] = 'CONFIRMED';
@@ -981,9 +1144,10 @@ class BookingController extends Controller
                                 $visaData[$dCol] = null;
                             }
                         }
-                        if (empty($visaData['booking_date'])) {
-                            $visaData['booking_date'] = $finalBookingDate;
-                        }
+                        $vBkDate = !empty($request->booking_date_visa_tab) 
+                            ? date('Y-m-d', strtotime($request->booking_date_visa_tab)) 
+                            : (!empty($visaData['booking_date']) ? date('Y-m-d', strtotime($visaData['booking_date'])) : $finalBookingDate);
+                        $visaData['booking_date'] = $vBkDate;
                         if (isset($visaData['supplier_id']) && empty($visaData['supplier_id'])) {
                             $visaData['supplier_id'] = null;
                         }

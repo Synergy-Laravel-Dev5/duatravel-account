@@ -31,7 +31,7 @@ class AccountController extends Controller
     {
         $request->validate([
             'account_name'        => 'required|string|max:255',
-            'account_type'        => 'required|in:cash,bank,general,loan_asset,loan_liability',
+            'account_type'        => 'required|in:cash,bank,general,loan_asset,loan_liability,fixed_asset,capital,retained_earnings',
             'entity_type'         => 'nullable|string|max:50',
             'entity_id'           => 'nullable|integer',
             'opening_balance_pkr' => 'nullable|numeric',
@@ -94,7 +94,7 @@ class AccountController extends Controller
     {
         $request->validate([
             'account_name'        => 'required|string|max:255',
-            'account_type'        => 'required|in:cash,bank,general,loan_asset,loan_liability',
+            'account_type'        => 'required|in:cash,bank,general,loan_asset,loan_liability,fixed_asset,capital,retained_earnings',
             'entity_type'         => 'nullable|string|max:50',
             'entity_id'           => 'nullable|integer',
             'opening_balance_pkr' => 'nullable|numeric',

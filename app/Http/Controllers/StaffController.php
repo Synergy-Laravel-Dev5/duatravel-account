@@ -185,7 +185,7 @@ class StaffController extends Controller
                 'voucher_no'     => $et->reference_no ?: ('EXP-' . str_pad($et->id, 5, '0', STR_PAD_LEFT)),
                 'type'           => $typeLabel,
                 'badge_class'    => $badgeClass,
-                'description'    => $et->description ?: ($isDebit ? 'Payment to Staff' : 'Adjustment from Staff'),
+                'description'    => $et->description ?: '',
                 'payment_method' => strtoupper($et->payment_type ?: 'Cash'),
                 'debit'          => $isDebit ? (float) $et->amount : 0,
                 'credit'         => !$isDebit ? (float) $et->amount : 0,

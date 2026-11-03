@@ -132,17 +132,32 @@
                         <span class="item-label">Prepaid expenses & supplier advances</span>
                         <span class="item-val">{{ number_format($totalPrepaidsPkr, 2) }}</span>
                     </div>
+                    @if($totalLoanAssetsPkr > 0)
+                    <div class="item-row">
+                        <span class="item-label">Loan assets & receivables</span>
+                        <span class="item-val">{{ number_format($totalLoanAssetsPkr, 2) }}</span>
+                    </div>
+                    @endif
                     <div class="subtotal-row">
                         <span class="item-label" style="padding-left:0;">Total current assets</span>
                         <span class="item-val">{{ number_format($totalCurrentAssets, 2) }}</span>
                     </div>
 
                     {{-- Non-Current Assets --}}
-                    <div class="section-header" style="margin-top: 15px;">Non-current assets:</div>
-                    <div class="item-row">
-                        <span class="item-label">Equipment & furniture</span>
-                        <span class="item-val">{{ number_format($fixedAssetsBase, 2) }}</span>
-                    </div>
+                    <div class="section-header" style="margin-top: 15px;">Non-current assets (Fixed Assets):</div>
+                    @if(!empty($fixedAssetDetails))
+                        @foreach($fixedAssetDetails as $fad)
+                            <div class="item-row">
+                                <span class="item-label">{{ $fad['name'] }}</span>
+                                <span class="item-val">{{ number_format($fad['balance'], 2) }}</span>
+                            </div>
+                        @endforeach
+                    @else
+                        <div class="item-row">
+                            <span class="item-label">Equipment & furniture</span>
+                            <span class="item-val">{{ number_format($fixedAssetsBase, 2) }}</span>
+                        </div>
+                    @endif
                     <div class="item-row">
                         <span class="item-label">Less: Acc. depreciation</span>
                         <span class="item-val">({{ number_format($accumulatedDepreciation, 2) }})</span>
@@ -168,9 +183,17 @@
                     {{-- Liabilities --}}
                     <div class="section-header">Liabilities:</div>
                     <div class="item-row">
-                        <span class="item-label">Notes payable / Borrowings</span>
+                        <span class="item-label">Notes payable / Borrowings & loans</span>
                         <span class="item-val">{{ number_format($totalNotesPayablePkr, 2) }}</span>
                     </div>
+                    @if(!empty($loanLiabilityDetails))
+                        @foreach($loanLiabilityDetails as $lld)
+                            <div class="item-row" style="font-size:10px; color:#64748b;">
+                                <span class="item-label" style="padding-left:18px;">• {{ $lld['name'] }}</span>
+                                <span class="item-val">{{ number_format($lld['balance'], 2) }}</span>
+                            </div>
+                        @endforeach
+                    @endif
                     <div class="item-row">
                         <span class="item-label">Accounts payable (Suppliers)</span>
                         <span class="item-val">{{ number_format($totalAccountsPayablePkr, 2) }}</span>
@@ -191,9 +214,17 @@
                     {{-- Stockholders' Equity --}}
                     <div class="section-header" style="margin-top: 15px;">Stockholders' equity:</div>
                     <div class="item-row">
-                        <span class="item-label">Capital stock</span>
+                        <span class="item-label">Capital stock / Invested capital</span>
                         <span class="item-val">{{ number_format($capitalStock, 2) }}</span>
                     </div>
+                    @if(!empty($capitalDetails))
+                        @foreach($capitalDetails as $cd)
+                            <div class="item-row" style="font-size:10px; color:#64748b;">
+                                <span class="item-label" style="padding-left:18px;">• {{ $cd['name'] }}</span>
+                                <span class="item-val">{{ number_format($cd['balance'], 2) }}</span>
+                            </div>
+                        @endforeach
+                    @endif
                     <div class="item-row">
                         <span class="item-label">Retained earnings</span>
                         <span class="item-val">{{ number_format($retainedEarnings, 2) }}</span>

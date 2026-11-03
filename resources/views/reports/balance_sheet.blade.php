@@ -130,6 +130,28 @@
                                     <span class="ps-3 text-secondary">Prepaid expenses & supplier advances</span>
                                     <span class="fw-semibold text-dark">{{ number_format($totalPrepaidsPkr, 2) }}</span>
                                 </div>
+                                @if(!empty($topSupplierAdvances))
+                                    @foreach($topSupplierAdvances as $sName => $sAmt)
+                                        <div class="d-flex justify-content-between align-items-center py-0 ps-5 fs-12 text-muted">
+                                            <span>• {{ $sName }}</span>
+                                            <span>{{ number_format($sAmt, 2) }}</span>
+                                        </div>
+                                    @endforeach
+                                @endif
+
+                                {{-- Loan Assets (Receivables) --}}
+                                @if($totalLoanAssetsPkr > 0 || !empty($loanAssetDetails))
+                                    <div class="d-flex justify-content-between align-items-center py-1 mt-1">
+                                        <span class="ps-3 text-secondary">Loan assets & short-term receivables</span>
+                                        <span class="fw-semibold text-dark">{{ number_format($totalLoanAssetsPkr, 2) }}</span>
+                                    </div>
+                                    @foreach($loanAssetDetails as $lad)
+                                        <div class="d-flex justify-content-between align-items-center py-0 ps-5 fs-12 text-muted">
+                                            <span>• {{ $lad['name'] }}</span>
+                                            <span>{{ number_format($lad['balance'], 2) }}</span>
+                                        </div>
+                                    @endforeach
+                                @endif
 
                                 {{-- Total Current Assets Subtotal --}}
                                 <div class="d-flex justify-content-between align-items-center pt-2 mt-2 border-top">
@@ -141,13 +163,22 @@
                             {{-- 2. Non-Current Assets --}}
                             <div class="mb-4">
                                 <div class="fw-bold text-decoration-underline text-dark mb-2 fs-14">
-                                    Non-current assets:
+                                    Non-current assets (Fixed Assets):
                                 </div>
 
-                                <div class="d-flex justify-content-between align-items-center py-1">
-                                    <span class="ps-3 text-secondary">Office equipment & furniture</span>
-                                    <span class="text-secondary">{{ number_format($fixedAssetsBase, 2) }}</span>
-                                </div>
+                                @if(!empty($fixedAssetDetails))
+                                    @foreach($fixedAssetDetails as $fad)
+                                        <div class="d-flex justify-content-between align-items-center py-1">
+                                            <span class="ps-3 text-secondary">{{ $fad['name'] }}</span>
+                                            <span class="text-secondary">{{ number_format($fad['balance'], 2) }}</span>
+                                        </div>
+                                    @endforeach
+                                @else
+                                    <div class="d-flex justify-content-between align-items-center py-1">
+                                        <span class="ps-3 text-secondary">Office equipment & furniture</span>
+                                        <span class="text-secondary">{{ number_format($fixedAssetsBase, 2) }}</span>
+                                    </div>
+                                @endif
 
                                 <div class="d-flex justify-content-between align-items-center py-1">
                                     <span class="ps-3 text-secondary">Less: Accumulated depreciation</span>
@@ -155,7 +186,7 @@
                                 </div>
 
                                 <div class="d-flex justify-content-between align-items-center pt-1 border-top border-secondary-subtle">
-                                    <span class="ps-3 text-secondary">Net fixed assets</span>
+                                    <span class="ps-3 text-secondary fw-semibold">Net fixed assets</span>
                                     <span class="fw-semibold text-dark">{{ number_format($netFixedAssets, 2) }}</span>
                                 </div>
                             </div>
@@ -186,15 +217,23 @@
                                     Liabilities:
                                 </div>
 
-                                {{-- Notes Payable --}}
+                                {{-- Notes Payable / Loan Liabilities --}}
                                 <div class="d-flex justify-content-between align-items-center py-1">
-                                    <span class="ps-3 text-secondary">Notes payable / Short-term borrowings</span>
+                                    <span class="ps-3 text-secondary">Notes payable / Short-term borrowings & loans</span>
                                     <span class="fw-semibold text-dark">{{ number_format($totalNotesPayablePkr, 2) }}</span>
                                 </div>
+                                @if(!empty($loanLiabilityDetails))
+                                    @foreach($loanLiabilityDetails as $lld)
+                                        <div class="d-flex justify-content-between align-items-center py-0 ps-5 fs-12 text-muted">
+                                            <span>• {{ $lld['name'] }}</span>
+                                            <span>{{ number_format($lld['balance'], 2) }}</span>
+                                        </div>
+                                    @endforeach
+                                @endif
 
                                 {{-- Accounts Payable --}}
                                 <div class="d-flex justify-content-between align-items-center py-1">
-                                    <span class="ps-3 text-secondary">Accounts payable (Hotels, Flights, Visas)</span>
+                                    <span class="ps-3 text-secondary">Accounts payable (Hotels, Flights, Visas, Transports)</span>
                                     <span class="fw-semibold text-dark">{{ number_format($totalAccountsPayablePkr, 2) }}</span>
                                 </div>
                                 @if(!empty($topSupplierPayables))
@@ -235,6 +274,14 @@
                                     <span class="ps-3 text-secondary">Capital stock / Invested capital</span>
                                     <span class="fw-semibold text-dark">{{ number_format($capitalStock, 2) }}</span>
                                 </div>
+                                @if(!empty($capitalDetails))
+                                    @foreach($capitalDetails as $cd)
+                                        <div class="d-flex justify-content-between align-items-center py-0 ps-5 fs-12 text-muted">
+                                            <span>• {{ $cd['name'] }}</span>
+                                            <span>{{ number_format($cd['balance'], 2) }}</span>
+                                        </div>
+                                    @endforeach
+                                @endif
 
                                 <div class="d-flex justify-content-between align-items-center py-1">
                                     <span class="ps-3 text-secondary">Retained earnings (Cumulative operating profit)</span>

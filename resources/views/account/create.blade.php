@@ -37,6 +37,9 @@
                                     <label class="form-label fw-semibold">Account Type <span class="text-danger">*</span></label>
                                     <select name="account_type" id="account_type_select" class="form-select" required>
                                         <option value="cash" {{ old('account_type', 'cash') == 'cash' ? 'selected' : '' }}>💵 Cash Account</option>
+                                        <option value="fixed_asset" {{ old('account_type') == 'fixed_asset' ? 'selected' : '' }}>🏢 Fixed Asset (Property, Plant, Furniture, Equipment)</option>
+                                        <option value="capital" {{ old('account_type') == 'capital' ? 'selected' : '' }}>💼 Capital Account (Owner / Partner Capital / Equity)</option>
+                                        <option value="retained_earnings" {{ old('account_type') == 'retained_earnings' ? 'selected' : '' }}>📈 Retained Earnings (Accumulated Profits / Reserves)</option>
                                         <option value="loan_asset" {{ old('account_type') == 'loan_asset' ? 'selected' : '' }}>📥 Loan Asset (Loan Given / Receivable)</option>
                                         <option value="loan_liability" {{ old('account_type') == 'loan_liability' ? 'selected' : '' }}>📤 Loan Liability (Loan Taken / Payable)</option>
                                         <option value="bank" {{ old('account_type') == 'bank' ? 'selected' : '' }}>🏦 Bank Account</option>
@@ -236,6 +239,9 @@
             // Hints per type
             const hints = {
                 'cash': 'Cash accounts represent physical cash in hand or cash drawers.',
+                'fixed_asset': 'Fixed Asset: Long-term tangible assets owned by company (Office furniture, computers, vehicles, property).',
+                'capital': 'Capital Account (Equity): Owner investment, share capital, or partners capital.',
+                'retained_earnings': 'Retained Earnings: Cumulative net earnings or retained profits reserved in company.',
                 'loan_asset': 'Loan Asset (Receivable): Money given out as loan to staff, client, or third party (Asset for company).',
                 'loan_liability': 'Loan Liability (Payable): Money borrowed or loan taken from bank, director, supplier, or investor (Liability to repay).',
                 'bank': 'Bank Account: Commercial bank checking or savings account.',
@@ -285,7 +291,10 @@
 
                 if (partyName) {
                     let prefix = 'Account';
-                    if (accType === 'loan_asset') prefix = 'Loan Asset';
+                    if (accType === 'fixed_asset') prefix = 'Fixed Asset';
+                    else if (accType === 'capital') prefix = 'Capital';
+                    else if (accType === 'retained_earnings') prefix = 'Retained Earnings';
+                    else if (accType === 'loan_asset') prefix = 'Loan Asset';
                     else if (accType === 'loan_liability') prefix = 'Loan Liability';
                     else if (accType === 'cash') prefix = 'Cash';
                     else if (accType === 'bank') prefix = 'Bank';

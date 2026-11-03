@@ -410,7 +410,7 @@ class TransactionReportController extends Controller
                 continue;
             }
 
-            $desc = $et->description ?: ($catLabel . ' via ' . ucfirst($et->payment_type));
+            $desc = $et->description ?: '';
             if ($cur !== 'PKR') {
                 $desc .= ' [' . $cur . ' ' . number_format($rawAmt, 2) . ' @ ROE ' . number_format($rate, 2) . ']';
             }

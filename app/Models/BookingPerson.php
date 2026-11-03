@@ -46,6 +46,13 @@ class BookingPerson extends Model
         'flight_date',
         'flight_time',
         'ticket_status',
+        'trip_type',
+        'departure_ticket',
+        'departure_cost',
+        'departure_sell',
+        'return_ticket',
+        'return_cost',
+        'return_sell',
     ];
 
     public function booking()

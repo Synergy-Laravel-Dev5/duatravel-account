@@ -446,8 +446,32 @@
                                                     @endforeach
                                                 </optgroup>
 
+                                                <optgroup label="🏢 Fixed Assets">
+                                                    @foreach($cashAccounts->where('account_type', 'fixed_asset') as $fa)
+                                                        <option value="account:{{ $fa->id }}" {{ old('jv_from_account', $jvData['from_account'] ?? '') == "account:{$fa->id}" ? 'selected' : '' }}>
+                                                            Fixed Asset: {{ $fa->account_name }} (Opening: PKR {{ number_format($fa->opening_balance_pkr, 2) }})
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
+
+                                                <optgroup label="💼 Capital & Equity">
+                                                    @foreach($cashAccounts->where('account_type', 'capital') as $cap)
+                                                        <option value="account:{{ $cap->id }}" {{ old('jv_from_account', $jvData['from_account'] ?? '') == "account:{$cap->id}" ? 'selected' : '' }}>
+                                                            Capital: {{ $cap->account_name }} (Opening: PKR {{ number_format($cap->opening_balance_pkr, 2) }})
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
+
+                                                <optgroup label="📈 Retained Earnings">
+                                                    @foreach($cashAccounts->where('account_type', 'retained_earnings') as $re)
+                                                        <option value="account:{{ $re->id }}" {{ old('jv_from_account', $jvData['from_account'] ?? '') == "account:{$re->id}" ? 'selected' : '' }}>
+                                                            Retained Earnings: {{ $re->account_name }} (Opening: PKR {{ number_format($re->opening_balance_pkr, 2) }})
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
+
                                                 <optgroup label="📁 General Accounts">
-                                                    @foreach($cashAccounts->whereNotIn('account_type', ['cash', 'loan_asset', 'loan_liability']) as $ga)
+                                                    @foreach($cashAccounts->whereNotIn('account_type', ['cash', 'loan_asset', 'loan_liability', 'fixed_asset', 'capital', 'retained_earnings']) as $ga)
                                                         <option value="account:{{ $ga->id }}" {{ old('jv_from_account', $jvData['from_account'] ?? '') == "account:{$ga->id}" ? 'selected' : '' }}>
                                                             General: {{ $ga->account_name }}
                                                         </option>
@@ -458,13 +482,13 @@
                                                 <div class="row g-2">
                                                     <div class="col-6">
                                                         <label class="form-label fs-11 fw-bold text-danger mb-1">
-                                                            <i class="mdi mdi-currency-usd me-1"></i> From ROE <span class="text-danger">*</span>
+                                                            <i class="mdi mdi-currency-usd me-1"></i> From ROE (Optional)
                                                         </label>
                                                         <div class="input-group input-group-sm">
                                                             <span class="input-group-text bg-white text-danger fw-bold fs-11">1 SAR=</span>
                                                             <input type="number" step="0.0001" name="jv_from_roe" id="jv_from_roe"
-                                                                value="{{ old('jv_from_roe', $jvData['from_roe'] ?? 76.00) }}"
-                                                                class="form-control form-control-sm text-center fw-bold" placeholder="76.00">
+                                                                value="{{ old('jv_from_roe', $jvData['from_roe'] ?? '') }}"
+                                                                class="form-control form-control-sm text-center fw-bold" placeholder="1.0000">
                                                         </div>
                                                     </div>
                                                     <div class="col-6">
@@ -557,8 +581,32 @@
                                                     @endforeach
                                                 </optgroup>
 
+                                                <optgroup label="🏢 Fixed Assets">
+                                                    @foreach($cashAccounts->where('account_type', 'fixed_asset') as $fa)
+                                                        <option value="account:{{ $fa->id }}" {{ old('jv_to_account', $jvData['to_account'] ?? '') == "account:{$fa->id}" ? 'selected' : '' }}>
+                                                            Fixed Asset: {{ $fa->account_name }} (Opening: PKR {{ number_format($fa->opening_balance_pkr, 2) }})
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
+
+                                                <optgroup label="💼 Capital & Equity">
+                                                    @foreach($cashAccounts->where('account_type', 'capital') as $cap)
+                                                        <option value="account:{{ $cap->id }}" {{ old('jv_to_account', $jvData['to_account'] ?? '') == "account:{$cap->id}" ? 'selected' : '' }}>
+                                                            Capital: {{ $cap->account_name }} (Opening: PKR {{ number_format($cap->opening_balance_pkr, 2) }})
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
+
+                                                <optgroup label="📈 Retained Earnings">
+                                                    @foreach($cashAccounts->where('account_type', 'retained_earnings') as $re)
+                                                        <option value="account:{{ $re->id }}" {{ old('jv_to_account', $jvData['to_account'] ?? '') == "account:{$re->id}" ? 'selected' : '' }}>
+                                                            Retained Earnings: {{ $re->account_name }} (Opening: PKR {{ number_format($re->opening_balance_pkr, 2) }})
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
+
                                                 <optgroup label="📁 General Accounts">
-                                                    @foreach($cashAccounts->whereNotIn('account_type', ['cash', 'loan_asset', 'loan_liability']) as $ga)
+                                                    @foreach($cashAccounts->whereNotIn('account_type', ['cash', 'loan_asset', 'loan_liability', 'fixed_asset', 'capital', 'retained_earnings']) as $ga)
                                                         <option value="account:{{ $ga->id }}" {{ old('jv_to_account', $jvData['to_account'] ?? '') == "account:{$ga->id}" ? 'selected' : '' }}>
                                                             General: {{ $ga->account_name }}
                                                         </option>
@@ -569,13 +617,13 @@
                                                 <div class="row g-2">
                                                     <div class="col-6">
                                                         <label class="form-label fs-11 fw-bold text-success mb-1">
-                                                            <i class="mdi mdi-currency-usd me-1"></i> To ROE <span class="text-danger">*</span>
+                                                            <i class="mdi mdi-currency-usd me-1"></i> To ROE (Optional)
                                                         </label>
                                                         <div class="input-group input-group-sm">
                                                             <span class="input-group-text bg-white text-success fw-bold fs-11">1 SAR=</span>
                                                             <input type="number" step="0.0001" name="jv_to_roe" id="jv_to_roe"
-                                                                value="{{ old('jv_to_roe', $jvData['to_roe'] ?? 75.00) }}"
-                                                                class="form-control form-control-sm text-center fw-bold" placeholder="75.00">
+                                                                value="{{ old('jv_to_roe', $jvData['to_roe'] ?? '') }}"
+                                                                class="form-control form-control-sm text-center fw-bold" placeholder="1.0000">
                                                         </div>
                                                     </div>
                                                     <div class="col-6">
@@ -1245,15 +1293,24 @@
             const fromRoe = parseFloat($('#jv_from_roe').val()) || 0;
             const toRoe   = parseFloat($('#jv_to_roe').val()) || 0;
 
-            if (fromAmt > 0 && fromRoe > 0) {
-                const fromSar = (fromAmt / fromRoe).toFixed(2);
-                $('#from_account_sar_hint').html('≈ <strong>' + fromSar + ' SAR</strong> (PKR ' + Number(fromAmt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ')');
+            if (fromAmt > 0) {
+                if (fromRoe > 1) {
+                    const fromSar = (fromAmt / fromRoe).toFixed(2);
+                    $('#from_account_sar_hint').html('<i class="mdi mdi-calculator me-1"></i>≈ <strong>' + fromSar + ' SAR</strong> (PKR ' + Number(fromAmt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ')');
+                } else {
+                    $('#from_account_sar_hint').html('<i class="mdi mdi-cash text-danger me-1"></i><strong>PKR ' + Number(fromAmt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>');
+                }
             } else {
                 $('#from_account_sar_hint').empty();
             }
-            if (toAmt > 0 && toRoe > 0) {
-                const toSar = (toAmt / toRoe).toFixed(2);
-                $('#to_account_sar_hint').html('≈ <strong>' + toSar + ' SAR</strong> (PKR ' + Number(toAmt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ')');
+
+            if (toAmt > 0) {
+                if (toRoe > 1) {
+                    const toSar = (toAmt / toRoe).toFixed(2);
+                    $('#to_account_sar_hint').html('<i class="mdi mdi-calculator me-1"></i>≈ <strong>' + toSar + ' SAR</strong> (PKR ' + Number(toAmt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ')');
+                } else {
+                    $('#to_account_sar_hint').html('<i class="mdi mdi-cash text-success me-1"></i><strong>PKR ' + Number(toAmt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</strong>');
+                }
             } else {
                 $('#to_account_sar_hint').empty();
             }
@@ -1263,8 +1320,8 @@
             jvSarBaseInput.addEventListener('input', function() {
                 const sarVal = parseFloat(this.value) || 0;
                 if (sarVal > 0) {
-                    const fRoe = parseFloat(document.getElementById('jv_from_roe')?.value) || 76.0;
-                    const tRoe = parseFloat(document.getElementById('jv_to_roe')?.value) || 75.0;
+                    const fRoe = parseFloat(document.getElementById('jv_from_roe')?.value) || 1.0;
+                    const tRoe = parseFloat(document.getElementById('jv_to_roe')?.value) || 1.0;
                     if (jvFromAmtField) jvFromAmtField.value = (sarVal * fRoe).toFixed(2);
                     if (jvToAmtField) jvToAmtField.value = (sarVal * tRoe).toFixed(2);
                     if (mainAmountField) mainAmountField.value = (sarVal * fRoe).toFixed(2);
@@ -1276,14 +1333,19 @@
         if (jvFromAmtField) {
             jvFromAmtField.addEventListener('input', function() {
                 if (mainAmountField) mainAmountField.value = this.value;
-                const fRoe = parseFloat(document.getElementById('jv_from_roe')?.value) || 76.0;
-                const tRoe = parseFloat(document.getElementById('jv_to_roe')?.value) || 75.0;
+                const fRoe = parseFloat(document.getElementById('jv_from_roe')?.value) || 0;
+                const tRoe = parseFloat(document.getElementById('jv_to_roe')?.value) || 0;
                 const fAmt = parseFloat(this.value) || 0;
-                if (fAmt > 0 && fRoe > 0) {
-                    const sar = fAmt / fRoe;
-                    if (jvSarBaseInput) jvSarBaseInput.value = sar.toFixed(2);
-                    if (jvToAmtField && jvToAmtField.getAttribute('data-customized') !== 'true') {
+
+                // User request: Automatically mirror From PKR Amount to To PKR Amount
+                if (jvToAmtField && jvToAmtField.getAttribute('data-customized') !== 'true') {
+                    if (fRoe > 1 && tRoe > 1) {
+                        const sar = fAmt / fRoe;
+                        if (jvSarBaseInput) jvSarBaseInput.value = sar.toFixed(2);
                         jvToAmtField.value = (sar * tRoe).toFixed(2);
+                    } else {
+                        jvToAmtField.value = this.value;
+                        if (jvSarBaseInput) jvSarBaseInput.value = fRoe > 1 ? (fAmt / fRoe).toFixed(2) : '';
                     }
                 }
                 updateUniversalHints();

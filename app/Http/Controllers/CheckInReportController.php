@@ -9,6 +9,7 @@ use App\Models\BookingVisa;
 use App\Models\BookingPerson;
 use App\Models\Hotel;
 use App\Models\Supplier;
+use App\Models\ExpenseTransaction;
 use Illuminate\Http\Request;
 
 class CheckInReportController extends Controller
@@ -20,7 +21,7 @@ class CheckInReportController extends Controller
         $activeDashboardPkg = session('dashboard_package', 'hajj');
         $defaultPackageType = in_array($activeDashboardPkg, ['hajj', 'umrah']) ? $activeDashboardPkg : null;
         $packageType    = $request->has('package_type') ? $request->get('package_type') : $defaultPackageType;
-        $checkInFrom    = $request->has('check_in_from') ? $request->get('check_in_from') : date('Y-m-d');
+        $checkInFrom    = $request->get('check_in_from');
         $checkInTo      = $request->get('check_in_to');
         $search         = $request->get('search');
         $status         = $request->get('status');
@@ -128,6 +129,55 @@ class CheckInReportController extends Controller
 
         $allBookings = $bookingQuery->latest()->get();
 
+        // 1.b Query ExpenseTransactions for suppliers (payments made to suppliers)
+        $supplierTxnQuery = ExpenseTransaction::whereNull('deleted_at')
+            ->whereNotNull('supplier_id');
+
+        if ($packageType === 'hajj') {
+            $supplierTxnQuery->where(function ($q) {
+                $q->where('hajj_umrah', 'hajj')
+                  ->orWhereNull('hajj_umrah')
+                  ->orWhere('hajj_umrah', '');
+            });
+        } elseif ($packageType === 'umrah') {
+            $supplierTxnQuery->where(function ($q) {
+                $q->where('hajj_umrah', 'umrah')
+                  ->orWhereNull('hajj_umrah')
+                  ->orWhere('hajj_umrah', '');
+            });
+        }
+
+        $supplierTxns = $supplierTxnQuery->get();
+
+        $supplierPaidMapPKR = [];
+        $supplierPaidMapSAR = [];
+
+        foreach ($supplierTxns as $st) {
+            $sId = (int) $st->supplier_id;
+            $cur = strtoupper($st->currency ?: 'PKR');
+            $rate = (float) ($st->exchange_rate > 0 ? $st->exchange_rate : 75.0);
+            $amt = (float) $st->amount;
+
+            $sign = ($st->transaction_type === 'credit') ? -1 : 1;
+            $pkrAmt = $amt * $sign;
+
+            if ($cur === 'SAR') {
+                $sarAmt = $pkrAmt;
+                $pkrAmt = ($rate > 1) ? round($pkrAmt * $rate, 2) : $pkrAmt;
+            } else {
+                $sarAmt = ($rate > 1) ? round($pkrAmt / $rate, 2) : $pkrAmt;
+            }
+
+            $supplierPaidMapPKR[$sId] = ($supplierPaidMapPKR[$sId] ?? 0) + $pkrAmt;
+            $supplierPaidMapSAR[$sId] = ($supplierPaidMapSAR[$sId] ?? 0) + $sarAmt;
+        }
+
+        // Pools for FIFO allocation per service
+        $hotelPoolPKR     = $supplierPaidMapPKR;
+        $flightPoolPKR    = $supplierPaidMapPKR;
+        $transportPoolPKR = $supplierPaidMapPKR;
+        $visaPoolPKR      = $supplierPaidMapPKR;
+
         // 2. Structured collections for each individual service card & combined report
         $records          = collect(); // Master Combined Record
         $hotelRecords     = collect(); // Dedicated Hotels
@@ -154,6 +204,7 @@ class CheckInReportController extends Controller
             $bHotelSalesPKR = 0;
             $bHotelCostsSAR = 0;
             $bHotelSalesSAR = 0;
+            $bHotelPaidPKR  = 0;
 
             if ($b->hotels && $b->hotels->count() > 0) {
                 foreach ($b->hotels as $hIdx => $bh) {
@@ -165,10 +216,21 @@ class CheckInReportController extends Controller
                     $hCostSAR = $hRoe > 0 ? ($hCostPKR / $hRoe) : 0;
                     $hSaleSAR = $hRoe > 0 ? ($hSalePKR / $hRoe) : 0;
 
+                    $hSupplierId = (int) ($bh->supplier_id ?: 0);
+                    $hPaidPKR = 0;
+                    if ($hSupplierId > 0 && isset($hotelPoolPKR[$hSupplierId])) {
+                        $hPaidPKR = min($hCostPKR, max(0, $hotelPoolPKR[$hSupplierId]));
+                        $hotelPoolPKR[$hSupplierId] -= $hPaidPKR;
+                    }
+                    $hBalPKR  = max(0, $hCostPKR - $hPaidPKR);
+                    $hPaidSAR = $hRoe > 0 ? round($hPaidPKR / $hRoe, 2) : 0;
+                    $hBalSAR  = max(0, $hCostSAR - $hPaidSAR);
+
                     $bHotelCostsPKR += $hCostPKR;
                     $bHotelSalesPKR += $hSalePKR;
                     $bHotelCostsSAR += $hCostSAR;
                     $bHotelSalesSAR += $hSaleSAR;
+                    $bHotelPaidPKR  += $hPaidPKR;
 
                     $hotelRecords->push((object)[
                         'booking_id'     => $b->id,
@@ -187,12 +249,17 @@ class CheckInReportController extends Controller
                         'check_in'       => $bh->check_in ? date('Y-m-d', strtotime($bh->check_in)) : null,
                         'check_out'      => $bh->check_out ? date('Y-m-d', strtotime($bh->check_out)) : null,
                         'option_date'    => $bh->option_date ? date('Y-m-d', strtotime($bh->option_date)) : null,
+                        'supplier_id'    => $hSupplierId,
                         'supplier_name'  => $bh->supplier->name ?? '-',
                         'roe'            => $hRoe,
                         'cost_pkr'       => $hCostPKR,
+                        'paid_pkr'       => $hPaidPKR,
+                        'balance_pkr'    => $hBalPKR,
                         'sale_pkr'       => $hSalePKR,
                         'margin_pkr'     => $hSalePKR - $hCostPKR,
                         'cost_sar'       => $hCostSAR,
+                        'paid_sar'       => $hPaidSAR,
+                        'balance_sar'    => $hBalSAR,
                         'sale_sar'       => $hSaleSAR,
                         'margin_sar'     => $hSaleSAR - $hCostSAR,
                         'status'         => $b->status ?: 'Confirmed',
@@ -210,6 +277,16 @@ class CheckInReportController extends Controller
             $fCostSAR = $fRoe > 0 ? ($fCostPKR / $fRoe) : 0;
             $fSaleSAR = $fRoe > 0 ? ($fSalePKR / $fRoe) : 0;
 
+            $fSupplierId = (int) ($b->flight_supplier_id ?: ($b->flightSupplier->id ?? 0));
+            $fPaidPKR = 0;
+            if ($fSupplierId > 0 && isset($flightPoolPKR[$fSupplierId])) {
+                $fPaidPKR = min($fCostPKR, max(0, $flightPoolPKR[$fSupplierId]));
+                $flightPoolPKR[$fSupplierId] -= $fPaidPKR;
+            }
+            $fBalPKR  = max(0, $fCostPKR - $fPaidPKR);
+            $fPaidSAR = $fRoe > 0 ? round($fPaidPKR / $fRoe, 2) : 0;
+            $fBalSAR  = max(0, $fCostSAR - $fPaidSAR);
+
             if ($hasFlight) {
                 $flightRecords->push((object)[
                     'booking_id'        => $b->id,
@@ -225,12 +302,17 @@ class CheckInReportController extends Controller
                     'departure_pnr'     => $b->departure_pnr ?: '-',
                     'departure_date'    => $b->departure_date ? date('Y-m-d', strtotime($b->departure_date)) : null,
                     'arrival_date'      => $b->arrival_date ? date('Y-m-d', strtotime($b->arrival_date)) : null,
+                    'supplier_id'       => $fSupplierId,
                     'supplier_name'     => $b->flightSupplier->name ?? '-',
                     'roe'               => $fRoe,
                     'cost_pkr'          => $fCostPKR,
+                    'paid_pkr'          => $fPaidPKR,
+                    'balance_pkr'       => $fBalPKR,
                     'sale_pkr'          => $fSalePKR,
                     'margin_pkr'        => $fSalePKR - $fCostPKR,
                     'cost_sar'          => $fCostSAR,
+                    'paid_sar'          => $fPaidSAR,
+                    'balance_sar'       => $fBalSAR,
                     'sale_sar'          => $fSaleSAR,
                     'margin_sar'        => $fSaleSAR - $fCostSAR,
                     'status'            => $b->status ?: 'Confirmed',
@@ -244,6 +326,7 @@ class CheckInReportController extends Controller
             $bTransportSalesPKR = 0;
             $bTransportCostsSAR = 0;
             $bTransportSalesSAR = 0;
+            $bTransportPaidPKR  = 0;
             $transportRoutesList = [];
 
             if ($b->transports && $b->transports->count() > 0) {
@@ -254,10 +337,21 @@ class CheckInReportController extends Controller
                     $tCostSAR = $tRoe > 0 ? ($tCostPKR / $tRoe) : 0;
                     $tSaleSAR = $tRoe > 0 ? ($tSalePKR / $tRoe) : 0;
 
+                    $tSupplierId = (int) ($t->supplier_id ?: 0);
+                    $tPaidPKR = 0;
+                    if ($tSupplierId > 0 && isset($transportPoolPKR[$tSupplierId])) {
+                        $tPaidPKR = min($tCostPKR, max(0, $transportPoolPKR[$tSupplierId]));
+                        $transportPoolPKR[$tSupplierId] -= $tPaidPKR;
+                    }
+                    $tBalPKR  = max(0, $tCostPKR - $tPaidPKR);
+                    $tPaidSAR = $tRoe > 0 ? round($tPaidPKR / $tRoe, 2) : 0;
+                    $tBalSAR  = max(0, $tCostSAR - $tPaidSAR);
+
                     $bTransportCostsPKR += $tCostPKR;
                     $bTransportSalesPKR += $tSalePKR;
                     $bTransportCostsSAR += $tCostSAR;
                     $bTransportSalesSAR += $tSaleSAR;
+                    $bTransportPaidPKR  += $tPaidPKR;
 
                     $rName = $t->route ?: 'Standard Route';
                     $vType = $t->transport_type ? ucfirst(str_replace('_', ' ', $t->transport_type)) : '-';
@@ -274,13 +368,18 @@ class CheckInReportController extends Controller
                         'pax'            => $paxCount,
                         'route'          => $rName,
                         'vehicle_type'   => $vType,
+                        'supplier_id'    => $tSupplierId,
                         'supplier_name'  => $t->supplier->name ?? '-',
                         'notes'          => $t->notes,
                         'roe'            => $tRoe,
                         'cost_pkr'       => $tCostPKR,
+                        'paid_pkr'       => $tPaidPKR,
+                        'balance_pkr'    => $tBalPKR,
                         'sale_pkr'       => $tSalePKR,
                         'margin_pkr'     => $tSalePKR - $tCostPKR,
                         'cost_sar'       => $tCostSAR,
+                        'paid_sar'       => $tPaidSAR,
+                        'balance_sar'    => $tBalSAR,
                         'sale_sar'       => $tSaleSAR,
                         'margin_sar'     => $tSaleSAR - $tCostSAR,
                         'status'         => $b->status ?: 'Confirmed',
@@ -295,6 +394,7 @@ class CheckInReportController extends Controller
             $bVisaSalesPKR = 0;
             $bVisaCostsSAR = 0;
             $bVisaSalesSAR = 0;
+            $bVisaPaidPKR  = 0;
 
             if ($b->visas && $b->visas->count() > 0) {
                 foreach ($b->visas as $v) {
@@ -304,10 +404,21 @@ class CheckInReportController extends Controller
                     $vCostSAR = $vRoe > 0 ? ($vCostPKR / $vRoe) : 0;
                     $vSaleSAR = $vRoe > 0 ? ($vSalePKR / $vRoe) : 0;
 
+                    $vSupplierId = (int) ($v->supplier_id ?: 0);
+                    $vPaidPKR = 0;
+                    if ($vSupplierId > 0 && isset($visaPoolPKR[$vSupplierId])) {
+                        $vPaidPKR = min($vCostPKR, max(0, $visaPoolPKR[$vSupplierId]));
+                        $visaPoolPKR[$vSupplierId] -= $vPaidPKR;
+                    }
+                    $vBalPKR  = max(0, $vCostPKR - $vPaidPKR);
+                    $vPaidSAR = $vRoe > 0 ? round($vPaidPKR / $vRoe, 2) : 0;
+                    $vBalSAR  = max(0, $vCostSAR - $vPaidSAR);
+
                     $bVisaCostsPKR += $vCostPKR;
                     $bVisaSalesPKR += $vSalePKR;
                     $bVisaCostsSAR += $vCostSAR;
                     $bVisaSalesSAR += $vSaleSAR;
+                    $bVisaPaidPKR  += $vPaidPKR;
 
                     $vPaxName = $v->given_name ?: $clientName;
 
@@ -320,13 +431,18 @@ class CheckInReportController extends Controller
                         'passport'       => $v->passport_number ?: ($b->passport_number ?? '-'),
                         'phone'          => $b->phone ?: ($b->client->phone ?? '-'),
                         'send_to'        => $v->send_to ?: 'Embassy',
+                        'supplier_id'    => $vSupplierId,
                         'supplier_name'  => $v->supplier->name ?? '-',
                         'visa_status'    => ucfirst($v->status ?: 'Approved'),
                         'roe'            => $vRoe,
                         'cost_pkr'       => $vCostPKR,
+                        'paid_pkr'       => $vPaidPKR,
+                        'balance_pkr'    => $vBalPKR,
                         'sale_pkr'       => $vSalePKR,
                         'margin_pkr'     => $vSalePKR - $vCostPKR,
                         'cost_sar'       => $vCostSAR,
+                        'paid_sar'       => $vPaidSAR,
+                        'balance_sar'    => $vBalSAR,
                         'sale_sar'       => $vSaleSAR,
                         'margin_sar'     => $vSaleSAR - $vCostSAR,
                         'status'         => $b->status ?: 'Confirmed',
@@ -348,10 +464,15 @@ class CheckInReportController extends Controller
             $bTotalSalePKR = (float) ($b->total_amount ?: ($bHotelSalesPKR + $fSalePKR + $bTransportSalesPKR + $bVisaSalesPKR + $pkgCost + $otherCost + $additionalAmount - $discount));
             $bMarginPKR    = $bTotalSalePKR - $bTotalCostPKR;
 
+            $bTotalPaidPKR = $bHotelPaidPKR + $fPaidPKR + $bTransportPaidPKR + $bVisaPaidPKR;
+            $bTotalBalPKR  = max(0, $bTotalCostPKR - $bTotalPaidPKR);
+
             $effRoe = $b->hotels->first()?->roe ?: ($fRoe > 1 ? $fRoe : $defRoe);
             $bTotalCostSAR = $effRoe > 0 ? ($bTotalCostPKR / $effRoe) : 0;
             $bTotalSaleSAR = $effRoe > 0 ? ($bTotalSalePKR / $effRoe) : 0;
             $bMarginSAR    = $effRoe > 0 ? ($bMarginPKR / $effRoe) : 0;
+            $bTotalPaidSAR = $effRoe > 0 ? round($bTotalPaidPKR / $effRoe, 2) : 0;
+            $bTotalBalSAR  = max(0, $bTotalCostSAR - $bTotalPaidSAR);
 
             $transportsSummary = implode(', ', $transportRoutesList);
 
@@ -361,6 +482,11 @@ class CheckInReportController extends Controller
                     $hRoe = (float) ($bh->roe ?: 1);
                     $hCost = (float) ($bh->cost_amount ?: (($bh->cost_per_night ?: 0) * ($bh->no_of_nights ?: 1) * max(1, (int)$bh->no_of_rooms) * $hRoe));
                     $hSale = (float) ($bh->selling_amount ?: (($bh->selling_per_night ?: 0) * ($bh->no_of_nights ?: 1) * max(1, (int)$bh->no_of_rooms) * $hRoe));
+
+                    $rowPaidPKR = ($bhIdx === 0 ? $bTotalPaidPKR : 0);
+                    $rowBalPKR  = max(0, ($bhIdx === 0 ? $bTotalCostPKR : $hCost) - $rowPaidPKR);
+                    $rowPaidSAR = $hRoe > 0 ? round($rowPaidPKR / $hRoe, 2) : 0;
+                    $rowBalSAR  = max(0, ($bhIdx === 0 ? $bTotalCostSAR : ($hRoe > 0 ? $hCost / $hRoe : 0)) - $rowPaidSAR);
 
                     $records->push((object)[
                         'booking_id'           => $b->id,
@@ -401,9 +527,13 @@ class CheckInReportController extends Controller
                         'visa_sale'            => $bhIdx === 0 ? $bVisaSalesPKR : 0,
                         // Financials
                         'cost_pkr'             => $bhIdx === 0 ? $bTotalCostPKR : $hCost,
+                        'paid_pkr'             => $rowPaidPKR,
+                        'balance_pkr'          => $rowBalPKR,
                         'sale_pkr'             => $bhIdx === 0 ? $bTotalSalePKR : $hSale,
                         'margin_pkr'           => $bhIdx === 0 ? $bMarginPKR : ($hSale - $hCost),
                         'cost_sar'             => $bhIdx === 0 ? $bTotalCostSAR : ($hRoe > 0 ? $hCost / $hRoe : 0),
+                        'paid_sar'             => $rowPaidSAR,
+                        'balance_sar'          => $rowBalSAR,
                         'sale_sar'             => $bhIdx === 0 ? $bTotalSaleSAR : ($hRoe > 0 ? $hSale / $hRoe : 0),
                         'margin_sar'           => $bhIdx === 0 ? $bMarginSAR : ($hRoe > 0 ? ($hSale - $hCost) / $hRoe : 0),
                         'effective_roe'        => $hRoe,
@@ -450,9 +580,13 @@ class CheckInReportController extends Controller
                     'visa_sale'            => $bVisaSalesPKR,
                     // Financials
                     'cost_pkr'             => $bTotalCostPKR,
+                    'paid_pkr'             => $bTotalPaidPKR,
+                    'balance_pkr'          => $bTotalBalPKR,
                     'sale_pkr'             => $bTotalSalePKR,
                     'margin_pkr'           => $bMarginPKR,
                     'cost_sar'             => $bTotalCostSAR,
+                    'paid_sar'             => $bTotalPaidSAR,
+                    'balance_sar'          => $bTotalBalSAR,
                     'sale_sar'             => $bTotalSaleSAR,
                     'margin_sar'           => $bMarginSAR,
                     'effective_roe'        => $fRoe > 1 ? $fRoe : $defRoe,
@@ -470,45 +604,65 @@ class CheckInReportController extends Controller
         $upcomingCheckIns = $hotelRecords->filter(fn($r) => $r->check_in && $r->check_in >= $today)->count();
 
         // Hotel Section Totals
-        $hotelCostTotalPKR   = $hotelRecords->sum('cost_pkr');
-        $hotelSaleTotalPKR   = $hotelRecords->sum('sale_pkr');
-        $hotelMarginTotalPKR = $hotelRecords->sum('margin_pkr');
-        $hotelCostTotalSAR   = $hotelRecords->sum('cost_sar');
-        $hotelSaleTotalSAR   = $hotelRecords->sum('sale_sar');
-        $hotelMarginTotalSAR = $hotelRecords->sum('margin_sar');
+        $hotelCostTotalPKR    = $hotelRecords->sum('cost_pkr');
+        $hotelSaleTotalPKR    = $hotelRecords->sum('sale_pkr');
+        $hotelMarginTotalPKR  = $hotelRecords->sum('margin_pkr');
+        $hotelPaidTotalPKR    = $hotelRecords->sum('paid_pkr');
+        $hotelBalanceTotalPKR = max(0, $hotelCostTotalPKR - $hotelPaidTotalPKR);
+        $hotelCostTotalSAR    = $hotelRecords->sum('cost_sar');
+        $hotelSaleTotalSAR    = $hotelRecords->sum('sale_sar');
+        $hotelMarginTotalSAR  = $hotelRecords->sum('margin_sar');
+        $hotelPaidTotalSAR    = $hotelRecords->sum('paid_sar');
+        $hotelBalanceTotalSAR = max(0, $hotelCostTotalSAR - $hotelPaidTotalSAR);
 
         // Flight Section Totals
-        $flightCostTotalPKR   = $flightRecords->sum('cost_pkr');
-        $flightSaleTotalPKR   = $flightRecords->sum('sale_pkr');
-        $flightMarginTotalPKR = $flightRecords->sum('margin_pkr');
-        $flightCostTotalSAR   = $flightRecords->sum('cost_sar');
-        $flightSaleTotalSAR   = $flightRecords->sum('sale_sar');
-        $flightMarginTotalSAR = $flightRecords->sum('margin_sar');
+        $flightCostTotalPKR    = $flightRecords->sum('cost_pkr');
+        $flightSaleTotalPKR    = $flightRecords->sum('sale_pkr');
+        $flightMarginTotalPKR  = $flightRecords->sum('margin_pkr');
+        $flightPaidTotalPKR    = $flightRecords->sum('paid_pkr');
+        $flightBalanceTotalPKR = max(0, $flightCostTotalPKR - $flightPaidTotalPKR);
+        $flightCostTotalSAR    = $flightRecords->sum('cost_sar');
+        $flightSaleTotalSAR    = $flightRecords->sum('sale_sar');
+        $flightMarginTotalSAR  = $flightRecords->sum('margin_sar');
+        $flightPaidTotalSAR    = $flightRecords->sum('paid_sar');
+        $flightBalanceTotalSAR = max(0, $flightCostTotalSAR - $flightPaidTotalSAR);
 
         // Transport Section Totals
-        $transportCostTotalPKR   = $transportRecords->sum('cost_pkr');
-        $transportSaleTotalPKR   = $transportRecords->sum('sale_pkr');
-        $transportMarginTotalPKR = $transportRecords->sum('margin_pkr');
-        $transportCostTotalSAR   = $transportRecords->sum('cost_sar');
-        $transportSaleTotalSAR   = $transportRecords->sum('sale_sar');
-        $transportMarginTotalSAR = $transportRecords->sum('margin_sar');
+        $transportCostTotalPKR    = $transportRecords->sum('cost_pkr');
+        $transportSaleTotalPKR    = $transportRecords->sum('sale_pkr');
+        $transportMarginTotalPKR  = $transportRecords->sum('margin_pkr');
+        $transportPaidTotalPKR    = $transportRecords->sum('paid_pkr');
+        $transportBalanceTotalPKR = max(0, $transportCostTotalPKR - $transportPaidTotalPKR);
+        $transportCostTotalSAR    = $transportRecords->sum('cost_sar');
+        $transportSaleTotalSAR    = $transportRecords->sum('sale_sar');
+        $transportMarginTotalSAR  = $transportRecords->sum('margin_sar');
+        $transportPaidTotalSAR    = $transportRecords->sum('paid_sar');
+        $transportBalanceTotalSAR = max(0, $transportCostTotalSAR - $transportPaidTotalSAR);
 
         // Visa Section Totals
-        $visaCostTotalPKR   = $visaRecords->sum('cost_pkr');
-        $visaSaleTotalPKR   = $visaRecords->sum('sale_pkr');
-        $visaMarginTotalPKR = $visaRecords->sum('margin_pkr');
-        $visaCostTotalSAR   = $visaRecords->sum('cost_sar');
-        $visaSaleTotalSAR   = $visaRecords->sum('sale_sar');
-        $visaMarginTotalSAR = $visaRecords->sum('margin_sar');
+        $visaCostTotalPKR    = $visaRecords->sum('cost_pkr');
+        $visaSaleTotalPKR    = $visaRecords->sum('sale_pkr');
+        $visaMarginTotalPKR  = $visaRecords->sum('margin_pkr');
+        $visaPaidTotalPKR    = $visaRecords->sum('paid_pkr');
+        $visaBalanceTotalPKR = max(0, $visaCostTotalPKR - $visaPaidTotalPKR);
+        $visaCostTotalSAR    = $visaRecords->sum('cost_sar');
+        $visaSaleTotalSAR    = $visaRecords->sum('sale_sar');
+        $visaMarginTotalSAR  = $visaRecords->sum('margin_sar');
+        $visaPaidTotalSAR    = $visaRecords->sum('paid_sar');
+        $visaBalanceTotalSAR = max(0, $visaCostTotalSAR - $visaPaidTotalSAR);
 
         // Grand Totals (Unique bookings summation to prevent double-count across multiple hotel rows)
-        $totalCostPKR   = $hotelCostTotalPKR + $flightCostTotalPKR + $transportCostTotalPKR + $visaCostTotalPKR;
-        $totalSalePKR   = $hotelSaleTotalPKR + $flightSaleTotalPKR + $transportSaleTotalPKR + $visaSaleTotalPKR;
-        $totalMarginPKR = $totalSalePKR - $totalCostPKR;
+        $totalCostPKR    = $hotelCostTotalPKR + $flightCostTotalPKR + $transportCostTotalPKR + $visaCostTotalPKR;
+        $totalSalePKR    = $hotelSaleTotalPKR + $flightSaleTotalPKR + $transportSaleTotalPKR + $visaSaleTotalPKR;
+        $totalMarginPKR  = $totalSalePKR - $totalCostPKR;
+        $totalPaidPKR    = $hotelPaidTotalPKR + $flightPaidTotalPKR + $transportPaidTotalPKR + $visaPaidTotalPKR;
+        $totalBalancePKR = max(0, $totalCostPKR - $totalPaidPKR);
 
-        $totalCostSAR   = $hotelCostTotalSAR + $flightCostTotalSAR + $transportCostTotalSAR + $visaCostTotalSAR;
-        $totalSaleSAR   = $hotelSaleTotalSAR + $flightSaleTotalSAR + $transportSaleTotalSAR + $visaSaleTotalSAR;
-        $totalMarginSAR = $totalSaleSAR - $totalCostSAR;
+        $totalCostSAR    = $hotelCostTotalSAR + $flightCostTotalSAR + $transportCostTotalSAR + $visaCostTotalSAR;
+        $totalSaleSAR    = $hotelSaleTotalSAR + $flightSaleTotalSAR + $transportSaleTotalSAR + $visaSaleTotalSAR;
+        $totalMarginSAR  = $totalSaleSAR - $totalCostSAR;
+        $totalPaidSAR    = $hotelPaidTotalSAR + $flightPaidTotalSAR + $transportPaidTotalSAR + $visaPaidTotalSAR;
+        $totalBalanceSAR = max(0, $totalCostSAR - $totalPaidSAR);
 
         return view('reports.checkin_report', compact(
             'records',
@@ -524,33 +678,53 @@ class CheckInReportController extends Controller
             'todayCheckIns',
             'upcomingCheckIns',
             'hotelCostTotalPKR',
+            'hotelPaidTotalPKR',
+            'hotelBalanceTotalPKR',
             'hotelSaleTotalPKR',
             'hotelMarginTotalPKR',
             'hotelCostTotalSAR',
+            'hotelPaidTotalSAR',
+            'hotelBalanceTotalSAR',
             'hotelSaleTotalSAR',
             'hotelMarginTotalSAR',
             'flightCostTotalPKR',
+            'flightPaidTotalPKR',
+            'flightBalanceTotalPKR',
             'flightSaleTotalPKR',
             'flightMarginTotalPKR',
             'flightCostTotalSAR',
+            'flightPaidTotalSAR',
+            'flightBalanceTotalSAR',
             'flightSaleTotalSAR',
             'flightMarginTotalSAR',
             'transportCostTotalPKR',
+            'transportPaidTotalPKR',
+            'transportBalanceTotalPKR',
             'transportSaleTotalPKR',
             'transportMarginTotalPKR',
             'transportCostTotalSAR',
+            'transportPaidTotalSAR',
+            'transportBalanceTotalSAR',
             'transportSaleTotalSAR',
             'transportMarginTotalSAR',
             'visaCostTotalPKR',
+            'visaPaidTotalPKR',
+            'visaBalanceTotalPKR',
             'visaSaleTotalPKR',
             'visaMarginTotalPKR',
             'visaCostTotalSAR',
+            'visaPaidTotalSAR',
+            'visaBalanceTotalSAR',
             'visaSaleTotalSAR',
             'visaMarginTotalSAR',
             'totalCostPKR',
+            'totalPaidPKR',
+            'totalBalancePKR',
             'totalSalePKR',
             'totalMarginPKR',
             'totalCostSAR',
+            'totalPaidSAR',
+            'totalBalanceSAR',
             'totalSaleSAR',
             'totalMarginSAR',
             'hotelName',
