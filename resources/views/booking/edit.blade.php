@@ -3,8 +3,12 @@
 
 @section('content')
 @php
-    $dashboardPkg = old('package_type', $booking->package_type ?? 'umrah');
-    $isUmrah = ($dashboardPkg === 'umrah');
+    $isHajj = (($booking->package_type ?? '') === 'hajj');
+    $isDomestic = (($booking->booking_category ?? '') === 'domestic');
+    $isInternational = (($booking->booking_category ?? '') === 'international');
+    $defaultCat = $booking->booking_category ?? ($isHajj ? 'hajj' : 'umrah');
+    $bCat = old('booking_category', $defaultCat);
+    $isUmrah = !$isHajj;
     $reqTab = request('tab') ?: old('active_tab', ($isUmrah ? '#tab-details' : '#tab-package'));
     if (!str_starts_with($reqTab, '#')) {
         $reqTab = '#' . $reqTab;
@@ -183,7 +187,7 @@
                                         <option value="cancelled" {{ $booking->status == 'cancelled' ? 'selected' : '' }}>
                                             Cancelled</option>
                                     </select>
-                                    <input type="hidden" name="package_type" id="package_type" value="{{ $dashboardPkg }}">
+                                    <input type="hidden" name="package_type" id="package_type" value="{{ $booking->package_type ?? 'umrah' }}">
                                 </div>
 
                             </div>
@@ -237,22 +241,22 @@
                                             </span>
                                             <div class="d-flex flex-wrap gap-3">
                                                 @php
-                                                    $bCat = old('booking_category', $booking->booking_category ?? 'umrah');
+                                                    $bCat = old('booking_category', $defaultCat);
                                                 @endphp
                                                 <div class="form-check">
-                                                    <input class="form-check-input booking-category-radio" type="radio" name="booking_category" id="bcat_umrah" value="umrah" {{ $bCat === 'umrah' ? 'checked' : '' }}>
+                                                    <input class="form-check-input booking-category-radio" type="radio" name="booking_category" id="bcat_umrah" value="umrah" {{ $bCat === 'umrah' ? 'checked' : '' }} onchange="applyCategoryToHotels(this.value)">
                                                     <label class="form-check-label fs-13 fw-semibold text-primary" for="bcat_umrah">
                                                         <i class="mdi mdi-mosque me-1"></i> Umrah Pilgrimage
                                                     </label>
                                                 </div>
                                                 <div class="form-check">
-                                                    <input class="form-check-input booking-category-radio" type="radio" name="booking_category" id="bcat_domestic" value="domestic" {{ $bCat === 'domestic' ? 'checked' : '' }}>
+                                                    <input class="form-check-input booking-category-radio" type="radio" name="booking_category" id="bcat_domestic" value="domestic" {{ $bCat === 'domestic' ? 'checked' : '' }} onchange="applyCategoryToHotels(this.value)">
                                                     <label class="form-check-label fs-13 fw-semibold text-success" for="bcat_domestic">
                                                         <i class="mdi mdi-airplane me-1"></i> Domestic Flight (Pakistan)
                                                     </label>
                                                 </div>
                                                 <div class="form-check">
-                                                    <input class="form-check-input booking-category-radio" type="radio" name="booking_category" id="bcat_international" value="international" {{ $bCat === 'international' ? 'checked' : '' }}>
+                                                    <input class="form-check-input booking-category-radio" type="radio" name="booking_category" id="bcat_international" value="international" {{ $bCat === 'international' ? 'checked' : '' }} onchange="applyCategoryToHotels(this.value)">
                                                     <label class="form-check-label fs-13 fw-semibold text-info" for="bcat_international">
                                                         <i class="mdi mdi-earth me-1"></i> International Flight
                                                     </label>
@@ -560,7 +564,7 @@
                                                 <span class="fw-semibold">Flight Supplier / Vendor</span>
                                                 <button type="button" class="btn btn-xs btn-link text-primary p-0 text-decoration-none" onclick="refreshSuppliersList(true)" title="Reload Suppliers"><i class="mdi mdi-refresh"></i> Refresh</button>
                                             </label>
-                                            <select name="flight_supplier_id" id="flight_supplier_id" class="form-select">
+                                            <select name="flight_supplier_id" id="flight_supplier_id" class="form-select select2">
                                                 <option value="">-- Select Flight Supplier --</option>
                                                 @foreach ($suppliers as $sup)
                                                     <option value="{{ $sup->id }}" {{ old('flight_supplier_id', $booking->flight_supplier_id) == $sup->id ? 'selected' : '' }}>
@@ -1243,7 +1247,10 @@
                                                 </div>
                                                 <div class="col-md-2">
                                                     <label class="form-label mb-1">Nights</label>
-                                                    <input type="number" name="hotels[{{ $loop->index }}][no_of_nights]" class="form-control form-control-sm hotel-nights" value="{{ old('hotels.'.$loop->index.'.no_of_nights', $hotel->no_of_nights ?: 1) }}" min="1">
+                                                    <input type="number" name="hotels[{{ $loop->index }}][no_of_nights]" class="form-control form-control-sm hotel-nights"
+                                                        value="{{ old('hotels.'.$loop->index.'.no_of_nights', $hotel->no_of_nights ?: 1) }}" min="1"
+                                                        oninput="calculateHotelRow(this.closest('.hotel-block'), 'nights')"
+                                                        onchange="calculateHotelRow(this.closest('.hotel-block'), 'nights')">
                                                 </div>
                                                 <input type="hidden" name="hotels[{{ $loop->index }}][booking_date]" class="hotel-booking-date sync-booking-date" value="{{ old('hotels.'.$loop->index.'.booking_date', $hotel->booking_date ? \Carbon\Carbon::parse($hotel->booking_date)->format('Y-m-d') : date('Y-m-d')) }}">
                                                 <div class="col-md-3">
@@ -1256,7 +1263,7 @@
                                         <div class="row g-3">
                                             <div class="col-md-3">
                                                 <label class="form-label">Hotel Name</label>
-                                                <select name="hotels[{{ $loop->index }}][hotel_name]" class="form-select hotel-name-select" onchange="updateHotelStaySummary()">
+                                                <select name="hotels[{{ $loop->index }}][hotel_name]" class="form-select hotel-name-select select2" onchange="updateHotelStaySummary()">
                                                     <option value="">Select Hotel</option>
                                                     @foreach($hotels as $h)
                                                         @php
@@ -1285,7 +1292,7 @@
                                             </div>
                                             <div class="col-md-3">
                                                 <label class="form-label">Hotel Supplier / Vendor</label>
-                                                <select name="hotels[{{ $loop->index }}][supplier_id]" class="form-select">
+                                                <select name="hotels[{{ $loop->index }}][supplier_id]" class="form-select hotel-supplier-select select2">
                                                     <option value="">-- Select Supplier --</option>
                                                     @foreach ($suppliers as $s)
                                                         <option value="{{ $s->id }}" {{ old('hotels.'.$loop->index.'.supplier_id', $hotel->supplier_id) == $s->id ? 'selected' : '' }}>
@@ -1296,7 +1303,8 @@
                                             </div>
                                             <div class="col-md-2">
                                                 <label class="form-label text-dark fw-bold">Currency</label>
-                                                <select name="hotels[{{ $loop->index }}][currency]" class="form-select hotel-currency fw-bold">
+                                                <select name="hotels[{{ $loop->index }}][currency]" class="form-select hotel-currency fw-bold"
+                                                    onchange="calculateHotelRow(this.closest('.hotel-block'))">
                                                     <option value="SAR" {{ $hCurr === 'SAR' ? 'selected' : '' }}>SAR (Riyal)</option>
                                                     <option value="PKR" {{ $hCurr === 'PKR' ? 'selected' : '' }}>PKR (Rupee)</option>
                                                     <option value="USD" {{ $hCurr === 'USD' ? 'selected' : '' }}>USD (Dollar)</option>
@@ -1309,7 +1317,9 @@
                                                 <div class="input-group">
                                                     <span class="input-group-text bg-light hotel-curr-prefix">1 {{ $hCurr }} =</span>
                                                     <input type="number" step="0.0001" name="hotels[{{ $loop->index }}][cost_roe]"
-                                                        class="form-control hotel-cost-roe" value="{{ $hCostRoe }}" {{ $isHPkr ? 'readonly' : '' }}>
+                                                        class="form-control hotel-cost-roe" value="{{ $hCostRoe }}" {{ $isHPkr ? 'readonly' : '' }}
+                                                        oninput="calculateHotelRow(this.closest('.hotel-block'))"
+                                                        onchange="calculateHotelRow(this.closest('.hotel-block'))">
                                                 </div>
                                                 <input type="hidden" name="hotels[{{ $loop->index }}][roe]" class="hotel-roe" value="{{ $hCostRoe }}">
                                             </div>
@@ -1318,7 +1328,9 @@
                                                 <div class="input-group">
                                                     <span class="input-group-text bg-light hotel-curr-prefix">1 {{ $hCurr }} =</span>
                                                     <input type="number" step="0.0001" name="hotels[{{ $loop->index }}][sale_roe]"
-                                                        class="form-control hotel-sale-roe" value="{{ $hSaleRoe }}" {{ $isHPkr ? 'readonly' : '' }}>
+                                                        class="form-control hotel-sale-roe" value="{{ $hSaleRoe }}" {{ $isHPkr ? 'readonly' : '' }}
+                                                        oninput="calculateHotelRow(this.closest('.hotel-block'))"
+                                                        onchange="calculateHotelRow(this.closest('.hotel-block'))">
                                                 </div>
                                             </div>
 
@@ -1338,7 +1350,9 @@
                                                 <label class="form-label">No. of Rooms</label>
                                                 <input type="number" name="hotels[{{ $loop->index }}][no_of_rooms]"
                                                     class="form-control hotel-rooms" value="{{ old('hotels.'.$loop->index.'.no_of_rooms', $hotel->no_of_rooms ?: 1) }}"
-                                                    min="1">
+                                                    min="1"
+                                                    oninput="calculateHotelRow(this.closest('.hotel-block'), 'rooms')"
+                                                    onchange="calculateHotelRow(this.closest('.hotel-block'), 'rooms')">
                                             </div>
                                             <div class="col-md-2">
                                                 <label class="form-label">Hotel Room #</label>
@@ -1372,13 +1386,17 @@
                                                 <label class="form-label text-danger fw-semibold">Cost Rate / Night (<span class="hotel-curr-label">{{ $hCurr }}</span>)</label>
                                                 <input type="number" step="0.01" name="hotels[{{ $loop->index }}][cost_per_night]"
                                                     class="form-control hotel-cost-rate" placeholder="0.00"
-                                                    value="{{ old('hotels.'.$loop->index.'.cost_per_night', $hotel->cost_per_night ?? 0) }}">
+                                                    value="{{ old('hotels.'.$loop->index.'.cost_per_night', $hotel->cost_per_night ?? 0) }}"
+                                                    oninput="autoDivideHotelRates(this.closest('.hotel-block'), 'cost'); calculateHotelRow(this.closest('.hotel-block'), 'costRate')"
+                                                    onchange="autoDivideHotelRates(this.closest('.hotel-block'), 'cost'); calculateHotelRow(this.closest('.hotel-block'), 'costRate')">
                                             </div>
                                             <div class="col-md-3">
                                                 <label class="form-label text-success fw-semibold">Sell Rate / Night (<span class="hotel-curr-label">{{ $hCurr }}</span>)</label>
                                                 <input type="number" step="0.01" name="hotels[{{ $loop->index }}][selling_per_night]"
                                                     class="form-control hotel-sell-rate" placeholder="0.00"
-                                                    value="{{ old('hotels.'.$loop->index.'.selling_per_night', $hotel->selling_per_night ?? 0) }}">
+                                                    value="{{ old('hotels.'.$loop->index.'.selling_per_night', $hotel->selling_per_night ?? 0) }}"
+                                                    oninput="autoDivideHotelRates(this.closest('.hotel-block'), 'sell'); calculateHotelRow(this.closest('.hotel-block'), 'sellRate')"
+                                                    onchange="autoDivideHotelRates(this.closest('.hotel-block'), 'sell'); calculateHotelRow(this.closest('.hotel-block'), 'sellRate')">
                                             </div>
 
                                             {{-- Main Cost Division & Additional Rooms Controls (Points 8 & 9) --}}
@@ -1518,16 +1536,16 @@
                                 @endforeach
                             </div>
                             <div class="d-flex flex-wrap gap-2 mt-2" id="hotelActionButtons">
-                                <button type="button" class="btn btn-primary btn-sm btn-hotel-makkah" id="btnAddMakkahHotel" onclick="addNewHotel('makkah')">
+                                <button type="button" class="btn btn-primary btn-sm btn-hotel-makkah" id="btnAddMakkahHotel" onclick="addNewHotel('makkah')" style="{{ in_array($bCat, ['domestic', 'international']) ? 'display: none !important;' : '' }}">
                                     <i class="mdi mdi-plus-circle me-1"></i> + Add Makkah Hotel
                                 </button>
-                                <button type="button" class="btn btn-success btn-sm btn-hotel-madinah" id="btnAddMadinahHotel" onclick="addNewHotel('madinah')">
+                                <button type="button" class="btn btn-success btn-sm btn-hotel-madinah" id="btnAddMadinahHotel" onclick="addNewHotel('madinah')" style="{{ in_array($bCat, ['domestic', 'international']) ? 'display: none !important;' : '' }}">
                                     <i class="mdi mdi-plus-circle me-1"></i> + Add Madinah Hotel
                                 </button>
                                 <button type="button" class="btn btn-outline-secondary btn-sm btn-hotel-other" id="btnAddOtherHotel" onclick="addNewHotel('other')">
-                                    <i class="mdi mdi-plus-circle me-1"></i> <span id="lblAddOtherHotel">+ Add Other Hotel</span>
+                                    <i class="mdi mdi-plus-circle me-1"></i> <span id="lblAddOtherHotel">{{ $bCat === 'domestic' ? '+ Add Domestic Hotel' : ($bCat === 'international' ? '+ Add International Hotel' : '+ Add Other Hotel') }}</span>
                                 </button>
-                                <button type="button" class="btn btn-info btn-sm text-white btn-hotel-select" id="addHotel">
+                                <button type="button" class="btn btn-info btn-sm text-white btn-hotel-select" id="addHotel" onclick="addNewHotel('other')" style="{{ in_array($bCat, ['domestic', 'international']) ? 'display: none !important;' : '' }}">
                                     <i class="mdi mdi-plus me-1"></i> <span id="lblAddHotelSelect">+ Add Hotel (Select)</span>
                                 </button>
                             </div>
@@ -1601,6 +1619,26 @@
                                                 <th style="color: #b45309;" class="text-end">Total Sale</th>
                                             </tr>
                                         </thead>
+                                        @php
+                                            $bInitTrnCostSar = 0;
+                                            $bInitTrnCostPkr = 0;
+                                            $bInitTrnSellSar = 0;
+                                            $bInitTrnSellPkr = 0;
+                                            $bInitTrnCurrs = [];
+                                            foreach ($booking->transports as $tItem) {
+                                                $q = (int)($tItem->quantity ?: 1);
+                                                $cSar = ((float)($tItem->cost_rate ?: 0)) * $q;
+                                                $sSar = ((float)($tItem->selling_rate ?: 0)) * $q;
+                                                $cRoe = (float)($tItem->cost_roe ?: ($tItem->roe ?: 75));
+                                                $sRoe = (float)($tItem->sale_roe ?: ($tItem->roe ?: 75));
+                                                $bInitTrnCostSar += $cSar;
+                                                $bInitTrnCostPkr += ($tItem->currency === 'PKR' ? $cSar : ($cSar * $cRoe));
+                                                $bInitTrnSellSar += $sSar;
+                                                $bInitTrnSellPkr += ($tItem->currency === 'PKR' ? $sSar : ($sSar * $sRoe));
+                                                $bInitTrnCurrs[$tItem->currency ?: 'SAR'] = true;
+                                            }
+                                            $bInitTrnCurr = count($bInitTrnCurrs) === 1 ? array_key_first($bInitTrnCurrs) : (count($bInitTrnCurrs) > 1 ? 'Mix' : 'SAR');
+                                        @endphp
                                         <tbody id="transportRoutesSummaryRows">
                                             @forelse($booking->transports as $t)
                                                 @php
@@ -1645,8 +1683,14 @@
                                                 <td colspan="2" class="text-end pe-3 fw-bold">Total</td>
                                                 <td id="transport_summary_total_qty" class="fw-bold text-dark fs-13">{{ $booking->transports->sum('quantity') ?: 0 }}</td>
                                                 <td colspan="4"></td>
-                                                <td id="transport_summary_total_cost" class="text-end text-danger fw-bold fs-12">0.00 SAR</td>
-                                                <td id="transport_summary_total_sell" class="text-end text-success fw-bold fs-12">0.00 SAR</td>
+                                                <td id="transport_summary_total_cost" class="text-end text-danger fw-bold fs-12">
+                                                    <span>{{ number_format($bInitTrnCostSar, 2) }} {{ $bInitTrnCurr }}</span><br>
+                                                    <small class="text-muted fw-normal">{{ number_format($bInitTrnCostPkr, 2) }} PKR</small>
+                                                </td>
+                                                <td id="transport_summary_total_sell" class="text-end text-success fw-bold fs-12">
+                                                    <span>{{ number_format($bInitTrnSellSar, 2) }} {{ $bInitTrnCurr }}</span><br>
+                                                    <small class="text-muted fw-normal">{{ number_format($bInitTrnSellPkr, 2) }} PKR</small>
+                                                </td>
                                             </tr>
                                         </tfoot>
                                     </table>
@@ -1658,25 +1702,25 @@
                                 <div class="col-md-3">
                                     <div class="border rounded p-2 bg-white text-center shadow-sm">
                                         <small class="text-muted d-block fw-semibold">Total Transport Cost (SAR)</small>
-                                        <strong class="text-danger fs-14" id="transport_cost_sar_total">0.00 SAR</strong>
+                                        <strong class="text-danger fs-14" id="transport_cost_sar_total">{{ number_format($bInitTrnCostSar, 2) }} {{ $bInitTrnCurr }}</strong>
                                     </div>
                                 </div>
                                 <div class="col-md-3">
                                     <div class="border rounded p-2 bg-white text-center shadow-sm">
                                         <small class="text-muted d-block fw-semibold">Total Transport Cost (PKR)</small>
-                                        <strong class="text-danger fs-14" id="transport_cost_pkr_total">0.00 PKR</strong>
+                                        <strong class="text-danger fs-14" id="transport_cost_pkr_total">{{ number_format($bInitTrnCostPkr, 2) }} PKR</strong>
                                     </div>
                                 </div>
                                 <div class="col-md-3">
                                     <div class="border rounded p-2 bg-white text-center shadow-sm">
                                         <small class="text-muted d-block fw-semibold">Total Transport Sell (SAR)</small>
-                                        <strong class="text-success fs-14" id="transport_sell_sar_total">0.00 SAR</strong>
+                                        <strong class="text-success fs-14" id="transport_sell_sar_total">{{ number_format($bInitTrnSellSar, 2) }} {{ $bInitTrnCurr }}</strong>
                                     </div>
                                 </div>
                                 <div class="col-md-3">
                                     <div class="border rounded p-2 bg-white text-center shadow-sm">
                                         <small class="text-muted d-block fw-semibold">Total Transport Sell (PKR)</small>
-                                        <strong class="text-success fs-14" id="transport_sell_pkr_total">0.00 PKR</strong>
+                                        <strong class="text-success fs-14" id="transport_sell_pkr_total">{{ number_format($bInitTrnSellPkr, 2) }} PKR</strong>
                                     </div>
                                 </div>
                             </div>
@@ -1759,7 +1803,9 @@
                                             <div class="col-md-1">
                                                 <label class="form-label">Qty</label>
                                                 <input type="number" name="transports[{{ $i }}][quantity]" class="form-control transport-qty"
-                                                    value="{{ old('transports.'.$i.'.quantity', $t->quantity ?? 1) }}" min="1">
+                                                    value="{{ old('transports.'.$i.'.quantity', $t->quantity ?? 1) }}" min="1"
+                                                    oninput="calculateTransportRow(this.closest('.route-block'))"
+                                                    onchange="calculateTransportRow(this.closest('.route-block'))">
                                             </div>
                                             <div class="col-md-2">
                                                 <label class="form-label">Type / Status</label>
@@ -1778,7 +1824,7 @@
                                             </div>
                                             <div class="col-md-3">
                                                 <label class="form-label">Transport Supplier / Vendor</label>
-                                                <select name="transports[{{ $i }}][supplier_id]" class="form-select">
+                                                <select name="transports[{{ $i }}][supplier_id]" class="form-select transport-supplier-select select2">
                                                     <option value="">-- Select Supplier --</option>
                                                     @foreach ($suppliers as $sup)
                                                         <option value="{{ $sup->id }}" {{ old('transports.'.$i.'.supplier_id', $t->supplier_id) == $sup->id ? 'selected' : '' }}>
@@ -1862,7 +1908,8 @@
                                             </div> --}}
                                             <div class="col-md-2">
                                                 <label class="form-label text-dark fw-bold">Currency</label>
-                                                <select name="transports[{{ $i }}][currency]" class="form-select transport-currency fw-bold">
+                                                <select name="transports[{{ $i }}][currency]" class="form-select transport-currency fw-bold"
+                                                    onchange="calculateTransportRow(this.closest('.route-block'))">
                                                     <option value="SAR" {{ $tCurr === 'SAR' ? 'selected' : '' }}>SAR (Riyal)</option>
                                                     <option value="PKR" {{ $tCurr === 'PKR' ? 'selected' : '' }}>PKR (Rupee)</option>
                                                     <option value="USD" {{ $tCurr === 'USD' ? 'selected' : '' }}>USD (Dollar)</option>
@@ -1875,7 +1922,9 @@
                                                 <div class="input-group">
                                                     <span class="input-group-text bg-light transport-curr-prefix">1 {{ $tCurr }} =</span>
                                                     <input type="number" step="0.0001" name="transports[{{ $i }}][cost_roe]"
-                                                        class="form-control transport-cost-roe" placeholder="75.00" value="{{ $tCostRoe }}" {{ $isTPkr ? 'readonly' : '' }}>
+                                                        class="form-control transport-cost-roe" placeholder="75.00" value="{{ $tCostRoe }}" {{ $isTPkr ? 'readonly' : '' }}
+                                                        oninput="calculateTransportRow(this.closest('.route-block'))"
+                                                        onchange="calculateTransportRow(this.closest('.route-block'))">
                                                 </div>
                                                 <input type="hidden" name="transports[{{ $i }}][roe]" class="transport-roe" value="{{ $tCostRoe }}">
                                             </div>
@@ -1884,13 +1933,17 @@
                                                 <div class="input-group">
                                                     <span class="input-group-text bg-light transport-curr-prefix">1 {{ $tCurr }} =</span>
                                                     <input type="number" step="0.0001" name="transports[{{ $i }}][sale_roe]"
-                                                        class="form-control transport-sale-roe" placeholder="75.00" value="{{ $tSaleRoe }}" {{ $isTPkr ? 'readonly' : '' }}>
+                                                        class="form-control transport-sale-roe" placeholder="75.00" value="{{ $tSaleRoe }}" {{ $isTPkr ? 'readonly' : '' }}
+                                                        oninput="calculateTransportRow(this.closest('.route-block'))"
+                                                        onchange="calculateTransportRow(this.closest('.route-block'))">
                                                 </div>
                                             </div>
                                             <div class="col-md-2">
                                                 <label class="form-label text-danger fw-semibold">Cost Rate (<span class="transport-curr-label">{{ $tCurr }}</span>)</label>
                                                 <input type="number" step="0.01" name="transports[{{ $i }}][cost_rate]"
-                                                    class="form-control transport-cost-rate" placeholder="0.00" value="{{ old('transports.'.$i.'.cost_rate', $t->cost_rate ?? 0) }}">
+                                                    class="form-control transport-cost-rate" placeholder="0.00" value="{{ old('transports.'.$i.'.cost_rate', $t->cost_rate ?? 0) }}"
+                                                    oninput="calculateTransportRow(this.closest('.route-block'))"
+                                                    onchange="calculateTransportRow(this.closest('.route-block'))">
                                             </div>
                                             <div class="col-md-3">
                                                 <label class="form-label text-danger fw-semibold">Total Cost (<span class="transport-curr-label">{{ $tCurr }}</span> & PKR)</label>
@@ -1904,7 +1957,9 @@
                                             <div class="col-md-2">
                                                 <label class="form-label text-success fw-semibold">Sell Rate (<span class="transport-curr-label">{{ $tCurr }}</span>)</label>
                                                 <input type="number" step="0.01" name="transports[{{ $i }}][selling_rate]"
-                                                    class="form-control transport-sell-rate" placeholder="0.00" value="{{ old('transports.'.$i.'.selling_rate', $t->selling_rate ?? 0) }}">
+                                                    class="form-control transport-sell-rate" placeholder="0.00" value="{{ old('transports.'.$i.'.selling_rate', $t->selling_rate ?? 0) }}"
+                                                    oninput="calculateTransportRow(this.closest('.route-block'))"
+                                                    onchange="calculateTransportRow(this.closest('.route-block'))">
                                             </div>
                                             <div class="col-md-3">
                                                 <label class="form-label text-success fw-semibold">Total Sell (<span class="transport-curr-label">{{ $tCurr }}</span> & PKR)</label>
@@ -1981,7 +2036,7 @@
                                             </div>
                                             <div class="col-md-3">
                                                 <label class="form-label">Transport Supplier / Vendor</label>
-                                                <select name="transports[0][supplier_id]" class="form-select">
+                                                <select name="transports[0][supplier_id]" class="form-select transport-supplier-select select2">
                                                     <option value="">-- Select Supplier --</option>
                                                     @foreach ($suppliers as $sup)
                                                         <option value="{{ $sup->id }}">{{ $sup->name }}</option>
@@ -2299,7 +2354,7 @@
                                             </div>
                                             <div class="col-md-3">
                                                 <label class="form-label" style="font-size:12px;">Visa Supplier / Vendor</label>
-                                                <select name="visas[{{ $i }}][supplier_id]" class="form-select form-select-sm">
+                                                <select name="visas[{{ $i }}][supplier_id]" class="form-select form-select-sm visa-supplier-select select2">
                                                     <option value="">-- Select Supplier --</option>
                                                     @foreach ($suppliers as $s)
                                                         <option value="{{ $s->id }}" {{ old('visas.'.$i.'.supplier_id', $visa->supplier_id) == $s->id ? 'selected' : '' }}>
@@ -2887,44 +2942,36 @@
 
         function buildHotelsOptions(filterCity = null) {
             let list = Array.isArray(hotelsData) ? hotelsData : [];
-            const activeCategory = document.querySelector('input[name="booking_category"]:checked')?.value || 'umrah';
+            const activeCategory = document.querySelector('input[name="booking_category"]:checked')?.value || '{{ $bCat }}';
 
-            const domesticPlaces = ['karachi', 'lahore', 'islamabad', 'rawalpindi', 'peshawar', 'multan', 'faisalabad', 'quetta', 'sialkot'];
-            const pilgrimagePlaces = ['makkah', 'madinah', 'azizia', 'mina/arafat', 'jeddah'];
+            const domesticPlaces = ['karachi', 'lahore', 'islamabad', 'rawalpindi', 'peshawar', 'multan', 'faisalabad', 'quetta', 'sialkot', 'pakistan'];
+            const pilgrimagePlaces = ['makkah', 'madinah', 'azizia', 'mina', 'arafat', 'jeddah', 'saudi'];
 
             if (activeCategory === 'domestic') {
                 list = list.filter(h => {
-                    const p = ((typeof h.place === 'object' ? h.place?.value : h.place) || h.city || '').toLowerCase();
+                    const p = (((typeof h.place === 'object' && h.place !== null) ? h.place?.value : h.place) || h.address || '').toLowerCase();
                     return domesticPlaces.some(dp => p.includes(dp));
                 });
             } else if (activeCategory === 'international') {
                 list = list.filter(h => {
-                    const p = ((typeof h.place === 'object' ? h.place?.value : h.place) || h.city || '').toLowerCase();
+                    const p = (((typeof h.place === 'object' && h.place !== null) ? h.place?.value : h.place) || h.address || '').toLowerCase();
                     const isPilgrim = pilgrimagePlaces.some(pp => p.includes(pp));
                     const isDom = domesticPlaces.some(dp => p.includes(dp));
                     return !isPilgrim && !isDom;
                 });
             } else {
-                if (filterCity) {
+                if (filterCity && filterCity !== 'other') {
                     const fc = filterCity.toLowerCase();
                     list = list.filter(h => {
-                        const p = ((typeof h.place === 'object' ? h.place?.value : h.place) || h.city || '').toLowerCase();
+                        const p = (((typeof h.place === 'object' && h.place !== null) ? h.place?.value : h.place) || h.address || '').toLowerCase();
                         return p.includes(fc);
                     });
                 }
             }
 
-            if (filterCity && activeCategory !== 'umrah' && filterCity !== 'other') {
-                const fc = filterCity.toLowerCase();
-                list = list.filter(h => {
-                    const p = ((typeof h.place === 'object' ? h.place?.value : h.place) || h.city || '').toLowerCase();
-                    return p.includes(fc);
-                });
-            }
-
             return `<option value="">Select Hotel</option>` +
                 list.map(h => {
-                    const p = (h.city || (typeof h.place === 'object' ? h.place?.value : h.place) || '');
+                    const p = ((typeof h.place === 'object' && h.place !== null) ? h.place?.value : h.place) || '';
                     return `<option value="${h.name}">${h.name}${p ? ' (' + p + ')' : ''}</option>`;
                 }).join('');
         }
@@ -3189,8 +3236,11 @@
             const seen = {};
             inputs.forEach(inp => {
                 inp.classList.remove('is-invalid');
-                const existingWarn = inp.parentElement.querySelector('.ticket-dup-warn');
-                if (existingWarn) existingWarn.remove();
+                const p = inp.parentElement;
+                if (p) {
+                    const existingWarn = p.querySelector('.ticket-dup-warn');
+                    if (existingWarn) existingWarn.remove();
+                }
             });
 
             inputs.forEach(inp => {
@@ -3199,11 +3249,12 @@
                     if (seen[val]) {
                         inp.classList.add('is-invalid');
                         seen[val].classList.add('is-invalid');
-                        if (!inp.parentElement.querySelector('.ticket-dup-warn')) {
+                        const p = inp.parentElement;
+                        if (p && !p.querySelector('.ticket-dup-warn')) {
                             const msg = document.createElement('small');
                             msg.className = 'text-danger d-block ticket-dup-warn fs-11 fw-semibold mt-1';
                             msg.innerHTML = '<i class="mdi mdi-alert-circle me-1"></i>Duplicate ticket!';
-                            inp.parentElement.appendChild(msg);
+                            p.appendChild(msg);
                         }
                     } else {
                         seen[val] = inp;
@@ -4088,7 +4139,7 @@
                             <div class="col-md-3"><label class="form-label" style="font-size:12px;">DOB</label>
                                 <input type="date" name="visas[${i}][date_of_birth]" class="form-control form-control-sm" value="${pDob}"></div>
                             <div class="col-md-3"><label class="form-label" style="font-size:12px;">Visa Supplier / Vendor</label>
-                                <select name="visas[${i}][supplier_id]" class="form-select form-select-sm">
+                                <select name="visas[${i}][supplier_id]" class="form-select form-select-sm visa-supplier-select select2">
                                     ${supOptions}
                                 </select></div>
                             <div class="col-md-6"><label class="form-label" style="font-size:12px;">Send To</label>
@@ -4771,7 +4822,8 @@
                         </div>
                         <div class="col-md-2">
                             <label class="form-label mb-1">Nights</label>
-                            <input type="number" name="hotels[${hotelIdx}][no_of_nights]" class="form-control form-control-sm hotel-nights" value="1" min="1">
+                            <input type="number" name="hotels[${hotelIdx}][no_of_nights]" class="form-control form-control-sm hotel-nights" value="1" min="1"
+                                oninput="calculateHotelRow(this.closest('.hotel-block'), 'nights')" onchange="calculateHotelRow(this.closest('.hotel-block'), 'nights')">
                         </div>
                         <input type="hidden" name="hotels[${hotelIdx}][booking_date]" class="hotel-booking-date sync-booking-date" value="{{ date('Y-m-d') }}">
                         <div class="col-md-3">
@@ -4784,7 +4836,7 @@
                 <div class="row g-3">
                     <div class="col-md-3">
                         <label class="form-label">Hotel Name</label>
-                        <select name="hotels[${hotelIdx}][hotel_name]" class="form-select hotel-name-select" onchange="updateHotelStaySummary()">
+                        <select name="hotels[${hotelIdx}][hotel_name]" class="form-select hotel-name-select select2" onchange="updateHotelStaySummary()">
                             ${relevantHotelsOptions}
                         </select>
                     </div>
@@ -4793,13 +4845,14 @@
                             <span>Hotel Supplier / Vendor</span>
                             <button type="button" class="btn btn-xs btn-link text-primary p-0 text-decoration-none" onclick="refreshSuppliersList(true)" title="Reload Suppliers"><i class="mdi mdi-refresh"></i> Refresh</button>
                         </label>
-                        <select name="hotels[${hotelIdx}][supplier_id]" class="form-select">
+                        <select name="hotels[${hotelIdx}][supplier_id]" class="form-select hotel-supplier-select select2">
                             ${suppliersOptions}
                         </select>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label text-dark fw-bold">Currency</label>
-                        <select name="hotels[${hotelIdx}][currency]" class="form-select hotel-currency fw-bold">
+                        <select name="hotels[${hotelIdx}][currency]" class="form-select hotel-currency fw-bold"
+                            onchange="calculateHotelRow(this.closest('.hotel-block'))">
                             <option value="SAR" ${flightCurr === 'SAR' ? 'selected' : ''}>SAR (Riyal)</option>
                             <option value="PKR" ${flightCurr === 'PKR' ? 'selected' : ''}>PKR (Rupee)</option>
                             <option value="USD" ${flightCurr === 'USD' ? 'selected' : ''}>USD (Dollar)</option>
@@ -4811,7 +4864,8 @@
                         <label class="form-label text-danger fw-bold">Cost ROE</label>
                         <div class="input-group">
                             <span class="input-group-text bg-light hotel-curr-prefix">1 ${flightCurr} =</span>
-                            <input type="number" step="0.0001" name="hotels[${hotelIdx}][cost_roe]" class="form-control hotel-cost-roe" value="${defaultCostRoe}" placeholder="75.00" ${isPkr ? 'readonly' : ''}>
+                            <input type="number" step="0.0001" name="hotels[${hotelIdx}][cost_roe]" class="form-control hotel-cost-roe" value="${defaultCostRoe}" placeholder="75.00" ${isPkr ? 'readonly' : ''}
+                                oninput="calculateHotelRow(this.closest('.hotel-block'))" onchange="calculateHotelRow(this.closest('.hotel-block'))">
                         </div>
                         <input type="hidden" name="hotels[${hotelIdx}][roe]" class="hotel-roe" value="${defaultCostRoe}">
                     </div>
@@ -4819,7 +4873,8 @@
                         <label class="form-label text-success fw-bold">Sale ROE</label>
                         <div class="input-group">
                             <span class="input-group-text bg-light hotel-curr-prefix">1 ${flightCurr} =</span>
-                            <input type="number" step="0.0001" name="hotels[${hotelIdx}][sale_roe]" class="form-control hotel-sale-roe" value="${defaultSaleRoe}" placeholder="75.00" ${isPkr ? 'readonly' : ''}>
+                            <input type="number" step="0.0001" name="hotels[${hotelIdx}][sale_roe]" class="form-control hotel-sale-roe" value="${defaultSaleRoe}" placeholder="75.00" ${isPkr ? 'readonly' : ''}
+                                oninput="calculateHotelRow(this.closest('.hotel-block'))" onchange="calculateHotelRow(this.closest('.hotel-block'))">
                         </div>
                     </div>
 
@@ -4836,7 +4891,8 @@
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">No. of Rooms</label>
-                        <input type="number" name="hotels[${hotelIdx}][no_of_rooms]" class="form-control hotel-rooms" value="1" min="1">
+                        <input type="number" name="hotels[${hotelIdx}][no_of_rooms]" class="form-control hotel-rooms" value="1" min="1"
+                            oninput="calculateHotelRow(this.closest('.hotel-block'), 'rooms')" onchange="calculateHotelRow(this.closest('.hotel-block'), 'rooms')">
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Hotel Room #</label>
@@ -4856,11 +4912,15 @@
                     </div>
                     <div class="col-md-3">
                         <label class="form-label text-danger fw-semibold">Cost Rate / Night (<span class="hotel-curr-label">${flightCurr}</span>)</label>
-                        <input type="number" step="0.01" name="hotels[${hotelIdx}][cost_per_night]" class="form-control hotel-cost-rate" placeholder="0.00" value="0">
+                        <input type="number" step="0.01" name="hotels[${hotelIdx}][cost_per_night]" class="form-control hotel-cost-rate" placeholder="0.00" value="0"
+                            oninput="autoDivideHotelRates(this.closest('.hotel-block'), 'cost'); calculateHotelRow(this.closest('.hotel-block'), 'costRate')"
+                            onchange="autoDivideHotelRates(this.closest('.hotel-block'), 'cost'); calculateHotelRow(this.closest('.hotel-block'), 'costRate')">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label text-success fw-semibold">Sell Rate / Night (<span class="hotel-curr-label">${flightCurr}</span>)</label>
-                        <input type="number" step="0.01" name="hotels[${hotelIdx}][selling_per_night]" class="form-control hotel-sell-rate" placeholder="0.00" value="0">
+                        <input type="number" step="0.01" name="hotels[${hotelIdx}][selling_per_night]" class="form-control hotel-sell-rate" placeholder="0.00" value="0"
+                            oninput="autoDivideHotelRates(this.closest('.hotel-block'), 'sell'); calculateHotelRow(this.closest('.hotel-block'), 'sellRate')"
+                            onchange="autoDivideHotelRates(this.closest('.hotel-block'), 'sell'); calculateHotelRow(this.closest('.hotel-block'), 'sellRate')">
                     </div>
 
                     {{-- Main Cost Division & Additional Rooms Controls (Points 8 & 9) --}}
@@ -4955,16 +5015,13 @@
             hotelIdx++;
             syncBookingHotelDates();
             if (lastRow) {
+                if (typeof initBookingSelect2 === 'function') initBookingSelect2(lastRow);
                 syncHotelPersons(lastRow);
                 autoDivideHotelRates(lastRow);
                 calculateHotelRow(lastRow);
             }
             calcTotal();
         }
-
-        document.getElementById('addHotel')?.addEventListener('click', function() {
-            addNewHotel('other');
-        });
 
         document.getElementById('hotelsList')?.addEventListener('click', function(e) {
             if (e.target.classList.contains('remove-hotel') || e.target.closest('.remove-hotel')) {
@@ -5298,6 +5355,11 @@
             let maxOut = null;
             let totalNights = 0;
             let totalRooms = 0;
+            let totalCostForeign = 0;
+            let totalCostPkr = 0;
+            let totalSellForeign = 0;
+            let totalSellPkr = 0;
+            let hotelCurrs = new Set();
             let summaryTableHtml = '';
 
             const blocks = document.querySelectorAll('.hotel-block');
@@ -5329,10 +5391,24 @@
                 const roomType = (b.querySelector('.hotel-room-type, select[name*="[room_type]"]')?.value || 'DOUBLE').toUpperCase();
                 const mealPlan = (b.querySelector('.hotel-meal-plan, select[name*="[meal_plan]"]')?.value || 'BB').toUpperCase();
 
-                const costSarText = b.querySelector('.hotel-cost-sar-disp')?.textContent?.trim() || '0.00 SAR';
-                const costPkrText = b.querySelector('.hotel-cost-pkr-disp')?.textContent?.trim() || '0.00 PKR';
-                const sellSarText = b.querySelector('.hotel-sell-sar-disp')?.textContent?.trim() || '0.00 SAR';
-                const sellPkrText = b.querySelector('.hotel-sell-pkr-disp')?.textContent?.trim() || '0.00 PKR';
+                const curr = b.querySelector('.hotel-currency')?.value || 'SAR';
+                const isPkr = (curr === 'PKR');
+                const costRoe = isPkr ? 1 : (parseFloat(b.querySelector('.hotel-cost-roe')?.value) || parseFloat(b.querySelector('.hotel-roe')?.value) || 75);
+                const saleRoe = isPkr ? 1 : (parseFloat(b.querySelector('.hotel-sale-roe')?.value) || costRoe || 75);
+
+                const costRate = parseFloat(b.querySelector('.hotel-cost-rate, input[name*="[cost_per_night]"]')?.value) || 0;
+                const sellRate = parseFloat(b.querySelector('.hotel-sell-rate, input[name*="[selling_per_night]"]')?.value) || 0;
+
+                const cForeign = nights * rooms * costRate;
+                const sForeign = nights * rooms * sellRate;
+                const cPkr = cForeign * costRoe;
+                const sPkr = sForeign * saleRoe;
+
+                totalCostForeign += cForeign;
+                totalCostPkr += cPkr;
+                totalSellForeign += sForeign;
+                totalSellPkr += sPkr;
+                hotelCurrs.add(curr);
 
                 summaryTableHtml += `<tr>
                     <td class="text-start fw-bold text-dark">${hName}</td>
@@ -5344,19 +5420,18 @@
                     <td>${rooms || 1}</td>
                     <td>${mealPlan}</td>
                     <td class="text-end text-danger fw-semibold">
-                        <span>${costSarText}</span><br>
-                        <small class="text-muted fw-normal">${costPkrText}</small>
+                        <span>${cForeign.toFixed(2)} ${curr}</span><br>
+                        <small class="text-muted fw-normal">${cPkr.toFixed(2)} PKR</small>
                     </td>
                     <td class="text-end text-success fw-semibold">
-                        <span>${sellSarText}</span><br>
-                        <small class="text-muted fw-normal">${sellPkrText}</small>
+                        <span>${sForeign.toFixed(2)} ${curr}</span><br>
+                        <small class="text-muted fw-normal">${sPkr.toFixed(2)} PKR</small>
                     </td>
                 </tr>`;
             });
 
-            const sumDisp = document.getElementById('hotel_stay_summary_dates');
-            const nightsDisp = document.getElementById('hotel_stay_total_nights');
-            const roomsDisp = document.getElementById('hotel_stay_total_rooms');
+            const hotelCurrLabel = hotelCurrs.size === 1 ? Array.from(hotelCurrs)[0] : (hotelCurrs.size > 1 ? 'Mix' : 'SAR');
+
             const summaryTableBody = document.getElementById('hotelAccommodationSummaryRows');
             const summaryNightsTotal = document.getElementById('hotel_summary_total_nights');
 
@@ -5368,19 +5443,23 @@
                 }
             }
 
-            const totCostSarText = document.getElementById('hotel_cost_sar_total')?.textContent || '0.00 SAR';
-            const totCostPkrText = document.getElementById('hotel_cost_pkr_total')?.textContent || '0.00 PKR';
-            const totSellSarText = document.getElementById('hotel_sell_sar_total')?.textContent || '0.00 SAR';
-            const totSellPkrText = document.getElementById('hotel_sell_pkr_total')?.textContent || '0.00 PKR';
-
             const summaryCostTotal = document.getElementById('hotel_summary_total_cost');
             const summarySellTotal = document.getElementById('hotel_summary_total_sell');
-            if (summaryCostTotal) summaryCostTotal.innerHTML = `<span>${totCostSarText}</span><br><small class="text-muted fw-normal">${totCostPkrText}</small>`;
-            if (summarySellTotal) summarySellTotal.innerHTML = `<span>${totSellSarText}</span><br><small class="text-muted fw-normal">${totSellPkrText}</small>`;
+            if (summaryCostTotal) summaryCostTotal.innerHTML = `<span>${totalCostForeign.toFixed(2)} ${hotelCurrLabel}</span><br><small class="text-muted fw-normal">${totalCostPkr.toFixed(2)} PKR</small>`;
+            if (summarySellTotal) summarySellTotal.innerHTML = `<span>${totalSellForeign.toFixed(2)} ${hotelCurrLabel}</span><br><small class="text-muted fw-normal">${totalSellPkr.toFixed(2)} PKR</small>`;
             if (summaryNightsTotal) {
                 summaryNightsTotal.textContent = totalNights;
             }
 
+            // Also update the 4 stat cards
+            if (document.getElementById('hotel_cost_sar_total')) document.getElementById('hotel_cost_sar_total').textContent = `${totalCostForeign.toFixed(2)} ${hotelCurrLabel}`;
+            if (document.getElementById('hotel_cost_pkr_total')) document.getElementById('hotel_cost_pkr_total').textContent = `${totalCostPkr.toFixed(2)} PKR`;
+            if (document.getElementById('hotel_sell_sar_total')) document.getElementById('hotel_sell_sar_total').textContent = `${totalSellForeign.toFixed(2)} ${hotelCurrLabel}`;
+            if (document.getElementById('hotel_sell_pkr_total')) document.getElementById('hotel_sell_pkr_total').textContent = `${totalSellPkr.toFixed(2)} PKR`;
+
+            const sumDisp = document.getElementById('hotel_stay_summary_dates');
+            const nightsDisp = document.getElementById('hotel_stay_total_nights');
+            const roomsDisp = document.getElementById('hotel_stay_total_rooms');
             if (sumDisp) {
                 if (minIn && maxOut) {
                     sumDisp.textContent = `${minIn} to ${maxOut}`;
@@ -5402,6 +5481,11 @@
             const blocks = document.querySelectorAll('.route-block');
             let summaryHtml = '';
             let totalQty = 0;
+            let totalCostForeign = 0;
+            let totalCostPkr = 0;
+            let totalSellForeign = 0;
+            let totalSellPkr = 0;
+            let transportCurrs = new Set();
 
             blocks.forEach((b, idx) => {
                 const routeSelect = b.querySelector('.transport-route-select');
@@ -5434,20 +5518,23 @@
                 const status = b.querySelector('select[name*="[status]"]')?.value || 'CONFIRMED';
 
                 const curr = b.querySelector('.transport-currency')?.value || 'SAR';
-                const costRate = parseFloat(b.querySelector('.transport-cost-rate')?.value) || 0;
-                const costRoe = parseFloat(b.querySelector('.transport-cost-roe')?.value) || (curr === 'PKR' ? 1 : 75);
+                const isPkr = (curr === 'PKR');
+                const costRoe = isPkr ? 1 : (parseFloat(b.querySelector('.transport-cost-roe')?.value) || (curr === 'PKR' ? 1 : 75));
+                const saleRoe = isPkr ? 1 : (parseFloat(b.querySelector('.transport-sale-roe')?.value) || costRoe);
+
+                const costRate = parseFloat(b.querySelector('.transport-cost-rate, input[name*="[cost_rate]"]')?.value) || 0;
+                const sellRate = parseFloat(b.querySelector('.transport-sell-rate, input[name*="[selling_rate]"]')?.value) || 0;
+
                 const costCurr = costRate * qty;
-                const costPkr = parseFloat(b.querySelector('.transport-cost-amount')?.value) || (costCurr * costRoe);
-
-                const sellRate = parseFloat(b.querySelector('.transport-sell-rate')?.value) || 0;
-                const saleRoe = parseFloat(b.querySelector('.transport-sale-roe')?.value) || costRoe;
+                const costPkr = costCurr * costRoe;
                 const sellCurr = sellRate * qty;
-                const sellPkr = parseFloat(b.querySelector('.transport-sell-amount')?.value) || (sellCurr * saleRoe);
+                const sellPkr = sellCurr * saleRoe;
 
-                const costSarText = b.querySelector('.transport-cost-sar-disp')?.textContent?.trim() || `${costCurr.toFixed(2)} ${curr}`;
-                const costPkrText = b.querySelector('.transport-cost-pkr-disp')?.textContent?.trim() || `${costPkr.toFixed(2)} PKR`;
-                const sellSarText = b.querySelector('.transport-sell-sar-disp')?.textContent?.trim() || `${sellCurr.toFixed(2)} ${curr}`;
-                const sellPkrText = b.querySelector('.transport-sell-pkr-disp')?.textContent?.trim() || `${sellPkr.toFixed(2)} PKR`;
+                totalCostForeign += costCurr;
+                totalCostPkr += costPkr;
+                totalSellForeign += sellCurr;
+                totalSellPkr += sellPkr;
+                transportCurrs.add(curr);
 
                 summaryHtml += `<tr>
                     <td class="text-start fw-bold text-dark">${routeName}</td>
@@ -5458,15 +5545,17 @@
                     <td>${supName}</td>
                     <td><span class="badge bg-${status === 'CONFIRMED' ? 'success' : (status === 'CANCELLED' ? 'danger' : 'warning')}">${status}</span></td>
                     <td class="text-end text-danger fw-semibold">
-                        <span>${costSarText}</span><br>
-                        <small class="text-muted fw-normal">${costPkrText}</small>
+                        <span>${costCurr.toFixed(2)} ${curr}</span><br>
+                        <small class="text-muted fw-normal">${costPkr.toFixed(2)} PKR</small>
                     </td>
                     <td class="text-end text-success fw-semibold">
-                        <span>${sellSarText}</span><br>
-                        <small class="text-muted fw-normal">${sellPkrText}</small>
+                        <span>${sellCurr.toFixed(2)} ${curr}</span><br>
+                        <small class="text-muted fw-normal">${sellPkr.toFixed(2)} PKR</small>
                     </td>
                 </tr>`;
             });
+
+            const transportCurrLabel = transportCurrs.size === 1 ? Array.from(transportCurrs)[0] : (transportCurrs.size > 1 ? 'Mix' : 'SAR');
 
             const tbody = document.getElementById('transportRoutesSummaryRows');
             if (tbody) {
@@ -5480,15 +5569,16 @@
             const qtyDisp = document.getElementById('transport_summary_total_qty');
             if (qtyDisp) qtyDisp.textContent = totalQty;
 
-            const totCostSarText = document.getElementById('transport_cost_sar_total')?.textContent || '0.00 SAR';
-            const totCostPkrText = document.getElementById('transport_cost_pkr_total')?.textContent || '0.00 PKR';
-            const totSellSarText = document.getElementById('transport_sell_sar_total')?.textContent || '0.00 SAR';
-            const totSellPkrText = document.getElementById('transport_sell_pkr_total')?.textContent || '0.00 PKR';
-
             const sumCostTotal = document.getElementById('transport_summary_total_cost');
             const sumSellTotal = document.getElementById('transport_summary_total_sell');
-            if (sumCostTotal) sumCostTotal.innerHTML = `<span>${totCostSarText}</span><br><small class="text-muted fw-normal">${totCostPkrText}</small>`;
-            if (sumSellTotal) sumSellTotal.innerHTML = `<span>${totSellSarText}</span><br><small class="text-muted fw-normal">${totSellPkrText}</small>`;
+            if (sumCostTotal) sumCostTotal.innerHTML = `<span>${totalCostForeign.toFixed(2)} ${transportCurrLabel}</span><br><small class="text-muted fw-normal">${totalCostPkr.toFixed(2)} PKR</small>`;
+            if (sumSellTotal) sumSellTotal.innerHTML = `<span>${totalSellForeign.toFixed(2)} ${transportCurrLabel}</span><br><small class="text-muted fw-normal">${totalSellPkr.toFixed(2)} PKR</small>`;
+
+            // Also update the 4 stat cards
+            if (document.getElementById('transport_cost_sar_total')) document.getElementById('transport_cost_sar_total').textContent = `${totalCostForeign.toFixed(2)} ${transportCurrLabel}`;
+            if (document.getElementById('transport_cost_pkr_total')) document.getElementById('transport_cost_pkr_total').textContent = `${totalCostPkr.toFixed(2)} PKR`;
+            if (document.getElementById('transport_sell_sar_total')) document.getElementById('transport_sell_sar_total').textContent = `${totalSellForeign.toFixed(2)} ${transportCurrLabel}`;
+            if (document.getElementById('transport_sell_pkr_total')) document.getElementById('transport_sell_pkr_total').textContent = `${totalSellPkr.toFixed(2)} PKR`;
         }
 
         // Integer-cent allocation helper so sum ALWAYS matches total exactly (no 99.99 or 200.01)
@@ -5633,7 +5723,8 @@
                                 ${vehiclesOptions}
                             </select></div>
                         <div class="col-md-1"><label class="form-label">Qty</label>
-                            <input type="number" name="transports[${routeIdx}][quantity]" class="form-control transport-qty" value="1" min="1"></div>
+                            <input type="number" name="transports[${routeIdx}][quantity]" class="form-control transport-qty" value="1" min="1"
+                                oninput="calculateTransportRow(this.closest('.route-block'))" onchange="calculateTransportRow(this.closest('.route-block'))"></div>
                         <div class="col-md-2"><label class="form-label">Type / Status</label>
                             <select name="transports[${routeIdx}][status]" class="form-select">
                                 <option value="CONFIRMED" selected>CONFIRMED</option>
@@ -5643,7 +5734,7 @@
                         <div class="col-md-1"><label class="form-label">Pax</label>
                             <input type="number" name="transports[${routeIdx}][pax]" class="form-control" value="1" min="1"></div>
                         <div class="col-md-3"><label class="form-label">Transport Supplier / Vendor</label>
-                            <select name="transports[${routeIdx}][supplier_id]" class="form-select">
+                            <select name="transports[${routeIdx}][supplier_id]" class="form-select transport-supplier-select select2">
                                 ${suppliersOptions}
                             </select></div>
                         <div class="col-md-2">
@@ -5685,7 +5776,8 @@
                         
                         <div class="col-md-2">
                             <label class="form-label text-dark fw-bold">Currency</label>
-                            <select name="transports[${routeIdx}][currency]" class="form-select transport-currency fw-bold">
+                            <select name="transports[${routeIdx}][currency]" class="form-select transport-currency fw-bold"
+                                onchange="calculateTransportRow(this.closest('.route-block'))">
                                 <option value="SAR" ${flightCurr === 'SAR' ? 'selected' : ''}>SAR (Riyal)</option>
                                 <option value="PKR" ${flightCurr === 'PKR' ? 'selected' : ''}>PKR (Rupee)</option>
                                 <option value="USD" ${flightCurr === 'USD' ? 'selected' : ''}>USD (Dollar)</option>
@@ -5696,7 +5788,8 @@
                             <label class="form-label text-danger fw-bold">Cost ROE</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light transport-curr-prefix">1 ${flightCurr} =</span>
-                                <input type="number" step="0.0001" name="transports[${routeIdx}][cost_roe]" class="form-control transport-cost-roe" placeholder="75.00" value="${defaultCostRoe}" ${isPkr ? 'readonly' : ''}>
+                                <input type="number" step="0.0001" name="transports[${routeIdx}][cost_roe]" class="form-control transport-cost-roe" placeholder="75.00" value="${defaultCostRoe}" ${isPkr ? 'readonly' : ''}
+                                    oninput="calculateTransportRow(this.closest('.route-block'))" onchange="calculateTransportRow(this.closest('.route-block'))">
                             </div>
                             <input type="hidden" name="transports[${routeIdx}][roe]" class="transport-roe" value="${defaultCostRoe}">
                         </div>
@@ -5704,11 +5797,13 @@
                             <label class="form-label text-success fw-bold">Sale ROE</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light transport-curr-prefix">1 ${flightCurr} =</span>
-                                <input type="number" step="0.0001" name="transports[${routeIdx}][sale_roe]" class="form-control transport-sale-roe" placeholder="75.00" value="${defaultSaleRoe}" ${isPkr ? 'readonly' : ''}>
+                                <input type="number" step="0.0001" name="transports[${routeIdx}][sale_roe]" class="form-control transport-sale-roe" placeholder="75.00" value="${defaultSaleRoe}" ${isPkr ? 'readonly' : ''}
+                                    oninput="calculateTransportRow(this.closest('.route-block'))" onchange="calculateTransportRow(this.closest('.route-block'))">
                             </div>
                         </div>
                         <div class="col-md-2"><label class="form-label text-danger fw-semibold">Cost Rate (<span class="transport-curr-label">${flightCurr}</span>)</label>
-                            <input type="number" step="0.01" name="transports[${routeIdx}][cost_rate]" class="form-control transport-cost-rate" placeholder="0.00" value="0"></div>
+                            <input type="number" step="0.01" name="transports[${routeIdx}][cost_rate]" class="form-control transport-cost-rate" placeholder="0.00" value="0"
+                                oninput="calculateTransportRow(this.closest('.route-block'))" onchange="calculateTransportRow(this.closest('.route-block'))"></div>
                         <div class="col-md-3"><label class="form-label text-danger fw-semibold">Total Cost (<span class="transport-curr-label">${flightCurr}</span> & PKR)</label>
                             <div class="p-1 px-2 border rounded bg-light">
                                 <div class="d-flex justify-content-between small text-danger"><span class="transport-curr-name">${flightCurr}:</span><strong class="transport-cost-sar-disp">0.00 ${flightCurr}</strong></div>
@@ -5716,7 +5811,8 @@
                             </div>
                             <input type="hidden" name="transports[${routeIdx}][cost_amount]" class="transport-cost-amount" value="0"></div>
                         <div class="col-md-2"><label class="form-label text-success fw-semibold">Sell Rate (<span class="transport-curr-label">${flightCurr}</span>)</label>
-                            <input type="number" step="0.01" name="transports[${routeIdx}][selling_rate]" class="form-control transport-sell-rate" placeholder="0.00" value="0"></div>
+                            <input type="number" step="0.01" name="transports[${routeIdx}][selling_rate]" class="form-control transport-sell-rate" placeholder="0.00" value="0"
+                                oninput="calculateTransportRow(this.closest('.route-block'))" onchange="calculateTransportRow(this.closest('.route-block'))"></div>
                         <div class="col-md-3"><label class="form-label text-success fw-semibold">Total Sell (<span class="transport-curr-label">${flightCurr}</span> & PKR)</label>
                             <div class="p-1 px-2 border rounded bg-light">
                                 <div class="d-flex justify-content-between small text-success"><span class="transport-curr-name">${flightCurr}:</span><strong class="transport-sell-sar-disp">0.00 ${flightCurr}</strong></div>
@@ -5744,6 +5840,7 @@
                     newRouteBlock.find('select[name*="[airline]"]').attr('data-auto', 'true');
                 }
             }
+            if (typeof initBookingSelect2 === 'function') initBookingSelect2(newRouteBlock);
             updateTransportSummary();
         });
 
@@ -6011,6 +6108,7 @@
 
         // Main Total and Dual Currency Costing Calculation
         function calcTotal() {
+            const parseNum = (v) => parseFloat(String(v || 0).replace(/,/g, '')) || 0;
             const adults   = parseInt(document.getElementById('pax_adults')?.value) || 0;
             const children = parseInt(document.getElementById('pax_children')?.value) || 0;
             const infants  = parseInt(document.getElementById('pax_infants')?.value) || 0;
@@ -6020,14 +6118,14 @@
             const flightCurr = document.getElementById('flight_currency')?.value || 'SAR';
             let flightForeign = 0;
             const flSellDisp = document.getElementById('flight_sell_sar_total')?.textContent || '';
-            flightForeign = parseFloat(flSellDisp) || 0;
-            const flightSaleRoe = (flightCurr === 'PKR') ? 1 : (parseFloat(document.getElementById('flight_sale_roe')?.value) || parseFloat(document.getElementById('flight_cost_roe')?.value) || 75);
-            const flightCostRoe = (flightCurr === 'PKR') ? 1 : (parseFloat(document.getElementById('flight_cost_roe')?.value) || 75);
+            flightForeign = parseNum(flSellDisp);
+            const flightSaleRoe = (flightCurr === 'PKR') ? 1 : (parseNum(document.getElementById('flight_sale_roe')?.value) || parseNum(document.getElementById('flight_cost_roe')?.value) || 75);
+            const flightCostRoe = (flightCurr === 'PKR') ? 1 : (parseNum(document.getElementById('flight_cost_roe')?.value) || 75);
 
             let flightCostForeign = 0;
             const flCostDisp = document.getElementById('flight_cost_sar_total')?.textContent || '';
-            flightCostForeign = parseFloat(flCostDisp) || 0;
-            let flightCostPkr = parseFloat(document.getElementById('flight_cost')?.value) || 0;
+            flightCostForeign = parseNum(flCostDisp);
+            let flightCostPkr = parseNum(document.getElementById('flight_cost')?.value);
             if (flightCostPkr === 0 && flightCostForeign > 0) {
                 flightCostPkr = (flightCurr === 'PKR') ? flightCostForeign : (flightCostForeign * flightCostRoe);
             }
@@ -6035,10 +6133,10 @@
             let flightPkr = 0;
             const flSellPkrDisp = document.getElementById('flight_sell_pkr_total')?.textContent || '';
             if (flSellPkrDisp) {
-                flightPkr = parseFloat(flSellPkrDisp) || 0;
+                flightPkr = parseNum(flSellPkrDisp);
             }
             if (flightPkr === 0) {
-                flightPkr = parseFloat(document.getElementById('flight_charges')?.value) || 0;
+                flightPkr = parseNum(document.getElementById('flight_charges')?.value);
             }
             if (flightPkr === 0 && flightForeign > 0) {
                 flightPkr = (flightCurr === 'PKR') ? flightForeign : (flightForeign * flightSaleRoe);
@@ -6490,7 +6588,7 @@
         });
 
         $(document).ready(function() {
-            if (typeof $ !== 'undefined' && $.fn.summernote) {
+            if (typeof jQuery !== 'undefined' && typeof jQuery.fn !== 'undefined' && jQuery.fn.summernote) {
                 $('a[href="#tab-additional-services"]').on('shown.bs.tab', function() {
                     if (!$('#additional_services_detail').next().hasClass('note-editor')) {
                         $('#additional_services_detail').summernote({
@@ -6679,6 +6777,21 @@
             this.setAttribute('data-customized', 'true');
         });
 
+        // --- SELECT2 INITIALIZATION HELPER ---
+        function initBookingSelect2(context) {
+            if (typeof jQuery === "undefined" || !jQuery.fn.select2) return;
+            const $ctx = context ? $(context) : $(document);
+            $ctx.find('select.select2').each(function() {
+                if (!$(this).hasClass('select2-hidden-accessible')) {
+                    $(this).select2({
+                        theme: 'bootstrap-5',
+                        width: '100%',
+                        placeholder: $(this).attr('placeholder') || 'Search & Select...'
+                    });
+                }
+            });
+        }
+
         // --- BOOKING CATEGORY SYNC & HOTEL BUTTON / DROPDOWN FILTERING ---
         function applyCategoryToHotels(cat) {
             const btnMakkah = document.getElementById('btnAddMakkahHotel');
@@ -6689,25 +6802,25 @@
             const alertMsg = document.querySelector('#noHotelAlert p');
 
             if (cat === 'domestic') {
-                if (btnMakkah) btnMakkah.style.display = 'none';
-                if (btnMadinah) btnMadinah.style.display = 'none';
-                if (btnOther) btnOther.style.display = '';
+                if (btnMakkah) btnMakkah.style.setProperty('display', 'none', 'important');
+                if (btnMadinah) btnMadinah.style.setProperty('display', 'none', 'important');
+                if (btnOther) btnOther.style.removeProperty('display');
                 if (lblOther) lblOther.textContent = '+ Add Domestic Hotel';
-                if (btnSelect) btnSelect.style.display = 'none';
+                if (btnSelect) btnSelect.style.setProperty('display', 'none', 'important');
                 if (alertMsg) alertMsg.textContent = 'Click the button below to add a domestic hotel.';
             } else if (cat === 'international') {
-                if (btnMakkah) btnMakkah.style.display = 'none';
-                if (btnMadinah) btnMadinah.style.display = 'none';
-                if (btnOther) btnOther.style.display = '';
+                if (btnMakkah) btnMakkah.style.setProperty('display', 'none', 'important');
+                if (btnMadinah) btnMadinah.style.setProperty('display', 'none', 'important');
+                if (btnOther) btnOther.style.removeProperty('display');
                 if (lblOther) lblOther.textContent = '+ Add International Hotel';
-                if (btnSelect) btnSelect.style.display = 'none';
+                if (btnSelect) btnSelect.style.setProperty('display', 'none', 'important');
                 if (alertMsg) alertMsg.textContent = 'Click the button below to add an international hotel.';
             } else {
-                if (btnMakkah) btnMakkah.style.display = '';
-                if (btnMadinah) btnMadinah.style.display = '';
-                if (btnOther) btnOther.style.display = '';
+                if (btnMakkah) btnMakkah.style.removeProperty('display');
+                if (btnMadinah) btnMadinah.style.removeProperty('display');
+                if (btnOther) btnOther.style.removeProperty('display');
                 if (lblOther) lblOther.textContent = '+ Add Other Hotel';
-                if (btnSelect) btnSelect.style.display = '';
+                if (btnSelect) btnSelect.style.removeProperty('display');
                 if (alertMsg) alertMsg.textContent = 'Click one of the buttons below to add a hotel for Makkah, Madinah or Other city.';
             }
 
@@ -6718,12 +6831,32 @@
                     const currentVal = select.value;
                     const blockLoc = block.getAttribute('data-location') || 'other';
                     let filterLoc = null;
-                    if (cat === 'umrah') {
+                    if (cat === 'umrah' || cat === 'hajj') {
                         if (blockLoc === 'makkah') filterLoc = 'makkah';
                         else if (blockLoc === 'madinah') filterLoc = 'madinah';
                     }
                     select.innerHTML = buildHotelsOptions(filterLoc);
-                    if (currentVal) select.value = currentVal;
+                    if (currentVal) {
+                        try {
+                            if (!select.querySelector(`option[value="${CSS.escape(currentVal)}"]`)) {
+                                const opt = document.createElement('option');
+                                opt.value = currentVal;
+                                opt.textContent = currentVal;
+                                select.appendChild(opt);
+                            }
+                        } catch(e) {}
+                        select.value = currentVal;
+                    }
+                    if (typeof jQuery !== 'undefined') {
+                        if ($(select).hasClass('select2-hidden-accessible')) {
+                            $(select).select2('destroy');
+                        }
+                        $(select).select2({
+                            theme: 'bootstrap-5',
+                            width: '100%',
+                            placeholder: 'Select Hotel'
+                        });
+                    }
                 }
             });
         }
@@ -6755,16 +6888,21 @@
         });
 
         // Initialize category hotels view on edit load
-        const initCategory = document.querySelector('input[name="booking_category"]:checked')?.value || 'umrah';
+        const initCategory = document.querySelector('input[name="booking_category"]:checked')?.value || '{{ $bCat }}';
         applyCategoryToHotels(initCategory);
 
-        // Trigger initial updateHotelStaySummary and updateTransportSummary on edit page load
-        if (typeof updateHotelStaySummary === 'function') {
-            setTimeout(updateHotelStaySummary, 250);
-        }
-        if (typeof updateTransportSummary === 'function') {
-            setTimeout(updateTransportSummary, 250);
-        }
+        // Initialize Select2 on all supplier and hotel dropdowns
+        initBookingSelect2();
+        $(document).on('shown.bs.tab', function() {
+            initBookingSelect2();
+        });
+
+        // Trigger initial updateHotelStaySummary, updateTransportSummary, and calcTotal on edit page load
+        setTimeout(function() {
+            if (typeof updateHotelStaySummary === 'function') updateHotelStaySummary();
+            if (typeof updateTransportSummary === 'function') updateTransportSummary();
+            if (typeof calcTotal === 'function') calcTotal();
+        }, 200);
     </script>
  
 @endsection

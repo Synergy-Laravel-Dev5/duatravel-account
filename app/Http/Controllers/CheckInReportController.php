@@ -80,7 +80,9 @@ class CheckInReportController extends Controller
             $bookingQuery->where(function ($q) use ($cFrom) {
                 $q->whereHas('hotels', function ($hq) use ($cFrom) {
                     $hq->whereDate('check_in', '>=', $cFrom);
-                })->orWhereDate('departure_date', '>=', $cFrom);
+                })->orWhereDate('departure_date', '>=', $cFrom)
+                  ->orWhereDate('booking_date', '>=', $cFrom)
+                  ->orWhereDate('flight_booking_date', '>=', $cFrom);
             });
         }
 
@@ -89,7 +91,9 @@ class CheckInReportController extends Controller
             $bookingQuery->where(function ($q) use ($cTo) {
                 $q->whereHas('hotels', function ($hq) use ($cTo) {
                     $hq->whereDate('check_in', '<=', $cTo);
-                })->orWhereDate('departure_date', '<=', $cTo);
+                })->orWhereDate('departure_date', '<=', $cTo)
+                  ->orWhereDate('booking_date', '<=', $cTo)
+                  ->orWhereDate('flight_booking_date', '<=', $cTo);
             });
         }
 
@@ -271,11 +275,13 @@ class CheckInReportController extends Controller
             // B. PROCESS FLIGHT
             // ─────────────────────────────────────────────────────────────
             $hasFlight = !empty($b->departure_flight) || !empty($b->departure_pnr) || !empty($b->departure_airline) || ($b->flight_cost > 0) || ($b->flight_charges > 0);
+            $fCurr = strtoupper($b->flight_currency ?: 'PKR');
+            $isFPkr = ($fCurr === 'PKR');
             $fRoe = (float) ($b->flight_roe ?: 1);
             $fCostPKR = (float) ($b->flight_cost ?: (($b->flight_cost_rate ?: 0) * $fRoe));
             $fSalePKR = (float) ($b->flight_charges ?: (($b->flight_selling_rate ?: 0) * $fRoe));
-            $fCostSAR = $fRoe > 0 ? ($fCostPKR / $fRoe) : 0;
-            $fSaleSAR = $fRoe > 0 ? ($fSalePKR / $fRoe) : 0;
+            $fCostSAR = $isFPkr ? 0 : ($fRoe > 0 ? ($fCostPKR / $fRoe) : 0);
+            $fSaleSAR = $isFPkr ? 0 : ($fRoe > 0 ? ($fSalePKR / $fRoe) : 0);
 
             $fSupplierId = (int) ($b->flight_supplier_id ?: ($b->flightSupplier->id ?? 0));
             $fPaidPKR = 0;
@@ -284,8 +290,8 @@ class CheckInReportController extends Controller
                 $flightPoolPKR[$fSupplierId] -= $fPaidPKR;
             }
             $fBalPKR  = max(0, $fCostPKR - $fPaidPKR);
-            $fPaidSAR = $fRoe > 0 ? round($fPaidPKR / $fRoe, 2) : 0;
-            $fBalSAR  = max(0, $fCostSAR - $fPaidSAR);
+            $fPaidSAR = $isFPkr ? 0 : ($fRoe > 0 ? round($fPaidPKR / $fRoe, 2) : 0);
+            $fBalSAR  = $isFPkr ? 0 : max(0, $fCostSAR - $fPaidSAR);
 
             if ($hasFlight) {
                 $flightRecords->push((object)[

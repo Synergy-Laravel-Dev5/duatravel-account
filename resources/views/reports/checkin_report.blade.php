@@ -863,18 +863,18 @@
                             <div class="d-flex gap-2 flex-wrap align-items-center">
                                 @if(($viewMode ?? 'full') !== 'sale_only')
                                     <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">
-                                        Flight Cost: Rs {{ number_format($flightCostTotalPKR, 0) }} (SAR {{ number_format($flightCostTotalSAR, 2) }})
+                                        Flight Cost: Rs {{ number_format($flightCostTotalPKR, 0) }}@if($flightCostTotalSAR > 0) (SAR {{ number_format($flightCostTotalSAR, 2) }})@endif
                                     </span>
                                     <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
-                                        Paid: Rs {{ number_format($flightPaidTotalPKR, 0) }} (SAR {{ number_format($flightPaidTotalSAR, 2) }})
+                                        Paid: Rs {{ number_format($flightPaidTotalPKR, 0) }}@if($flightPaidTotalSAR > 0) (SAR {{ number_format($flightPaidTotalSAR, 2) }})@endif
                                     </span>
                                     <span class="badge bg-warning-subtle text-danger border border-warning-subtle px-2 py-1 fw-bold">
-                                        Remaining Balance: Rs {{ number_format($flightBalanceTotalPKR, 0) }} (SAR {{ number_format($flightBalanceTotalSAR, 2) }})
+                                        Remaining Balance: Rs {{ number_format($flightBalanceTotalPKR, 0) }}@if($flightBalanceTotalSAR > 0) (SAR {{ number_format($flightBalanceTotalSAR, 2) }})@endif
                                     </span>
                                 @endif
                                 @if(($viewMode ?? 'full') !== 'cost_only')
                                     <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1">
-                                        Flight Sale: Rs {{ number_format($flightSaleTotalPKR, 0) }} (SAR {{ number_format($flightSaleTotalSAR, 2) }})
+                                        Flight Sale: Rs {{ number_format($flightSaleTotalPKR, 0) }}@if($flightSaleTotalSAR > 0) (SAR {{ number_format($flightSaleTotalSAR, 2) }})@endif
                                     </span>
                                 @endif
                             </div>
@@ -945,26 +945,26 @@
                                                 {{-- Flight Cost --}}
                                                 @if(($viewMode ?? 'full') !== 'sale_only')
                                                 <td class="text-end">
-                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                    @if(($currencyFilter === 'sar' || $currencyFilter === 'all') && $fr->cost_sar > 0)
                                                         <div class="fw-bold text-danger">SAR {{ number_format($fr->cost_sar, 2) }}</div>
                                                     @endif
-                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all' || $fr->cost_sar == 0)
                                                         <small class="text-muted">Rs {{ number_format($fr->cost_pkr, 0) }}</small>
                                                     @endif
                                                 </td>
                                                 <td class="text-end">
-                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                    @if(($currencyFilter === 'sar' || $currencyFilter === 'all') && $fr->paid_sar > 0)
                                                         <div class="fw-bold text-success">SAR {{ number_format($fr->paid_sar, 2) }}</div>
                                                     @endif
-                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all' || $fr->paid_sar == 0)
                                                         <small class="text-muted">Rs {{ number_format($fr->paid_pkr, 0) }}</small>
                                                     @endif
                                                 </td>
                                                 <td class="text-end">
-                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                    @if(($currencyFilter === 'sar' || $currencyFilter === 'all') && $fr->balance_sar > 0)
                                                         <div class="fw-bold {{ $fr->balance_sar > 0 ? 'text-danger' : 'text-success' }}">SAR {{ number_format($fr->balance_sar, 2) }}</div>
                                                     @endif
-                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all' || $fr->balance_sar == 0)
                                                         <span class="badge {{ $fr->balance_pkr > 0 ? 'bg-warning-subtle text-danger' : 'bg-success-subtle text-success' }} fs-11">
                                                             Rs {{ number_format($fr->balance_pkr, 0) }}
                                                         </span>
@@ -975,10 +975,10 @@
                                                 {{-- Flight Sale --}}
                                                 @if(($viewMode ?? 'full') !== 'cost_only')
                                                 <td class="text-end">
-                                                    @if($currencyFilter === 'sar' || $currencyFilter === 'all')
+                                                    @if(($currencyFilter === 'sar' || $currencyFilter === 'all') && $fr->sale_sar > 0)
                                                         <div class="fw-bold text-info">SAR {{ number_format($fr->sale_sar, 2) }}</div>
                                                     @endif
-                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all')
+                                                    @if($currencyFilter === 'pkr' || $currencyFilter === 'all' || $fr->sale_sar == 0)
                                                         <small class="text-muted">Rs {{ number_format($fr->sale_pkr, 0) }}</small>
                                                     @endif
                                                 </td>

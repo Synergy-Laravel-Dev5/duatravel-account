@@ -474,19 +474,16 @@ class BookingController extends Controller
                         $hotelData['room_type'] = 'double';
                     }
 
-                    $hNights = (int)$hotelData['no_of_nights'];
-                    $hRooms = (int)$hotelData['no_of_rooms'];
+                    $hNights = (int)($hotelData['no_of_nights'] ?? 1);
+                    $hRooms = (int)($hotelData['no_of_rooms'] ?? 1);
                     $hCostRate = (float)($hotelData['cost_per_night'] ?? 0);
                     $hSellRate = (float)($hotelData['selling_per_night'] ?? 0);
-                    $hCostRoe = (float)($hotelData['cost_roe'] ?? ($hotelData['roe'] ?? 1));
-                    $hSaleRoe = (float)($hotelData['sale_roe'] ?? $hCostRoe);
+                    $hCurr = $hotelData['currency'] ?? 'SAR';
+                    $hCostRoe = ($hCurr === 'PKR') ? 1.0 : (float)($hotelData['cost_roe'] ?? ($hotelData['roe'] ?? 1));
+                    $hSaleRoe = ($hCurr === 'PKR') ? 1.0 : (float)($hotelData['sale_roe'] ?? $hCostRoe);
 
-                    if (empty($hotelData['cost_amount']) || (float)$hotelData['cost_amount'] <= 0) {
-                        $hotelData['cost_amount'] = $hNights * $hRooms * $hCostRate * $hCostRoe;
-                    }
-                    if (empty($hotelData['selling_amount']) || (float)$hotelData['selling_amount'] <= 0) {
-                        $hotelData['selling_amount'] = $hNights * $hRooms * $hSellRate * $hSaleRoe;
-                    }
+                    $hotelData['cost_amount'] = $hNights * $hRooms * $hCostRate * $hCostRoe;
+                    $hotelData['selling_amount'] = $hNights * $hRooms * $hSellRate * $hSaleRoe;
 
                     // Point 9: Additional rooms
                     if (isset($hotel['extra_rooms'])) {
@@ -535,18 +532,15 @@ class BookingController extends Controller
                         $transportData['pax'] = 1;
                     }
 
-                    $tQty = (float)$transportData['quantity'];
+                    $tQty = (float)($transportData['quantity'] ?? 1);
                     $tCostRate = (float)($transportData['cost_rate'] ?? 0);
                     $tSellRate = (float)($transportData['selling_rate'] ?? 0);
-                    $tCostRoe = (float)($transportData['cost_roe'] ?? ($transportData['roe'] ?? 1));
-                    $tSaleRoe = (float)($transportData['sale_roe'] ?? $tCostRoe);
+                    $tCurr = $transportData['currency'] ?? 'SAR';
+                    $tCostRoe = ($tCurr === 'PKR') ? 1.0 : (float)($transportData['cost_roe'] ?? ($transportData['roe'] ?? 1));
+                    $tSaleRoe = ($tCurr === 'PKR') ? 1.0 : (float)($transportData['sale_roe'] ?? $tCostRoe);
 
-                    if (empty($transportData['cost_amount']) || (float)$transportData['cost_amount'] <= 0) {
-                        $transportData['cost_amount'] = $tCostRate * $tQty * $tCostRoe;
-                    }
-                    if (empty($transportData['selling_amount']) || (float)$transportData['selling_amount'] <= 0) {
-                        $transportData['selling_amount'] = $tSellRate * $tQty * $tSaleRoe;
-                    }
+                    $transportData['cost_amount'] = $tCostRate * $tQty * $tCostRoe;
+                    $transportData['selling_amount'] = $tSellRate * $tQty * $tSaleRoe;
                     if (empty($transportData['status'])) {
                         $transportData['status'] = 'CONFIRMED';
                     }
@@ -1022,19 +1016,16 @@ class BookingController extends Controller
                             $hotelData['room_type'] = 'double';
                         }
 
-                        $hNights = (int)$hotelData['no_of_nights'];
-                        $hRooms = (int)$hotelData['no_of_rooms'];
+                        $hNights = (int)($hotelData['no_of_nights'] ?? 1);
+                        $hRooms = (int)($hotelData['no_of_rooms'] ?? 1);
                         $hCostRate = (float)($hotelData['cost_per_night'] ?? 0);
                         $hSellRate = (float)($hotelData['selling_per_night'] ?? 0);
-                        $hCostRoe = (float)($hotelData['cost_roe'] ?? ($hotelData['roe'] ?? 1));
-                        $hSaleRoe = (float)($hotelData['sale_roe'] ?? $hCostRoe);
+                        $hCurr = $hotelData['currency'] ?? 'SAR';
+                        $hCostRoe = ($hCurr === 'PKR') ? 1.0 : (float)($hotelData['cost_roe'] ?? ($hotelData['roe'] ?? 1));
+                        $hSaleRoe = ($hCurr === 'PKR') ? 1.0 : (float)($hotelData['sale_roe'] ?? $hCostRoe);
 
-                        if (empty($hotelData['cost_amount']) || (float)$hotelData['cost_amount'] <= 0) {
-                            $hotelData['cost_amount'] = $hNights * $hRooms * $hCostRate * $hCostRoe;
-                        }
-                        if (empty($hotelData['selling_amount']) || (float)$hotelData['selling_amount'] <= 0) {
-                            $hotelData['selling_amount'] = $hNights * $hRooms * $hSellRate * $hSaleRoe;
-                        }
+                        $hotelData['cost_amount'] = $hNights * $hRooms * $hCostRate * $hCostRoe;
+                        $hotelData['selling_amount'] = $hNights * $hRooms * $hSellRate * $hSaleRoe;
 
                         // Point 9: Additional rooms
                         if (isset($hotel['extra_rooms'])) {
@@ -1088,18 +1079,15 @@ class BookingController extends Controller
                             $transportData['pax'] = 1;
                         }
 
-                        $tQty = (float)$transportData['quantity'];
+                        $tQty = (float)($transportData['quantity'] ?? 1);
                         $tCostRate = (float)($transportData['cost_rate'] ?? 0);
                         $tSellRate = (float)($transportData['selling_rate'] ?? 0);
-                        $tCostRoe = (float)($transportData['cost_roe'] ?? ($transportData['roe'] ?? 1));
-                        $tSaleRoe = (float)($transportData['sale_roe'] ?? $tCostRoe);
+                        $tCurr = $transportData['currency'] ?? 'SAR';
+                        $tCostRoe = ($tCurr === 'PKR') ? 1.0 : (float)($transportData['cost_roe'] ?? ($transportData['roe'] ?? 1));
+                        $tSaleRoe = ($tCurr === 'PKR') ? 1.0 : (float)($transportData['sale_roe'] ?? $tCostRoe);
 
-                        if (empty($transportData['cost_amount']) || (float)$transportData['cost_amount'] <= 0) {
-                            $transportData['cost_amount'] = $tCostRate * $tQty * $tCostRoe;
-                        }
-                        if (empty($transportData['selling_amount']) || (float)$transportData['selling_amount'] <= 0) {
-                            $transportData['selling_amount'] = $tSellRate * $tQty * $tSaleRoe;
-                        }
+                        $transportData['cost_amount'] = $tCostRate * $tQty * $tCostRoe;
+                        $transportData['selling_amount'] = $tSellRate * $tQty * $tSaleRoe;
                         if (empty($transportData['status'])) {
                             $transportData['status'] = 'CONFIRMED';
                         }

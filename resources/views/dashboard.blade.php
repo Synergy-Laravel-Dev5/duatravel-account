@@ -528,14 +528,6 @@
                         </svg>
                         Umrah
                     </a>
-                    <a href="{{ route('dashboard', ['package' => 'domestic', 'year' => $year]) }}"
-                        class="pkg-tab {{ $package === 'domestic' ? 'active-umrah' : '' }}" style="{{ $package === 'domestic' ? 'background: #0284c7 !important; color:#fff !important; border-color: #0284c7 !important;' : '' }}">
-                        <i class="mdi mdi-airplane me-1"></i> Domestic
-                    </a>
-                    <a href="{{ route('dashboard', ['package' => 'international', 'year' => $year]) }}"
-                        class="pkg-tab {{ $package === 'international' ? 'active-umrah' : '' }}" style="{{ $package === 'international' ? 'background: #0d9488 !important; color:#fff !important; border-color: #0d9488 !important;' : '' }}">
-                        <i class="mdi mdi-earth me-1"></i> International
-                    </a>
                 </div>
 
                 {{-- Year Dropdown --}}
@@ -561,77 +553,6 @@
                     <i class="mdi mdi-arrow-left me-1"></i> Switch Package
                 </a>
             </div>
-
-            @if($package === 'umrah')
-            {{-- ════ DOMESTIC & INTERNATIONAL FLIGHTS PERFORMANCE (Separate from Umrah) ════ --}}
-            <div class="row g-3 mb-3">
-                <div class="col-md-6 anim anim-2">
-                    <div class="stat-card" style="border-left: 4px solid #0284c7; background: #ffffff;">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="badge bg-soft-primary text-primary p-2 fs-14 rounded-circle"><i class="mdi mdi-airplane"></i></span>
-                                <div>
-                                    <h6 class="mb-0 fw-bold text-dark">Domestic Flights (Pakistan)</h6>
-                                    <small class="text-muted">Calculations kept separate from {{ ucfirst($package) }}</small>
-                                </div>
-                            </div>
-                            <a href="{{ route('dashboard', ['package' => 'domestic', 'year' => $year]) }}" class="btn btn-xs btn-outline-primary">View Analytics</a>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center border-top pt-2 mt-1">
-                            <div>
-                                <small class="text-muted d-block fs-11">Total Bookings</small>
-                                <strong class="fs-15 text-dark">{{ $domesticBookingsCount ?? 0 }}</strong>
-                            </div>
-                            <div class="text-end">
-                                <small class="text-muted d-block fs-11">Revenue</small>
-                                <strong class="fs-15 text-success">PKR {{ number_format($domesticRevenue ?? 0) }}</strong>
-                            </div>
-                            <div class="text-end">
-                                <small class="text-muted d-block fs-11">Direct Cost</small>
-                                <strong class="fs-15 text-danger">PKR {{ number_format($domesticDirectCost ?? 0) }}</strong>
-                            </div>
-                            <div class="text-end">
-                                <small class="text-muted d-block fs-11">Profit</small>
-                                <strong class="fs-15 {{ ($domesticProfit ?? 0) >= 0 ? 'text-primary' : 'text-danger' }}">PKR {{ number_format($domesticProfit ?? 0) }}</strong>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6 anim anim-3">
-                    <div class="stat-card" style="border-left: 4px solid #0d9488; background: #ffffff;">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="badge bg-soft-info text-info p-2 fs-14 rounded-circle"><i class="mdi mdi-earth"></i></span>
-                                <div>
-                                    <h6 class="mb-0 fw-bold text-dark">International Flights</h6>
-                                    <small class="text-muted">Calculations kept separate from {{ ucfirst($package) }}</small>
-                                </div>
-                            </div>
-                            <a href="{{ route('dashboard', ['package' => 'international', 'year' => $year]) }}" class="btn btn-xs btn-outline-info">View Analytics</a>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center border-top pt-2 mt-1">
-                            <div>
-                                <small class="text-muted d-block fs-11">Total Bookings</small>
-                                <strong class="fs-15 text-dark">{{ $intlBookingsCount ?? 0 }}</strong>
-                            </div>
-                            <div class="text-end">
-                                <small class="text-muted d-block fs-11">Revenue</small>
-                                <strong class="fs-15 text-info">PKR {{ number_format($intlRevenue ?? 0) }}</strong>
-                            </div>
-                            <div class="text-end">
-                                <small class="text-muted d-block fs-11">Direct Cost</small>
-                                <strong class="fs-15 text-danger">PKR {{ number_format($intlDirectCost ?? 0) }}</strong>
-                            </div>
-                            <div class="text-end">
-                                <small class="text-muted d-block fs-11">Profit</small>
-                                <strong class="fs-15 {{ ($intlProfit ?? 0) >= 0 ? 'text-primary' : 'text-danger' }}">PKR {{ number_format($intlProfit ?? 0) }}</strong>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            @endif
 
             {{-- ════ ROW 1 — FINANCIAL PERFORMANCE (REVENUE, DIRECT COSTS, OVERHEADS, PROFIT) ════ --}}
             <div class="row g-3 mb-3">

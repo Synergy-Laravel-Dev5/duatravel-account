@@ -28,7 +28,11 @@ class DashboardController extends Controller
               ->orWhereRaw('LOWER(TRIM(package_type)) != ?', ['umrah']);
         })->count();
 
-        $umrahCount  = Booking::whereRaw('LOWER(TRIM(package_type)) = ?', ['umrah'])->count();
+        $umrahCount  = Booking::where(function($q) {
+            $q->whereRaw('LOWER(TRIM(package_type)) = ?', ['umrah'])
+              ->orWhereIn('booking_category', ['umrah', 'domestic', 'international'])
+              ->orWhereIn('package_type', ['domestic', 'international']);
+        })->count();
 
         $hajjRevenue  = Booking::where(function($q) {
             $q->where('package_type', 'hajj')
@@ -39,7 +43,11 @@ class DashboardController extends Controller
               ->orWhereRaw('LOWER(TRIM(package_type)) != ?', ['umrah']);
         })->sum('total_amount');
 
-        $umrahRevenue = Booking::whereRaw('LOWER(TRIM(package_type)) = ?', ['umrah'])->sum('total_amount');
+        $umrahRevenue = Booking::where(function($q) {
+            $q->whereRaw('LOWER(TRIM(package_type)) = ?', ['umrah'])
+              ->orWhereIn('booking_category', ['umrah', 'domestic', 'international'])
+              ->orWhereIn('package_type', ['domestic', 'international']);
+        })->sum('total_amount');
 
         return view('welcome', compact('hajjCount', 'umrahCount', 'hajjRevenue', 'umrahRevenue', 'activeHajjSeason', 'activeUmrahSeason'));
     }
@@ -60,7 +68,7 @@ class DashboardController extends Controller
         }
 
         $package = strtolower(trim((string) $request->get('package', session('dashboard_package', 'hajj'))));
-        if (!in_array($package, ['hajj', 'umrah', 'domestic', 'international'])) {
+        if (!in_array($package, ['hajj', 'umrah'])) {
             $package = 'hajj';
         }
         $year = (int) $request->get('year', session('dashboard_year', Carbon::now()->year));
@@ -144,25 +152,12 @@ class DashboardController extends Controller
                 })->where(function ($sq) {
                     $sq->whereNull('package_type')
                        ->orWhereRaw('LOWER(TRIM(package_type)) != ?', ['umrah']);
-                })->where(function ($sq) {
-                    $sq->whereNull('booking_category')
-                       ->orWhereNotIn('booking_category', ['domestic', 'international']);
                 });
             } elseif ($package === 'umrah') {
-                $q->whereRaw('LOWER(TRIM(package_type)) = ?', ['umrah'])
-                  ->where(function ($sq) {
-                      $sq->whereNull('booking_category')
-                         ->orWhereNotIn('booking_category', ['domestic', 'international']);
-                  });
-            } elseif ($package === 'domestic') {
                 $q->where(function ($sq) {
-                    $sq->where('booking_category', 'domestic')
-                       ->orWhere('package_type', 'domestic');
-                });
-            } elseif ($package === 'international') {
-                $q->where(function ($sq) {
-                    $sq->where('booking_category', 'international')
-                       ->orWhere('package_type', 'international');
+                    $sq->whereRaw('LOWER(TRIM(package_type)) = ?', ['umrah'])
+                       ->orWhereIn('booking_category', ['umrah', 'domestic', 'international'])
+                       ->orWhereIn('package_type', ['domestic', 'international']);
                 });
             } else {
                 $q->where('package_type', $package);
@@ -483,57 +478,10 @@ class DashboardController extends Controller
             return $b->visas->count() > 0 || (float) $b->visa_charges > 0;
         })->count();
 
-        // Separate Calculation for Domestic & International Bookings (so they never mix into Umrah)
-        $domesticBookingsQuery = Booking::where(function ($q) {
-            $q->where('booking_category', 'domestic')
-              ->orWhere('package_type', 'domestic');
-        })->where(function ($q) use ($applyYear) {
-            $applyYear($q);
-        })->get();
-
-        $domesticBookingsCount = $domesticBookingsQuery->count();
-        $domesticRevenue = 0;
-        $domesticDirectCost = 0;
-        foreach ($domesticBookingsQuery as $dbk) {
-            $fPkr = (float) ($dbk->flight_charges ?: 0);
-            $cCost = (float) ($dbk->flight_cost ?: 0);
-            $domesticRevenue += (float) ($dbk->total_amount ?: $fPkr);
-            $domesticDirectCost += $cCost;
-        }
-        $domesticProfit = $domesticRevenue - $domesticDirectCost;
-
-        $intlBookingsQuery = Booking::where(function ($q) {
-            $q->where('booking_category', 'international')
-              ->orWhere('package_type', 'international');
-        })->where(function ($q) use ($applyYear) {
-            $applyYear($q);
-        })->get();
-
-        $intlBookingsCount = $intlBookingsQuery->count();
-        $intlRevenue = 0;
-        $intlDirectCost = 0;
-        foreach ($intlBookingsQuery as $ibk) {
-            $fPkr = (float) ($ibk->flight_charges ?: 0);
-            $cCost = (float) ($ibk->flight_cost ?: 0);
-            $intlRevenue += (float) ($ibk->total_amount ?: $fPkr);
-            $intlDirectCost += $cCost;
-        }
-        $intlProfit = $intlRevenue - $intlDirectCost;
-
         return view('dashboard', compact(
             'package',
             'year',
             'availableYears',
-
-            'domesticBookingsCount',
-            'domesticRevenue',
-            'domesticDirectCost',
-            'domesticProfit',
-
-            'intlBookingsCount',
-            'intlRevenue',
-            'intlDirectCost',
-            'intlProfit',
 
             'totalUsers',
             'usersTrend',

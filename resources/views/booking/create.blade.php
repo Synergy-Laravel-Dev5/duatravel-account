@@ -24,8 +24,14 @@
                 @endif
 
                 @php
-                    $dashboardPkg = session('dashboard_package', 'umrah');
-                    $isUmrah = ($dashboardPkg === 'umrah');
+                    $dashboardPkg = strtolower(session('dashboard_package', 'umrah'));
+                    $selectedSeasonName = strtolower(session('selected_season_name', ''));
+                    $isDomestic = ($dashboardPkg === 'domestic' || str_contains($selectedSeasonName, 'domestic'));
+                    $isInternational = ($dashboardPkg === 'international' || str_contains($selectedSeasonName, 'international'));
+                    $isHajj = ($dashboardPkg === 'hajj' || str_contains($selectedSeasonName, 'hajj'));
+                    $defaultCat = $isDomestic ? 'domestic' : ($isInternational ? 'international' : ($isHajj ? 'hajj' : 'umrah'));
+                    $bCat = old('booking_category', $defaultCat);
+                    $isUmrah = !$isHajj;
                 @endphp
 
                 {{-- Summary Bar --}}
@@ -192,22 +198,22 @@
                                             </span>
                                             <div class="d-flex flex-wrap gap-3">
                                                 @php
-                                                    $bCat = old('booking_category', ($dashboardPkg === 'domestic' ? 'domestic' : ($dashboardPkg === 'international' ? 'international' : 'umrah')));
+                                                    $bCat = old('booking_category', $defaultCat);
                                                 @endphp
                                                 <div class="form-check">
-                                                    <input class="form-check-input booking-category-radio" type="radio" name="booking_category" id="bcat_umrah" value="umrah" {{ $bCat === 'umrah' ? 'checked' : '' }}>
+                                                    <input class="form-check-input booking-category-radio" type="radio" name="booking_category" id="bcat_umrah" value="umrah" {{ $bCat === 'umrah' ? 'checked' : '' }} onchange="applyCategoryToHotels(this.value)">
                                                     <label class="form-check-label fs-13 fw-semibold text-primary" for="bcat_umrah">
                                                         <i class="mdi mdi-mosque me-1"></i> Umrah Pilgrimage
                                                     </label>
                                                 </div>
                                                 <div class="form-check">
-                                                    <input class="form-check-input booking-category-radio" type="radio" name="booking_category" id="bcat_domestic" value="domestic" {{ $bCat === 'domestic' ? 'checked' : '' }}>
+                                                    <input class="form-check-input booking-category-radio" type="radio" name="booking_category" id="bcat_domestic" value="domestic" {{ $bCat === 'domestic' ? 'checked' : '' }} onchange="applyCategoryToHotels(this.value)">
                                                     <label class="form-check-label fs-13 fw-semibold text-success" for="bcat_domestic">
                                                         <i class="mdi mdi-airplane me-1"></i> Domestic Flight (Pakistan)
                                                     </label>
                                                 </div>
                                                 <div class="form-check">
-                                                    <input class="form-check-input booking-category-radio" type="radio" name="booking_category" id="bcat_international" value="international" {{ $bCat === 'international' ? 'checked' : '' }}>
+                                                    <input class="form-check-input booking-category-radio" type="radio" name="booking_category" id="bcat_international" value="international" {{ $bCat === 'international' ? 'checked' : '' }} onchange="applyCategoryToHotels(this.value)">
                                                     <label class="form-check-label fs-13 fw-semibold text-info" for="bcat_international">
                                                         <i class="mdi mdi-earth me-1"></i> International Flight
                                                     </label>
@@ -406,7 +412,7 @@
                                                 <span class="fw-semibold">Flight Supplier / Vendor</span>
                                                 <button type="button" class="btn btn-xs btn-link text-primary p-0 text-decoration-none" onclick="refreshSuppliersList(true)" title="Reload Suppliers"><i class="mdi mdi-refresh"></i> Refresh</button>
                                             </label>
-                                            <select name="flight_supplier_id" id="flight_supplier_id" class="form-select">
+                                            <select name="flight_supplier_id" id="flight_supplier_id" class="form-select select2">
                                                 <option value="">-- Select Flight Supplier --</option>
                                                 @foreach ($suppliers as $sup)
                                                     <option value="{{ $sup->id }}">{{ $sup->name }}</option>
@@ -886,21 +892,29 @@
                             <div id="noHotelAlert" class="alert alert-light border py-4 text-center text-muted mb-3">
                                 <i class="mdi mdi-hotel fs-36 text-primary d-block mb-1"></i>
                                 <strong>No hotels added yet.</strong>
-                                <p class="small text-muted mb-0">Click one of the buttons below to add a hotel for Makkah, Madinah or Other city.</p>
+                                <p class="small text-muted mb-0">
+                                    @if($bCat === 'domestic')
+                                        Click the button below to add a domestic hotel.
+                                    @elseif($bCat === 'international')
+                                        Click the button below to add an international hotel.
+                                    @else
+                                        Click one of the buttons below to add a hotel for Makkah, Madinah or Other city.
+                                    @endif
+                                </p>
                             </div>
                             <div id="hotelsList"></div>
 
                             <div class="d-flex flex-wrap gap-2 mt-2" id="hotelActionButtons">
-                                <button type="button" class="btn btn-primary btn-sm btn-hotel-makkah" id="btnAddMakkahHotel" onclick="addNewHotel('makkah')">
+                                <button type="button" class="btn btn-primary btn-sm btn-hotel-makkah" id="btnAddMakkahHotel" onclick="addNewHotel('makkah')" style="{{ in_array($bCat, ['domestic', 'international']) ? 'display: none !important;' : '' }}">
                                     <i class="mdi mdi-plus-circle me-1"></i> + Add Makkah Hotel
                                 </button>
-                                <button type="button" class="btn btn-success btn-sm btn-hotel-madinah" id="btnAddMadinahHotel" onclick="addNewHotel('madinah')">
+                                <button type="button" class="btn btn-success btn-sm btn-hotel-madinah" id="btnAddMadinahHotel" onclick="addNewHotel('madinah')" style="{{ in_array($bCat, ['domestic', 'international']) ? 'display: none !important;' : '' }}">
                                     <i class="mdi mdi-plus-circle me-1"></i> + Add Madinah Hotel
                                 </button>
                                 <button type="button" class="btn btn-outline-secondary btn-sm btn-hotel-other" id="btnAddOtherHotel" onclick="addNewHotel('other')">
-                                    <i class="mdi mdi-plus-circle me-1"></i> <span id="lblAddOtherHotel">+ Add Other Hotel</span>
+                                    <i class="mdi mdi-plus-circle me-1"></i> <span id="lblAddOtherHotel">{{ $bCat === 'domestic' ? '+ Add Domestic Hotel' : ($bCat === 'international' ? '+ Add International Hotel' : '+ Add Other Hotel') }}</span>
                                 </button>
-                                <button type="button" class="btn btn-info btn-sm text-white btn-hotel-select" id="addHotel">
+                                <button type="button" class="btn btn-info btn-sm text-white btn-hotel-select" id="addHotel" onclick="addNewHotel('other')" style="{{ in_array($bCat, ['domestic', 'international']) ? 'display: none !important;' : '' }}">
                                     <i class="mdi mdi-plus me-1"></i> <span id="lblAddHotelSelect">+ Add Hotel (Select)</span>
                                 </button>
                             </div>
@@ -1052,7 +1066,9 @@
                                         <div class="col-md-1">
                                             <label class="form-label">Qty</label>
                                             <input type="number" name="transports[0][quantity]" class="form-control transport-qty"
-                                                value="{{ old('transports.0.quantity', 1) }}" min="1">
+                                                value="{{ old('transports.0.quantity', 1) }}" min="1"
+                                                oninput="calculateTransportRow(this.closest('.route-block'))"
+                                                onchange="calculateTransportRow(this.closest('.route-block'))">
                                         </div>
                                         <div class="col-md-2">
                                             <label class="form-label">Type / Status</label>
@@ -1074,7 +1090,7 @@
                                                 <span>Transport Supplier / Vendor</span>
                                                 <button type="button" class="btn btn-xs btn-link text-primary p-0 text-decoration-none" onclick="refreshSuppliersList(true)" title="Reload Suppliers"><i class="mdi mdi-refresh"></i> Refresh</button>
                                             </label>
-                                            <select name="transports[0][supplier_id]" class="form-select">
+                                            <select name="transports[0][supplier_id]" class="form-select transport-supplier-select select2">
                                                 <option value="">-- Select Supplier --</option>
                                                 @foreach ($suppliers as $sup)
                                                     <option value="{{ $sup->id }}" {{ old('transports.0.supplier_id') == $sup->id ? 'selected' : '' }}>{{ $sup->name }}</option>
@@ -1130,7 +1146,8 @@
                                         </div>
                                         <div class="col-md-2">
                                             <label class="form-label text-dark fw-bold">Currency</label>
-                                            <select name="transports[0][currency]" class="form-select transport-currency fw-bold">
+                                            <select name="transports[0][currency]" class="form-select transport-currency fw-bold"
+                                                onchange="calculateTransportRow(this.closest('.route-block'))">
                                                 <option value="SAR" selected>SAR (Riyal)</option>
                                                 <option value="PKR">PKR (Rupee)</option>
                                                 <option value="USD">USD (Dollar)</option>
@@ -1143,7 +1160,9 @@
                                             <div class="input-group">
                                                 <span class="input-group-text bg-light transport-curr-prefix">1 SAR =</span>
                                                 <input type="number" step="0.0001" name="transports[0][cost_roe]"
-                                                    class="form-control transport-cost-roe" placeholder="75.00" value="75">
+                                                    class="form-control transport-cost-roe" placeholder="75.00" value="75"
+                                                    oninput="calculateTransportRow(this.closest('.route-block'))"
+                                                    onchange="calculateTransportRow(this.closest('.route-block'))">
                                             </div>
                                             <input type="hidden" name="transports[0][roe]" class="transport-roe" value="75">
                                         </div>
@@ -1152,13 +1171,17 @@
                                             <div class="input-group">
                                                 <span class="input-group-text bg-light transport-curr-prefix">1 SAR =</span>
                                                 <input type="number" step="0.0001" name="transports[0][sale_roe]"
-                                                    class="form-control transport-sale-roe" placeholder="75.00" value="75">
+                                                    class="form-control transport-sale-roe" placeholder="75.00" value="75"
+                                                    oninput="calculateTransportRow(this.closest('.route-block'))"
+                                                    onchange="calculateTransportRow(this.closest('.route-block'))">
                                             </div>
                                         </div>
                                         <div class="col-md-2">
                                             <label class="form-label text-danger fw-semibold">Cost Rate (<span class="transport-curr-label">SAR</span>)</label>
                                             <input type="number" step="0.01" name="transports[0][cost_rate]"
-                                                class="form-control transport-cost-rate" placeholder="0.00" value="0">
+                                                class="form-control transport-cost-rate" placeholder="0.00" value="0"
+                                                oninput="calculateTransportRow(this.closest('.route-block'))"
+                                                onchange="calculateTransportRow(this.closest('.route-block'))">
                                         </div>
                                         <div class="col-md-3">
                                             <label class="form-label text-danger fw-semibold">Total Cost (<span class="transport-curr-label">SAR</span> & PKR)</label>
@@ -1172,7 +1195,9 @@
                                         <div class="col-md-2">
                                             <label class="form-label text-success fw-semibold">Sell Rate (<span class="transport-curr-label">SAR</span>)</label>
                                             <input type="number" step="0.01" name="transports[0][selling_rate]"
-                                                class="form-control transport-sell-rate" placeholder="0.00" value="0">
+                                                class="form-control transport-sell-rate" placeholder="0.00" value="0"
+                                                oninput="calculateTransportRow(this.closest('.route-block'))"
+                                                onchange="calculateTransportRow(this.closest('.route-block'))">
                                         </div>
                                         <div class="col-md-3">
                                             <label class="form-label text-success fw-semibold">Total Sell (<span class="transport-curr-label">SAR</span> & PKR)</label>
@@ -1695,45 +1720,37 @@
 
         function buildHotelsOptions(filterCity = null) {
             let list = Array.isArray(hotelsData) ? hotelsData : [];
-            const activeCategory = document.querySelector('input[name="booking_category"]:checked')?.value || 'umrah';
+            const activeCategory = document.querySelector('input[name="booking_category"]:checked')?.value || '{{ $bCat }}';
 
-            const domesticPlaces = ['karachi', 'lahore', 'islamabad', 'rawalpindi', 'peshawar', 'multan', 'faisalabad', 'quetta', 'sialkot'];
-            const pilgrimagePlaces = ['makkah', 'madinah', 'azizia', 'mina/arafat', 'jeddah'];
+            const domesticPlaces = ['karachi', 'lahore', 'islamabad', 'rawalpindi', 'peshawar', 'multan', 'faisalabad', 'quetta', 'sialkot', 'pakistan'];
+            const pilgrimagePlaces = ['makkah', 'madinah', 'azizia', 'mina', 'arafat', 'jeddah', 'saudi'];
 
             if (activeCategory === 'domestic') {
                 list = list.filter(h => {
-                    const p = ((typeof h.place === 'object' ? h.place?.value : h.place) || h.city || '').toLowerCase();
+                    const p = (((typeof h.place === 'object' && h.place !== null) ? h.place?.value : h.place) || h.address || '').toLowerCase();
                     return domesticPlaces.some(dp => p.includes(dp));
                 });
             } else if (activeCategory === 'international') {
                 list = list.filter(h => {
-                    const p = ((typeof h.place === 'object' ? h.place?.value : h.place) || h.city || '').toLowerCase();
+                    const p = (((typeof h.place === 'object' && h.place !== null) ? h.place?.value : h.place) || h.address || '').toLowerCase();
                     const isPilgrim = pilgrimagePlaces.some(pp => p.includes(pp));
                     const isDom = domesticPlaces.some(dp => p.includes(dp));
                     return !isPilgrim && !isDom;
                 });
             } else {
-                if (filterCity) {
+                if (filterCity && filterCity !== 'other') {
                     const fc = filterCity.toLowerCase();
                     list = list.filter(h => {
-                        const p = ((typeof h.place === 'object' ? h.place?.value : h.place) || h.city || '').toLowerCase();
+                        const p = (((typeof h.place === 'object' && h.place !== null) ? h.place?.value : h.place) || h.address || '').toLowerCase();
                         return p.includes(fc);
                     });
                 }
             }
 
-            if (filterCity && activeCategory !== 'umrah' && filterCity !== 'other') {
-                const fc = filterCity.toLowerCase();
-                list = list.filter(h => {
-                    const p = ((typeof h.place === 'object' ? h.place?.value : h.place) || h.city || '').toLowerCase();
-                    return p.includes(fc);
-                });
-            }
-
             return `<option value="">Select Hotel</option>` +
                 list.map(h => {
-                    const cityStr = (typeof h.place === 'object' ? h.place?.value : h.place) || h.city || '';
-                    return `<option value="${h.name}">${h.name} (${cityStr})</option>`;
+                    const cityStr = ((typeof h.place === 'object' && h.place !== null) ? h.place?.value : h.place) || '';
+                    return `<option value="${h.name}">${h.name}${cityStr ? ' (' + cityStr + ')' : ''}</option>`;
                 }).join('');
         }
 
@@ -2005,8 +2022,11 @@
             const seen = {};
             inputs.forEach(inp => {
                 inp.classList.remove('is-invalid');
-                const existingWarn = inp.parentElement.querySelector('.ticket-dup-warn');
-                if (existingWarn) existingWarn.remove();
+                const p = inp.parentElement;
+                if (p) {
+                    const existingWarn = p.querySelector('.ticket-dup-warn');
+                    if (existingWarn) existingWarn.remove();
+                }
             });
 
             inputs.forEach(inp => {
@@ -2015,11 +2035,12 @@
                     if (seen[val]) {
                         inp.classList.add('is-invalid');
                         seen[val].classList.add('is-invalid');
-                        if (!inp.parentElement.querySelector('.ticket-dup-warn')) {
+                        const p = inp.parentElement;
+                        if (p && !p.querySelector('.ticket-dup-warn')) {
                             const msg = document.createElement('small');
                             msg.className = 'text-danger d-block ticket-dup-warn fs-11 fw-semibold mt-1';
                             msg.innerHTML = '<i class="mdi mdi-alert-circle me-1"></i>Duplicate ticket!';
-                            inp.parentElement.appendChild(msg);
+                            p.appendChild(msg);
                         }
                     } else {
                         seen[val] = inp;
@@ -2884,7 +2905,7 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label" style="font-size:12px;">Visa Supplier</label>
-                            <select name="visas[${i}][supplier_id]" class="form-select form-select-sm">
+                            <select name="visas[${i}][supplier_id]" class="form-select form-select-sm visa-supplier-select select2">
                                 ${supplierOptionsHtml}
                             </select>
                         </div>
@@ -3567,7 +3588,7 @@
                             <span>Hotel Name</span>
                             <button type="button" class="btn btn-xs btn-link text-primary p-0 text-decoration-none" onclick="refreshHotelsDropdown(${hotelIdx})" title="Reload Hotels"><i class="mdi mdi-refresh"></i> Refresh</button>
                         </label>
-                        <select name="hotels[${hotelIdx}][hotel_name]" class="form-select hotel-name-select" onchange="updateHotelStaySummary()">
+                        <select name="hotels[${hotelIdx}][hotel_name]" class="form-select hotel-name-select select2" onchange="updateHotelStaySummary()">
                             ${relevantHotelsOptions}
                         </select>
                     </div>
@@ -3576,7 +3597,7 @@
                             <span>Hotel Supplier / Vendor</span>
                             <button type="button" class="btn btn-xs btn-link text-primary p-0 text-decoration-none" onclick="refreshSuppliersList(true)" title="Reload Suppliers"><i class="mdi mdi-refresh"></i> Refresh</button>
                         </label>
-                        <select name="hotels[${hotelIdx}][supplier_id]" class="form-select">
+                        <select name="hotels[${hotelIdx}][supplier_id]" class="form-select hotel-supplier-select select2">
                             ${suppliersOptions}
                         </select>
                     </div>
@@ -3728,6 +3749,7 @@
             hotelIdx++;
             syncBookingHotelDates();
             if (lastRow) {
+                if (typeof initBookingSelect2 === 'function') initBookingSelect2(lastRow);
                 syncHotelPersons(lastRow);
                 autoDivideHotelRates(lastRow);
                 calculateHotelRow(lastRow);
@@ -4066,6 +4088,11 @@
             let maxOut = null;
             let totalNights = 0;
             let totalRooms = 0;
+            let totalCostForeign = 0;
+            let totalCostPkr = 0;
+            let totalSellForeign = 0;
+            let totalSellPkr = 0;
+            let hotelCurrs = new Set();
             let summaryTableHtml = '';
 
             const blocks = document.querySelectorAll('.hotel-block');
@@ -4097,10 +4124,24 @@
                 const roomType = (b.querySelector('.hotel-room-type, select[name*="[room_type]"]')?.value || 'DOUBLE').toUpperCase();
                 const mealPlan = (b.querySelector('.hotel-meal-plan, select[name*="[meal_plan]"]')?.value || 'BB').toUpperCase();
 
-                const costSarText = b.querySelector('.hotel-cost-sar-disp')?.textContent?.trim() || '0.00 SAR';
-                const costPkrText = b.querySelector('.hotel-cost-pkr-disp')?.textContent?.trim() || '0.00 PKR';
-                const sellSarText = b.querySelector('.hotel-sell-sar-disp')?.textContent?.trim() || '0.00 SAR';
-                const sellPkrText = b.querySelector('.hotel-sell-pkr-disp')?.textContent?.trim() || '0.00 PKR';
+                const curr = b.querySelector('.hotel-currency')?.value || 'SAR';
+                const isPkr = (curr === 'PKR');
+                const costRoe = isPkr ? 1 : (parseFloat(b.querySelector('.hotel-cost-roe')?.value) || parseFloat(b.querySelector('.hotel-roe')?.value) || 75);
+                const saleRoe = isPkr ? 1 : (parseFloat(b.querySelector('.hotel-sale-roe')?.value) || costRoe || 75);
+
+                const costRate = parseFloat(b.querySelector('.hotel-cost-rate, input[name*="[cost_per_night]"]')?.value) || 0;
+                const sellRate = parseFloat(b.querySelector('.hotel-sell-rate, input[name*="[selling_per_night]"]')?.value) || 0;
+
+                const cForeign = nights * rooms * costRate;
+                const sForeign = nights * rooms * sellRate;
+                const cPkr = cForeign * costRoe;
+                const sPkr = sForeign * saleRoe;
+
+                totalCostForeign += cForeign;
+                totalCostPkr += cPkr;
+                totalSellForeign += sForeign;
+                totalSellPkr += sPkr;
+                hotelCurrs.add(curr);
 
                 summaryTableHtml += `<tr>
                     <td class="text-start fw-bold text-dark">${hName}</td>
@@ -4112,19 +4153,18 @@
                     <td>${rooms || 1}</td>
                     <td>${mealPlan}</td>
                     <td class="text-end text-danger fw-semibold">
-                        <span>${costSarText}</span><br>
-                        <small class="text-muted fw-normal">${costPkrText}</small>
+                        <span>${cForeign.toFixed(2)} ${curr}</span><br>
+                        <small class="text-muted fw-normal">${cPkr.toFixed(2)} PKR</small>
                     </td>
                     <td class="text-end text-success fw-semibold">
-                        <span>${sellSarText}</span><br>
-                        <small class="text-muted fw-normal">${sellPkrText}</small>
+                        <span>${sForeign.toFixed(2)} ${curr}</span><br>
+                        <small class="text-muted fw-normal">${sPkr.toFixed(2)} PKR</small>
                     </td>
                 </tr>`;
             });
 
-            const sumDisp = document.getElementById('hotel_stay_summary_dates');
-            const nightsDisp = document.getElementById('hotel_stay_total_nights');
-            const roomsDisp = document.getElementById('hotel_stay_total_rooms');
+            const hotelCurrLabel = hotelCurrs.size === 1 ? Array.from(hotelCurrs)[0] : (hotelCurrs.size > 1 ? 'Mix' : 'SAR');
+
             const summaryTableBody = document.getElementById('hotelAccommodationSummaryRows');
             const summaryNightsTotal = document.getElementById('hotel_summary_total_nights');
 
@@ -4136,19 +4176,23 @@
                 }
             }
 
-            const totCostSarText = document.getElementById('hotel_cost_sar_total')?.textContent || '0.00 SAR';
-            const totCostPkrText = document.getElementById('hotel_cost_pkr_total')?.textContent || '0.00 PKR';
-            const totSellSarText = document.getElementById('hotel_sell_sar_total')?.textContent || '0.00 SAR';
-            const totSellPkrText = document.getElementById('hotel_sell_pkr_total')?.textContent || '0.00 PKR';
-
             const summaryCostTotal = document.getElementById('hotel_summary_total_cost');
             const summarySellTotal = document.getElementById('hotel_summary_total_sell');
-            if (summaryCostTotal) summaryCostTotal.innerHTML = `<span>${totCostSarText}</span><br><small class="text-muted fw-normal">${totCostPkrText}</small>`;
-            if (summarySellTotal) summarySellTotal.innerHTML = `<span>${totSellSarText}</span><br><small class="text-muted fw-normal">${totSellPkrText}</small>`;
+            if (summaryCostTotal) summaryCostTotal.innerHTML = `<span>${totalCostForeign.toFixed(2)} ${hotelCurrLabel}</span><br><small class="text-muted fw-normal">${totalCostPkr.toFixed(2)} PKR</small>`;
+            if (summarySellTotal) summarySellTotal.innerHTML = `<span>${totalSellForeign.toFixed(2)} ${hotelCurrLabel}</span><br><small class="text-muted fw-normal">${totalSellPkr.toFixed(2)} PKR</small>`;
             if (summaryNightsTotal) {
                 summaryNightsTotal.textContent = totalNights;
             }
 
+            // Stat cards
+            if (document.getElementById('hotel_cost_sar_total')) document.getElementById('hotel_cost_sar_total').textContent = `${totalCostForeign.toFixed(2)} ${hotelCurrLabel}`;
+            if (document.getElementById('hotel_cost_pkr_total')) document.getElementById('hotel_cost_pkr_total').textContent = `${totalCostPkr.toFixed(2)} PKR`;
+            if (document.getElementById('hotel_sell_sar_total')) document.getElementById('hotel_sell_sar_total').textContent = `${totalSellForeign.toFixed(2)} ${hotelCurrLabel}`;
+            if (document.getElementById('hotel_sell_pkr_total')) document.getElementById('hotel_sell_pkr_total').textContent = `${totalSellPkr.toFixed(2)} PKR`;
+
+            const sumDisp = document.getElementById('hotel_stay_summary_dates');
+            const nightsDisp = document.getElementById('hotel_stay_total_nights');
+            const roomsDisp = document.getElementById('hotel_stay_total_rooms');
             if (sumDisp) {
                 if (minIn && maxOut) {
                     sumDisp.textContent = `${minIn} to ${maxOut}`;
@@ -4170,6 +4214,11 @@
             const blocks = document.querySelectorAll('.route-block');
             let summaryHtml = '';
             let totalQty = 0;
+            let totalCostForeign = 0;
+            let totalCostPkr = 0;
+            let totalSellForeign = 0;
+            let totalSellPkr = 0;
+            let transportCurrs = new Set();
 
             blocks.forEach((b, idx) => {
                 const routeSelect = b.querySelector('.transport-route-select');
@@ -4201,10 +4250,24 @@
 
                 const status = b.querySelector('select[name*="[status]"]')?.value || 'CONFIRMED';
 
-                const costSarText = b.querySelector('.transport-cost-sar-disp')?.textContent?.trim() || '0.00 SAR';
-                const costPkrText = b.querySelector('.transport-cost-pkr-disp')?.textContent?.trim() || '0.00 PKR';
-                const sellSarText = b.querySelector('.transport-sell-sar-disp')?.textContent?.trim() || '0.00 SAR';
-                const sellPkrText = b.querySelector('.transport-sell-pkr-disp')?.textContent?.trim() || '0.00 PKR';
+                const curr = b.querySelector('.transport-currency')?.value || 'SAR';
+                const isPkr = (curr === 'PKR');
+                const costRoe = isPkr ? 1 : (parseFloat(b.querySelector('.transport-cost-roe')?.value) || (curr === 'PKR' ? 1 : 75));
+                const saleRoe = isPkr ? 1 : (parseFloat(b.querySelector('.transport-sale-roe')?.value) || costRoe);
+
+                const costRate = parseFloat(b.querySelector('.transport-cost-rate, input[name*="[cost_rate]"]')?.value) || 0;
+                const sellRate = parseFloat(b.querySelector('.transport-sell-rate, input[name*="[selling_rate]"]')?.value) || 0;
+
+                const costCurr = costRate * qty;
+                const costPkr = costCurr * costRoe;
+                const sellCurr = sellRate * qty;
+                const sellPkr = sellCurr * saleRoe;
+
+                totalCostForeign += costCurr;
+                totalCostPkr += costPkr;
+                totalSellForeign += sellCurr;
+                totalSellPkr += sellPkr;
+                transportCurrs.add(curr);
 
                 summaryHtml += `<tr>
                     <td class="text-start fw-bold text-dark">${routeName}</td>
@@ -4215,15 +4278,17 @@
                     <td>${supName}</td>
                     <td><span class="badge bg-${status === 'CONFIRMED' ? 'success' : (status === 'CANCELLED' ? 'danger' : 'warning')}">${status}</span></td>
                     <td class="text-end text-danger fw-semibold">
-                        <span>${costSarText}</span><br>
-                        <small class="text-muted fw-normal">${costPkrText}</small>
+                        <span>${costCurr.toFixed(2)} ${curr}</span><br>
+                        <small class="text-muted fw-normal">${costPkr.toFixed(2)} PKR</small>
                     </td>
                     <td class="text-end text-success fw-semibold">
-                        <span>${sellSarText}</span><br>
-                        <small class="text-muted fw-normal">${sellPkrText}</small>
+                        <span>${sellCurr.toFixed(2)} ${curr}</span><br>
+                        <small class="text-muted fw-normal">${sellPkr.toFixed(2)} PKR</small>
                     </td>
                 </tr>`;
             });
+
+            const transportCurrLabel = transportCurrs.size === 1 ? Array.from(transportCurrs)[0] : (transportCurrs.size > 1 ? 'Mix' : 'SAR');
 
             const tbody = document.getElementById('transportRoutesSummaryRows');
             if (tbody) {
@@ -4237,15 +4302,16 @@
             const qtyDisp = document.getElementById('transport_summary_total_qty');
             if (qtyDisp) qtyDisp.textContent = totalQty;
 
-            const totCostSarText = document.getElementById('transport_cost_sar_total')?.textContent || '0.00 SAR';
-            const totCostPkrText = document.getElementById('transport_cost_pkr_total')?.textContent || '0.00 PKR';
-            const totSellSarText = document.getElementById('transport_sell_sar_total')?.textContent || '0.00 SAR';
-            const totSellPkrText = document.getElementById('transport_sell_pkr_total')?.textContent || '0.00 PKR';
-
             const sumCostTotal = document.getElementById('transport_summary_total_cost');
             const sumSellTotal = document.getElementById('transport_summary_total_sell');
-            if (sumCostTotal) sumCostTotal.innerHTML = `<span>${totCostSarText}</span><br><small class="text-muted fw-normal">${totCostPkrText}</small>`;
-            if (sumSellTotal) sumSellTotal.innerHTML = `<span>${totSellSarText}</span><br><small class="text-muted fw-normal">${totSellPkrText}</small>`;
+            if (sumCostTotal) sumCostTotal.innerHTML = `<span>${totalCostForeign.toFixed(2)} ${transportCurrLabel}</span><br><small class="text-muted fw-normal">${totalCostPkr.toFixed(2)} PKR</small>`;
+            if (sumSellTotal) sumSellTotal.innerHTML = `<span>${totalSellForeign.toFixed(2)} ${transportCurrLabel}</span><br><small class="text-muted fw-normal">${totalSellPkr.toFixed(2)} PKR</small>`;
+
+            // Stat cards
+            if (document.getElementById('transport_cost_sar_total')) document.getElementById('transport_cost_sar_total').textContent = `${totalCostForeign.toFixed(2)} ${transportCurrLabel}`;
+            if (document.getElementById('transport_cost_pkr_total')) document.getElementById('transport_cost_pkr_total').textContent = `${totalCostPkr.toFixed(2)} PKR`;
+            if (document.getElementById('transport_sell_sar_total')) document.getElementById('transport_sell_sar_total').textContent = `${totalSellForeign.toFixed(2)} ${transportCurrLabel}`;
+            if (document.getElementById('transport_sell_pkr_total')) document.getElementById('transport_sell_pkr_total').textContent = `${totalSellPkr.toFixed(2)} PKR`;
         }
 
         // Integer-cent allocation helper so sum ALWAYS matches total exactly (no 99.99 or 200.01)
@@ -4400,7 +4466,7 @@
                         <div class="col-md-1"><label class="form-label">Pax</label>
                             <input type="number" name="transports[${routeIdx}][pax]" class="form-control" value="1" min="1"></div>
                         <div class="col-md-3"><label class="form-label">Transport Supplier / Vendor</label>
-                            <select name="transports[${routeIdx}][supplier_id]" class="form-select">
+                            <select name="transports[${routeIdx}][supplier_id]" class="form-select transport-supplier-select select2">
                                 ${suppliersOptions}
                             </select></div>
                         <div class="col-md-2">
@@ -4504,6 +4570,7 @@
                     newRouteBlock.find('select[name*="[airline]"]').attr('data-auto', 'true');
                 }
             }
+            if (typeof initBookingSelect2 === 'function') initBookingSelect2(newRouteBlock);
         });
 
         document.getElementById('routesList')?.addEventListener('click', function(e) {
@@ -4765,6 +4832,7 @@
 
         // Main Total and Dual Currency Costing Calculation
         function calcTotal() {
+            const parseNum = (v) => parseFloat(String(v || 0).replace(/,/g, '')) || 0;
             const adults   = parseInt(document.getElementById('pax_adults')?.value) || 0;
             const children = parseInt(document.getElementById('pax_children')?.value) || 0;
             const infants  = parseInt(document.getElementById('pax_infants')?.value) || 0;
@@ -4774,14 +4842,14 @@
             const flightCurr = document.getElementById('flight_currency')?.value || 'SAR';
             let flightForeign = 0;
             const flSellDisp = document.getElementById('flight_sell_sar_total')?.textContent || '';
-            flightForeign = parseFloat(flSellDisp) || 0;
-            const flightSaleRoe = (flightCurr === 'PKR') ? 1 : (parseFloat(document.getElementById('flight_sale_roe')?.value) || parseFloat(document.getElementById('flight_cost_roe')?.value) || 75);
-            const flightCostRoe = (flightCurr === 'PKR') ? 1 : (parseFloat(document.getElementById('flight_cost_roe')?.value) || 75);
+            flightForeign = parseNum(flSellDisp);
+            const flightSaleRoe = (flightCurr === 'PKR') ? 1 : (parseNum(document.getElementById('flight_sale_roe')?.value) || parseNum(document.getElementById('flight_cost_roe')?.value) || 75);
+            const flightCostRoe = (flightCurr === 'PKR') ? 1 : (parseNum(document.getElementById('flight_cost_roe')?.value) || 75);
 
             let flightCostForeign = 0;
             const flCostDisp = document.getElementById('flight_cost_sar_total')?.textContent || '';
-            flightCostForeign = parseFloat(flCostDisp) || 0;
-            let flightCostPkr = parseFloat(document.getElementById('flight_cost')?.value) || 0;
+            flightCostForeign = parseNum(flCostDisp);
+            let flightCostPkr = parseNum(document.getElementById('flight_cost')?.value);
             if (flightCostPkr === 0 && flightCostForeign > 0) {
                 flightCostPkr = (flightCurr === 'PKR') ? flightCostForeign : (flightCostForeign * flightCostRoe);
             }
@@ -4789,10 +4857,10 @@
             let flightPkr = 0;
             const flSellPkrDisp = document.getElementById('flight_sell_pkr_total')?.textContent || '';
             if (flSellPkrDisp) {
-                flightPkr = parseFloat(flSellPkrDisp) || 0;
+                flightPkr = parseNum(flSellPkrDisp);
             }
             if (flightPkr === 0) {
-                flightPkr = parseFloat(document.getElementById('flight_charges')?.value) || 0;
+                flightPkr = parseNum(document.getElementById('flight_charges')?.value);
             }
             if (flightPkr === 0 && flightForeign > 0) {
                 flightPkr = (flightCurr === 'PKR') ? flightForeign : (flightForeign * flightSaleRoe);
@@ -5218,7 +5286,7 @@
         });
 
         $(document).ready(function() {
-            if (typeof $ !== 'undefined' && $.fn.summernote) {
+            if (typeof jQuery !== 'undefined' && typeof jQuery.fn !== 'undefined' && jQuery.fn.summernote) {
                 $('a[href="#tab-additional-services"]').on('shown.bs.tab', function() {
                     if (!$('#additional_services_detail').next().hasClass('note-editor')) {
                         $('#additional_services_detail').summernote({
@@ -5604,6 +5672,21 @@
             this.setAttribute('data-customized', 'true');
         });
 
+        // --- SELECT2 INITIALIZATION HELPER ---
+        function initBookingSelect2(context) {
+            if (typeof jQuery === "undefined" || !jQuery.fn.select2) return;
+            const $ctx = context ? $(context) : $(document);
+            $ctx.find('select.select2').each(function() {
+                if (!$(this).hasClass('select2-hidden-accessible')) {
+                    $(this).select2({
+                        theme: 'bootstrap-5',
+                        width: '100%',
+                        placeholder: $(this).attr('placeholder') || 'Search & Select...'
+                    });
+                }
+            });
+        }
+
         // --- BOOKING CATEGORY SYNC & HOTEL BUTTON / DROPDOWN FILTERING ---
         function applyCategoryToHotels(cat) {
             const btnMakkah = document.getElementById('btnAddMakkahHotel');
@@ -5614,25 +5697,25 @@
             const alertMsg = document.querySelector('#noHotelAlert p');
 
             if (cat === 'domestic') {
-                if (btnMakkah) btnMakkah.style.display = 'none';
-                if (btnMadinah) btnMadinah.style.display = 'none';
-                if (btnOther) btnOther.style.display = '';
+                if (btnMakkah) btnMakkah.style.setProperty('display', 'none', 'important');
+                if (btnMadinah) btnMadinah.style.setProperty('display', 'none', 'important');
+                if (btnOther) btnOther.style.removeProperty('display');
                 if (lblOther) lblOther.textContent = '+ Add Domestic Hotel';
-                if (btnSelect) btnSelect.style.display = 'none';
+                if (btnSelect) btnSelect.style.setProperty('display', 'none', 'important');
                 if (alertMsg) alertMsg.textContent = 'Click the button below to add a domestic hotel.';
             } else if (cat === 'international') {
-                if (btnMakkah) btnMakkah.style.display = 'none';
-                if (btnMadinah) btnMadinah.style.display = 'none';
-                if (btnOther) btnOther.style.display = '';
+                if (btnMakkah) btnMakkah.style.setProperty('display', 'none', 'important');
+                if (btnMadinah) btnMadinah.style.setProperty('display', 'none', 'important');
+                if (btnOther) btnOther.style.removeProperty('display');
                 if (lblOther) lblOther.textContent = '+ Add International Hotel';
-                if (btnSelect) btnSelect.style.display = 'none';
+                if (btnSelect) btnSelect.style.setProperty('display', 'none', 'important');
                 if (alertMsg) alertMsg.textContent = 'Click the button below to add an international hotel.';
             } else {
-                if (btnMakkah) btnMakkah.style.display = '';
-                if (btnMadinah) btnMadinah.style.display = '';
-                if (btnOther) btnOther.style.display = '';
+                if (btnMakkah) btnMakkah.style.removeProperty('display');
+                if (btnMadinah) btnMadinah.style.removeProperty('display');
+                if (btnOther) btnOther.style.removeProperty('display');
                 if (lblOther) lblOther.textContent = '+ Add Other Hotel';
-                if (btnSelect) btnSelect.style.display = '';
+                if (btnSelect) btnSelect.style.removeProperty('display');
                 if (alertMsg) alertMsg.textContent = 'Click one of the buttons below to add a hotel for Makkah, Madinah or Other city.';
             }
 
@@ -5643,12 +5726,32 @@
                     const currentVal = select.value;
                     const blockLoc = block.getAttribute('data-location') || 'other';
                     let filterLoc = null;
-                    if (cat === 'umrah') {
+                    if (cat === 'umrah' || cat === 'hajj') {
                         if (blockLoc === 'makkah') filterLoc = 'makkah';
                         else if (blockLoc === 'madinah') filterLoc = 'madinah';
                     }
                     select.innerHTML = buildHotelsOptions(filterLoc);
-                    if (currentVal) select.value = currentVal;
+                    if (currentVal) {
+                        try {
+                            if (!select.querySelector(`option[value="${CSS.escape(currentVal)}"]`)) {
+                                const opt = document.createElement('option');
+                                opt.value = currentVal;
+                                opt.textContent = currentVal;
+                                select.appendChild(opt);
+                            }
+                        } catch(e) {}
+                        select.value = currentVal;
+                    }
+                    if (typeof jQuery !== 'undefined') {
+                        if ($(select).hasClass('select2-hidden-accessible')) {
+                            $(select).select2('destroy');
+                        }
+                        $(select).select2({
+                            theme: 'bootstrap-5',
+                            width: '100%',
+                            placeholder: 'Select Hotel'
+                        });
+                    }
                 }
             });
         }
@@ -5680,8 +5783,14 @@
         });
 
         // Initialize category hotels view on load
-        const initCategory = document.querySelector('input[name="booking_category"]:checked')?.value || 'umrah';
+        const initCategory = document.querySelector('input[name="booking_category"]:checked')?.value || '{{ $bCat }}';
         applyCategoryToHotels(initCategory);
+
+        // Initialize Select2 on all supplier and hotel dropdowns
+        initBookingSelect2();
+        $(document).on('shown.bs.tab', function() {
+            initBookingSelect2();
+        });
 
         // Initial trigger of summary views
         if (typeof updateHotelStaySummary === 'function') updateHotelStaySummary();
