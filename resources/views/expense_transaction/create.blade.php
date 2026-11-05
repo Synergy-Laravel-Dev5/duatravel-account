@@ -141,7 +141,11 @@
                                                 data-type="{{ ucfirst($s->supplier_type ?? 'N/A') }}"
                                                 data-payable="{{ number_format($s->total_payable ?? 0, 2) }}"
                                                 data-paid="{{ number_format($s->total_paid ?? 0, 2) }}"
-                                                data-balance="{{ number_format($s->balance ?? 0, 2) }}">
+                                                data-balance="{{ number_format($s->balance ?? 0, 2) }}"
+                                                data-hotel="{{ number_format($s->hotel_cost ?? 0, 2) }}"
+                                                data-flight="{{ number_format($s->flight_cost ?? 0, 2) }}"
+                                                data-visa="{{ number_format($s->visa_cost ?? 0, 2) }}"
+                                                data-transport="{{ number_format($s->transport_cost ?? 0, 2) }}">
                                                 {{ $s->name }}{{ !empty($s->company_name) ? ' (' . $s->company_name . ')' : '' }}
                                             </option>
                                         @endforeach
@@ -157,9 +161,44 @@
                                                 <div class="col-4 text-danger"><strong>Payable:</strong> <span id="supPayable">0.00</span></div>
                                                 <div class="col-4 text-success"><strong>Paid:</strong> <span id="supPaid">0.00</span></div>
                                                 <div class="col-4 text-primary"><strong>Balance:</strong> <span id="supBalance">0.00</span></div>
+                                                <div class="col-12 mt-1 border-top pt-1 text-muted" id="supServicesBreakdown">
+                                                    <small><span class="fw-semibold text-dark"><i class="mdi mdi-clipboard-list-outline me-1"></i>Services Taken:</span> Hotel: PKR <span id="supHotelCost" class="fw-semibold text-primary">0.00</span> | Flight: PKR <span id="supFlightCost" class="fw-semibold text-info">0.00</span> | Transport: PKR <span id="supTransportCost" class="fw-semibold text-secondary">0.00</span> | Visa: PKR <span id="supVisaCost" class="fw-semibold text-warning">0.00</span></small>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+
+                            {{-- Service Type & Specific Booking Allocation for Supplier --}}
+                            <div class="row g-3 mt-1">
+                                <div class="col-md-6">
+                                    <label class="form-label fs-12 fw-semibold text-primary">
+                                        <i class="mdi mdi-cube-outline me-1"></i> Allocated Service Type
+                                    </label>
+                                    <select name="service_type" id="supplier_service_type" class="form-select form-select-sm select2">
+                                        <option value="all" {{ old('service_type') == 'all' ? 'selected' : '' }}>🌐 General / All Services (Unallocated)</option>
+                                        <option value="hotel" {{ old('service_type') == 'hotel' ? 'selected' : '' }}>🏨 Hotel Accommodation (Check-In Report)</option>
+                                        <option value="flight" {{ old('service_type') == 'flight' ? 'selected' : '' }}>✈️ Flight Tickets</option>
+                                        <option value="transport" {{ old('service_type') == 'transport' ? 'selected' : '' }}>🚌 Transport / Routes</option>
+                                        <option value="visa" {{ old('service_type') == 'visa' ? 'selected' : '' }}>📄 Visa Services</option>
+                                    </select>
+                                    <small class="text-muted fs-11">Choose service to reflect payment in Check-In / Hotel reports</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fs-12 fw-semibold text-primary">
+                                        <i class="mdi mdi-bookmark-check me-1"></i> Specific Booking / Voucher (Optional)
+                                    </label>
+                                    <select name="booking_id" id="supplier_booking_id" class="form-select form-select-sm select2">
+                                        <option value="">-- General Supplier Payment / Any Booking --</option>
+                                        @if(isset($allBookings))
+                                            @foreach($allBookings as $bk)
+                                                <option value="{{ $bk->id }}" {{ old('booking_id') == $bk->id ? 'selected' : '' }}>
+                                                    #{{ $bk->voucher_number ?: ('BKG-' . $bk->id) }} - {{ $bk->client->name ?? 'Walk-in' }} (Total: PKR {{ number_format($bk->total_amount, 2) }})
+                                                </option>
+                                            @endforeach
+                                        @endif
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -750,7 +789,7 @@
                                         <tbody id="multiClientTbody">
                                             <tr>
                                                 <td>
-                                                    <select name="jv_clients[0][client_id]" class="form-select form-select-sm">
+                                                    <select name="jv_clients[0][client_id]" class="form-select form-select-sm select2">
                                                         <option value="">-- Select Client --</option>
                                                         @foreach($clients as $c)
                                                             <option value="{{ $c->id }}">{{ $c->name }}</option>
@@ -838,7 +877,7 @@
                                             <tbody id="cmsSuppliersTbody">
                                                 <tr>
                                                     <td>
-                                                        <select name="jv_suppliers[0][supplier_id]" class="form-select form-select-sm cms-supplier-select">
+                                                        <select name="jv_suppliers[0][supplier_id]" class="form-select form-select-sm cms-supplier-select select2">
                                                             <option value="">-- Select Supplier --</option>
                                                             @foreach($suppliers as $s)
                                                                 <option value="{{ $s->id }}">{{ $s->name }} ({{ ucfirst($s->type ?? 'supplier') }})</option>
@@ -1250,9 +1289,6 @@
                     currencyRoeGroup.classList.remove('d-none');
                     if (rateInput) {
                         rateInput.setAttribute('required', 'required');
-                        if (currencySelect && currencySelect.value === 'PKR' && (!rateInput.getAttribute('data-user-custom') || rateInput.value === '76' || rateInput.value === '76.00')) {
-                            rateInput.value = '1.00';
-                        }
                     }
                 }
             }
@@ -1373,11 +1409,7 @@
 
         if (currencySelect) {
             currencySelect.addEventListener('change', function() {
-                if (this.value === 'PKR') {
-                    if (rateInput && !rateInput.getAttribute('data-user-custom')) {
-                        rateInput.value = '1.00';
-                    }
-                } else if (this.value === 'SAR') {
+                if (this.value === 'SAR') {
                     if (rateInput && (!rateInput.getAttribute('data-user-custom') || rateInput.value === '1.00' || rateInput.value === '1')) {
                         rateInput.value = '76.00';
                     }
@@ -1406,6 +1438,7 @@
 
         if (jvSarBaseInput) {
             jvSarBaseInput.addEventListener('input', function() {
+                this.setAttribute('data-user-typed-sar', 'true');
                 const sarVal = parseFloat(this.value) || 0;
                 if (sarVal > 0) {
                     const fRoe = parseFloat(document.getElementById('jv_from_roe')?.value) || 1.0;
@@ -1420,23 +1453,17 @@
 
         if (jvFromAmtField) {
             jvFromAmtField.addEventListener('input', function() {
+                if (jvSarBaseInput) jvSarBaseInput.removeAttribute('data-user-typed-sar');
                 this.setAttribute('data-linked', 'true');
                 if (mainAmountInput) mainAmountInput.value = this.value;
                 const fRoe = parseFloat(document.getElementById('jv_from_roe')?.value) || 0;
-                const tRoe = parseFloat(document.getElementById('jv_to_roe')?.value) || 0;
                 const fAmt = parseFloat(this.value) || 0;
 
-                // User request: Automatically mirror From PKR Amount to To PKR Amount
+                // User request: Mirror exact amount to To-Amount without forced ROE conversion
                 if (jvToAmtField && jvToAmtField.getAttribute('data-customized') !== 'true') {
-                    if (fRoe > 1 && tRoe > 1) {
-                        const sar = fAmt / fRoe;
-                        if (jvSarBaseInput) jvSarBaseInput.value = sar.toFixed(2);
-                        jvToAmtField.value = (sar * tRoe).toFixed(2);
-                    } else {
-                        jvToAmtField.value = this.value;
-                        if (jvSarBaseInput) jvSarBaseInput.value = fRoe > 1 ? (fAmt / fRoe).toFixed(2) : '';
-                    }
+                    jvToAmtField.value = this.value;
                 }
+                if (jvSarBaseInput) jvSarBaseInput.value = fRoe > 1 ? (fAmt / fRoe).toFixed(2) : '';
                 updateCurrencyAndLiveROE();
             });
         }
@@ -1453,21 +1480,18 @@
             if (el) el.addEventListener('input', function() {
                 const fRoe = parseFloat(document.getElementById('jv_from_roe')?.value) || 0;
                 const tRoe = parseFloat(document.getElementById('jv_to_roe')?.value) || 0;
-                if (jvSarBaseInput && parseFloat(jvSarBaseInput.value) > 0) {
+                
+                // Only if user explicitly typed into SAR Base input, recalculate PKR
+                if (jvSarBaseInput && jvSarBaseInput.getAttribute('data-user-typed-sar') === 'true' && parseFloat(jvSarBaseInput.value) > 0) {
                     const sarVal = parseFloat(jvSarBaseInput.value);
                     if (jvFromAmtField && fRoe > 1) jvFromAmtField.value = (sarVal * fRoe).toFixed(2);
                     if (jvToAmtField && tRoe > 1) jvToAmtField.value = (sarVal * tRoe).toFixed(2);
                     if (mainAmountInput && fRoe > 1) mainAmountInput.value = (sarVal * fRoe).toFixed(2);
-                } else if (jvFromAmtField && parseFloat(jvFromAmtField.value) > 0) {
-                    const fAmt = parseFloat(jvFromAmtField.value);
-                    if (fRoe > 1 && tRoe > 1) {
-                        const sar = fAmt / fRoe;
-                        if (jvSarBaseInput) jvSarBaseInput.value = sar.toFixed(2);
-                        if (jvToAmtField && jvToAmtField.getAttribute('data-customized') !== 'true') {
-                            jvToAmtField.value = (sar * tRoe).toFixed(2);
-                        }
-                    } else if (jvToAmtField && jvToAmtField.getAttribute('data-customized') !== 'true') {
-                        jvToAmtField.value = jvFromAmtField.value;
+                } else {
+                    // User entered PKR: preserve PKR amount and update SAR base!
+                    const currentPkr = parseFloat(jvFromAmtField?.value || mainAmountInput?.value) || 0;
+                    if (jvSarBaseInput && currentPkr > 0 && fRoe > 1) {
+                        jvSarBaseInput.value = (currentPkr / fRoe).toFixed(2);
                     }
                 }
                 updateCurrencyAndLiveROE();

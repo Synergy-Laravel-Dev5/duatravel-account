@@ -13,6 +13,7 @@ use App\Models\Booking;
 use App\Models\BookingHotel;
 use App\Models\BookingVisa;
 use App\Models\BookingTransport;
+use App\Models\Transaction;
 use App\Models\ExpenseTransaction;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -69,14 +70,79 @@ class ExpenseTransactionController extends Controller
         }
         $clients = $clientsQ->get();
 
+        // Calculate actual live balance for all clients
+        $bkgTotals = Booking::selectRaw('client_id, SUM(total_amount) as debits, SUM(total_received) as credits')
+            ->groupBy('client_id')->get()->keyBy('client_id');
+        $txTotals = Transaction::where('status', 'confirmed')
+            ->selectRaw('client_id, SUM(amount) as credits')
+            ->groupBy('client_id')->get()->keyBy('client_id');
+        $etTotals = ExpenseTransaction::whereNotNull('client_id')
+            ->selectRaw('client_id, 
+                SUM(CASE WHEN transaction_type = "credit" THEN (CASE WHEN currency = "SAR" THEN amount * exchange_rate ELSE amount END) ELSE 0 END) as credits,
+                SUM(CASE WHEN transaction_type = "debit" THEN (CASE WHEN currency = "SAR" THEN amount * exchange_rate ELSE amount END) ELSE 0 END) as debits')
+            ->groupBy('client_id')->get()->keyBy('client_id');
+
+        foreach ($clients as $c) {
+            $opPkr = ($c->opening_balance_pkr_type === 'credit' ? -1 : 1) * ((float)$c->opening_balance_pkr ?: 0);
+            $cRoe = (float)($c->opening_balance_roe > 1 ? $c->opening_balance_roe : 75.0);
+            if ((float)$c->opening_balance_sar != 0) {
+                $opPkr += ($c->opening_balance_sar_type === 'credit' ? -1 : 1) * ((float)$c->opening_balance_sar * $cRoe);
+            }
+            $bDeb = (float) ($bkgTotals[$c->id]->debits ?? 0);
+            $bCred = (float) ($bkgTotals[$c->id]->credits ?? 0);
+            $tCred = (float) ($txTotals[$c->id]->credits ?? 0);
+            $eCred = (float) ($etTotals[$c->id]->credits ?? 0);
+            $eDeb  = (float) ($etTotals[$c->id]->debits ?? 0);
+
+            $c->balance = round($opPkr + $bDeb - $bCred - $tCred - $eCred + $eDeb, 2);
+        }
+
+        // Calculate live payable, paid, and balance for all suppliers
+        $supHotel = BookingHotel::selectRaw('supplier_id, SUM(COALESCE(cost_amount, cost_per_night * no_of_rooms * no_of_nights * COALESCE(cost_roe, roe, 75))) as total')
+            ->groupBy('supplier_id')->get()->keyBy('supplier_id');
+        $supFlight = Booking::selectRaw('flight_supplier_id as supplier_id, SUM(CASE WHEN flight_currency = "SAR" THEN flight_cost * COALESCE(flight_cost_roe, 75) ELSE flight_cost END) as total')
+            ->whereNotNull('flight_supplier_id')->groupBy('flight_supplier_id')->get()->keyBy('supplier_id');
+        $supRetFlight = Booking::selectRaw('return_flight_supplier_id as supplier_id, SUM(CASE WHEN flight_currency = "SAR" THEN flight_cost * COALESCE(flight_cost_roe, 75) ELSE flight_cost END) as total')
+            ->whereNotNull('return_flight_supplier_id')->groupBy('return_flight_supplier_id')->get()->keyBy('supplier_id');
+        $supVisa = BookingVisa::selectRaw('supplier_id, SUM(COALESCE(cost_amount, cost_rate * COALESCE(cost_roe, roe, 75))) as total')
+            ->groupBy('supplier_id')->get()->keyBy('supplier_id');
+        $supTransport = BookingTransport::selectRaw('supplier_id, SUM(COALESCE(cost_amount, cost_rate * COALESCE(cost_roe, roe, 75))) as total')
+            ->groupBy('supplier_id')->get()->keyBy('supplier_id');
+        $supPaid = ExpenseTransaction::whereNotNull('supplier_id')
+            ->selectRaw('supplier_id, 
+                SUM(CASE WHEN transaction_type = "debit" THEN (CASE WHEN currency = "SAR" THEN amount * exchange_rate ELSE amount END) ELSE 0 END) as paid,
+                SUM(CASE WHEN transaction_type = "credit" THEN (CASE WHEN currency = "SAR" THEN amount * exchange_rate ELSE amount END) ELSE 0 END) as refunds')
+            ->groupBy('supplier_id')->get()->keyBy('supplier_id');
+
+        foreach ($suppliers as $s) {
+            $sRoe = (float) ($s->opening_balance_roe ?: 75.0);
+            $sOb = ((float)$s->opening_balance_pkr ?: 0) + (((float)$s->opening_balance_sar ?: 0) * $sRoe);
+            $hCost = (float) ($supHotel[$s->id]->total ?? 0);
+            $fCost = (float) ($supFlight[$s->id]->total ?? 0) + (float) ($supRetFlight[$s->id]->total ?? 0);
+            $vCost = (float) ($supVisa[$s->id]->total ?? 0);
+            $tCost = (float) ($supTransport[$s->id]->total ?? 0);
+
+            $sBilled = $sOb + $hCost + $fCost + $vCost + $tCost;
+            $sPaidAmt = (float) ($supPaid[$s->id]->paid ?? 0) - (float) ($supPaid[$s->id]->refunds ?? 0);
+
+            $s->total_payable  = round($sBilled, 2);
+            $s->total_paid     = round($sPaidAmt, 2);
+            $s->balance        = round($sBilled - $sPaidAmt, 2);
+            $s->hotel_cost     = round($hCost, 2);
+            $s->flight_cost    = round($fCost, 2);
+            $s->visa_cost      = round($vCost, 2);
+            $s->transport_cost = round($tCost, 2);
+        }
+
         $staffMembers = Staff::with(['department', 'designation'])->where('status', 'active')->orderBy('first_name')->get();
         $cashAccounts = Account::where('status', 'active')->orderBy('account_name')->get();
 
         $lastId = ExpenseTransaction::withTrashed()->max('id') ?? 0;
         $autoRef = 'DT-EXP-' . str_pad($lastId + 1, 6, '0', STR_PAD_LEFT);
         $autoJvRef = 'DT-JV-' . str_pad($lastId + 1, 6, '0', STR_PAD_LEFT);
+        $allBookings = Booking::with('client')->latest('id')->take(200)->get();
 
-        return view('expense_transaction.create', compact('expenses', 'banks', 'suppliers', 'clients', 'staffMembers', 'cashAccounts', 'autoRef', 'autoJvRef'));
+        return view('expense_transaction.create', compact('expenses', 'banks', 'suppliers', 'clients', 'staffMembers', 'cashAccounts', 'autoRef', 'autoJvRef', 'allBookings'));
     }
 
     public function store(Request $request)
@@ -224,8 +290,8 @@ class ExpenseTransactionController extends Controller
                     $fromSar = $fromRoe > 1 ? round($fromAmount / $fromRoe, 2) : 0;
                     $toSar   = $toRoe > 1 ? round($toAmount / $toRoe, 2) : 0;
 
-                    $fromCurr = $fromRoe > 1 ? 'SAR' : 'PKR';
-                    $toCurr   = $toRoe > 1 ? 'SAR' : 'PKR';
+                    $fromCurr = $request->currency ?: 'PKR';
+                    $toCurr   = $request->currency ?: 'PKR';
 
                     $fromDesc = $request->description ?: null;
                     $toDesc   = $request->description ?: null;
@@ -562,6 +628,8 @@ class ExpenseTransactionController extends Controller
                 'account_id'       => $accountId,
                 'expense_id'       => $expenseId,
                 'supplier_id'      => $supplierId,
+                'booking_id'       => ($payeeType === 'supplier' || $payeeType === 'client') ? ($request->booking_id ?: null) : null,
+                'service_type'     => ($payeeType === 'supplier') ? ($request->service_type ?: 'all') : null,
                 'client_id'        => $clientId,
                 'company_id'       => $companyId,
                 'staff_id'         => $staffId,
@@ -608,6 +676,70 @@ class ExpenseTransactionController extends Controller
             $clientsQ->where('package_type', 'umrah');
         }
         $clients = $clientsQ->get();
+
+        // Calculate actual live balance for all clients
+        $bkgTotals = Booking::selectRaw('client_id, SUM(total_amount) as debits, SUM(total_received) as credits')
+            ->groupBy('client_id')->get()->keyBy('client_id');
+        $txTotals = Transaction::where('status', 'confirmed')
+            ->selectRaw('client_id, SUM(amount) as credits')
+            ->groupBy('client_id')->get()->keyBy('client_id');
+        $etTotals = ExpenseTransaction::whereNotNull('client_id')
+            ->selectRaw('client_id, 
+                SUM(CASE WHEN transaction_type = "credit" THEN (CASE WHEN currency = "SAR" THEN amount * exchange_rate ELSE amount END) ELSE 0 END) as credits,
+                SUM(CASE WHEN transaction_type = "debit" THEN (CASE WHEN currency = "SAR" THEN amount * exchange_rate ELSE amount END) ELSE 0 END) as debits')
+            ->groupBy('client_id')->get()->keyBy('client_id');
+
+        foreach ($clients as $c) {
+            $opPkr = ($c->opening_balance_pkr_type === 'credit' ? -1 : 1) * ((float)$c->opening_balance_pkr ?: 0);
+            $cRoe = (float)($c->opening_balance_roe > 1 ? $c->opening_balance_roe : 75.0);
+            if ((float)$c->opening_balance_sar != 0) {
+                $opPkr += ($c->opening_balance_sar_type === 'credit' ? -1 : 1) * ((float)$c->opening_balance_sar * $cRoe);
+            }
+            $bDeb = (float) ($bkgTotals[$c->id]->debits ?? 0);
+            $bCred = (float) ($bkgTotals[$c->id]->credits ?? 0);
+            $tCred = (float) ($txTotals[$c->id]->credits ?? 0);
+            $eCred = (float) ($etTotals[$c->id]->credits ?? 0);
+            $eDeb  = (float) ($etTotals[$c->id]->debits ?? 0);
+
+            $c->balance = round($opPkr + $bDeb - $bCred - $tCred - $eCred + $eDeb, 2);
+        }
+
+        // Calculate live payable, paid, and balance for all suppliers
+        $supHotel = BookingHotel::selectRaw('supplier_id, SUM(COALESCE(cost_amount, cost_per_night * no_of_rooms * no_of_nights * COALESCE(cost_roe, roe, 75))) as total')
+            ->groupBy('supplier_id')->get()->keyBy('supplier_id');
+        $supFlight = Booking::selectRaw('flight_supplier_id as supplier_id, SUM(CASE WHEN flight_currency = "SAR" THEN flight_cost * COALESCE(flight_cost_roe, 75) ELSE flight_cost END) as total')
+            ->whereNotNull('flight_supplier_id')->groupBy('flight_supplier_id')->get()->keyBy('supplier_id');
+        $supRetFlight = Booking::selectRaw('return_flight_supplier_id as supplier_id, SUM(CASE WHEN flight_currency = "SAR" THEN flight_cost * COALESCE(flight_cost_roe, 75) ELSE flight_cost END) as total')
+            ->whereNotNull('return_flight_supplier_id')->groupBy('return_flight_supplier_id')->get()->keyBy('supplier_id');
+        $supVisa = BookingVisa::selectRaw('supplier_id, SUM(COALESCE(cost_amount, cost_rate * COALESCE(cost_roe, roe, 75))) as total')
+            ->groupBy('supplier_id')->get()->keyBy('supplier_id');
+        $supTransport = BookingTransport::selectRaw('supplier_id, SUM(COALESCE(cost_amount, cost_rate * COALESCE(cost_roe, roe, 75))) as total')
+            ->groupBy('supplier_id')->get()->keyBy('supplier_id');
+        $supPaid = ExpenseTransaction::whereNotNull('supplier_id')
+            ->selectRaw('supplier_id, 
+                SUM(CASE WHEN transaction_type = "debit" THEN (CASE WHEN currency = "SAR" THEN amount * exchange_rate ELSE amount END) ELSE 0 END) as paid,
+                SUM(CASE WHEN transaction_type = "credit" THEN (CASE WHEN currency = "SAR" THEN amount * exchange_rate ELSE amount END) ELSE 0 END) as refunds')
+            ->groupBy('supplier_id')->get()->keyBy('supplier_id');
+
+        foreach ($suppliers as $s) {
+            $sRoe = (float) ($s->opening_balance_roe ?: 75.0);
+            $sOb = ((float)$s->opening_balance_pkr ?: 0) + (((float)$s->opening_balance_sar ?: 0) * $sRoe);
+            $hCost = (float) ($supHotel[$s->id]->total ?? 0);
+            $fCost = (float) ($supFlight[$s->id]->total ?? 0) + (float) ($supRetFlight[$s->id]->total ?? 0);
+            $vCost = (float) ($supVisa[$s->id]->total ?? 0);
+            $tCost = (float) ($supTransport[$s->id]->total ?? 0);
+
+            $sBilled = $sOb + $hCost + $fCost + $vCost + $tCost;
+            $sPaidAmt = (float) ($supPaid[$s->id]->paid ?? 0) - (float) ($supPaid[$s->id]->refunds ?? 0);
+
+            $s->total_payable  = round($sBilled, 2);
+            $s->total_paid     = round($sPaidAmt, 2);
+            $s->balance        = round($sBilled - $sPaidAmt, 2);
+            $s->hotel_cost     = round($hCost, 2);
+            $s->flight_cost    = round($fCost, 2);
+            $s->visa_cost      = round($vCost, 2);
+            $s->transport_cost = round($tCost, 2);
+        }
 
         $staffMembers = Staff::with(['department', 'designation'])->where('status', 'active')->orderBy('first_name')->get();
         $cashAccounts = Account::where('status', 'active')->orderBy('account_name')->get();
@@ -721,7 +853,9 @@ class ExpenseTransactionController extends Controller
             }
         }
 
-        return view('expense_transaction.edit', compact('transaction', 'expenses', 'banks', 'suppliers', 'clients', 'staffMembers', 'cashAccounts', 'relatedJvEntries', 'jvData'));
+        $allBookings = Booking::with('client')->latest('id')->take(200)->get();
+
+        return view('expense_transaction.edit', compact('transaction', 'expenses', 'banks', 'suppliers', 'clients', 'staffMembers', 'cashAccounts', 'relatedJvEntries', 'jvData', 'allBookings'));
     }
 
     public function update(Request $request, $id)
@@ -1057,8 +1191,8 @@ class ExpenseTransactionController extends Controller
                     $fromSar = $fromRoe > 1 ? round($fromAmount / $fromRoe, 2) : 0;
                     $toSar   = $toRoe > 1 ? round($toAmount / $toRoe, 2) : 0;
 
-                    $fromCurr = $fromRoe > 1 ? 'SAR' : 'PKR';
-                    $toCurr   = $toRoe > 1 ? 'SAR' : 'PKR';
+                    $fromCurr = $request->currency ?: 'PKR';
+                    $toCurr   = $request->currency ?: 'PKR';
 
                     $fromDesc = $request->description ?: null;
                     $toDesc   = $request->description ?: null;
@@ -1137,6 +1271,8 @@ class ExpenseTransactionController extends Controller
                 'account_id'       => $accountId,
                 'expense_id'       => $expenseId,
                 'supplier_id'      => $supplierId,
+                'booking_id'       => ($payeeType === 'supplier' || $payeeType === 'client') ? ($request->booking_id ?: null) : null,
+                'service_type'     => ($payeeType === 'supplier') ? ($request->service_type ?: 'all') : null,
                 'client_id'        => $clientId,
                 'company_id'       => $companyId,
                 'staff_id'         => $staffId,

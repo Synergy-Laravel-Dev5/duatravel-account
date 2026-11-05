@@ -171,6 +171,38 @@
                                     </div>
                                 </div>
                             </div>
+
+                            {{-- Service Type & Booking Allocation --}}
+                            <div class="row g-3 mt-1">
+                                <div class="col-md-6">
+                                    <label class="form-label fs-12 fw-semibold text-primary">
+                                        <i class="mdi mdi-cube-outline me-1"></i> Allocated Service Type
+                                    </label>
+                                    <select name="service_type" id="supplier_service_type" class="form-select form-select-sm select2">
+                                        <option value="all" {{ old('service_type', $transaction->service_type ?? 'all') == 'all' ? 'selected' : '' }}>🌐 General / All Services (Unallocated)</option>
+                                        <option value="hotel" {{ old('service_type', $transaction->service_type) == 'hotel' ? 'selected' : '' }}>🏨 Hotel Accommodation (Check-In Report)</option>
+                                        <option value="flight" {{ old('service_type', $transaction->service_type) == 'flight' ? 'selected' : '' }}>✈️ Flight Tickets</option>
+                                        <option value="transport" {{ old('service_type', $transaction->service_type) == 'transport' ? 'selected' : '' }}>🚌 Transport / Routes</option>
+                                        <option value="visa" {{ old('service_type', $transaction->service_type) == 'visa' ? 'selected' : '' }}>📄 Visa Services</option>
+                                    </select>
+                                    <small class="text-muted fs-11">Choose service to reflect payment in Check-In / Hotel reports</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fs-12 fw-semibold text-primary">
+                                        <i class="mdi mdi-bookmark-check me-1"></i> Specific Booking / Voucher (Optional)
+                                    </label>
+                                    <select name="booking_id" id="supplier_booking_id" class="form-select form-select-sm select2">
+                                        <option value="">-- General Supplier Payment / Any Booking --</option>
+                                        @if(isset($allBookings))
+                                            @foreach($allBookings as $bk)
+                                                <option value="{{ $bk->id }}" {{ old('booking_id', $transaction->booking_id) == $bk->id ? 'selected' : '' }}>
+                                                    #{{ $bk->voucher_number ?: ('BKG-' . $bk->id) }} - {{ $bk->client->name ?? 'Walk-in' }} (Total: PKR {{ number_format($bk->total_amount, 2) }})
+                                                </option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- 2. CLIENT SECTION -->

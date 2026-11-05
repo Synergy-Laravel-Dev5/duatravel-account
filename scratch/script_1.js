@@ -1,0 +1,4145 @@
+
+        const packagesData     = [];
+        let clientsData        = [{"id":1,"lead_id":null,"package_id":null,"package_type":"umrah","name":"Arsal Ali","company_name":"DUA Travel","passport_number":"Pass099","passport_document":null,"cnic":"42401-4563546-9","cnic_document":null,"phone":"+15243914715","email":"arsalali1234566@gmail.com","type":"client","status":"active","opening_balance_pkr":"0.00","opening_balance_sar":"0.00","opening_balance_pkr_type":"debit","opening_balance_sar_type":"debit","opening_balance_roe":"75.0000","deleted_at":null,"created_at":"2026-11-04T11:01:45.000000Z","updated_at":"2026-11-04T11:01:45.000000Z"},{"id":2,"lead_id":null,"package_id":null,"package_type":"umrah","name":"Hamza","company_name":"DUA Travel","passport_number":"AH2753301","passport_document":null,"cnic":"42101-3683365-7","cnic_document":null,"phone":"+15243914715","email":"hamza@gmail.com","type":"client","status":"active","opening_balance_pkr":"0.00","opening_balance_sar":"0.00","opening_balance_pkr_type":"debit","opening_balance_sar_type":"debit","opening_balance_roe":"75.0000","deleted_at":null,"created_at":"2026-11-04T11:02:11.000000Z","updated_at":"2026-11-04T11:02:11.000000Z"}];
+        const hotelsData       = [{"id":1,"hotel_number":"HTL-MAK-001","code":"HTL-SWM","name":"Swiss\u00f4tel Makkah","address":"King Abdul Aziz Endowment, Abraj Al Bait Complex, Makkah","contact":"+966 12 571 8000","email":"reservations.makkah@swissotel.com","place":"Makkah","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":2,"hotel_number":"HTL-MAK-002","code":"HTL-FMT","name":"Makkah Clock Royal Tower, A Fairmont Hotel","address":"King Abdul Aziz Endowment, Clock Tower, Makkah","contact":"+966 12 571 7777","email":"makkah@fairmont.com","place":"Makkah","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":3,"hotel_number":"HTL-MAK-003","code":"HTL-PZM","name":"Pullman Zamzam Makkah","address":"Abraj Al Bait Complex, Ibrahim Al Khalil St, Makkah","contact":"+966 12 571 5555","email":"h6329@accor.com","place":"Makkah","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":4,"hotel_number":"HTL-MAK-004","code":"HTL-MHT","name":"Makkah Hotel \u0026 Towers (Ex-Hilton)","address":"Ibrahim Al Khalil Street, Facing King Fahd Gate, Makkah","contact":"+966 12 534 0000","email":"info@makkah-hotel.com","place":"Makkah","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":5,"hotel_number":"HTL-MAK-005","code":"HTL-JOM","name":"Jabal Omar Marriott Hotel Makkah","address":"Umm Al Qura Road, Jabal Omar, Makkah","contact":"+966 12 529 6666","email":"marriott.makkah@marriott.com","place":"Makkah","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":6,"hotel_number":"HTL-MAK-006","code":"HTL-ANJ","name":"Anjum Hotel Makkah","address":"Umm Al Qura Street, Jabal Kaaba, Makkah","contact":"+966 12 510 0000","email":"reservations@anjumhotels.com","place":"Makkah","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":7,"hotel_number":"HTL-MAK-007","code":"HTL-VOC","name":"voco Makkah, an IHG Hotel","address":"Ibrahim Al Khalil Road, Al Misfalah, Makkah","contact":"+966 12 526 0000","email":"info.vocomakkah@ihg.com","place":"Makkah","accommodation_type":"Hotel","accommodation_category":"4 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":8,"hotel_number":"HTL-MAK-008","code":"HTL-LMD","name":"Le M\u00e9ridien Towers Makkah","address":"Kudai Road, Al Aziziyah District, Makkah","contact":"+966 12 539 9999","email":"lemeridien.makkah@marriott.com","place":"Makkah","accommodation_type":"Hotel","accommodation_category":"4 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":9,"hotel_number":"HTL-MAK-009","code":"HTL-SHD","name":"Al Shohada Hotel Makkah","address":"Ajyad Street, Makkah","contact":"+966 12 574 4401","email":"reservation@alshohada.com","place":"Makkah","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":10,"hotel_number":"HTL-MAK-010","code":"HTL-KSW","name":"Kiswa Towers Hotel","address":"Al Tayseer Street, Jarwal, Makkah","contact":"+966 12 541 0000","email":"info@kiswahotels.com","place":"Makkah","accommodation_type":"Hotel","accommodation_category":"3 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":11,"hotel_number":"HTL-MAK-011","code":"HTL-EMG","name":"Emaar Grand Hotel Makkah","address":"Ibrahim Al Khalil Street, Al Misfalah, Makkah","contact":"+966 12 530 2222","email":"grand@emaarhotels.com","place":"Makkah","accommodation_type":"Hotel","accommodation_category":"4 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":12,"hotel_number":"HTL-MAK-012","code":"HTL-AZD","name":"Al Azizia Diamond Hotel","address":"Al Aziziyah North Road, Makkah","contact":"+966 12 558 3333","email":"azizia.diamond@gmail.com","place":"Azizia","accommodation_type":"Building\/Flat","accommodation_category":"3 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":13,"hotel_number":"HTL-MED-001","code":"HTL-OBR","name":"The Oberoi Madinah","address":"Northern Central Area, Facing Prophet Mosque, Madinah","contact":"+966 14 828 2222","email":"madinah@oberoihotels.com","place":"Madinah","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":14,"hotel_number":"HTL-MED-002","code":"HTL-DTQ","name":"Dar Al Taqwa Hotel Madinah","address":"Off Al Sitteen Street, Facing Ladies Gate, Madinah","contact":"+966 14 829 1111","email":"info@daraltaqwa.com","place":"Madinah","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":15,"hotel_number":"HTL-MED-003","code":"HTL-ANM","name":"Anwar Al Madinah M\u00f6venpick Hotel","address":"Central Zone, Haram Court, Madinah","contact":"+966 14 818 1000","email":"hotel.anwar.reservation@movenpick.com","place":"Madinah","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":16,"hotel_number":"HTL-MED-004","code":"HTL-PZM-MDN","name":"Pullman Zamzam Madinah","address":"Amr Bin Al Aas Street, Al Badaah, Madinah","contact":"+966 14 821 0500","email":"h6329-re@accor.com","place":"Madinah","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":17,"hotel_number":"HTL-MED-005","code":"HTL-FAL","name":"Frontel Al Harithia Hotel Madinah","address":"Central Northern Area, Madinah","contact":"+966 14 820 0111","email":"reservation@frontelhotels.com","place":"Madinah","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":18,"hotel_number":"HTL-MED-006","code":"HTL-EMR","name":"Emaar Royal Hotel Al Madina","address":"North Central Area, Al Badaah, Madinah","contact":"+966 14 819 5555","email":"royal@emaarhotels.com","place":"Madinah","accommodation_type":"Hotel","accommodation_category":"4 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":19,"hotel_number":"HTL-MED-007","code":"HTL-TBF","name":"Taiba Front Hotel Madinah","address":"Northern Central Zone, Madinah","contact":"+966 14 829 0055","email":"info@taibafronthotel.com","place":"Madinah","accommodation_type":"Hotel","accommodation_category":"4 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":20,"hotel_number":"HTL-MED-008","code":"HTL-RVA","name":"Ruve Al Madinah Hotel","address":"Abi Ayyub Al-Ansari St, Central Area, Madinah","contact":"+966 14 829 9999","email":"info@ruvealmadinah.com","place":"Madinah","accommodation_type":"Hotel","accommodation_category":"4 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":21,"hotel_number":"HTL-MED-009","code":"HTL-RDA","name":"Rawda Al Aqeeq Hotel","address":"Western Central Area, As Salam St, Madinah","contact":"+966 14 820 4444","email":"rawda@alaqeeq.com","place":"Madinah","accommodation_type":"Hotel","accommodation_category":"4 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":22,"hotel_number":"HTL-KHI-001","code":"HTL-PC-KHI","name":"Pearl Continental Hotel Karachi","address":"Club Road, Karachi","contact":"+92 21 111 505 505","email":"pchk@pchotels.com","place":"Karachi","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":23,"hotel_number":"HTL-KHI-002","code":"HTL-MAR-KHI","name":"Karachi Marriott Hotel","address":"9 Abdullah Haroon Road, Civil Lines, Karachi","contact":"+92 21 111 223 344","email":"marriott@marriottkarachi.com","place":"Karachi","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":24,"hotel_number":"HTL-KHI-003","code":"HTL-MOV-KHI","name":"M\u00f6venpick Hotel Karachi","address":"Club Road, Civil Lines, Karachi","contact":"+92 21 3563 3333","email":"hotel.karachi@movenpick.com","place":"Karachi","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":25,"hotel_number":"HTL-KHI-004","code":"HTL-AVR-KHI","name":"Avari Towers Karachi","address":"242-243 Fatima Jinnah Road, Karachi","contact":"+92 21 111 282 747","email":"towers@avari.com","place":"Karachi","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":26,"hotel_number":"HTL-KHI-005","code":"HTL-RAM-KHI","name":"Ramada Plaza Karachi Airport","address":"Terminal 1 Road, Star Gate, Karachi Airport","contact":"+92 21 9924 8921","email":"info@ramadaplazakarachi.com","place":"Karachi","accommodation_type":"Hotel","accommodation_category":"4 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":27,"hotel_number":"HTL-LHE-001","code":"HTL-PC-LHE","name":"Pearl Continental Hotel Lahore","address":"Shahrah-e-Quaid-e-Azam, Lahore","contact":"+92 42 111 505 505","email":"pclhe@pchotels.com","place":"Lahore","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":28,"hotel_number":"HTL-LHE-002","code":"HTL-AVR-LHE","name":"Avari Hotel Lahore","address":"87 Shahrah-e-Quaid-e-Azam, Lahore","contact":"+92 42 3636 6366","email":"lahore@avari.com","place":"Lahore","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":29,"hotel_number":"HTL-LHE-003","code":"HTL-NIS-LHE","name":"The Nishat Hotel Gulberg Lahore","address":"9A Mian Mahmood Ali Kasuri Rd, Gulberg III, Lahore","contact":"+92 42 111 000 777","email":"info@nishathotel.biz","place":"Lahore","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":30,"hotel_number":"HTL-LHE-004","code":"HTL-LUX-LHE","name":"Luxus Grand Hotel Lahore","address":"4 Egerton Rd, Edgerton Road, Lahore","contact":"+92 42 3636 8999","email":"info@luxusgrand.com","place":"Lahore","accommodation_type":"Hotel","accommodation_category":"4 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":31,"hotel_number":"HTL-LHE-005","code":"HTL-RYS-LHE","name":"Royal Swiss Lahore Airport","address":"Opposite Allama Iqbal International Airport, Lahore","contact":"+92 42 111 888 777","email":"reservations@royalswisslahore.com","place":"Lahore","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":32,"hotel_number":"HTL-ISB-001","code":"HTL-SRN-ISB","name":"Islamabad Serena Hotel","address":"Khayaban-e-Suhrawardy, G-5\/1, Islamabad","contact":"+92 51 287 4000","email":"reservations.ish@serena.com.pk","place":"Islamabad","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":33,"hotel_number":"HTL-ISB-002","code":"HTL-MAR-ISB","name":"Islamabad Marriott Hotel","address":"Aga Khan Road, F-5\/1, Islamabad","contact":"+92 51 282 6121","email":"marriott@marriottislamabad.com","place":"Islamabad","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":34,"hotel_number":"HTL-RWP-001","code":"HTL-PC-RWP","name":"Pearl Continental Hotel Rawalpindi","address":"The Mall, Rawalpindi","contact":"+92 51 111 505 505","email":"pcr@pchotels.com","place":"Rawalpindi","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":35,"hotel_number":"HTL-ISB-003","code":"HTL-RAM-ISB","name":"Ramada by Wyndham Islamabad","address":"Club Road, Adjacent Rawal Lake, Islamabad","contact":"+92 51 111 300 700","email":"info@ramadaislamabad.com","place":"Islamabad","accommodation_type":"Hotel","accommodation_category":"4 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":36,"hotel_number":"HTL-PEW-001","code":"HTL-PC-PEW","name":"Pearl Continental Hotel Peshawar","address":"Khyber Road, Peshawar Cantonment","contact":"+92 91 111 505 505","email":"pcp@pchotels.com","place":"Peshawar","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":37,"hotel_number":"HTL-MUX-001","code":"HTL-RAM-MUX","name":"Ramada by Wyndham Multan","address":"76 Abdali Road, Multan","contact":"+92 61 111 234 567","email":"info@ramadamultan.com","place":"Multan","accommodation_type":"Hotel","accommodation_category":"4 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":38,"hotel_number":"HTL-LYP-001","code":"HTL-SRN-LYP","name":"Faisalabad Serena Hotel","address":"Club Road, Faisalabad","contact":"+92 41 111 133 133","email":"reservations.fsh@serena.com.pk","place":"Faisalabad","accommodation_type":"Hotel","accommodation_category":"4 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":39,"hotel_number":"HTL-UET-001","code":"HTL-SRN-UET","name":"Quetta Serena Hotel","address":"Shahrah-e-Zarghoon, Quetta","contact":"+92 81 282 0071","email":"reservations.qsh@serena.com.pk","place":"Quetta","accommodation_type":"Hotel","accommodation_category":"4 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":40,"hotel_number":"HTL-DXB-001","code":"HTL-ATL-DXB","name":"Atlantis, The Palm Dubai","address":"Crescent Rd, The Palm Jumeirah, Dubai, UAE","contact":"+971 4 426 2000","email":"reservations@atlantisthepalm.com","place":"Dubai","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":41,"hotel_number":"HTL-DXB-002","code":"HTL-JWM-DXB","name":"JW Marriott Marquis Hotel Dubai","address":"Sheikh Zayed Rd, Business Bay, Dubai, UAE","contact":"+971 4 414 0000","email":"jwmarquis@marriott.com","place":"Dubai","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":42,"hotel_number":"HTL-DXB-003","code":"HTL-HYT-DXB","name":"Grand Hyatt Dubai","address":"Riyadh Street, Sheikh Rashid Rd, Dubai, UAE","contact":"+971 4 317 1234","email":"dubai.grand@hyatt.com","place":"Dubai","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":43,"hotel_number":"HTL-DXB-004","code":"HTL-ROV-DXB","name":"Rove City Centre Deira Dubai","address":"24 19B Street, Port Saeed, Deira, Dubai, UAE","contact":"+971 4 561 9000","email":"hello@rovehotels.com","place":"Dubai","accommodation_type":"Hotel","accommodation_category":"4 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":44,"hotel_number":"HTL-AUH-001","code":"HTL-EMP-AUH","name":"Emirates Palace Mandarin Oriental Abu Dhabi","address":"West Corniche Road, Abu Dhabi, UAE","contact":"+971 2 690 9000","email":"moauh-reservations@mohg.com","place":"Abu Dhabi","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":45,"hotel_number":"HTL-SHJ-001","code":"HTL-SHR-SHJ","name":"Sheraton Sharjah Beach Resort","address":"Al Muntazah St, Sharjah, UAE","contact":"+971 6 563 0000","email":"sharjah.sheraton@marriott.com","place":"Sharjah","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":46,"hotel_number":"HTL-IST-001","code":"HTL-CVK-IST","name":"CVK Park Bosphorus Hotel Istanbul","address":"G\u00fcm\u00fc\u015fsuyu, \u0130n\u00f6n\u00fc Cd. No:8, Beyo\u011flu, Istanbul, Turkey","contact":"+90 212 377 8888","email":"info@cvkhotels.com","place":"Istanbul","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":47,"hotel_number":"HTL-IST-002","code":"HTL-RAD-IST","name":"Radisson Blu Hotel Istanbul Pera","address":"Evliya \u00c7elebi, Refik Saydam Cd. No:19, Beyo\u011flu, Istanbul","contact":"+90 212 377 2500","email":"info.pera.istanbul@radissonblu.com","place":"Istanbul","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":48,"hotel_number":"HTL-BAK-001","code":"HTL-FRM-BAK","name":"Fairmont Baku, Flame Towers","address":"1A Mehdi Huseyn St, Baku 1006, Azerbaijan","contact":"+994 12 565 4848","email":"baku@fairmont.com","place":"Baku","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":49,"hotel_number":"HTL-LON-001","code":"HTL-RTZ-LON","name":"The Ritz London","address":"150 Piccadilly, St. James\u0027s, London W1J 9BR, UK","contact":"+44 20 7493 8181","email":"enquire@theritzlondon.com","place":"London","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":50,"hotel_number":"HTL-BKK-001","code":"HTL-AMR-BKK","name":"Amari Bangkok","address":"847 Phetchaburi Rd, Thanon Phaya Thai, Ratchathewi, Bangkok","contact":"+66 2 653 9000","email":"bangkok@amari.com","place":"Bangkok","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":51,"hotel_number":"HTL-KUL-001","code":"HTL-MND-KUL","name":"Mandarin Oriental Kuala Lumpur","address":"Kuala Lumpur City Centre, 50088 Kuala Lumpur, Malaysia","contact":"+60 3 2380 8888","email":"mokul-reservations@mohg.com","place":"Kuala Lumpur","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":52,"hotel_number":"HTL-DOH-001","code":"HTL-INC-DOH","name":"InterContinental Doha The City","address":"West Bay, Off Al Wahda Street, Doha, Qatar","contact":"+974 4015 8888","email":"doha@ihg.com","place":"Doha","accommodation_type":"Hotel","accommodation_category":"5 Star","logo":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"}];
+        const suppliersData    = [{"id":1,"name":"Polani","company_name":"DUA Travel","service_type":"all","contact_person":"Ahmed","phone":null,"email":null,"address":null,"city":null,"country":"Saudi Arabia","opening_balance":"0.00","opening_balance_pkr":"0.00","opening_balance_sar":"0.00","opening_balance_pkr_type":"credit","opening_balance_sar_type":"credit","opening_balance_roe":"75.0000","status":"active","deleted_at":null,"created_at":"2026-11-04T11:02:39.000000Z","updated_at":"2026-11-04T11:02:39.000000Z"}];
+        const mealPlansData    = [{"id":1,"name":"Room Only","code":"RO","description":"Accommodation only without meals","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":2,"name":"Bed \u0026 Breakfast","code":"BB","description":"Daily buffet breakfast included","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":3,"name":"Half Board","code":"HB","description":"Breakfast and dinner included","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":4,"name":"Full Board","code":"FB","description":"Breakfast, lunch, and dinner included","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":5,"name":"Sahoor Only","code":"SO","description":"Ramadan Sahoor meal included","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":6,"name":"Iftar Only","code":"IO","description":"Ramadan Iftar buffet included","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":7,"name":"Sahoor \u0026 Iftar","code":"SI","description":"Ramadan Sahoor and Iftar meals included","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"}];
+
+        function buildHotelsOptions(filterCity = null) {
+            let list = Array.isArray(hotelsData) ? hotelsData : [];
+            const activeCategory = document.querySelector('input[name="booking_category"]:checked')?.value || 'umrah';
+
+            const domesticPlaces = ['karachi', 'lahore', 'islamabad', 'rawalpindi', 'peshawar', 'multan', 'faisalabad', 'quetta', 'sialkot', 'pakistan'];
+            const pilgrimagePlaces = ['makkah', 'madinah', 'azizia', 'mina', 'arafat', 'jeddah', 'saudi'];
+
+            if (activeCategory === 'domestic') {
+                list = list.filter(h => {
+                    const p = (((typeof h.place === 'object' && h.place !== null) ? h.place?.value : h.place) || h.address || '').toLowerCase();
+                    return domesticPlaces.some(dp => p.includes(dp));
+                });
+            } else if (activeCategory === 'international') {
+                list = list.filter(h => {
+                    const p = (((typeof h.place === 'object' && h.place !== null) ? h.place?.value : h.place) || h.address || '').toLowerCase();
+                    const isPilgrim = pilgrimagePlaces.some(pp => p.includes(pp));
+                    const isDom = domesticPlaces.some(dp => p.includes(dp));
+                    return !isPilgrim && !isDom;
+                });
+            } else {
+                if (filterCity && filterCity !== 'other') {
+                    const fc = filterCity.toLowerCase();
+                    list = list.filter(h => {
+                        const p = (((typeof h.place === 'object' && h.place !== null) ? h.place?.value : h.place) || h.address || '').toLowerCase();
+                        return p.includes(fc);
+                    });
+                }
+            }
+
+            return `<option value="">Select Hotel</option>` +
+                list.map(h => {
+                    const p = ((typeof h.place === 'object' && h.place !== null) ? h.place?.value : h.place) || '';
+                    return `<option value="${h.name}">${h.name}${p ? ' (' + p + ')' : ''}</option>`;
+                }).join('');
+        }
+
+        function buildMealPlansOptions(selectedCode = 'BB') {
+            if (!Array.isArray(mealPlansData) || mealPlansData.length === 0) {
+                return `
+                    <option value="RO" ${selectedCode === 'RO' ? 'selected' : ''}>Room Only (RO)</option>
+                    <option value="BB" ${selectedCode === 'BB' ? 'selected' : ''}>Bed & Breakfast (BB)</option>
+                    <option value="HB" ${selectedCode === 'HB' ? 'selected' : ''}>Half Board (HB)</option>
+                    <option value="FB" ${selectedCode === 'FB' ? 'selected' : ''}>Full Board (FB)</option>
+                    <option value="SO" ${selectedCode === 'SO' ? 'selected' : ''}>Sahoor Only (SO)</option>
+                    <option value="IO" ${selectedCode === 'IO' ? 'selected' : ''}>Iftar Only (IO)</option>
+                    <option value="SI" ${selectedCode === 'SI' ? 'selected' : ''}>Sahoor & Iftar (SI)</option>
+                `;
+            }
+            return mealPlansData.map(mp => {
+                const sel = (selectedCode && (selectedCode.toUpperCase() === mp.code.toUpperCase() || selectedCode.toUpperCase() === mp.name.toUpperCase())) ? 'selected' : '';
+                return `<option value="${mp.code}" ${sel}>${mp.name} (${mp.code})</option>`;
+            }).join('');
+        }
+
+        function buildRoomViewsOptions(selected = 'Standard View') {
+            const views = [
+                'Standard View',
+                'City View',
+                'Haram View',
+                'Kaaba View',
+                'Partial Haram View',
+                'Sea / Mountain View'
+            ];
+            return views.map(v => `<option value="${v}" ${selected === v ? 'selected' : ''}>${v}</option>`).join('');
+        }
+
+        function refreshHotelsDropdown(idx = null) {
+            refreshMasterData(true);
+        }
+        const airlinesData     = [{"id":1,"name":"Pakistan International Airlines","code":"PK-PIA","iata_code":"PK","icao_code":"PIA","country":"Pakistan","call_sign":"PAKISTAN","logo":null,"ffnumber":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":2,"name":"Saudia (Saudi Arabian Airlines)","code":"SV-SVA","iata_code":"SV","icao_code":"SVA","country":"Saudi Arabia","call_sign":"SAUDIA","logo":null,"ffnumber":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":3,"name":"Flynas","code":"XY-KNE","iata_code":"XY","icao_code":"KNE","country":"Saudi Arabia","call_sign":"NAS EXPRESS","logo":null,"ffnumber":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":4,"name":"Flyadeal","code":"F3-FAD","iata_code":"F3","icao_code":"FAD","country":"Saudi Arabia","call_sign":"ADEAL","logo":null,"ffnumber":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":5,"name":"Airblue","code":"PA-ABQ","iata_code":"PA","icao_code":"ABQ","country":"Pakistan","call_sign":"AIRBLUE","logo":null,"ffnumber":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":6,"name":"Serene Air","code":"ER-SEP","iata_code":"ER","icao_code":"SEP","country":"Pakistan","call_sign":"SERENE","logo":null,"ffnumber":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":7,"name":"Fly Jinnah","code":"9P-FJL","iata_code":"9P","icao_code":"FJL","country":"Pakistan","call_sign":"FLY JINNAH","logo":null,"ffnumber":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":8,"name":"Emirates Airline","code":"EK-UAE","iata_code":"EK","icao_code":"UAE","country":"United Arab Emirates","call_sign":"EMIRATES","logo":null,"ffnumber":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":9,"name":"Flydubai","code":"FZ-FDB","iata_code":"FZ","icao_code":"FDB","country":"United Arab Emirates","call_sign":"FLYDUBAI","logo":null,"ffnumber":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":10,"name":"Air Arabia","code":"G9-ABY","iata_code":"G9","icao_code":"ABY","country":"United Arab Emirates","call_sign":"ARABIA","logo":null,"ffnumber":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":11,"name":"Qatar Airways","code":"QR-QTR","iata_code":"QR","icao_code":"QTR","country":"Qatar","call_sign":"QATARI","logo":null,"ffnumber":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":12,"name":"Gulf Air","code":"GF-GFA","iata_code":"GF","icao_code":"GFA","country":"Bahrain","call_sign":"GULF AIR","logo":null,"ffnumber":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":13,"name":"Etihad Airways","code":"EY-ETD","iata_code":"EY","icao_code":"ETD","country":"United Arab Emirates","call_sign":"ETIHAD","logo":null,"ffnumber":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":14,"name":"Oman Air","code":"WY-OMA","iata_code":"WY","icao_code":"OMA","country":"Oman","call_sign":"OMAN AIR","logo":null,"ffnumber":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":15,"name":"SalamAir","code":"OV-OMS","iata_code":"OV","icao_code":"OMS","country":"Oman","call_sign":"SALAM AIR","logo":null,"ffnumber":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":16,"name":"Kuwait Airways","code":"KU-KAC","iata_code":"KU","icao_code":"KAC","country":"Kuwait","call_sign":"KUWAITI","logo":null,"ffnumber":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":17,"name":"Turkish Airlines","code":"TK-THY","iata_code":"TK","icao_code":"THY","country":"Turkey","call_sign":"TURKISH","logo":null,"ffnumber":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":18,"name":"Jazeera Airways","code":"J9-JZR","iata_code":"J9","icao_code":"JZR","country":"Kuwait","call_sign":"JAZEERA","logo":null,"ffnumber":null,"status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"}];
+        const routesData       = [{"id":1,"start_place":"Jeddah Airport (JED)","end_place":"Makkah Hotel","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z","deleted_at":null},{"id":2,"start_place":"Makkah Hotel","end_place":"Madinah Hotel","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z","deleted_at":null},{"id":3,"start_place":"Madinah Hotel","end_place":"Makkah Hotel","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z","deleted_at":null},{"id":4,"start_place":"Madinah Hotel","end_place":"Madinah Airport (MED)","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z","deleted_at":null},{"id":5,"start_place":"Madinah Hotel","end_place":"Jeddah Airport (JED)","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z","deleted_at":null},{"id":6,"start_place":"Makkah Hotel","end_place":"Jeddah Airport (JED)","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z","deleted_at":null},{"id":7,"start_place":"Makkah Hotel","end_place":"Ziyarat Makkah (Jabal Al-Noor, Thowr, Mina, Arafat)","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z","deleted_at":null},{"id":8,"start_place":"Madinah Hotel","end_place":"Ziyarat Madinah (Masjid Quba, Qiblatain, Uhud)","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z","deleted_at":null},{"id":9,"start_place":"Makkah Hotel","end_place":"Jeddah City Tour \u0026 Corniche","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z","deleted_at":null},{"id":10,"start_place":"Makkah Hotel","end_place":"Taif Ziyarat \u0026 Cable Car","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z","deleted_at":null},{"id":11,"start_place":"Makkah Hotel","end_place":"Haramain Train Station (Rusaifah)","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z","deleted_at":null},{"id":12,"start_place":"Madinah Hotel","end_place":"Haramain Train Station (Knowledge City)","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z","deleted_at":null},{"id":13,"start_place":"Makkah Hotel","end_place":"Mina Camps (8 Dhul Hijjah)","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z","deleted_at":null},{"id":14,"start_place":"Mina Camps","end_place":"Arafat Plain (9 Dhul Hijjah)","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z","deleted_at":null},{"id":15,"start_place":"Arafat Plain","end_place":"Muzdalifah Night Stay","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z","deleted_at":null},{"id":16,"start_place":"Muzdalifah","end_place":"Mina Jamarat Stoning","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z","deleted_at":null},{"id":17,"start_place":"Karachi (KHI)","end_place":"Jeddah (JED)","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z","deleted_at":null},{"id":18,"start_place":"Karachi (KHI)","end_place":"Madinah (MED)","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z","deleted_at":null},{"id":19,"start_place":"Lahore (LHE)","end_place":"Jeddah (JED)","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z","deleted_at":null},{"id":20,"start_place":"Lahore (LHE)","end_place":"Madinah (MED)","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z","deleted_at":null},{"id":21,"start_place":"Islamabad (ISB)","end_place":"Jeddah (JED)","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z","deleted_at":null},{"id":22,"start_place":"Islamabad (ISB)","end_place":"Madinah (MED)","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z","deleted_at":null},{"id":23,"start_place":"Multan (MUX)","end_place":"Jeddah (JED)","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z","deleted_at":null},{"id":24,"start_place":"Sialkot (SKT)","end_place":"Jeddah (JED)","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z","deleted_at":null},{"id":25,"start_place":"Peshawar (PEW)","end_place":"Jeddah (JED)","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z","deleted_at":null},{"id":26,"start_place":"Quetta (UET)","end_place":"Jeddah (JED)","status":"active","created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z","deleted_at":null}];
+        const vehiclesData     = [{"id":1,"vehicle_type":"Luxury SUV (GMC Yukon)","brand_name":"GMC Yukon XL","model_year":"2024","plate_number":"4521-KSA","supplier_name":"Al-Haram VIP Transport","status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":2,"vehicle_type":"Private Car (Sedan)","brand_name":"Toyota Camry","model_year":"2023","plate_number":"9402-KSA","supplier_name":"Dua Fleet Transport","status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":3,"vehicle_type":"Family SUV (7 Seater)","brand_name":"Toyota Fortuner","model_year":"2024","plate_number":"1823-KSA","supplier_name":"Al-Wifaq Transport","status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":4,"vehicle_type":"Family MPV (7-8 Seater)","brand_name":"Hyundai Staria \/ H1","model_year":"2024","plate_number":"6109-KSA","supplier_name":"Rahhal Express Transport","status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":5,"vehicle_type":"Passenger Van (14 Seater)","brand_name":"Toyota HiAce Grandia","model_year":"2023","plate_number":"8812-KSA","supplier_name":"Makkah Coach Service","status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":6,"vehicle_type":"Mini Bus (30 Seater)","brand_name":"Toyota Coaster","model_year":"2024","plate_number":"3190-KSA","supplier_name":"Al-Qaid Group Transport","status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":7,"vehicle_type":"VIP Coach Bus (49 Seater)","brand_name":"Mercedes-Benz Travego","model_year":"2024","plate_number":"7724-KSA","supplier_name":"SAPTCO VIP Fleet","status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"},{"id":8,"vehicle_type":"Standard Coach (50 Seater)","brand_name":"Yutong High Decker","model_year":"2023","plate_number":"5541-KSA","supplier_name":"Dabbab Transport Syndicate","status":"active","deleted_at":null,"created_at":"2026-11-04T10:49:46.000000Z","updated_at":"2026-11-04T10:49:46.000000Z"}];
+        const existingVisas    = [{"id":11,"booking_id":1,"passport_number":"Pass099","given_name":"Arsal Ali","date_of_birth":null,"company":null,"supplier_id":1,"currency":"SAR","cost_roe":"75.0000","sale_roe":"76.0000","roe":"75.0000","send_to":null,"booking_date":"2026-07-02","option_date":null,"status":"pending","cost_rate":"350.00","cost_amount":"26250.00","selling_rate":"410.00","selling_amount":"31160.00","visa_attachment":null,"voucher_no":"VIS-2026-00001-1","created_at":"2026-11-05T07:58:51.000000Z","updated_at":"2026-11-05T07:58:51.000000Z","supplier":{"id":1,"name":"Polani","company_name":"DUA Travel","service_type":"all","contact_person":"Ahmed","phone":null,"email":null,"address":null,"city":null,"country":"Saudi Arabia","opening_balance":"0.00","opening_balance_pkr":"0.00","opening_balance_sar":"0.00","opening_balance_pkr_type":"credit","opening_balance_sar_type":"credit","opening_balance_roe":"75.0000","status":"active","deleted_at":null,"created_at":"2026-11-04T11:02:39.000000Z","updated_at":"2026-11-04T11:02:39.000000Z"}},{"id":12,"booking_id":1,"passport_number":"2144124","given_name":"Mubbashir Malik","date_of_birth":null,"company":null,"supplier_id":1,"currency":"SAR","cost_roe":"75.0000","sale_roe":"76.0000","roe":"75.0000","send_to":null,"booking_date":"2026-07-02","option_date":null,"status":"pending","cost_rate":"350.00","cost_amount":"26250.00","selling_rate":"410.00","selling_amount":"31160.00","visa_attachment":null,"voucher_no":"VIS-2026-00001-2","created_at":"2026-11-05T07:58:51.000000Z","updated_at":"2026-11-05T07:58:51.000000Z","supplier":{"id":1,"name":"Polani","company_name":"DUA Travel","service_type":"all","contact_person":"Ahmed","phone":null,"email":null,"address":null,"city":null,"country":"Saudi Arabia","opening_balance":"0.00","opening_balance_pkr":"0.00","opening_balance_sar":"0.00","opening_balance_pkr_type":"credit","opening_balance_sar_type":"credit","opening_balance_roe":"75.0000","status":"active","deleted_at":null,"created_at":"2026-11-04T11:02:39.000000Z","updated_at":"2026-11-04T11:02:39.000000Z"}}];
+        const existingPersons  = [{"id":11,"booking_id":1,"full_name":"Arsal Ali","pax_type":"adult","haji_id":null,"hb_number":null,"surname":"Arsal","given_name":"Ali","father_name":null,"dob":null,"gender":"male","city":"karachi","blood_group":null,"passport_number":"Pass099","flight_ticket":"124273","flight_cost":"70000.00","flight_sell":"82000.00","flight_supplier_id":1,"return_flight_supplier_id":1,"flight_pnr":"234123","flight_date":"2026-11-04","flight_time":"17:09:00","trip_type":"round_trip","departure_ticket":"124273","departure_cost":"45000.00","departure_sell":"50000.00","return_ticket":"789879","return_cost":"25000.00","return_sell":"32000.00","room_number":null,"room_type":null,"hotel_name":null,"location":"makkah","room_gender":"Any","cnic":null,"phone":null,"cnic_front":null,"cnic_back":null,"passport_photo":null,"photo":null,"medical_certificate":null,"nominee_name":null,"nominee_relation":null,"nominee_cnic":null,"nominee_mobile":null,"created_at":"2026-11-05T07:58:51.000000Z","updated_at":"2026-11-05T07:58:51.000000Z"},{"id":12,"booking_id":1,"full_name":"Mubbashir Malik","pax_type":"adult","haji_id":null,"hb_number":null,"surname":"Mubbashir","given_name":"Malik","father_name":null,"dob":null,"gender":"male","city":"karachi","blood_group":null,"passport_number":"2144124","flight_ticket":"5646","flight_cost":"70000.00","flight_sell":"82000.00","flight_supplier_id":1,"return_flight_supplier_id":1,"flight_pnr":"234123","flight_date":"2026-11-04","flight_time":"17:09:00","trip_type":"round_trip","departure_ticket":"5646","departure_cost":"45000.00","departure_sell":"50000.00","return_ticket":"241244","return_cost":"25000.00","return_sell":"32000.00","room_number":null,"room_type":null,"hotel_name":null,"location":"makkah","room_gender":"Any","cnic":null,"phone":null,"cnic_front":null,"cnic_back":null,"passport_photo":null,"photo":null,"medical_certificate":null,"nominee_name":null,"nominee_relation":null,"nominee_cnic":null,"nominee_mobile":null,"created_at":"2026-11-05T07:58:51.000000Z","updated_at":"2026-11-05T07:58:51.000000Z"}];
+        const existingBooking  = {"id":1,"client_id":1,"haji_id":null,"company_id":null,"booking_for":"client","package_id":null,"package_type":"umrah","booking_category":"umrah","package_year":"2026","currency":"PKR","booking_date":"2026-11-04","given_name":null,"sur_name":null,"passport_number":"Pass099","room_number":null,"cnic":"42401-4563546-9","no_of_pax":3,"adults_count":2,"children_count":0,"infants_count":0,"care_of":"client","voucher_number":"BK-2026-00001","flight_voucher_no":"FLT-2026-00001","hotel_voucher_no":"HTL-2026-00001","transport_voucher_no":"TRN-2026-00001","visa_voucher_no":"VIS-2026-00001","card_number":null,"phone":"+15243914715","emergency_phone":null,"cnic_front":null,"cnic_back":null,"passport_photo":null,"photo":null,"medical_certificate":null,"nominee_name":null,"nominee_relation":null,"nominee_cnic":null,"nominee_mobile":null,"departure_date":"2026-11-04","departure_flight":"PK-301","departure_time":"17:09:00","flight_time_format":"12","departure_airline":"Pakistan International Airlines","departure_pnr":"234123","arrival_date":"2026-11-18","arrival_flight":"241","arrival_time":"19:30:00","arrival_airline":"Saudia (Saudi Arabian Airlines)","arrival_pnr":"25415","flight_supplier_id":1,"return_flight_supplier_id":1,"flight_booking_date":"2026-08-01","flight_option_date":null,"flight_currency":"PKR","flight_cost_roe":"1.0000","flight_sale_roe":"1.0000","flight_roe":"1.0000","flight_attachment":null,"visa_passport":null,"visa_given_name":null,"visa_sur_name":null,"visa_dob":null,"visa_company":null,"visa_send_to":null,"package_name":null,"package_cost":"0.00","visa_charges":"62320.00","flight_charges":"218666.67","transport_charges":"9000.00","hotel_charges":"114000.00","flight_cost_rate":"186666.67","flight_cost":"186666.67","flight_selling_rate":"218666.67","flight_adult_cost":"0.00","flight_adult_sell":"0.00","flight_child_cost":"0.00","flight_child_sell":"0.00","flight_infant_cost":"0.00","flight_infant_sell":"0.00","other_charges":"0.00","discount":"0.00","additional_services_detail":null,"additional_services_amount":"0.00","additional_services_cost":"0.00","total_amount":"403986.67","total_received":"0.00","balance":"403986.67","status":"pending","agreement_signature":null,"deleted_at":null,"created_at":"2026-11-04T11:21:48.000000Z","updated_at":"2026-11-05T07:58:51.000000Z","package":null,"persons":[{"id":11,"booking_id":1,"full_name":"Arsal Ali","pax_type":"adult","haji_id":null,"hb_number":null,"surname":"Arsal","given_name":"Ali","father_name":null,"dob":null,"gender":"male","city":"karachi","blood_group":null,"passport_number":"Pass099","flight_ticket":"124273","flight_cost":"70000.00","flight_sell":"82000.00","flight_supplier_id":1,"return_flight_supplier_id":1,"flight_pnr":"234123","flight_date":"2026-11-04","flight_time":"17:09:00","trip_type":"round_trip","departure_ticket":"124273","departure_cost":"45000.00","departure_sell":"50000.00","return_ticket":"789879","return_cost":"25000.00","return_sell":"32000.00","room_number":null,"room_type":null,"hotel_name":null,"location":"makkah","room_gender":"Any","cnic":null,"phone":null,"cnic_front":null,"cnic_back":null,"passport_photo":null,"photo":null,"medical_certificate":null,"nominee_name":null,"nominee_relation":null,"nominee_cnic":null,"nominee_mobile":null,"created_at":"2026-11-05T07:58:51.000000Z","updated_at":"2026-11-05T07:58:51.000000Z"},{"id":12,"booking_id":1,"full_name":"Mubbashir Malik","pax_type":"adult","haji_id":null,"hb_number":null,"surname":"Mubbashir","given_name":"Malik","father_name":null,"dob":null,"gender":"male","city":"karachi","blood_group":null,"passport_number":"2144124","flight_ticket":"5646","flight_cost":"70000.00","flight_sell":"82000.00","flight_supplier_id":1,"return_flight_supplier_id":1,"flight_pnr":"234123","flight_date":"2026-11-04","flight_time":"17:09:00","trip_type":"round_trip","departure_ticket":"5646","departure_cost":"45000.00","departure_sell":"50000.00","return_ticket":"241244","return_cost":"25000.00","return_sell":"32000.00","room_number":null,"room_type":null,"hotel_name":null,"location":"makkah","room_gender":"Any","cnic":null,"phone":null,"cnic_front":null,"cnic_back":null,"passport_photo":null,"photo":null,"medical_certificate":null,"nominee_name":null,"nominee_relation":null,"nominee_cnic":null,"nominee_mobile":null,"created_at":"2026-11-05T07:58:51.000000Z","updated_at":"2026-11-05T07:58:51.000000Z"}],"hotels":[{"id":11,"booking_id":1,"location":"makkah","hotel_name":"Al Shohada Hotel Makkah","supplier_id":1,"currency":"SAR","cost_roe":"75.0000","sale_roe":"76.0000","roe":"75.0000","no_of_nights":5,"check_in":"2026-11-04","check_out":"2026-11-09","option_date":"2026-11-04","booking_date":"2026-10-01","room_type":"double","no_of_rooms":1,"room_number":null,"meal_plan":"BB","room_view":"Standard View","gender":"Any","cost_per_night":"120.00","cost_amount":"45000.00","selling_per_night":"150.00","selling_amount":"57000.00","person_rates":[{"name":"Arsal Ali","cost_per_night":"40.00","total_cost":"15000.00","selling_per_night":"50.00","total_selling":"19000.00"},{"name":"Mubbashir Malik","cost_per_night":"40.00","total_cost":"15000.00","selling_per_night":"50.00","total_selling":"19000.00"},{"name":"Passenger 3","cost_per_night":"40.00","total_cost":"15000.00","selling_per_night":"50.00","total_selling":"19000.00"}],"hotel_voucher":null,"voucher_no":"HTL-2026-00001-1","additional_rooms":null,"created_at":"2026-11-05T07:58:51.000000Z","updated_at":"2026-11-05T07:58:51.000000Z","supplier":{"id":1,"name":"Polani","company_name":"DUA Travel","service_type":"all","contact_person":"Ahmed","phone":null,"email":null,"address":null,"city":null,"country":"Saudi Arabia","opening_balance":"0.00","opening_balance_pkr":"0.00","opening_balance_sar":"0.00","opening_balance_pkr_type":"credit","opening_balance_sar_type":"credit","opening_balance_roe":"75.0000","status":"active","deleted_at":null,"created_at":"2026-11-04T11:02:39.000000Z","updated_at":"2026-11-04T11:02:39.000000Z"}},{"id":12,"booking_id":1,"location":"madinah","hotel_name":"Dar Al Taqwa Hotel Madinah","supplier_id":1,"currency":"SAR","cost_roe":"75.0000","sale_roe":"76.0000","roe":"75.0000","no_of_nights":5,"check_in":"2026-11-10","check_out":"2026-11-15","option_date":"2026-11-03","booking_date":"2026-10-01","room_type":"double","no_of_rooms":1,"room_number":null,"meal_plan":"BB","room_view":"Standard View","gender":"Any","cost_per_night":"120.00","cost_amount":"45000.00","selling_per_night":"150.00","selling_amount":"57000.00","person_rates":[{"name":"Arsal Ali","cost_per_night":"40.00","total_cost":"15000.00","selling_per_night":"50.00","total_selling":"19000.00"},{"name":"Mubbashir Malik","cost_per_night":"40.00","total_cost":"15000.00","selling_per_night":"50.00","total_selling":"19000.00"},{"name":"Passenger 3","cost_per_night":"40.00","total_cost":"15000.00","selling_per_night":"50.00","total_selling":"19000.00"}],"hotel_voucher":null,"voucher_no":"HTL-2026-00001-2","additional_rooms":null,"created_at":"2026-11-05T07:58:51.000000Z","updated_at":"2026-11-05T07:58:51.000000Z","supplier":{"id":1,"name":"Polani","company_name":"DUA Travel","service_type":"all","contact_person":"Ahmed","phone":null,"email":null,"address":null,"city":null,"country":"Saudi Arabia","opening_balance":"0.00","opening_balance_pkr":"0.00","opening_balance_sar":"0.00","opening_balance_pkr_type":"credit","opening_balance_sar_type":"credit","opening_balance_roe":"75.0000","status":"active","deleted_at":null,"created_at":"2026-11-04T11:02:39.000000Z","updated_at":"2026-11-04T11:02:39.000000Z"}}],"transports":[{"id":6,"booking_id":1,"supplier_id":1,"currency":"SAR","cost_roe":"75.0000","sale_roe":"75.0000","roe":"75.0000","route":"Madinah Hotel TO Makkah Hotel","vehicle":"Hyundai Staria \/ H1","quantity":1,"status":"CONFIRMED","pax":1,"travel_date":"2026-11-04T00:00:00.000000Z","travel_time":"17:09:00","flight_no":"PK-301","pickup_from":"JED APT","destination":"MAK HTL","brn":null,"airline":"Pakistan International Airlines","transport_type":"private_car","booking_date":"2026-12-03T00:00:00.000000Z","option_date":null,"cost_rate":"100.00","cost_amount":"7500.00","selling_rate":"120.00","selling_amount":"9000.00","notes":"test","transport_ticket":null,"voucher_no":"TRN-2026-00001-1","created_at":"2026-11-05T07:58:51.000000Z","updated_at":"2026-11-05T07:58:51.000000Z","supplier":{"id":1,"name":"Polani","company_name":"DUA Travel","service_type":"all","contact_person":"Ahmed","phone":null,"email":null,"address":null,"city":null,"country":"Saudi Arabia","opening_balance":"0.00","opening_balance_pkr":"0.00","opening_balance_sar":"0.00","opening_balance_pkr_type":"credit","opening_balance_sar_type":"credit","opening_balance_roe":"75.0000","status":"active","deleted_at":null,"created_at":"2026-11-04T11:02:39.000000Z","updated_at":"2026-11-04T11:02:39.000000Z"}}],"visas":[{"id":11,"booking_id":1,"passport_number":"Pass099","given_name":"Arsal Ali","date_of_birth":null,"company":null,"supplier_id":1,"currency":"SAR","cost_roe":"75.0000","sale_roe":"76.0000","roe":"75.0000","send_to":null,"booking_date":"2026-07-02","option_date":null,"status":"pending","cost_rate":"350.00","cost_amount":"26250.00","selling_rate":"410.00","selling_amount":"31160.00","visa_attachment":null,"voucher_no":"VIS-2026-00001-1","created_at":"2026-11-05T07:58:51.000000Z","updated_at":"2026-11-05T07:58:51.000000Z","supplier":{"id":1,"name":"Polani","company_name":"DUA Travel","service_type":"all","contact_person":"Ahmed","phone":null,"email":null,"address":null,"city":null,"country":"Saudi Arabia","opening_balance":"0.00","opening_balance_pkr":"0.00","opening_balance_sar":"0.00","opening_balance_pkr_type":"credit","opening_balance_sar_type":"credit","opening_balance_roe":"75.0000","status":"active","deleted_at":null,"created_at":"2026-11-04T11:02:39.000000Z","updated_at":"2026-11-04T11:02:39.000000Z"}},{"id":12,"booking_id":1,"passport_number":"2144124","given_name":"Mubbashir Malik","date_of_birth":null,"company":null,"supplier_id":1,"currency":"SAR","cost_roe":"75.0000","sale_roe":"76.0000","roe":"75.0000","send_to":null,"booking_date":"2026-07-02","option_date":null,"status":"pending","cost_rate":"350.00","cost_amount":"26250.00","selling_rate":"410.00","selling_amount":"31160.00","visa_attachment":null,"voucher_no":"VIS-2026-00001-2","created_at":"2026-11-05T07:58:51.000000Z","updated_at":"2026-11-05T07:58:51.000000Z","supplier":{"id":1,"name":"Polani","company_name":"DUA Travel","service_type":"all","contact_person":"Ahmed","phone":null,"email":null,"address":null,"city":null,"country":"Saudi Arabia","opening_balance":"0.00","opening_balance_pkr":"0.00","opening_balance_sar":"0.00","opening_balance_pkr_type":"credit","opening_balance_sar_type":"credit","opening_balance_roe":"75.0000","status":"active","deleted_at":null,"created_at":"2026-11-04T11:02:39.000000Z","updated_at":"2026-11-04T11:02:39.000000Z"}}],"flight_supplier":{"id":1,"name":"Polani","company_name":"DUA Travel","service_type":"all","contact_person":"Ahmed","phone":null,"email":null,"address":null,"city":null,"country":"Saudi Arabia","opening_balance":"0.00","opening_balance_pkr":"0.00","opening_balance_sar":"0.00","opening_balance_pkr_type":"credit","opening_balance_sar_type":"credit","opening_balance_roe":"75.0000","status":"active","deleted_at":null,"created_at":"2026-11-04T11:02:39.000000Z","updated_at":"2026-11-04T11:02:39.000000Z"},"client":{"id":1,"lead_id":null,"package_id":null,"package_type":"umrah","name":"Arsal Ali","company_name":"DUA Travel","passport_number":"Pass099","passport_document":null,"cnic":"42401-4563546-9","cnic_document":null,"phone":"+15243914715","email":"arsalali1234566@gmail.com","type":"client","status":"active","opening_balance_pkr":"0.00","opening_balance_sar":"0.00","opening_balance_pkr_type":"debit","opening_balance_sar_type":"debit","opening_balance_roe":"75.0000","deleted_at":null,"created_at":"2026-11-04T11:01:45.000000Z","updated_at":"2026-11-04T11:01:45.000000Z"},"company":null};
+        const transactionsPaid = 0;
+
+        const suppliersOptions = `<option value="">-- Select Supplier --</option>` +
+            (typeof suppliersData !== 'undefined' ? suppliersData.map(s => `<option value="${s.id}">${s.name}</option>`).join('') : '');
+
+        const hotelsOptions = `<option value="">Select Hotel</option>` +
+            (typeof hotelsData !== 'undefined' ? hotelsData.map(h => `<option value="${h.name}">${h.name} (${h.city || h.place || ''})</option>`).join('') : '');
+
+        function buildRoutesOptions() {
+            return `<option value="">-- Select Route --</option>` +
+                (Array.isArray(routesData) ? routesData.map(r => {
+                    const val = (r.start_place && r.end_place) ? `${r.start_place} TO ${r.end_place}` : (r.formatted_route || '');
+                    const txt = (r.start_place && r.end_place) ? `${r.start_place} → ${r.end_place}` : (r.formatted_route || '');
+                    return `<option value="${val}">${txt}</option>`;
+                }).join('') : '');
+        }
+        let routesOptions = buildRoutesOptions();
+
+        function buildAirlinesOptions() {
+            return `<option value="">-- Select Airline (Optional) --</option>` +
+                (Array.isArray(airlinesData) ? airlinesData.map(a => `<option value="${a.name}">${a.name}${a.iata_code ? ' (' + a.iata_code + ')' : ''}</option>`).join('') : '');
+        }
+        let airlinesOptions = buildAirlinesOptions();
+
+        function buildVehiclesOptions() {
+            return `<option value="">-- Select Vehicle --</option>` +
+                (Array.isArray(vehiclesData) ? vehiclesData.map(v => {
+                    const val = v.brand_name || v.vehicle_type || '';
+                    const label = v.vehicle_type + (v.brand_name ? ` (${v.brand_name})` : '');
+                    return `<option value="${val}">${label}</option>`;
+                }).join('') : '');
+        }
+        let vehiclesOptions  = buildVehiclesOptions();
+
+        function updatePersonFullName(idx) {
+            const sur   = document.getElementById(`person_surname_${idx}`)?.value || '';
+            const given = document.getElementById(`person_given_name_${idx}`)?.value || '';
+            const combined = (sur + ' ' + given).trim();
+            const el = document.getElementById(`person_name_${idx}`);
+            if (el) el.value = combined;
+
+            // Sync with flight table passenger name
+            const flNameDisp = document.querySelector(`#flight_person_row_${idx} .person-flight-name-disp`);
+            const flNameInput = document.querySelector(`#flight_person_row_${idx} .person-flight-name`);
+            if (flNameDisp && combined) flNameDisp.textContent = combined;
+            if (flNameInput && combined) flNameInput.value = combined;
+
+            // Sync with all hotel tables passenger names
+            document.querySelectorAll(`.hotel-person-row[data-person-idx="${idx}"]`).forEach(pRow => {
+                const hNameDisp = pRow.querySelector('.person-hotel-name-disp');
+                const hNameInput = pRow.querySelector('.person-hotel-name');
+                if (hNameDisp && combined) hNameDisp.textContent = combined;
+                if (hNameInput && combined) hNameInput.value = combined;
+            });
+        }
+
+        // Point 12: Dropdown Auto-Refresh for Clients
+        async function refreshClientsDropdown(showNotification = true) {
+            try {
+                const clientSelect = document.getElementById('clientSelect');
+                const curVal = clientSelect ? clientSelect.value : '';
+                const res = await fetch('http://localhost/admin/client/json-list');
+                const data = await res.json();
+                if (Array.isArray(data)) {
+                    if (clientSelect) {
+                        let html = '<option value="">-- Select Client --</option>';
+                        data.forEach(c => {
+                            const compStr = c.company_name ? ` (${c.company_name})` : '';
+                            const phoneCnic = c.phone || c.cnic || '';
+                            const isSel = (c.id == curVal) ? 'selected' : '';
+                            html += `<option value="${c.id}" data-name="${c.name}" data-phone="${c.phone || ''}" data-cnic="${c.cnic || ''}" data-passport="${c.passport_number || ''}" data-company="${c.company_name || ''}" ${isSel}>${c.name}${compStr} - ${phoneCnic}</option>`;
+                        });
+                        clientSelect.innerHTML = html;
+                        if (curVal) clientSelect.value = curVal;
+                        if (typeof $ !== 'undefined' && $(clientSelect).data('select2')) {
+                            $(clientSelect).trigger('change.select2');
+                        }
+                    }
+                    if (showNotification) {
+                        showAutoRefreshToast('Clients dropdown refreshed without losing data!');
+                    }
+                }
+            } catch(e) {
+                console.error('Error refreshing clients:', e);
+            }
+        }
+
+        // Point 12: Dropdown Auto-Refresh for Packages
+        async function refreshPackagesDropdown(showNotification = true) {
+            try {
+                const pkgSelect = document.getElementById('packageSelect');
+                const curVal = pkgSelect ? pkgSelect.value : '';
+                const res = await fetch('http://localhost/admin/package/json-list');
+                const data = await res.json();
+                if (Array.isArray(data)) {
+                    if (pkgSelect) {
+                        let html = '<option value="">-- Select Package --</option>';
+                        data.forEach(p => {
+                            const codeStr = p.code ? ` (${p.code})` : '';
+                            const isSel = (p.id == curVal) ? 'selected' : '';
+                            html += `<option value="${p.id}" ${isSel}>${p.name}${codeStr}</option>`;
+                        });
+                        pkgSelect.innerHTML = html;
+                        if (curVal) pkgSelect.value = curVal;
+                    }
+                    if (showNotification) {
+                        showAutoRefreshToast('Packages dropdown refreshed without losing data!');
+                    }
+                }
+            } catch(e) {
+                console.error('Error refreshing packages:', e);
+            }
+        }
+
+        function showAutoRefreshToast(msg) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success alert-dismissible fade show p-2 px-3 mb-2 shadow position-fixed top-0 end-0 m-3';
+            alertDiv.style.zIndex = '99999';
+            alertDiv.innerHTML = `<i class="mdi mdi-check-circle me-1"></i> <strong>Refreshed!</strong> ${msg} <button type="button" class="btn-close p-2" data-bs-dismiss="alert"></button>`;
+            document.body.appendChild(alertDiv);
+            setTimeout(() => alertDiv.remove(), 3500);
+        }
+
+        function handleDefaultVisaCurrencyChange(val) {
+            const costRoeInput = document.getElementById('default_visa_cost_roe');
+            const saleRoeInput = document.getElementById('default_visa_sale_roe');
+            const currLabels = document.querySelectorAll('.def-visa-curr-label');
+
+            currLabels.forEach(el => el.textContent = val);
+
+            if (val === 'PKR') {
+                if (costRoeInput) { costRoeInput.value = '1.0000'; costRoeInput.readOnly = true; }
+                if (saleRoeInput) { saleRoeInput.value = '1.0000'; saleRoeInput.readOnly = true; }
+            } else {
+                if (costRoeInput) {
+                    costRoeInput.readOnly = false;
+                    if (val === 'SAR') costRoeInput.value = '75.0000';
+                    else if (val === 'MYR') costRoeInput.value = '63.0000';
+                    else if (val === 'USD') costRoeInput.value = '278.0000';
+                    else if (val === 'AED') costRoeInput.value = '76.0000';
+                }
+                if (saleRoeInput) {
+                    saleRoeInput.readOnly = false;
+                    if (val === 'SAR') saleRoeInput.value = '76.0000';
+                    else if (val === 'MYR') saleRoeInput.value = '64.0000';
+                    else if (val === 'USD') saleRoeInput.value = '280.0000';
+                    else if (val === 'AED') saleRoeInput.value = '77.0000';
+                }
+            }
+        }
+
+        // Point 14: Apply Default Visa to All Passengers
+        function applyDefaultVisaToAll() {
+            const defSup = document.getElementById('default_visa_supplier_id')?.value;
+            const defCurr = document.getElementById('default_visa_currency')?.value || 'SAR';
+            const isPkr = (defCurr === 'PKR');
+            const defCostRoe = isPkr ? '1.0000' : (document.getElementById('default_visa_cost_roe')?.value || '75.0000');
+            const defSaleRoe = isPkr ? '1.0000' : (document.getElementById('default_visa_sale_roe')?.value || '76.0000');
+            const defCost = document.getElementById('default_visa_cost_rate')?.value;
+            const defSell = document.getElementById('default_visa_sell_rate')?.value;
+
+            document.querySelectorAll('#visasList .visa-card').forEach(card => {
+                if (defSup) {
+                    const supSel = card.querySelector('select[name*="[supplier_id]"]');
+                    if (supSel) supSel.value = defSup;
+                }
+
+                const currSel = card.querySelector('.visa-currency') || card.querySelector('select[name*="[currency]"]');
+                if (currSel) {
+                    currSel.value = defCurr;
+                }
+
+                const costRoeInput = card.querySelector('.visa-cost-roe');
+                const saleRoeInput = card.querySelector('.visa-sale-roe');
+                const legacyRoe = card.querySelector('.visa-roe');
+
+                if (isPkr) {
+                    if (costRoeInput) { costRoeInput.value = '1.0000'; costRoeInput.readOnly = true; }
+                    if (saleRoeInput) { saleRoeInput.value = '1.0000'; saleRoeInput.readOnly = true; }
+                    if (legacyRoe) legacyRoe.value = '1.0000';
+                } else {
+                    if (costRoeInput) {
+                        costRoeInput.readOnly = false;
+                        if (defCostRoe !== '' && defCostRoe !== undefined) costRoeInput.value = defCostRoe;
+                    }
+                    if (saleRoeInput) {
+                        saleRoeInput.readOnly = false;
+                        if (defSaleRoe !== '' && defSaleRoe !== undefined) saleRoeInput.value = defSaleRoe;
+                    }
+                    if (legacyRoe && defCostRoe !== '' && defCostRoe !== undefined) legacyRoe.value = defCostRoe;
+                }
+
+                if (defCost !== '' && defCost !== undefined) {
+                    const cInp = card.querySelector('.visa-cost-rate');
+                    if (cInp) cInp.value = defCost;
+                }
+                if (defSell !== '' && defSell !== undefined) {
+                    const sInp = card.querySelector('.visa-sell-rate');
+                    if (sInp) sInp.value = defSell;
+                }
+
+                card.querySelectorAll('.visa-curr-label').forEach(el => el.textContent = defCurr);
+                card.querySelectorAll('.visa-curr-prefix').forEach(el => el.textContent = `1 ${defCurr} =`);
+                card.querySelectorAll('.visa-curr-name').forEach(el => el.textContent = `${defCurr}:`);
+
+                if (typeof calculateVisaRow === 'function') {
+                    calculateVisaRow(card);
+                }
+            });
+            if (typeof calcTotal === 'function') {
+                calcTotal();
+            }
+            showAutoRefreshToast('Default visa supplier, currency, ROE, and rates applied to all passengers!');
+        }
+
+        // Point 4: Live Unique Ticket Check
+        function checkUniqueTicketNumbers() {
+            const inputs = document.querySelectorAll('.person-flight-ticket');
+            const seen = {};
+            inputs.forEach(inp => {
+                inp.classList.remove('is-invalid');
+                const p = inp.parentElement;
+                if (p) {
+                    const existingWarn = p.querySelector('.ticket-dup-warn');
+                    if (existingWarn) existingWarn.remove();
+                }
+            });
+
+            inputs.forEach(inp => {
+                const val = inp.value.trim().toLowerCase();
+                if (val) {
+                    if (seen[val]) {
+                        inp.classList.add('is-invalid');
+                        seen[val].classList.add('is-invalid');
+                        const p = inp.parentElement;
+                        if (p && !p.querySelector('.ticket-dup-warn')) {
+                            const msg = document.createElement('small');
+                            msg.className = 'text-danger d-block ticket-dup-warn fs-11 fw-semibold mt-1';
+                            msg.innerHTML = '<i class="mdi mdi-alert-circle me-1"></i>Duplicate ticket!';
+                            p.appendChild(msg);
+                        }
+                    } else {
+                        seen[val] = inp;
+                    }
+                }
+            });
+        }
+
+        // Client Select Auto-population (Robust for Select2 & Native Events)
+        function populateClientDetails(target) {
+            const el = (target instanceof HTMLElement) ? target : document.getElementById('clientSelect');
+            if (!el) return;
+            const clientId = parseInt(el.value);
+            if (!clientId) return;
+
+            let client = (typeof clientsData !== 'undefined' && Array.isArray(clientsData)) ? clientsData.find(c => c.id == clientId) : null;
+            const selOpt = el.querySelector(`option[value="${clientId}"]`) || (el.options && el.selectedIndex >= 0 ? el.options[el.selectedIndex] : null);
+
+            const passVal  = (client && client.passport_number) ? client.passport_number : (selOpt ? (selOpt.getAttribute('data-passport') || '') : '');
+            const cnicVal  = (client && client.cnic) ? client.cnic : (selOpt ? (selOpt.getAttribute('data-cnic') || '') : '');
+            const phoneVal = (client && client.phone) ? client.phone : (selOpt ? (selOpt.getAttribute('data-phone') || '') : '');
+            const nameVal  = (client && client.name) ? client.name : (selOpt ? (selOpt.getAttribute('data-name') || '') : '');
+
+            const fillPass  = document.getElementById('fill_passport');
+            const fillCnic  = document.getElementById('fill_cnic');
+            const fillPhone = document.getElementById('fill_phone');
+
+            if (fillPass && passVal) fillPass.value = passVal;
+            if (fillCnic && cnicVal) fillCnic.value = cnicVal;
+            if (fillPhone && phoneVal) fillPhone.value = phoneVal;
+            const fillEmerg = document.getElementById('fill_emergency_phone') || document.querySelector('input[name="emergency_phone"]');
+            const emergVal  = (client && client.emergency_phone) ? client.emergency_phone : (selOpt ? (selOpt.getAttribute('data-emergency') || '') : '');
+            if (fillEmerg && emergVal) fillEmerg.value = emergVal;
+
+            // Auto-fill Primary Passenger (idx 0)
+            const p0Name = document.getElementById('person_name_0');
+            const p0Pass = document.getElementById('person_passport_0');
+            const p0Cnic = document.getElementById('person_cnic_0');
+
+            if (p0Name && (!p0Name.value || p0Name.value === '')) p0Name.value = nameVal;
+            if (p0Pass && (!p0Pass.value || p0Pass.value === '')) p0Pass.value = passVal;
+            if (p0Cnic && (!p0Cnic.value || p0Cnic.value === '')) p0Cnic.value = cnicVal;
+
+            const parts = (nameVal || '').trim().split(' ');
+            if (parts.length > 1) {
+                const s0 = document.getElementById('person_surname_0');
+                const g0 = document.getElementById('person_given_name_0');
+                if (s0 && !s0.value) s0.value = parts[0];
+                if (g0 && !g0.value) g0.value = parts.slice(1).join(' ');
+            } else if (nameVal) {
+                const g0 = document.getElementById('person_given_name_0');
+                if (g0 && !g0.value) g0.value = nameVal;
+            }
+
+            // Immediately update flight row 0
+            const fl0NameDisp = document.querySelector('#flight_person_row_0 .person-flight-name-disp');
+            const fl0NameInput = document.querySelector('#flight_person_row_0 .person-flight-name');
+            const fl0PassInput = document.querySelector('#flight_person_row_0 .person-flight-passport');
+            if (fl0NameDisp && nameVal) fl0NameDisp.textContent = nameVal;
+            if (fl0NameInput && nameVal) fl0NameInput.value = nameVal;
+            if (fl0PassInput && passVal) fl0PassInput.value = passVal;
+
+            if (typeof syncFlightPersons === 'function') syncFlightPersons();
+            if (typeof syncAllHotelPersons === 'function') syncAllHotelPersons();
+        }
+
+        $(document).on('change select2:select select2:clear', '#clientSelect', function() {
+            populateClientDetails(this);
+        });
+        document.getElementById('clientSelect')?.addEventListener('change', function() {
+            populateClientDetails(this);
+        });
+
+        // Trigger on load if client is already pre-selected
+        $(function() {
+            const initClientEl = document.getElementById('clientSelect');
+            if (initClientEl && initClientEl.value) {
+                populateClientDetails(initClientEl);
+            }
+        });
+
+        // Two-way live sync between Persons tab and Flight tab & Hotel tab
+        $(document).on('input change', 'input[id^="person_surname_"], input[id^="person_given_name_"]', function() {
+            const idx = this.id.split('_').pop();
+            updatePersonFullName(idx);
+        });
+
+        $(document).on('input change', 'input[id^="person_name_"]', function() {
+            const idx = this.id.split('_').pop();
+            const val = this.value.trim();
+            const flNameDisp = document.querySelector(`#flight_person_row_${idx} .person-flight-name-disp`);
+            const flNameInput = document.querySelector(`#flight_person_row_${idx} .person-flight-name`);
+            if (flNameDisp) flNameDisp.textContent = val || `Passenger ${parseInt(idx) + 1}`;
+            if (flNameInput) flNameInput.value = val;
+
+            document.querySelectorAll(`.hotel-person-row[data-person-idx="${idx}"]`).forEach(pRow => {
+                const hNameDisp = pRow.querySelector('.person-hotel-name-disp');
+                const hNameInput = pRow.querySelector('.person-hotel-name');
+                if (hNameDisp) hNameDisp.textContent = val || `Passenger ${parseInt(idx) + 1}`;
+                if (hNameInput) hNameInput.value = val;
+            });
+        });
+
+        $(document).on('input change', 'input[id^="person_passport_"]', function() {
+            const idx = this.id.split('_').pop();
+            const passVal = this.value.trim();
+            const flPassInput = document.querySelector(`#flight_person_row_${idx} .person-flight-passport`);
+            if (flPassInput) flPassInput.value = passVal;
+
+            if (idx === '0') {
+                const fillPass = document.getElementById('fill_passport');
+                if (fillPass) fillPass.value = passVal;
+            }
+        });
+
+        $(document).on('input change', '.person-flight-passport', function() {
+            const row = this.closest('.flight-person-row');
+            if (!row) return;
+            const idx = row.getAttribute('data-idx');
+            const passVal = this.value.trim();
+            const pPass = document.getElementById(`person_passport_${idx}`);
+            if (pPass) pPass.value = passVal;
+
+            if (idx === '0') {
+                const fillPass = document.getElementById('fill_passport');
+                if (fillPass) fillPass.value = passVal;
+            }
+        });
+
+        $(document).on('input change', '#fill_passport', function() {
+            const passVal = this.value.trim();
+            const p0Pass = document.getElementById('person_passport_0');
+            if (p0Pass) p0Pass.value = passVal;
+            const fl0Pass = document.querySelector('#flight_person_row_0 .person-flight-passport');
+            if (fl0Pass) fl0Pass.value = passVal;
+        });
+
+        function onPackageSelectChange(sel) {
+            const pkgId = parseInt(sel.value);
+            if (!pkgId) return;
+
+            const pkg = packagesData.find(p => p.id === pkgId);
+            if (!pkg) return;
+
+            const isPkgUmrah = (pkg.package_type === 'umrah' || (!pkg.package_type && document.getElementById('package_type')?.value === 'umrah'));
+
+            const pkgNameContainer = document.getElementById('package_name_container');
+            const clientBlock = document.getElementById('clientBlock');
+            const companyBlock = document.getElementById('companyBlock');
+            const bookingForInput = document.getElementById('booking_for_input');
+            const noteBlock = document.getElementById('personsBookingForNote');
+
+            if (isPkgUmrah) {
+                if (pkgNameContainer) pkgNameContainer.style.display = 'none';
+                if (clientBlock) clientBlock.style.display = '';
+                if (companyBlock) companyBlock.style.display = 'none';
+                if (bookingForInput) bookingForInput.value = 'client';
+                if (noteBlock) noteBlock.classList.add('d-none');
+            } else {
+                if (pkgNameContainer) pkgNameContainer.style.display = '';
+                if (clientBlock) clientBlock.style.display = 'none';
+                if (companyBlock) companyBlock.style.display = '';
+                if (bookingForInput) bookingForInput.value = 'company';
+                if (noteBlock) noteBlock.classList.remove('d-none');
+            }
+
+            if (document.getElementById('package_name')) {
+                document.getElementById('package_name').value = pkg.name || '';
+            }
+            if (document.getElementById('package_year') && pkg.year) {
+                document.getElementById('package_year').value = pkg.year;
+            }
+
+            const pkgCost = parseFloat(pkg.package_amount || pkg.adult_pkr || pkg.adult_sar || 0);
+            if (document.getElementById('package_cost')) {
+                document.getElementById('package_cost').value = pkgCost ? pkgCost.toFixed(2) : '0.00';
+            }
+
+            syncBookingHotelDates();
+            calcTotal();
+        }
+
+        const tabLinks = Array.from(document.querySelectorAll('#bookingTabs .nav-link'));
+
+        function activateTab(idx) {
+            if (idx < 0 || idx >= tabLinks.length) return;
+            tabLinks[idx].click();
+            const href = tabLinks[idx].getAttribute('href');
+            if (href === '#tab-flight') syncFlightPersons();
+            if (href === '#tab-transport') syncFlightDatesToTransport();
+            if (href === '#tab-visa') {
+                const pax = parseInt(document.getElementById('no_of_pax')?.value) || 1;
+                rebuildVisasList(pax);
+            }
+            if (href === '#tab-persons') {
+                const pax = parseInt(document.getElementById('no_of_pax')?.value) || 1;
+                const container = document.getElementById('personsList');
+                if (container && container.children.length === 0) rebuildPersonsList(pax);
+            }
+            if (href === '#tab-costing') {
+                calculateFlight();
+                calcTotal();
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function activateTabByHref(href) {
+            if (!href) return;
+            if (!href.startsWith('#')) href = '#' + href;
+            const link = document.querySelector(`#bookingTabs .nav-link[href="${href}"]`);
+            if (link) {
+                if (typeof bootstrap !== 'undefined' && bootstrap.Tab) {
+                    bootstrap.Tab.getOrCreateInstance(link).show();
+                } else {
+                    link.click();
+                }
+                const activeTabInput = document.getElementById('active_tab');
+                if (activeTabInput) activeTabInput.value = href;
+                if (history.replaceState) {
+                    const url = new URL(window.location);
+                    url.searchParams.set('tab', href);
+                    history.replaceState(null, '', url);
+                }
+            }
+        }
+
+        function submitBookingForm(btn, action = 'save_stay') {
+            const form = document.getElementById('bookingForm');
+            if (!form) return false;
+
+            // Set save action (save_stay or save_close)
+            const saveActionInput = document.getElementById('save_action');
+            if (saveActionInput) {
+                saveActionInput.value = action;
+            }
+
+            // Determine active tab
+            const activePane = btn?.closest('.tab-pane') || document.querySelector('.tab-pane.active') || document.querySelector('.tab-pane.show');
+            const activeHref = activePane ? ('#' + activePane.id) : (document.querySelector('#bookingTabs .nav-link.active')?.getAttribute('href') || '#tab-details');
+            const activeTabInput = document.getElementById('active_tab');
+            if (activeTabInput) {
+                activeTabInput.value = activeHref;
+            }
+
+            // 1. Client Validation
+            const clientSelect = document.getElementById('clientSelect');
+            if (!clientSelect || !clientSelect.value) {
+                activateTabByHref('#tab-details');
+                alert('Please select a Client before updating the booking.');
+                setTimeout(() => {
+                    if (typeof $ !== 'undefined' && $(clientSelect).data('select2')) {
+                        $(clientSelect).select2('open');
+                    } else if (clientSelect) {
+                        clientSelect.focus();
+                    }
+                }, 250);
+                return false;
+            }
+
+            // 2. Passengers Validation
+            const adultsInput = document.getElementById('pax_adults');
+            const paxAdults = parseInt(adultsInput?.value) || 0;
+            const paxInput = document.getElementById('no_of_pax');
+            const paxVal = parseInt(paxInput?.value) || 0;
+            if (paxVal < 1 || paxAdults < 1) {
+                activateTabByHref('#tab-details');
+                alert('Please specify at least 1 passenger.');
+                paxInput?.focus();
+                return false;
+            }
+
+            // 3. FULL SYNCHRONIZATION of all tabs before submit
+            try {
+                if (typeof updatePaxCountsFromPersons === 'function') updatePaxCountsFromPersons();
+                if (typeof syncFlightPersons === 'function') syncFlightPersons();
+                if (typeof syncAllHotelPersons === 'function') syncAllHotelPersons();
+                document.querySelectorAll('.hotel-block').forEach(r => {
+                    if (typeof calculateHotelRow === 'function') calculateHotelRow(r);
+                });
+                document.querySelectorAll('.route-block').forEach(r => {
+                    if (typeof calculateTransportRow === 'function') calculateTransportRow(r);
+                });
+                document.querySelectorAll('.visa-card').forEach(r => {
+                    if (typeof calculateVisaRow === 'function') calculateVisaRow(r);
+                });
+                if (typeof calculateFlight === 'function') calculateFlight();
+                if (typeof calcTotal === 'function') calcTotal();
+            } catch (syncErr) {
+                console.error('Error during pre-submit sync:', syncErr);
+            }
+
+            // 4. Update UI: show spinner & disable buttons
+            const submitBtns = document.querySelectorAll('.btn-save-booking, button[type="submit"]');
+            submitBtns.forEach(b => {
+                b.disabled = true;
+            });
+            if (btn) {
+                btn.innerHTML = '<i class="mdi mdi-loading mdi-spin me-1"></i> Saving...';
+            }
+
+            // 5. Submit the form
+            try {
+                HTMLFormElement.prototype.submit.call(form);
+            } catch (e) {
+                form.submit();
+            }
+            return true;
+        }
+
+        document.querySelectorAll('#bookingTabs .nav-link').forEach(link => {
+            link.addEventListener('click', function() {
+                const target = this.getAttribute('href');
+                if (target === '#tab-flight') syncFlightPersons();
+                if (target === '#tab-hotel') syncAllHotelPersons();
+                if (target === '#tab-transport') syncFlightDatesToTransport(true);
+                if (target === '#tab-visa') {
+                    const pax = parseInt(document.getElementById('no_of_pax')?.value) || 1;
+                    rebuildVisasList(pax);
+                }
+                if (target === '#tab-persons') {
+                    const pax = parseInt(document.getElementById('no_of_pax')?.value) || 1;
+                    const container = document.getElementById('personsList');
+                    if (container && container.children.length === 0) rebuildPersonsList(pax);
+                }
+                if (target === '#tab-costing') {
+                    calculateFlight();
+                    calcTotal();
+                }
+            });
+
+            link.addEventListener('shown.bs.tab', function() {
+                const target = this.getAttribute('href');
+                if (target === '#tab-flight') syncFlightPersons();
+                if (target === '#tab-hotel') syncAllHotelPersons();
+                if (target === '#tab-transport') syncFlightDatesToTransport(true);
+                const activeTabInput = document.getElementById('active_tab');
+                if (activeTabInput && target) activeTabInput.value = target;
+                if (history.replaceState) {
+                    const url = new URL(window.location);
+                    url.searchParams.set('tab', target);
+                    history.replaceState(null, '', url);
+                }
+            });
+        });
+
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.btn-next, .btn-prev');
+            if (!btn) return;
+            const cur = tabLinks.findIndex(t => t.classList.contains('active'));
+            btn.classList.contains('btn-next') ? activateTab(cur + 1) : activateTab(cur - 1);
+        });
+
+        function rebuildPersonsList(newPax) {
+            const container = document.getElementById('personsList');
+            if (!container) return;
+            const currentCount = container.querySelectorAll('.person-card').length;
+
+            if (newPax < currentCount) {
+                for (let i = currentCount - 1; i >= newPax; i--) {
+                    document.getElementById('person_card_' + i)?.remove();
+                }
+                updatePaxCountsFromPersons();
+                syncFlightPersons();
+                syncAllHotelPersons();
+                return;
+            }
+
+            for (let i = currentCount; i < newPax; i++) {
+                container.insertAdjacentHTML('beforeend', `
+                    <div class="person-card" id="person_card_${i}">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <strong class="text-primary" style="font-size:13px;">Passenger ${i + 1}</strong>
+                            <span class="badge bg-primary person-type-badge" id="person_type_badge_${i}">Adult</span>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold" style="font-size:12px;">Passenger Type <span class="text-danger">*</span></label>
+                                <select name="persons[${i}][pax_type]" id="person_pax_type_${i}" class="form-select form-select-sm person-pax-type-select" onchange="onPersonPaxTypeChange(${i}, this.value)">
+                                    <option value="adult" selected>Adult (12+ yrs)</option>
+                                    <option value="child">Child (2-11 yrs)</option>
+                                    <option value="infant">Infant (0-2 yrs)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3"><label class="form-label" style="font-size:12px;">Surname (Passport)</label>
+                                <input type="text" name="persons[${i}][surname]" id="person_surname_${i}" class="form-control form-control-sm" oninput="updatePersonFullName(${i})"></div>
+                            <div class="col-md-3"><label class="form-label" style="font-size:12px;">Given Name (Passport)</label>
+                                <input type="text" name="persons[${i}][given_name]" id="person_given_name_${i}" class="form-control form-control-sm" oninput="updatePersonFullName(${i})"></div>
+                            <div class="col-md-3"><label class="form-label" style="font-size:12px;">Full Name</label>
+                                <input type="text" name="persons[${i}][full_name]" id="person_name_${i}" class="form-control form-control-sm"></div>
+                            <div class="col-md-3"><label class="form-label" style="font-size:12px;">Passport #</label>
+                                <input type="text" name="persons[${i}][passport_number]" id="person_passport_${i}" class="form-control form-control-sm"></div>
+                            <div class="col-md-3"><label class="form-label" style="font-size:12px;">DOB</label>
+                                <input type="date" name="persons[${i}][dob]" class="form-control form-control-sm"></div>
+                            <div class="col-md-3"><label class="form-label" style="font-size:12px;">Gender</label>
+                                <select name="persons[${i}][gender]" class="form-select form-select-sm">
+                                    <option value="">-- Select --</option><option value="male">Male</option><option value="female">Female</option>
+                                </select></div>
+                            <div class="col-md-3"><label class="form-label" style="font-size:12px;">City</label>
+                                <input type="text" name="persons[${i}][city]" class="form-control form-control-sm" placeholder="e.g. Lahore / Karachi"></div>
+                        </div>
+
+                        <div class="border-top mt-3 pt-3">
+                            <strong class="text-secondary d-block mb-2" style="font-size:12px;">
+                                <i class="mdi mdi-file-document-multiple me-1"></i> Documents (Optional)
+                            </strong>
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <label class="form-label" style="font-size:11px;">Passport First Page</label>
+                                    <input type="file" name="persons[${i}][passport_photo]" class="form-control form-control-sm" accept="image/*,.pdf">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label" style="font-size:11px;">Picture of Passenger</label>
+                                    <input type="file" name="persons[${i}][photo]" class="form-control form-control-sm" accept="image/*">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label" style="font-size:11px;">Medical Fitness Certificate</label>
+                                    <input type="file" name="persons[${i}][medical_certificate]" class="form-control form-control-sm" accept="image/*,.pdf">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `);
+            }
+            updatePaxCountsFromPersons();
+            syncFlightPersons();
+            syncAllHotelPersons();
+        }
+
+        function updatePaxCountsFromPersons() {
+            let adults = 0;
+            let children = 0;
+            let infants = 0;
+
+            const paxSelects = document.querySelectorAll('.person-pax-type-select');
+            paxSelects.forEach((sel, idx) => {
+                const val = sel.value || 'adult';
+                if (val === 'child') children++;
+                else if (val === 'infant') infants++;
+                else adults++;
+
+                const badge = document.getElementById(`person_type_badge_${idx}`);
+                if (badge) {
+                    if (val === 'child') {
+                        badge.className = 'badge bg-info text-dark person-type-badge';
+                        badge.textContent = 'Child';
+                    } else if (val === 'infant') {
+                        badge.className = 'badge bg-warning text-dark person-type-badge';
+                        badge.textContent = 'Infant';
+                    } else {
+                        badge.className = 'badge bg-primary person-type-badge';
+                        badge.textContent = 'Adult';
+                    }
+                }
+            });
+
+            if (paxSelects.length === 0) {
+                adults = parseInt(document.getElementById('no_of_pax')?.value) || 1;
+            }
+
+            if (document.getElementById('pax_adults')) document.getElementById('pax_adults').value = adults;
+            if (document.getElementById('pax_children')) document.getElementById('pax_children').value = children;
+            if (document.getElementById('pax_infants')) document.getElementById('pax_infants').value = infants;
+            if (document.getElementById('hidden_pax_adults')) document.getElementById('hidden_pax_adults').value = adults;
+            if (document.getElementById('hidden_pax_children')) document.getElementById('hidden_pax_children').value = children;
+            if (document.getElementById('hidden_pax_infants')) document.getElementById('hidden_pax_infants').value = infants;
+
+            if (document.getElementById('bar_pax_adults')) document.getElementById('bar_pax_adults').textContent = adults;
+            if (document.getElementById('bar_pax_children')) document.getElementById('bar_pax_children').textContent = children;
+            if (document.getElementById('bar_pax_infants')) document.getElementById('bar_pax_infants').textContent = infants;
+
+            if (document.getElementById('flight_adult_pax_label')) document.getElementById('flight_adult_pax_label').textContent = adults;
+            if (document.getElementById('flight_child_pax_label')) document.getElementById('flight_child_pax_label').textContent = children;
+            if (document.getElementById('flight_infant_pax_label')) document.getElementById('flight_infant_pax_label').textContent = infants;
+
+            calculateFlight();
+            calcTotal();
+        }
+
+        function onPersonPaxTypeChange(idx, val) {
+            // Update Flight row category
+            const flRow = document.getElementById(`flight_person_row_${idx}`);
+            if (flRow) {
+                const flPaxTypeSel = flRow.querySelector('.person-flight-pax-type');
+                if (flPaxTypeSel && flPaxTypeSel.value !== val) {
+                    flPaxTypeSel.value = val;
+                }
+            }
+
+            // Update Hotel badges
+            document.querySelectorAll(`.hotel-person-row[data-person-idx="${idx}"] .person-hotel-type-badge`).forEach(b => {
+                b.textContent = val.toUpperCase();
+                b.className = `badge ${val === 'child' ? 'bg-info text-dark' : (val === 'infant' ? 'bg-warning text-dark' : 'bg-primary')} person-hotel-type-badge ms-1`;
+            });
+
+            // Update Visa badge
+            const vBadge = document.querySelector(`#visa_card_${idx} .person-visa-type-badge`);
+            if (vBadge) {
+                vBadge.textContent = val.toUpperCase();
+                vBadge.className = `badge ${val === 'child' ? 'bg-info text-dark' : (val === 'infant' ? 'bg-warning text-dark' : 'bg-primary')} person-visa-type-badge ms-1`;
+            }
+
+            updatePaxCountsFromPersons();
+        }
+
+        function onFlightPaxTypeChange(idx, val) {
+            const pSel = document.getElementById(`person_pax_type_${idx}`);
+            if (pSel && pSel.value !== val) {
+                pSel.value = val;
+            }
+            onPersonPaxTypeChange(idx, val);
+        }
+
+        function syncFlightPersons() {
+            const pax = parseInt(document.getElementById('no_of_pax')?.value) || 1;
+            const list = document.getElementById('flightPersonsList');
+            if (!list) return;
+
+            const curr = document.getElementById('flight_currency')?.value || 'SAR';
+            const costRoe = (curr === 'PKR') ? 1 : (parseFloat(document.getElementById('flight_cost_roe')?.value) || parseFloat(document.getElementById('flight_roe')?.value) || 75);
+            const saleRoe = (curr === 'PKR') ? 1 : (parseFloat(document.getElementById('flight_sale_roe')?.value) || costRoe || 75);
+            const mainSupId = document.getElementById('flight_supplier_id')?.value || '';
+            const depDate = document.querySelector('input[name="departure_date"]')?.value || '';
+            const depTime = document.querySelector('input[name="departure_time"]')?.value || '';
+            const depPnr  = document.querySelector('input[name="departure_pnr"]')?.value || '';
+
+            // Preserve any existing DOM input values so user typing is not wiped out
+            const existingRowData = {};
+            list.querySelectorAll('.flight-person-row').forEach(row => {
+                const idx = row.getAttribute('data-idx');
+                if (idx !== null) {
+                    const supEl = row.querySelector('.person-flight-supplier');
+                    const pnrEl = row.querySelector('.person-flight-pnr');
+                    const dateEl = row.querySelector('.person-flight-date');
+                    const timeEl = row.querySelector('.person-flight-time');
+                    const tripEl = row.querySelector('.person-flight-trip-type');
+
+                    existingRowData[idx] = {
+                        passport:           row.querySelector('.person-flight-passport')?.value,
+                        pax_type:           row.querySelector('.person-flight-pax-type')?.value,
+                        trip_type:          tripEl?.value,
+                        dep_ticket:         row.querySelector('.person-flight-dep-ticket')?.value,
+                        dep_cost:           row.querySelector('.person-flight-dep-cost')?.value,
+                        dep_sell:           row.querySelector('.person-flight-dep-sell')?.value,
+                        ret_ticket:         row.querySelector('.person-flight-ret-ticket')?.value,
+                        ret_cost:           row.querySelector('.person-flight-ret-cost')?.value,
+                        ret_sell:           row.querySelector('.person-flight-ret-sell')?.value,
+                        ticket:             row.querySelector('.person-flight-ticket-main')?.value || row.querySelector('.person-flight-dep-ticket')?.value || row.querySelector('.person-flight-ticket')?.value,
+                        ticket_status:      row.querySelector('.person-flight-status')?.value,
+                        cost:               row.querySelector('.person-flight-cost')?.value,
+                        sell:               row.querySelector('.person-flight-sell')?.value,
+                        flight_supplier_id: supEl?.value || '',
+                        return_flight_supplier_id: row.querySelector('.person-flight-ret-supplier')?.value || '',
+                        flight_pnr:         pnrEl?.value,
+                        flight_date:        dateEl?.value,
+                        flight_time:        timeEl?.value,
+                        custom_supplier:    supEl?.getAttribute('data-customized') === 'true' || (supEl && supEl.value !== ''),
+                        custom_pnr:         pnrEl?.getAttribute('data-customized') === 'true',
+                        custom_date:        dateEl?.getAttribute('data-customized') === 'true',
+                        custom_time:        timeEl?.getAttribute('data-customized') === 'true',
+                        custom_trip:        tripEl?.getAttribute('data-customized') === 'true',
+                    };
+                }
+            });
+
+            const clientPassVal = document.getElementById('fill_passport')?.value || document.getElementById('person_passport_0')?.value || (typeof clientsData !== 'undefined' && Array.isArray(clientsData) ? (clientsData.find(c => c.id == document.getElementById('clientSelect')?.value)?.passport_number || '') : '') || (typeof existingBooking !== 'undefined' && existingBooking ? (existingBooking.passport_number || (existingBooking.client ? existingBooking.client.passport_number : '')) : '');
+            const mainSupSelect = document.getElementById('flight_supplier_id') || document.querySelector('select[name="flight_supplier_id"]');
+            const mainSupName = (mainSupSelect && mainSupSelect.selectedIndex >= 0 && mainSupSelect.value) ? (mainSupSelect.options[mainSupSelect.selectedIndex]?.text?.replace(/^--.*--$/, '')?.trim() || '') : '';
+            const mainTripVal = document.querySelector('input[name="flight_trip_type"]:checked')?.value;
+            const defaultTripType = (mainTripVal === 'oneway' ? 'departure_only' : 'round_trip');
+
+            let rowsHtml = '';
+            for (let i = 0; i < pax; i++) {
+                const pExisting = (typeof existingPersons !== 'undefined' && existingPersons && existingPersons[i]) ? existingPersons[i] : null;
+                const personName = document.getElementById(`person_name_${i}`)?.value || (pExisting ? pExisting.full_name : '') || (i === 0 ? (document.querySelector('input[name="client_name"]')?.value || document.getElementById('clientSelect')?.selectedOptions[0]?.getAttribute('data-name') || '') : '') || `Passenger ${i + 1}`;
+                const inDom = existingRowData[i];
+                const domPass = document.getElementById(`person_passport_${i}`)?.value;
+                const savedPass = (pExisting ? pExisting.passport_number : '');
+                const rowPass = (inDom && inDom.passport !== undefined && inDom.passport !== '') ? inDom.passport : '';
+                const personPass = domPass || (i === 0 ? clientPassVal : '') || savedPass || rowPass || '';
+
+                if (i === 0 && personPass) {
+                    const p0El = document.getElementById('person_passport_0');
+                    if (p0El && !p0El.value) p0El.value = personPass;
+                    const fillEl = document.getElementById('fill_passport');
+                    if (fillEl && !fillEl.value) fillEl.value = personPass;
+                }
+
+                const personTypeFromDom = document.getElementById(`person_pax_type_${i}`)?.value;
+
+                let isCustomSup  = false;
+                let isCustomPnr  = false;
+                let isCustomDate = false;
+                let isCustomTime = false;
+                let isCustomTrip = false;
+
+                if (inDom) {
+                    isCustomSup  = inDom.custom_supplier;
+                    isCustomPnr  = inDom.custom_pnr;
+                    isCustomDate = inDom.custom_date;
+                    isCustomTime = inDom.custom_time;
+                    isCustomTrip = inDom.custom_trip;
+                } else if (pExisting) {
+                    isCustomSup  = !!(pExisting.flight_supplier_id && mainSupId && pExisting.flight_supplier_id != mainSupId);
+                    isCustomPnr  = !!(pExisting.flight_pnr && depPnr && pExisting.flight_pnr != depPnr);
+                    isCustomDate = !!(pExisting.flight_date && depDate && pExisting.flight_date != depDate);
+                    isCustomTime = !!(pExisting.flight_time && depTime && pExisting.flight_time != depTime);
+                    isCustomTrip = !!(pExisting.trip_type && pExisting.trip_type != defaultTripType);
+                }
+
+                let pType      = personTypeFromDom || (inDom ? inDom.pax_type : (pExisting ? pExisting.pax_type : 'adult'));
+                let pTripType  = isCustomTrip ? (inDom ? inDom.trip_type : (pExisting ? pExisting.trip_type : defaultTripType)) : defaultTripType;
+                let pDepTicket = inDom ? inDom.dep_ticket : (pExisting ? (pExisting.departure_ticket || pExisting.flight_ticket || '') : '');
+                let pDepCost   = inDom ? inDom.dep_cost : (pExisting && (parseFloat(pExisting.departure_cost) > 0) ? pExisting.departure_cost : '');
+                let pDepSell   = inDom ? inDom.dep_sell : (pExisting && (parseFloat(pExisting.departure_sell) > 0) ? pExisting.departure_sell : '');
+                let pRetTicket = inDom ? inDom.ret_ticket : (pExisting ? (pExisting.return_ticket || '') : '');
+                let pRetCost   = inDom ? inDom.ret_cost : (pExisting && (parseFloat(pExisting.return_cost) > 0) ? pExisting.return_cost : '');
+                let pRetSell   = inDom ? inDom.ret_sell : (pExisting && (parseFloat(pExisting.return_sell) > 0) ? pExisting.return_sell : '');
+                let pTicket    = inDom ? inDom.ticket : (pExisting ? (pExisting.flight_ticket || pDepTicket || '') : '');
+                let pStatus    = inDom ? (inDom.ticket_status || 'confirmed') : (pExisting ? (pExisting.ticket_status || 'confirmed') : 'confirmed');
+                let pCost      = inDom ? inDom.cost : (pExisting && (parseFloat(pExisting.flight_cost) > 0) ? pExisting.flight_cost : '');
+                let pSell      = inDom ? inDom.sell : (pExisting && (parseFloat(pExisting.flight_sell) > 0) ? pExisting.flight_sell : '');
+                let pSup       = isCustomSup ? (inDom ? inDom.flight_supplier_id : (pExisting ? pExisting.flight_supplier_id : '')) : '';
+                let pRetSup    = inDom ? (inDom.return_flight_supplier_id || '') : (pExisting ? (pExisting.return_flight_supplier_id || '') : '');
+                let pPnr       = isCustomPnr ? (inDom ? inDom.flight_pnr : (pExisting ? pExisting.flight_pnr : depPnr)) : depPnr;
+                let pDate      = isCustomDate ? (inDom ? inDom.flight_date : (pExisting ? pExisting.flight_date : depDate)) : depDate;
+                let pTime      = isCustomTime ? (inDom ? inDom.flight_time : (pExisting ? pExisting.flight_time : depTime)) : depTime;
+
+                // Smart defaults for legacy bookings if cost/sell is still blank
+                if (pCost === '' && pDepCost === '' && pRetCost === '' && typeof existingBooking !== 'undefined' && existingBooking) {
+                    if (existingBooking.flight_adult_cost > 0) {
+                        pCost = existingBooking.flight_adult_cost;
+                    } else if (existingBooking.flight_cost_rate > 0) {
+                        pCost = (pax > 1 ? (parseFloat(existingBooking.flight_cost_rate) / pax).toFixed(2) : existingBooking.flight_cost_rate);
+                    } else if (existingBooking.flight_cost > 0 && costRoe > 0) {
+                        pCost = (parseFloat(existingBooking.flight_cost) / (pax * costRoe)).toFixed(2);
+                    }
+                }
+                if (pSell === '' && pDepSell === '' && pRetSell === '' && typeof existingBooking !== 'undefined' && existingBooking) {
+                    if (existingBooking.flight_adult_sell > 0) {
+                        pSell = existingBooking.flight_adult_sell;
+                    } else if (existingBooking.flight_selling_rate > 0) {
+                        pSell = (pax > 1 ? (parseFloat(existingBooking.flight_selling_rate) / pax).toFixed(2) : existingBooking.flight_selling_rate);
+                    } else if (existingBooking.flight_charges > 0 && saleRoe > 0) {
+                        pSell = (parseFloat(existingBooking.flight_charges) / (pax * saleRoe)).toFixed(2);
+                    }
+                }
+
+                const costVal = parseFloat(pCost) || ((parseFloat(pDepCost) || 0) + (parseFloat(pRetCost) || 0)) || 0;
+                const sellVal = parseFloat(pSell) || ((parseFloat(pDepSell) || 0) + (parseFloat(pRetSell) || 0)) || 0;
+
+                // Build supplier dropdown options
+                let supOptionsHtml = `<option value="">-- Same as Main ${mainSupName ? '(' + mainSupName + ')' : 'Supplier'} --</option>`;
+                let retSupOptionsHtml = `<option value="">-- Ret: Same as Dep Supplier --</option>`;
+                if (typeof suppliersData !== 'undefined' && Array.isArray(suppliersData)) {
+                    supOptionsHtml += suppliersData.map(s => `<option value="${s.id}" ${s.id == pSup ? 'selected' : ''}>${s.name}</option>`).join('');
+                    retSupOptionsHtml += suppliersData.map(s => `<option value="${s.id}" ${s.id == pRetSup ? 'selected' : ''}>${s.name}</option>`).join('');
+                }
+
+                const isCancelled = (pStatus === 'cancelled');
+                const isRefunded = (pStatus === 'refunded');
+
+                rowsHtml += `
+                <tr class="flight-person-row ${isCancelled ? 'table-danger' : (isRefunded ? 'table-warning' : '')}" data-idx="${i}" id="flight_person_row_${i}" style="${isCancelled ? 'opacity:0.65; text-decoration: line-through;' : ''}">
+                    <td class="text-center text-muted fw-bold">${i + 1}</td>
+                    <td>
+                        <strong class="text-primary person-flight-name-disp">${personName}</strong>
+                        <input type="hidden" name="flight_persons[${i}][name]" class="person-flight-name" value="${personName}">
+                        <div class="mt-1">
+                            <input type="text" name="flight_persons[${i}][passport]" class="form-control form-control-sm person-flight-passport" value="${personPass}" placeholder="Passport #">
+                        </div>
+                    </td>
+                    <td>
+                        <select name="flight_persons[${i}][pax_type]" class="form-select form-select-sm person-flight-pax-type" onchange="onFlightPaxTypeChange(${i}, this.value)">
+                            <option value="adult" ${pType === 'adult' ? 'selected' : ''}>Adult</option>
+                            <option value="child" ${pType === 'child' ? 'selected' : ''}>Child</option>
+                            <option value="infant" ${pType === 'infant' ? 'selected' : ''}>Infant</option>
+                        </select>
+                        <select name="flight_persons[${i}][trip_type]" class="form-select form-select-sm person-flight-trip-type mt-1 border-primary" onchange="onTripTypeChange(${i}, this.value); onPersonFlightTravelInput(this);" data-customized="${isCustomTrip ? 'true' : 'false'}" title="Choose Trip Type">
+                            <option value="round_trip" ${pTripType === 'round_trip' ? 'selected' : ''}>Round Trip</option>
+                            <option value="departure_only" ${pTripType === 'departure_only' ? 'selected' : ''}>Departure Only (One Way)</option>
+                            <option value="return_only" ${pTripType === 'return_only' ? 'selected' : ''}>Return Only (Inbound)</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select name="flight_persons[${i}][flight_supplier_id]" class="form-select form-select-sm person-flight-supplier" data-customized="${isCustomSup && pSup ? 'true' : 'false'}" onchange="onPersonFlightSupplierChange(this, ${i})" title="Departure Supplier">
+                            ${supOptionsHtml}
+                        </select>
+                        <select name="flight_persons[${i}][return_flight_supplier_id]" class="form-select form-select-sm person-flight-ret-supplier mt-1" title="Return Supplier">
+                            ${retSupOptionsHtml}
+                        </select>
+                        <span class="badge ${isCustomSup && pSup ? 'bg-soft-info text-primary border border-info border-opacity-25' : 'bg-light text-muted border'} fs-10 mt-1 d-inline-block person-supplier-badge" id="person_sup_badge_${i}">
+                            <i class="mdi ${isCustomSup && pSup ? 'mdi-account-cog' : 'mdi-link-variant'} me-1"></i>${isCustomSup && pSup ? 'Individual Supplier' : 'Linked to Main Supplier'}
+                        </span>
+                        <input type="text" name="flight_persons[${i}][flight_pnr]" class="form-control form-control-sm person-flight-pnr mt-1 ${isCustomPnr ? 'border-info' : ''}" value="${pPnr}" placeholder="PNR #" data-customized="${isCustomPnr ? 'true' : 'false'}" oninput="onPersonFlightTravelInput(this)">
+                    </td>
+                    
+                    <td class="box-dep-ticket ${pTripType === 'return_only' ? 'opacity-25' : ''}">
+                        <div class="mb-1">
+                            <input type="text" name="flight_persons[${i}][departure_ticket]" class="form-control form-control-sm person-flight-ticket person-flight-dep-ticket" value="${pDepTicket || pTicket}" placeholder="Departure Ticket #" maxlength="13" ${pTripType === 'return_only' ? 'disabled' : ''}>
+                        </div>
+                        <div class="d-flex gap-1">
+                            <input type="number" step="0.01" name="flight_persons[${i}][departure_cost]" class="form-control form-control-sm text-end person-flight-dep-cost flight-rate-calc" value="${pDepCost}" placeholder="Cost" title="Departure Cost" ${pTripType === 'return_only' ? 'disabled' : ''}>
+                            <input type="number" step="0.01" name="flight_persons[${i}][departure_sell]" class="form-control form-control-sm text-end person-flight-dep-sell flight-rate-calc" value="${pDepSell}" placeholder="Sell" title="Departure Sell" ${pTripType === 'return_only' ? 'disabled' : ''}>
+                        </div>
+                    </td>
+                    
+                    <td class="box-ret-ticket ${pTripType === 'departure_only' ? 'opacity-25' : ''}">
+                        <div class="mb-1">
+                            <input type="text" name="flight_persons[${i}][return_ticket]" class="form-control form-control-sm person-flight-ticket person-flight-ret-ticket" value="${pRetTicket}" placeholder="Return Ticket #" maxlength="13" ${pTripType === 'departure_only' ? 'disabled' : ''}>
+                        </div>
+                        <div class="d-flex gap-1">
+                            <input type="number" step="0.01" name="flight_persons[${i}][return_cost]" class="form-control form-control-sm text-end person-flight-ret-cost flight-rate-calc" value="${pRetCost}" placeholder="Cost" title="Return Cost" ${pTripType === 'departure_only' ? 'disabled' : ''}>
+                            <input type="number" step="0.01" name="flight_persons[${i}][return_sell]" class="form-control form-control-sm text-end person-flight-ret-sell flight-rate-calc" value="${pRetSell}" placeholder="Sell" title="Return Sell" ${pTripType === 'departure_only' ? 'disabled' : ''}>
+                        </div>
+                    </td>
+                    
+                    <td>
+                        <input type="hidden" name="flight_persons[${i}][ticket]" class="person-flight-ticket-main" value="${pTicket || pDepTicket || pRetTicket}">
+                        <input type="number" step="0.01" name="flight_persons[${i}][flight_cost]" class="form-control form-control-sm text-end person-flight-cost flight-rate-calc fw-bold text-danger bg-light" value="${pCost || (costVal > 0 ? costVal.toFixed(2) : '')}" placeholder="0.00" readonly>
+                        <small class="text-danger d-block text-end person-flight-cost-pkr-disp" style="font-size:11px;">${(costVal * costRoe).toFixed(2)} PKR</small>
+                        <input type="number" step="0.01" name="flight_persons[${i}][flight_sell]" class="form-control form-control-sm text-end person-flight-sell flight-rate-calc fw-bold text-success bg-light mt-1" value="${pSell || (sellVal > 0 ? sellVal.toFixed(2) : '')}" placeholder="0.00" readonly>
+                        <small class="text-success d-block text-end person-flight-sell-pkr-disp" style="font-size:11px;">${(sellVal * saleRoe).toFixed(2)} PKR</small>
+                    </td>
+                    <td>
+                        <select name="flight_persons[${i}][ticket_status]" class="form-select form-select-sm person-flight-status mb-1 ${isCancelled ? 'bg-soft-danger text-danger border-danger fw-bold' : (isRefunded ? 'bg-soft-warning text-warning border-warning fw-bold' : 'text-success fw-bold')}" onchange="handleTicketStatusChange(this)">
+                            <option value="confirmed" ${pStatus === 'confirmed' ? 'selected' : ''}>Confirmed</option>
+                            <option value="cancelled" ${pStatus === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                            <option value="refunded" ${pStatus === 'refunded' ? 'selected' : ''}>Refunded</option>
+                        </select>
+                        <input type="date" name="flight_persons[${i}][flight_date]" class="form-control form-control-sm person-flight-date ${isCustomDate ? 'border-info' : ''}" value="${pDate}" title="Flight date" data-customized="${isCustomDate ? 'true' : 'false'}" onchange="onPersonFlightTravelInput(this)">
+                        <input type="text" name="flight_persons[${i}][flight_time]" class="form-control form-control-sm person-flight-time flight-time-picker mt-1 ${isCustomTime ? 'border-info' : ''}" value="${pTime}" placeholder="hh:mm" title="Flight time" data-customized="${isCustomTime ? 'true' : 'false'}" onchange="onPersonFlightTravelInput(this)">
+                    </td>
+                </tr>`;
+            }
+
+            list.innerHTML = `
+                <div class="p-2 px-3 mb-2 border rounded bg-light d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <div>
+                        <span class="fw-bold text-dark fs-12"><i class="mdi mdi-airplane me-1 text-primary"></i> Passenger-Wise Flight & Ticket Management:</span>
+                        <small class="text-muted d-block" style="font-size:11px;">Each passenger can have unique tickets, separate suppliers, Departure & Return tickets/costs/sells, custom flight details (Date/Time/PNR), and rates.</small>
+                    </div>
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <div class="input-group input-group-sm" style="width: auto;">
+                            <span class="input-group-text bg-white fs-11">Adult Rate (<span class="flight-curr-label">${curr}</span>):</span>
+                            <input type="number" step="0.01" id="quick_adult_cost" class="form-control form-control-sm text-end" placeholder="Cost" style="width: 80px;">
+                            <input type="number" step="0.01" id="quick_adult_sell" class="form-control form-control-sm text-end" placeholder="Sell" style="width: 80px;">
+                            <button type="button" class="btn btn-primary btn-sm" id="btnQuickApplyAdults"><i class="mdi mdi-check me-1"></i> Apply to All Adults</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive border rounded bg-white shadow-sm mb-3">
+                    <table class="table table-sm table-hover align-middle mb-0" id="flightPersonsTable">
+                        <thead class="table-light fs-12">
+                            <tr>
+                                <th style="width: 30px;" class="text-center">#</th>
+                                <th style="width: 14%;">Passenger & Passport</th>
+                                <th style="width: 15%;">Pax Type & Trip</th>
+                                <th style="width: 13%;">Supplier & PNR</th>
+                                <th style="width: 18%;">Departure Ticket (Cost / Sell)</th>
+                                <th style="width: 18%;">Return Ticket (Cost / Sell)</th>
+                                <th style="width: 11%;" class="text-end">Total Rate (<span class="flight-curr-label">${curr}</span>)</th>
+                                <th style="width: 11%;">Status & Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="flightPersonsTableBody">
+                            ${rowsHtml}
+                        </tbody>
+                        <tfoot class="table-light fw-bold fs-12 border-top">
+                            <tr>
+                                <td colspan="6" class="text-dark">Total Flight Tickets (${pax} Passengers)</td>
+                                <td class="text-end text-danger">
+                                    <span id="tbl_flight_cost_curr_total">0.00 ${curr}</span>
+                                    <br><small class="text-danger fw-normal" id="tbl_flight_cost_pkr_total">0.00 PKR</small>
+                                </td>
+                                <td class="text-end text-success">
+                                    <span id="tbl_flight_sell_curr_total">0.00 ${curr}</span>
+                                    <br><small class="text-success fw-normal" id="tbl_flight_sell_pkr_total">0.00 PKR</small>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            `;
+
+            calculateFlight();
+            checkUniqueTicketNumbers();
+        }
+
+        function handlePaxChange(newVal) {
+            const val = Math.max(1, parseInt(newVal) || 1);
+            const paxInput = document.getElementById('no_of_pax');
+            if (paxInput && parseInt(paxInput.value) !== val) {
+                paxInput.value = val;
+            }
+            if (document.getElementById('bar_pax')) {
+                document.getElementById('bar_pax').textContent = val;
+            }
+            if (document.getElementById('bar_pax_badge')) {
+                document.getElementById('bar_pax_badge').textContent = val;
+            }
+            rebuildPersonsList(val);
+            rebuildVisasList(val);
+            updatePaxCountsFromPersons();
+            syncFlightPersons();
+            syncAllHotelPersons();
+            calculateFlight();
+            document.querySelectorAll('.hotel-block').forEach(r => calculateHotelRow(r));
+            if (typeof calculateAllTransports === 'function') calculateAllTransports();
+            calcTotal();
+            if (typeof updateHotelStaySummary === 'function') updateHotelStaySummary();
+            if (typeof updateTransportSummary === 'function') updateTransportSummary();
+        }
+        window.handlePaxChange = handlePaxChange;
+
+        $(document).on('input change', '#no_of_pax', function() {
+            handlePaxChange(this.value);
+        });
+
+        function rebuildVisasList(newPax) {
+            const container = document.getElementById('visasList');
+            if (!container) return;
+            const currentCount = container.querySelectorAll('.visa-card').length;
+
+            if (newPax < currentCount) {
+                for (let i = currentCount - 1; i >= newPax; i--) {
+                    document.getElementById('visa_card_' + i)?.remove();
+                }
+                calcTotal();
+                return;
+            }
+
+            const flightCurr = document.getElementById('flight_currency')?.value || 'SAR';
+            const defaultCostRoe = (flightCurr === 'PKR') ? 1 : (document.getElementById('flight_cost_roe')?.value || 75);
+            const defaultSaleRoe = (flightCurr === 'PKR') ? 1 : (document.getElementById('flight_sale_roe')?.value || defaultCostRoe);
+
+            const defVisaCurr = document.getElementById('default_visa_currency')?.value;
+            const defVisaCostRoe = document.getElementById('default_visa_cost_roe')?.value;
+            const defVisaSaleRoe = document.getElementById('default_visa_sale_roe')?.value;
+            const defVisaCostRate = document.getElementById('default_visa_cost_rate')?.value;
+            const defVisaSellRate = document.getElementById('default_visa_sell_rate')?.value;
+            const defVisaSup = document.getElementById('default_visa_supplier_id')?.value;
+
+            const fallbackCurr = defVisaCurr || flightCurr;
+            const isDefPkr = (fallbackCurr === 'PKR');
+            const fallbackCostRoe = isDefPkr ? 1 : (defVisaCostRoe || defaultCostRoe);
+            const fallbackSaleRoe = isDefPkr ? 1 : (defVisaSaleRoe || defaultSaleRoe || fallbackCostRoe);
+
+            for (let i = currentCount; i < newPax; i++) {
+                const v = (typeof existingVisas !== 'undefined' && existingVisas && existingVisas[i]) ? existingVisas[i] : {};
+                const pName = document.getElementById(`person_name_${i}`)?.value || (v.given_name || '');
+                const pPass = document.getElementById(`person_passport_${i}`)?.value || (v.passport_number || '');
+                const pDob = document.getElementById(`person_dob_${i}`)?.value || (v.date_of_birth || '');
+                const pType = document.getElementById(`person_pax_type_${i}`)?.value || 'adult';
+                const vBadgeClass = pType === 'child' ? 'bg-info text-dark' : (pType === 'infant' ? 'bg-warning text-dark' : 'bg-primary');
+                const vTypeLabel = pType.toUpperCase();
+
+                const vCurr = v.currency || fallbackCurr;
+                const vIsPkr = (vCurr === 'PKR');
+                const costRoe = vIsPkr ? 1 : (v.cost_roe || v.roe || fallbackCostRoe);
+                const saleRoe = vIsPkr ? 1 : (v.sale_roe || costRoe || fallbackSaleRoe);
+
+                const costRate = parseFloat(v.cost_rate) || parseFloat(defVisaCostRate) || 0;
+                const costAmt = parseFloat(v.cost_amount) || (costRate * parseFloat(costRoe));
+                const sellRate = parseFloat(v.selling_rate) || parseFloat(defVisaSellRate) || 0;
+                const sellAmt = parseFloat(v.selling_amount) || (sellRate * parseFloat(saleRoe));
+
+                const vBookingDate = v.booking_date || '2026-11-05';
+                const supId = v.supplier_id || defVisaSup || '';
+
+                let supOptions = `<option value="">-- Select Supplier --</option>` +
+                    (typeof suppliersData !== 'undefined' ? suppliersData.map(s => `<option value="${s.id}" ${s.id == supId ? 'selected' : ''}>${s.name}</option>`).join('') : '');
+
+                const visaVoucherBase = document.getElementById('visa_voucher_no')?.value || 'VIS-2026-00001';
+                const vChildVoucher = v.voucher_no || (visaVoucherBase + '-' + (i + 1));
+
+                container.insertAdjacentHTML('beforeend', `
+                    <div class="visa-card border rounded p-3 mb-2 bg-white" id="visa_card_${i}">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <strong class="text-warning" style="font-size:13px;">
+                                    <i class="mdi mdi-passport me-1"></i> Visa ${i + 1}: ${pName || 'Passenger ' + (i + 1)}
+                                </strong>
+                                <span class="badge ${vBadgeClass} person-visa-type-badge" style="font-size:10px;">${vTypeLabel}</span>
+                                <span class="badge bg-soft-danger text-danger border border-danger fs-11 font-monospace">
+                                    <i class="mdi mdi-ticket-confirmation me-1"></i>Voucher #: ${vChildVoucher}
+                                </span>
+                                <input type="hidden" name="visas[${i}][voucher_no]" value="${vChildVoucher}">
+                            </div>
+                            <span class="badge bg-warning text-dark">${((v.status || 'pending')).toUpperCase()}</span>
+                        </div>
+                        <div class="row g-2 mt-1">
+                            <div class="col-md-3"><label class="form-label" style="font-size:12px;">Passport #</label>
+                                <input type="text" name="visas[${i}][passport_number]" class="form-control form-control-sm" value="${pPass}"></div>
+                            <div class="col-md-3"><label class="form-label" style="font-size:12px;">Full Name</label>
+                                <input type="text" name="visas[${i}][given_name]" class="form-control form-control-sm" value="${pName}"></div>
+                            <div class="col-md-3"><label class="form-label" style="font-size:12px;">DOB</label>
+                                <input type="date" name="visas[${i}][date_of_birth]" class="form-control form-control-sm" value="${pDob}"></div>
+                            <div class="col-md-3"><label class="form-label" style="font-size:12px;">Visa Supplier / Vendor</label>
+                                <select name="visas[${i}][supplier_id]" class="form-select form-select-sm visa-supplier-select select2">
+                                    ${supOptions}
+                                </select></div>
+                            <div class="col-md-6"><label class="form-label" style="font-size:12px;">Send To</label>
+                                <select name="visas[${i}][send_to]" class="form-select form-select-sm">
+                                    <option value="">-- Select --</option>
+                                    <option value="shirka" ${v.send_to === 'shirka' ? 'selected' : ''}>Shirka</option>
+                                    <option value="consulate" ${v.send_to === 'consulate' ? 'selected' : ''}>Consulate</option>
+                                    <option value="both" ${v.send_to === 'both' ? 'selected' : ''}>Both</option>
+                                </select></div>
+                            <div class="col-md-2">
+                                <label class="form-label text-dark fw-bold" style="font-size:12px;">Currency</label>
+                                <select name="visas[${i}][currency]" class="form-select form-select-sm visa-currency fw-bold">
+                                    <option value="SAR" ${vCurr === 'SAR' ? 'selected' : ''}>SAR</option>
+                                    <option value="PKR" ${vCurr === 'PKR' ? 'selected' : ''}>PKR</option>
+                                    <option value="USD" ${vCurr === 'USD' ? 'selected' : ''}>USD</option>
+                                    <option value="MYR" ${vCurr === 'MYR' ? 'selected' : ''}>MYR</option>
+                                    <option value="AED" ${vCurr === 'AED' ? 'selected' : ''}>AED</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label text-danger fw-bold" style="font-size:12px;">Cost ROE</label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light visa-curr-prefix">1 ${vCurr} =</span>
+                                    <input type="number" step="0.0001" name="visas[${i}][cost_roe]" class="form-control visa-cost-roe" placeholder="75.00" value="${costRoe}" ${vIsPkr ? 'readonly' : ''}>
+                                </div>
+                                <input type="hidden" name="visas[${i}][roe]" class="visa-roe" value="${costRoe}">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label text-success fw-bold" style="font-size:12px;">Sale ROE</label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light visa-curr-prefix">1 ${vCurr} =</span>
+                                    <input type="number" step="0.0001" name="visas[${i}][sale_roe]" class="form-control visa-sale-roe" placeholder="75.00" value="${saleRoe}" ${vIsPkr ? 'readonly' : ''}>
+                                </div>
+                            </div>
+                            <div class="col-md-2"><label class="form-label text-danger fw-semibold" style="font-size:12px;">Cost Rate (<span class="visa-curr-label">${vCurr}</span>)</label>
+                                <input type="number" step="0.01" name="visas[${i}][cost_rate]" class="form-control form-control-sm visa-cost-rate" placeholder="0.00" value="${costRate}"></div>
+                            <div class="col-md-3"><label class="form-label text-danger fw-semibold" style="font-size:12px;">Total Cost (<span class="visa-curr-label">${vCurr}</span> & PKR)</label>
+                                <div class="p-1 px-2 border rounded bg-light">
+                                    <div class="d-flex justify-content-between small text-danger"><span class="visa-curr-name">${vCurr}:</span><strong class="visa-cost-sar-disp">${costRate.toFixed(2)} ${vCurr}</strong></div>
+                                    <div class="d-flex justify-content-between small text-danger"><span>PKR:</span><strong class="visa-cost-pkr-disp">${costAmt.toFixed(2)} PKR</strong></div>
+                                </div>
+                                <input type="hidden" name="visas[${i}][cost_amount]" class="visa-cost-amount" value="${costAmt.toFixed(2)}"></div>
+                            <div class="col-md-2"><label class="form-label text-success fw-semibold" style="font-size:12px;">Sell Rate (<span class="visa-curr-label">${vCurr}</span>)</label>
+                                <input type="number" step="0.01" name="visas[${i}][selling_rate]" class="form-control form-control-sm visa-sell-rate" placeholder="0.00" value="${sellRate}"></div>
+                            <div class="col-md-3"><label class="form-label text-success fw-semibold" style="font-size:12px;">Total Sell (<span class="visa-curr-label">${vCurr}</span> & PKR)</label>
+                                <div class="p-1 px-2 border rounded bg-light">
+                                    <div class="d-flex justify-content-between small text-success"><span class="visa-curr-name">${vCurr}:</span><strong class="visa-sell-sar-disp">${sellRate.toFixed(2)} ${vCurr}</strong></div>
+                                    <div class="d-flex justify-content-between small text-success"><span>PKR:</span><strong class="visa-sell-pkr-disp">${sellAmt.toFixed(2)} PKR</strong></div>
+                                </div>
+                                <input type="hidden" name="visas[${i}][selling_amount]" class="visa-sell-amount" value="${sellAmt.toFixed(2)}"></div>
+                            <div class="col-md-3"><label class="form-label" style="font-size:12px;"><i class="mdi mdi-calendar me-1 text-primary"></i> Booking Date</label>
+                                <input type="date" name="visas[${i}][booking_date]" class="form-control form-control-sm visa-booking-date" value="${vBookingDate}"></div>
+
+                            <div class="col-md-3"><label class="form-label" style="font-size:12px;">Status</label>
+                                <select name="visas[${i}][status]" class="form-select form-select-sm">
+                                    <option value="pending" ${(v.status || 'pending') === 'pending' ? 'selected' : ''}>Pending</option>
+                                    <option value="applied" ${v.status === 'applied' ? 'selected' : ''}>Applied</option>
+                                    <option value="approved" ${v.status === 'approved' ? 'selected' : ''}>Approved</option>
+                                    <option value="rejected" ${v.status === 'rejected' ? 'selected' : ''}>Rejected</option>
+                                </select></div>
+                            <div class="col-md-6"><label class="form-label" style="font-size:12px;">Visa Attachment</label>
+                                <input type="file" name="visas[${i}][visa_attachment]" class="form-control form-control-sm" accept="image/*,.pdf"></div>
+                        </div>
+                    </div>
+                `);
+            }
+            calcTotal();
+        }
+
+        // Flight Currency Change Event Listener
+        document.getElementById('flight_currency')?.addEventListener('change', function() {
+            const val = this.value;
+            const costRoeInput = document.getElementById('flight_cost_roe');
+            const saleRoeInput = document.getElementById('flight_sale_roe');
+            const legacyRoeInput = document.getElementById('flight_roe');
+
+            if (val === 'PKR') {
+                if (costRoeInput) { costRoeInput.value = '1.0000'; costRoeInput.readOnly = true; }
+                if (saleRoeInput) { saleRoeInput.value = '1.0000'; saleRoeInput.readOnly = true; }
+                if (legacyRoeInput) legacyRoeInput.value = '1.0000';
+            } else {
+                if (costRoeInput) {
+                    costRoeInput.readOnly = false;
+                    if (val === 'SAR') costRoeInput.value = '75.0000';
+                    else if (val === 'MYR') costRoeInput.value = '63.0000';
+                    else if (val === 'USD') costRoeInput.value = '278.0000';
+                    else if (val === 'AED') costRoeInput.value = '76.0000';
+                }
+                if (saleRoeInput) {
+                    saleRoeInput.readOnly = false;
+                    if (val === 'SAR') saleRoeInput.value = '75.0000';
+                    else if (val === 'MYR') saleRoeInput.value = '63.0000';
+                    else if (val === 'USD') saleRoeInput.value = '278.0000';
+                    else if (val === 'AED') saleRoeInput.value = '76.0000';
+                }
+                if (legacyRoeInput && costRoeInput) legacyRoeInput.value = costRoeInput.value;
+            }
+            calculateFlight();
+        });
+
+        // Flight Calculation (Foreign & PKR for Individual Passengers and Dual ROE)
+        function calculateFlight() {
+            const adults   = parseInt(document.getElementById('pax_adults')?.value) || 0;
+            const children = parseInt(document.getElementById('pax_children')?.value) || 0;
+            const infants  = parseInt(document.getElementById('pax_infants')?.value) || 0;
+            const pax      = Math.max(1, adults + children + infants);
+
+            const curr = document.getElementById('flight_currency')?.value || 'SAR';
+            const isPkr = (curr === 'PKR');
+
+            const costRoeInput = document.getElementById('flight_cost_roe');
+            const saleRoeInput = document.getElementById('flight_sale_roe');
+            const legacyRoeInput = document.getElementById('flight_roe');
+
+            if (isPkr) {
+                if (costRoeInput) { costRoeInput.value = '1.0000'; costRoeInput.readOnly = true; }
+                if (saleRoeInput) { saleRoeInput.value = '1.0000'; saleRoeInput.readOnly = true; }
+            } else {
+                if (costRoeInput) costRoeInput.readOnly = false;
+                if (saleRoeInput) saleRoeInput.readOnly = false;
+            }
+
+            const costRoe = isPkr ? 1 : (parseFloat(costRoeInput?.value) || parseFloat(legacyRoeInput?.value) || 1);
+            const saleRoe = isPkr ? 1 : (parseFloat(saleRoeInput?.value) || costRoe || 1);
+
+            if (legacyRoeInput) legacyRoeInput.value = costRoe;
+
+            // Update UI currency labels
+            document.querySelectorAll('.flight-curr-label').forEach(el => el.textContent = curr);
+            const prefixEl = document.getElementById('flight_curr_prefix');
+            if (prefixEl) prefixEl.textContent = `1 ${curr} =`;
+            const prefixSaleEl = document.getElementById('flight_sale_curr_prefix');
+            if (prefixSaleEl) prefixSaleEl.textContent = `1 ${curr} =`;
+
+            // Check individual passenger rows in flightPersonsTable
+            const personRows = document.querySelectorAll('.flight-person-row');
+            let totalCostCurr = 0;
+            let totalSellCurr = 0;
+            let hasCustomPersonRates = false;
+
+            if (personRows.length > 0) {
+                personRows.forEach(row => {
+                    const statusSelect = row.querySelector('.person-flight-status');
+                    const ticketStatus = statusSelect?.value || 'confirmed';
+                    const isCancelled = (ticketStatus === 'cancelled');
+
+                    const tripType = row.querySelector('.person-flight-trip-type')?.value || 'round_trip';
+                    const depCost = parseFloat(row.querySelector('.person-flight-dep-cost')?.value) || 0;
+                    const depSell = parseFloat(row.querySelector('.person-flight-dep-sell')?.value) || 0;
+                    const retCost = parseFloat(row.querySelector('.person-flight-ret-cost')?.value) || 0;
+                    const retSell = parseFloat(row.querySelector('.person-flight-ret-sell')?.value) || 0;
+
+                    const costInput = row.querySelector('.person-flight-cost');
+                    const sellInput = row.querySelector('.person-flight-sell');
+
+                    let costVal = parseFloat(costInput?.value) || 0;
+                    let sellVal = parseFloat(sellInput?.value) || 0;
+
+                    if (tripType === 'departure_only') {
+                        costVal = depCost;
+                        sellVal = depSell;
+                    } else if (tripType === 'return_only') {
+                        costVal = retCost;
+                        sellVal = retSell;
+                    } else {
+                        if (depCost > 0 || retCost > 0) costVal = depCost + retCost;
+                        if (depSell > 0 || retSell > 0) sellVal = depSell + retSell;
+                    }
+
+                    if (costInput && (depCost > 0 || retCost > 0 || costVal > 0)) costInput.value = costVal > 0 ? costVal.toFixed(2) : '';
+                    if (sellInput && (depSell > 0 || retSell > 0 || sellVal > 0)) sellInput.value = sellVal > 0 ? sellVal.toFixed(2) : '';
+
+                    if (costVal > 0 || sellVal > 0) hasCustomPersonRates = true;
+
+                    if (!isCancelled) {
+                        totalCostCurr += costVal;
+                        totalSellCurr += sellVal;
+                    }
+
+                    const costPkrDisp = row.querySelector('.person-flight-cost-pkr-disp');
+                    const sellPkrDisp = row.querySelector('.person-flight-sell-pkr-disp');
+                    if (costPkrDisp) costPkrDisp.textContent = (costVal * costRoe).toFixed(2) + ' PKR' + (isCancelled ? ' (Void)' : '');
+                    if (sellPkrDisp) sellPkrDisp.textContent = (sellVal * saleRoe).toFixed(2) + ' PKR' + (isCancelled ? ' (Void)' : '');
+                });
+            }
+
+            // Fallback: If no individual person rates were entered, check tier inputs or existing flight_charges / flight_cost
+            if (!hasCustomPersonRates) {
+                const adultCostCurr = parseFloat(document.getElementById('flight_adult_cost')?.value) || 0;
+                const adultSellCurr = parseFloat(document.getElementById('flight_adult_sell')?.value) || 0;
+                const childCostCurr = parseFloat(document.getElementById('flight_child_cost')?.value) || 0;
+                const childSellCurr = parseFloat(document.getElementById('flight_child_sell')?.value) || 0;
+                const infantCostCurr = parseFloat(document.getElementById('flight_infant_cost')?.value) || 0;
+                const infantSellCurr = parseFloat(document.getElementById('flight_infant_sell')?.value) || 0;
+
+                const tierCostCurr = (adults * adultCostCurr) + (children * childCostCurr) + (infants * infantCostCurr);
+                const tierSellCurr = (adults * adultSellCurr) + (children * childSellCurr) + (infants * infantSellCurr);
+
+                if (tierCostCurr > 0 || tierSellCurr > 0) {
+                    totalCostCurr = tierCostCurr;
+                    totalSellCurr = tierSellCurr;
+                } else {
+                    const existingCostPkr = parseFloat(document.getElementById('flight_cost')?.value) || 0;
+                    const existingSellPkr = parseFloat(document.getElementById('flight_charges')?.value) || 0;
+                    if (existingCostPkr > 0 && costRoe > 0) totalCostCurr = existingCostPkr / costRoe;
+                    if (existingSellPkr > 0 && saleRoe > 0) totalSellCurr = existingSellPkr / saleRoe;
+                }
+            }
+
+            const totalCostPkr = totalCostCurr * costRoe;
+            const totalSellPkr = totalSellCurr * saleRoe;
+
+            // Badges / Pax labels
+            const adultBadge = document.getElementById('flight_adult_pax_label');
+            if (adultBadge) adultBadge.textContent = adults;
+            const childBadge = document.getElementById('flight_child_pax_label');
+            if (childBadge) childBadge.textContent = children;
+            const infantBadge = document.getElementById('flight_infant_pax_label');
+            if (infantBadge) infantBadge.textContent = infants;
+
+            // Table footer totals
+            const tblCostCurr = document.getElementById('tbl_flight_cost_curr_total');
+            if (tblCostCurr) tblCostCurr.textContent = totalCostCurr.toFixed(2) + ' ' + curr;
+            const tblCostPkr = document.getElementById('tbl_flight_cost_pkr_total');
+            if (tblCostPkr) tblCostPkr.textContent = totalCostPkr.toFixed(2) + ' PKR';
+            const tblSellCurr = document.getElementById('tbl_flight_sell_curr_total');
+            if (tblSellCurr) tblSellCurr.textContent = totalSellCurr.toFixed(2) + ' ' + curr;
+            const tblSellPkr = document.getElementById('tbl_flight_sell_pkr_total');
+            if (tblSellPkr) tblSellPkr.textContent = totalSellPkr.toFixed(2) + ' PKR';
+
+            // Row displays for tier table
+            const elAdultCostDisp = document.getElementById('flight_adult_cost_sar_disp');
+            if (elAdultCostDisp) elAdultCostDisp.textContent = totalCostCurr.toFixed(2);
+            const elAdultSellDisp = document.getElementById('flight_adult_sell_sar_disp');
+            if (elAdultSellDisp) elAdultSellDisp.textContent = totalSellCurr.toFixed(2);
+
+            // Summary cards
+            const elCostSarTot = document.getElementById('flight_cost_sar_total');
+            if (elCostSarTot) elCostSarTot.textContent = (curr === 'PKR') ? '—' : (totalCostCurr.toFixed(2) + ' ' + curr);
+            const elCostPkrTot = document.getElementById('flight_cost_pkr_total');
+            if (elCostPkrTot) elCostPkrTot.textContent = totalCostPkr.toFixed(2) + ' PKR';
+            const elSellSarTot = document.getElementById('flight_sell_sar_total');
+            if (elSellSarTot) elSellSarTot.textContent = (curr === 'PKR') ? '—' : (totalSellCurr.toFixed(2) + ' ' + curr);
+            const elSellPkrTot = document.getElementById('flight_sell_pkr_total');
+            if (elSellPkrTot) elSellPkrTot.textContent = totalSellPkr.toFixed(2) + ' PKR';
+
+            // Backend compatibility hidden inputs
+            const elCost = document.getElementById('flight_cost');
+            if (elCost) elCost.value = totalCostPkr.toFixed(2);
+            const elCharges = document.getElementById('flight_charges');
+            if (elCharges) elCharges.value = totalSellPkr.toFixed(2);
+            const elChargesDisp = document.getElementById('flight_charges_disp');
+            if (elChargesDisp) elChargesDisp.value = totalSellPkr.toFixed(2);
+            const elCostRate = document.getElementById('flight_cost_rate');
+            if (elCostRate) elCostRate.value = totalCostCurr.toFixed(2);
+            const elSellRate = document.getElementById('flight_selling_rate');
+            if (elSellRate) elSellRate.value = totalSellCurr.toFixed(2);
+
+            calcTotal();
+        }
+
+        window.onTripTypeChange = function(idx, val) {
+            const row = document.getElementById(`flight_person_row_${idx}`);
+            if (!row) return;
+            const depBox = row.querySelector('.box-dep-ticket');
+            const retBox = row.querySelector('.box-ret-ticket');
+            if (val === 'departure_only') {
+                if (depBox) {
+                    depBox.classList.remove('opacity-25');
+                    depBox.querySelectorAll('input').forEach(i => i.disabled = false);
+                }
+                if (retBox) {
+                    retBox.classList.add('opacity-25');
+                    retBox.querySelectorAll('input').forEach(i => i.disabled = true);
+                }
+            } else if (val === 'return_only') {
+                if (retBox) {
+                    retBox.classList.remove('opacity-25');
+                    retBox.querySelectorAll('input').forEach(i => i.disabled = false);
+                }
+                if (depBox) {
+                    depBox.classList.add('opacity-25');
+                    depBox.querySelectorAll('input').forEach(i => i.disabled = true);
+                }
+            } else {
+                if (depBox) {
+                    depBox.classList.remove('opacity-25');
+                    depBox.querySelectorAll('input').forEach(i => i.disabled = false);
+                }
+                if (retBox) {
+                    retBox.classList.remove('opacity-25');
+                    retBox.querySelectorAll('input').forEach(i => i.disabled = false);
+                }
+            }
+            calculateFlight();
+        };
+
+        // Helper to robustly select airline in dropdown by code, name or partial text
+        function setSelectAirline($sel, airVal) {
+            if (!$sel || !$sel.length || !airVal) return;
+            $sel.val(airVal);
+            if ($sel.val()) return;
+
+            const airLower = String(airVal).toLowerCase().trim();
+            let matchedVal = null;
+            $sel.find('option').each(function() {
+                const optVal = $(this).val();
+                const optText = $(this).text().toLowerCase().trim();
+                if (optVal && (optVal.toLowerCase().trim() === airLower || optText.includes(airLower) || airLower.includes(optVal.toLowerCase().trim()))) {
+                    matchedVal = optVal;
+                    return false;
+                }
+            });
+            if (matchedVal) {
+                $sel.val(matchedVal);
+            } else {
+                $sel.append(new Option(airVal, airVal, true, true));
+            }
+        }
+
+        // Auto-sync Flight Departure and Arrival dates/times into Transport routes
+        function syncFlightDatesToTransport(force = false) {
+            const depDate   = $('input[name="departure_date"]').val() || '';
+            const depTime   = $('input[name="departure_time"]').val() || '';
+            const depFlight = $('input[name="departure_flight"]').val() || '';
+            const depAir    = $('select[name="departure_airline"]').val() || '';
+
+            const arrDate   = $('input[name="arrival_date"]').val() || '';
+            const arrTime   = $('input[name="arrival_time"]').val() || '';
+            const arrFlight = $('input[name="arrival_flight"]').val() || '';
+            const arrAir    = $('select[name="arrival_airline"]').val() || '';
+
+            // 1. Sync Route 1 (Outbound / Arrival into KSA):
+            const route0 = $('.route-block').first();
+            if (route0.length && (depDate || depTime || depFlight || depAir)) {
+                const r0Date = route0.find('input[name*="[travel_date]"]');
+                if (r0Date.length && (force || !r0Date.val() || r0Date.attr('data-auto') === 'true')) {
+                    if (depDate) r0Date.val(depDate).attr('data-auto', 'true').trigger('change');
+                }
+                const r0Time = route0.find('input[name*="[travel_time]"]');
+                if (r0Time.length && (force || !r0Time.val() || r0Time.attr('data-auto') === 'true')) {
+                    if (depTime) r0Time.val(depTime).attr('data-auto', 'true');
+                }
+                const r0Flight = route0.find('input[name*="[flight_no]"]');
+                if (r0Flight.length && (force || !r0Flight.val() || r0Flight.attr('data-auto') === 'true')) {
+                    if (depFlight) r0Flight.val(depFlight).attr('data-auto', 'true');
+                }
+                const r0Air = route0.find('select[name*="[airline]"]');
+                if (r0Air.length && (force || !r0Air.val() || r0Air.attr('data-auto') === 'true')) {
+                    if (depAir) {
+                        setSelectAirline(r0Air, depAir);
+                        r0Air.attr('data-auto', 'true');
+                    }
+                }
+                const r0From = route0.find('input[name*="[pickup_from]"]');
+                if (r0From.length && (force || !r0From.val() || r0From.attr('data-auto') === 'true')) {
+                    r0From.val('JED APT').attr('data-auto', 'true');
+                }
+                const r0To = route0.find('input[name*="[destination]"]');
+                if (r0To.length && (force || !r0To.val() || r0To.attr('data-auto') === 'true')) {
+                    r0To.val('MAK HTL').attr('data-auto', 'true');
+                }
+            }
+
+            // 2. Sync Route 2 (Inbound / Return from KSA):
+            if (arrDate || arrTime || arrFlight || arrAir) {
+                // If only 1 route block exists, dynamically add Route 2 if force or transport tab active
+                if ($('.route-block').length === 1 && (force || $('#tab-transport').hasClass('active') || $('#tab-transport').hasClass('show'))) {
+                    const addBtn = document.getElementById('addRoute');
+                    if (addBtn) addBtn.click();
+                }
+
+                const routeBlocks = $('.route-block');
+                if (routeBlocks.length >= 2) {
+                    const routeReturn = routeBlocks.eq(1);
+                    const rRetDate = routeReturn.find('input[name*="[travel_date]"]');
+                    if (rRetDate.length && (force || !rRetDate.val() || rRetDate.attr('data-auto') === 'true')) {
+                        if (arrDate) rRetDate.val(arrDate).attr('data-auto', 'true').trigger('change');
+                    }
+                    const rRetTime = routeReturn.find('input[name*="[travel_time]"]');
+                    if (rRetTime.length && (force || !rRetTime.val() || rRetTime.attr('data-auto') === 'true')) {
+                        if (arrTime) rRetTime.val(arrTime).attr('data-auto', 'true');
+                    }
+                    const rRetFlight = routeReturn.find('input[name*="[flight_no]"]');
+                    if (rRetFlight.length && (force || !rRetFlight.val() || rRetFlight.attr('data-auto') === 'true')) {
+                        if (arrFlight) rRetFlight.val(arrFlight).attr('data-auto', 'true');
+                    }
+                    const rRetAir = routeReturn.find('select[name*="[airline]"]');
+                    if (rRetAir.length && (force || !rRetAir.val() || rRetAir.attr('data-auto') === 'true')) {
+                        if (arrAir) {
+                            setSelectAirline(rRetAir, arrAir);
+                            rRetAir.attr('data-auto', 'true');
+                        }
+                    }
+                    const rRetFrom = routeReturn.find('input[name*="[pickup_from]"]');
+                    if (rRetFrom.length && (force || !rRetFrom.val() || rRetFrom.attr('data-auto') === 'true')) {
+                        rRetFrom.val('MAK HTL').attr('data-auto', 'true');
+                    }
+                    const rRetTo = routeReturn.find('input[name*="[destination]"]');
+                    if (rRetTo.length && (force || !rRetTo.val() || rRetTo.attr('data-auto') === 'true')) {
+                        rRetTo.val('JED APT').attr('data-auto', 'true');
+                    }
+                }
+            }
+
+            if (typeof updateTransportSummary === 'function') updateTransportSummary();
+        }
+
+        $(document).on('input change', 'input[name="departure_date"], input[name="departure_time"], input[name="departure_flight"], select[name="departure_airline"], input[name="arrival_date"], input[name="arrival_time"], input[name="arrival_flight"], select[name="arrival_airline"]', function() {
+            syncFlightDatesToTransport();
+        });
+
+        $(document).on('input change', '.route-block input[name*="[travel_date]"], .route-block input[name*="[travel_time]"], .route-block input[name*="[flight_no]"], .route-block select[name*="[airline]"]', function(e) {
+            if (e.originalEvent) {
+                $(this).attr('data-auto', 'false');
+            }
+        });
+
+        $(document).on('click', '.btn-set-transport-dep', function(e) {
+            e.preventDefault();
+            const depDate = $('input[name="departure_date"]').val() || '';
+            const depTime = $('input[name="departure_time"]').val() || '';
+            const depFlight = $('input[name="departure_flight"]').val() || '';
+            const depAir = $('select[name="departure_airline"]').val() || '';
+
+            const block = $(this).closest('.route-block');
+            if (depDate || depTime || depFlight || depAir) {
+                if (depDate) block.find('input[name*="[travel_date]"]').val(depDate).attr('data-auto', 'true').trigger('change');
+                if (depTime) block.find('input[name*="[travel_time]"]').val(depTime).attr('data-auto', 'true');
+                if (depFlight) block.find('input[name*="[flight_no]"]').val(depFlight).attr('data-auto', 'true');
+                if (depAir) {
+                    setSelectAirline(block.find('select[name*="[airline]"]'), depAir);
+                    block.find('select[name*="[airline]"]').attr('data-auto', 'true');
+                }
+                const pFrom = block.find('input[name*="[pickup_from]"]');
+                if (pFrom.length && (!pFrom.val() || pFrom.attr('data-auto') === 'true')) pFrom.val('JED APT').attr('data-auto', 'true');
+                const pTo = block.find('input[name*="[destination]"]');
+                if (pTo.length && (!pTo.val() || pTo.attr('data-auto') === 'true')) pTo.val('MAK HTL').attr('data-auto', 'true');
+                if (typeof updateTransportSummary === 'function') updateTransportSummary();
+            } else {
+                alert('Please enter Departure Date / Flight details in Flight tab first.');
+            }
+        });
+
+        $(document).on('click', '.btn-set-transport-arr', function(e) {
+            e.preventDefault();
+            const arrDate = $('input[name="arrival_date"]').val() || '';
+            const arrTime = $('input[name="arrival_time"]').val() || '';
+            const arrFlight = $('input[name="arrival_flight"]').val() || '';
+            const arrAir = $('select[name="arrival_airline"]').val() || '';
+
+            const block = $(this).closest('.route-block');
+            if (arrDate || arrTime || arrFlight || arrAir) {
+                if (arrDate) block.find('input[name*="[travel_date]"]').val(arrDate).attr('data-auto', 'true').trigger('change');
+                if (arrTime) block.find('input[name*="[travel_time]"]').val(arrTime).attr('data-auto', 'true');
+                if (arrFlight) block.find('input[name*="[flight_no]"]').val(arrFlight).attr('data-auto', 'true');
+                if (arrAir) {
+                    setSelectAirline(block.find('select[name*="[airline]"]'), arrAir);
+                    block.find('select[name*="[airline]"]').attr('data-auto', 'true');
+                }
+                const pFrom = block.find('input[name*="[pickup_from]"]');
+                if (pFrom.length && (!pFrom.val() || pFrom.attr('data-auto') === 'true')) pFrom.val('MAK HTL').attr('data-auto', 'true');
+                const pTo = block.find('input[name*="[destination]"]');
+                if (pTo.length && (!pTo.val() || pTo.attr('data-auto') === 'true')) pTo.val('JED APT').attr('data-auto', 'true');
+                if (typeof updateTransportSummary === 'function') updateTransportSummary();
+            } else {
+                alert('Please enter Return / Arrival Date / Flight details in Flight tab first.');
+            }
+        });
+
+        $(document).on('click', '#btnAutoFillFlightToTransport', function(e) {
+            e.preventDefault();
+            syncFlightDatesToTransport(true);
+            const depDate = $('input[name="departure_date"]').val();
+            const arrDate = $('input[name="arrival_date"]').val();
+            if (depDate || arrDate) {
+                alert('Transport routes updated successfully from Flight details!');
+            } else {
+                alert('Please enter Flight Departure or Return details in the Flight tab first.');
+            }
+        });
+
+        // Passenger passport sync across tabs
+        $(document).on('input change', '.person-flight-passport', function() {
+            const row = $(this).closest('.flight-person-row');
+            const idx = row.attr('data-idx');
+            const val = $(this).val();
+            if (idx !== undefined) {
+                const targetEl = document.getElementById(`person_passport_${idx}`);
+                if (targetEl && targetEl.value !== val) targetEl.value = val;
+                if (idx == 0) {
+                    const fillPass = document.getElementById('fill_passport');
+                    if (fillPass && fillPass.value !== val) fillPass.value = val;
+                }
+            }
+        });
+
+        $(document).on('input change', '#fill_passport, [id^="person_passport_"]', function() {
+            const id = $(this).attr('id');
+            const val = $(this).val();
+            if (id === 'fill_passport' || id === 'person_passport_0') {
+                const row0Pass = document.querySelector('#flight_person_row_0 .person-flight-passport');
+                if (row0Pass && row0Pass.value !== val) row0Pass.value = val;
+                if (id === 'fill_passport') {
+                    const p0 = document.getElementById('person_passport_0');
+                    if (p0 && p0.value !== val) p0.value = val;
+                }
+            } else {
+                const match = id.match(/person_passport_(\d+)/);
+                if (match) {
+                    const rowPass = document.querySelector(`#flight_person_row_${match[1]} .person-flight-passport`);
+                    if (rowPass && rowPass.value !== val) rowPass.value = val;
+                }
+            }
+        });
+
+        function handleTicketStatusChange(select) {
+            const row = select.closest('tr');
+            if (!row) return;
+            const val = select.value;
+            select.className = 'form-select form-select-sm person-flight-status ' + 
+                (val === 'cancelled' ? 'bg-soft-danger text-danger border-danger fw-bold' : (val === 'refunded' ? 'bg-soft-warning text-warning border-warning fw-bold' : 'text-success fw-bold'));
+            
+            if (val === 'cancelled') {
+                row.classList.add('table-danger');
+                row.classList.remove('table-warning');
+                row.style.opacity = '0.65';
+                row.style.textDecoration = 'line-through';
+            } else if (val === 'refunded') {
+                row.classList.add('table-warning');
+                row.classList.remove('table-danger');
+                row.style.opacity = '0.85';
+                row.style.textDecoration = 'none';
+            } else {
+                row.classList.remove('table-danger', 'table-warning');
+                row.style.opacity = '1';
+                row.style.textDecoration = 'none';
+            }
+            calculateFlight();
+            if (typeof calcTotal === 'function') calcTotal();
+        }
+
+        // Master Flight Rates Cascade Button Handler
+        document.addEventListener('click', function(e) {
+            if (e.target && (e.target.id === 'btnCascadeFlightRates' || e.target.closest('#btnCascadeFlightRates'))) {
+                e.preventDefault();
+                const adultCost = parseFloat(document.getElementById('flight_adult_cost')?.value) || 0;
+                const adultSell = parseFloat(document.getElementById('flight_adult_sell')?.value) || 0;
+                const childCost = parseFloat(document.getElementById('flight_child_cost')?.value) || 0;
+                const childSell = parseFloat(document.getElementById('flight_child_sell')?.value) || 0;
+                const infantCost = parseFloat(document.getElementById('flight_infant_cost')?.value) || 0;
+                const infantSell = parseFloat(document.getElementById('flight_infant_sell')?.value) || 0;
+
+                const mainSup = document.getElementById('flight_supplier_id')?.value || '';
+                const depDate = document.querySelector('input[name="departure_date"]')?.value || '';
+                const depTime = document.querySelector('input[name="departure_time"]')?.value || '';
+                const depPnr  = document.querySelector('input[name="departure_pnr"]')?.value || '';
+
+                let updatedCount = 0;
+                document.querySelectorAll('.flight-person-row').forEach(row => {
+                    const pType = row.querySelector('.person-flight-pax-type')?.value || 'adult';
+                    const costInp = row.querySelector('.person-flight-cost');
+                    const sellInp = row.querySelector('.person-flight-sell');
+
+                    if (pType === 'adult') {
+                        if (costInp && adultCost > 0) costInp.value = adultCost.toFixed(2);
+                        if (sellInp && adultSell > 0) sellInp.value = adultSell.toFixed(2);
+                    } else if (pType === 'child') {
+                        if (costInp && childCost > 0) costInp.value = childCost.toFixed(2);
+                        if (sellInp && childSell > 0) sellInp.value = childSell.toFixed(2);
+                    } else if (pType === 'infant') {
+                        if (costInp && infantCost > 0) costInp.value = infantCost.toFixed(2);
+                        if (sellInp && infantSell > 0) sellInp.value = infantSell.toFixed(2);
+                    }
+
+                    const supSel  = row.querySelector('.person-flight-supplier');
+                    const dateInp = row.querySelector('.person-flight-date');
+                    const timeInp = row.querySelector('.person-flight-time');
+                    const pnrInp  = row.querySelector('.person-flight-pnr');
+                    const idx     = row.getAttribute('data-idx');
+
+                    if (supSel) {
+                        supSel.removeAttribute('data-customized');
+                        supSel.value = '';
+                        const badge = document.getElementById('person_sup_badge_' + idx);
+                        if (badge) {
+                            badge.className = 'badge bg-light text-muted border fs-10 mt-1 d-inline-block person-supplier-badge';
+                            badge.innerHTML = '<i class="mdi mdi-link-variant me-1"></i>Linked to Main Supplier';
+                        }
+                    }
+                    if (dateInp) {
+                        dateInp.removeAttribute('data-customized');
+                        dateInp.classList.remove('border-info');
+                        if (depDate) dateInp.value = depDate;
+                    }
+                    if (timeInp) {
+                        timeInp.removeAttribute('data-customized');
+                        timeInp.classList.remove('border-info');
+                        if (depTime) timeInp.value = depTime;
+                    }
+                    if (pnrInp) {
+                        pnrInp.removeAttribute('data-customized');
+                        pnrInp.classList.remove('border-info');
+                        if (depPnr) pnrInp.value = depPnr;
+                    }
+                    updatedCount++;
+                });
+
+                calculateFlight();
+                if (typeof calcTotal === 'function') calcTotal();
+                if (typeof showAutoRefreshToast === 'function') {
+                    showAutoRefreshToast(`Master flight rates, supplier & details applied to ${updatedCount} passengers!`);
+                } else {
+                    alert(`Master flight rates, supplier & details applied to ${updatedCount} passengers!`);
+                }
+            }
+        });
+
+        // Trip Type Toggle (One-Way vs Round-Trip)
+        document.addEventListener('change', function(e) {
+            if (e.target && e.target.classList.contains('flight-trip-type-radio')) {
+                const returnSec = document.getElementById('returnFlightSection');
+                if (!returnSec) return;
+                if (e.target.value === 'oneway') {
+                    returnSec.style.display = 'none';
+                } else {
+                    returnSec.style.display = 'flex';
+                }
+            }
+        });
+
+        // Hotels Dynamic Management
+        let hotelIdx = 2;
+
+        function addNewHotel(loc = 'makkah') {
+            try {
+                const hotelsList = document.getElementById('hotelsList');
+                if (!hotelsList) {
+                    console.error('hotelsList element not found!');
+                    return;
+                }
+
+                const existingHotels = document.querySelectorAll('#hotelsList .hotel-block');
+                hotelIdx = Math.max(hotelIdx, existingHotels.length);
+
+                const noHotelAlert = document.getElementById('noHotelAlert');
+                if (noHotelAlert) noHotelAlert.style.display = 'none';
+
+                const activeCategory = document.querySelector('input[name="booking_category"]:checked')?.value || 'umrah';
+                let locLabel = 'Makkah Hotel';
+                let locVal = 'makkah';
+
+                if (activeCategory === 'domestic') {
+                    loc = 'other';
+                    locLabel = 'Domestic Hotel';
+                    locVal = 'other';
+                } else if (activeCategory === 'international') {
+                    loc = 'other';
+                    locLabel = 'International Hotel';
+                    locVal = 'other';
+                } else {
+                    if (loc === 'madinah') { locLabel = 'Madinah Hotel'; locVal = 'madinah'; }
+                    else if (loc === 'other') { locLabel = 'Other Hotel'; locVal = 'other'; }
+                    else if (loc === 'jeddah') { locLabel = 'Jeddah Hotel'; locVal = 'jeddah'; }
+                }
+
+                const flightCurr = (activeCategory === 'domestic') ? 'PKR' : (document.getElementById('flight_currency')?.value || 'SAR');
+                const defaultCostRoe = (flightCurr === 'PKR') ? 1 : (document.getElementById('flight_cost_roe')?.value || 75);
+                const defaultSaleRoe = (flightCurr === 'PKR') ? 1 : (document.getElementById('flight_sale_roe')?.value || defaultCostRoe);
+                const isPkr = (flightCurr === 'PKR');
+                const hotelVoucherBase = document.getElementById('hotel_voucher_no')?.value || 'HTL-2026-00001';
+                const childVoucher = hotelVoucherBase + '-' + (hotelIdx + 1);
+
+                // Filter hotels by location & category
+                let relevantHotelsOptions = '';
+                try {
+                    relevantHotelsOptions = (activeCategory === 'domestic' || activeCategory === 'international')
+                        ? buildHotelsOptions()
+                        : buildHotelsOptions(loc === 'makkah' ? 'makkah' : (loc === 'madinah' ? 'madinah' : null));
+                } catch(e) {
+                    console.error('buildHotelsOptions error:', e);
+                    relevantHotelsOptions = typeof hotelsOptions !== 'undefined' ? hotelsOptions : '<option value="">Select Hotel</option>';
+                }
+
+            const html = `
+            <div class="hotel-block border rounded p-3 mb-3 bg-white shadow-sm" data-hotel-idx="${hotelIdx}" data-location="${locVal}" data-city="${locVal.toUpperCase()}">
+                <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+                    <div class="d-flex align-items-center gap-2">
+                        <h6 class="text-primary mb-0 fw-bold"><i class="mdi mdi-hotel me-1"></i> ${locLabel}</h6>
+                        <span class="badge bg-soft-success text-success border border-success fs-12 px-2 py-1 font-monospace">
+                            <i class="mdi mdi-ticket-confirmation me-1"></i>Voucher #: ${childVoucher}
+                        </span>
+                        <input type="hidden" name="hotels[${hotelIdx}][voucher_no]" value="${childVoucher}">
+                    </div>
+                    <button type="button" class="btn btn-outline-danger btn-sm remove-hotel"><i class="mdi mdi-delete-outline me-1"></i> Remove</button>
+                </div>
+                <input type="hidden" name="hotels[${hotelIdx}][location]" value="${locVal}">
+                
+                
+                <div class="p-2 mb-3 rounded bg-light border">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-5">
+                            <label class="form-label fw-bold text-dark mb-1"><i class="mdi mdi-calendar-range me-1 text-primary"></i> Stay Period (Check In & Check Out)</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-white text-primary fw-semibold"><i class="mdi mdi-login me-1"></i> Check In</span>
+                                <input type="date" name="hotels[${hotelIdx}][check_in]" class="form-control form-control-sm hotel-checkin" onchange="calculateHotelNights(${hotelIdx})">
+                                <span class="input-group-text bg-white text-danger fw-semibold"><i class="mdi mdi-logout me-1"></i> Check Out</span>
+                                <input type="date" name="hotels[${hotelIdx}][check_out]" class="form-control form-control-sm hotel-checkout" onchange="calculateHotelNights(${hotelIdx})">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label mb-1">Nights</label>
+                            <input type="number" name="hotels[${hotelIdx}][no_of_nights]" class="form-control form-control-sm hotel-nights" value="1" min="1"
+                                oninput="calculateHotelRow(this.closest('.hotel-block'), 'nights')" onchange="calculateHotelRow(this.closest('.hotel-block'), 'nights')">
+                        </div>
+                        <input type="hidden" name="hotels[${hotelIdx}][booking_date]" class="hotel-booking-date sync-booking-date" value="2026-11-05">
+                        <div class="col-md-3">
+                            <label class="form-label text-warning fw-bold mb-1"><i class="mdi mdi-calendar-clock me-1 text-warning"></i> Option Date</label>
+                            <input type="date" name="hotels[${hotelIdx}][option_date]" class="form-control form-control-sm hotel-option-date border-warning">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Hotel Name</label>
+                        <select name="hotels[${hotelIdx}][hotel_name]" class="form-select hotel-name-select select2" onchange="updateHotelStaySummary()">
+                            ${relevantHotelsOptions}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label d-flex justify-content-between align-items-center mb-1">
+                            <span>Hotel Supplier / Vendor</span>
+                            <button type="button" class="btn btn-xs btn-link text-primary p-0 text-decoration-none" onclick="refreshSuppliersList(true)" title="Reload Suppliers"><i class="mdi mdi-refresh"></i> Refresh</button>
+                        </label>
+                        <select name="hotels[${hotelIdx}][supplier_id]" class="form-select hotel-supplier-select select2">
+                            ${suppliersOptions}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label text-dark fw-bold">Currency</label>
+                        <select name="hotels[${hotelIdx}][currency]" class="form-select hotel-currency fw-bold"
+                            onchange="calculateHotelRow(this.closest('.hotel-block'))">
+                            <option value="SAR" ${flightCurr === 'SAR' ? 'selected' : ''}>SAR (Riyal)</option>
+                            <option value="PKR" ${flightCurr === 'PKR' ? 'selected' : ''}>PKR (Rupee)</option>
+                            <option value="USD" ${flightCurr === 'USD' ? 'selected' : ''}>USD (Dollar)</option>
+                            <option value="MYR" ${flightCurr === 'MYR' ? 'selected' : ''}>MYR (Ringgit)</option>
+                            <option value="AED" ${flightCurr === 'AED' ? 'selected' : ''}>AED (Dirham)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label text-danger fw-bold">Cost ROE</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light hotel-curr-prefix">1 ${flightCurr} =</span>
+                            <input type="number" step="0.0001" name="hotels[${hotelIdx}][cost_roe]" class="form-control hotel-cost-roe" value="${defaultCostRoe}" placeholder="75.00" ${isPkr ? 'readonly' : ''}
+                                oninput="calculateHotelRow(this.closest('.hotel-block'))" onchange="calculateHotelRow(this.closest('.hotel-block'))">
+                        </div>
+                        <input type="hidden" name="hotels[${hotelIdx}][roe]" class="hotel-roe" value="${defaultCostRoe}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label text-success fw-bold">Sale ROE</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light hotel-curr-prefix">1 ${flightCurr} =</span>
+                            <input type="number" step="0.0001" name="hotels[${hotelIdx}][sale_roe]" class="form-control hotel-sale-roe" value="${defaultSaleRoe}" placeholder="75.00" ${isPkr ? 'readonly' : ''}
+                                oninput="calculateHotelRow(this.closest('.hotel-block'))" onchange="calculateHotelRow(this.closest('.hotel-block'))">
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">Room Type</label>
+                        <select name="hotels[${hotelIdx}][room_type]" class="form-select hotel-room-type">
+                            <option value="single">Single</option>
+                            <option value="double" selected>Double</option>
+                            <option value="triple">Triple</option>
+                            <option value="quad">Quad</option>
+                            <option value="sharing">Sharing</option>
+                            <option value="suite">Suite</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">No. of Rooms</label>
+                        <input type="number" name="hotels[${hotelIdx}][no_of_rooms]" class="form-control hotel-rooms" value="1" min="1"
+                            oninput="calculateHotelRow(this.closest('.hotel-block'), 'rooms')" onchange="calculateHotelRow(this.closest('.hotel-block'), 'rooms')">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Hotel Room #</label>
+                        <input type="text" name="hotels[${hotelIdx}][room_number]" class="form-control hotel-room-number-input" placeholder="e.g. 402 / 505">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold"><i class="mdi mdi-silverware me-1 text-primary"></i> Meal Plan</label>
+                        <select name="hotels[${hotelIdx}][meal_plan]" class="form-select hotel-meal-plan" onchange="updateHotelStaySummary()">
+                            ${buildMealPlansOptions('BB')}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold"><i class="mdi mdi-eye me-1 text-info"></i> Room View</label>
+                        <select name="hotels[${hotelIdx}][room_view]" class="form-select hotel-room-view">
+                            ${buildRoomViewsOptions('Standard View')}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-danger fw-semibold">Cost Rate / Night (<span class="hotel-curr-label">${flightCurr}</span>)</label>
+                        <input type="number" step="0.01" name="hotels[${hotelIdx}][cost_per_night]" class="form-control hotel-cost-rate" placeholder="0.00" value="0"
+                            oninput="autoDivideHotelRates(this.closest('.hotel-block'), 'cost'); calculateHotelRow(this.closest('.hotel-block'), 'costRate')"
+                            onchange="autoDivideHotelRates(this.closest('.hotel-block'), 'cost'); calculateHotelRow(this.closest('.hotel-block'), 'costRate')">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-success fw-semibold">Sell Rate / Night (<span class="hotel-curr-label">${flightCurr}</span>)</label>
+                        <input type="number" step="0.01" name="hotels[${hotelIdx}][selling_per_night]" class="form-control hotel-sell-rate" placeholder="0.00" value="0"
+                            oninput="autoDivideHotelRates(this.closest('.hotel-block'), 'sell'); calculateHotelRow(this.closest('.hotel-block'), 'sellRate')"
+                            onchange="autoDivideHotelRates(this.closest('.hotel-block'), 'sell'); calculateHotelRow(this.closest('.hotel-block'), 'sellRate')">
+                    </div>
+
+                    
+                    <div class="col-12">
+                        <div class="d-flex flex-wrap align-items-center justify-content-between p-2 rounded bg-light border gap-2">
+                            <div class="d-flex flex-wrap gap-2">
+                                <button type="button" class="btn btn-xs btn-outline-info" onclick="divideHotelMainCost(${hotelIdx})" title="Divide main cost equally among passengers">
+                                    <i class="mdi mdi-calculator me-1"></i> Divide / Allocate Main Cost
+                                </button>
+                                <button type="button" class="btn btn-xs btn-outline-success" onclick="addAdditionalRoomToHotel(${hotelIdx})">
+                                    <i class="mdi mdi-plus-circle me-1"></i> + Add Additional Room
+                                </button>
+                            </div>
+                        </div>
+                        <div class="additional-rooms-container mt-2" id="additional_rooms_list_${hotelIdx}"></div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label text-danger fw-semibold">Total Cost (<span class="hotel-curr-label">${flightCurr}</span> & PKR)</label>
+                        <div class="p-1 px-2 border rounded bg-light">
+                            <div class="d-flex justify-content-between small text-danger"><span class="hotel-curr-name">${flightCurr}:</span><strong class="hotel-cost-sar-disp">0.00 ${flightCurr}</strong></div>
+                            <div class="d-flex justify-content-between small text-danger"><span>PKR:</span><strong class="hotel-cost-pkr-disp">0.00 PKR</strong></div>
+                        </div>
+                        <input type="hidden" name="hotels[${hotelIdx}][cost_amount]" class="hotel-cost-total" value="0">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label text-success fw-semibold">Total Sell (<span class="hotel-curr-label">${flightCurr}</span> & PKR)</label>
+                        <div class="p-1 px-2 border rounded bg-light">
+                            <div class="d-flex justify-content-between small text-success"><span class="hotel-curr-name">${flightCurr}:</span><strong class="hotel-sell-sar-disp">0.00 ${flightCurr}</strong></div>
+                            <div class="d-flex justify-content-between small text-success"><span>PKR:</span><strong class="hotel-sell-pkr-disp">0.00 PKR</strong></div>
+                        </div>
+                        <input type="hidden" name="hotels[${hotelIdx}][selling_amount]" class="hotel-sell-total" value="0">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Hotel Voucher / Booking Confirmation</label>
+                        <input type="file" name="hotels[${hotelIdx}][hotel_voucher]" class="form-control" accept="image/*,.pdf">
+                    </div>
+
+                    
+                    <div class="col-12 hotel-persons-wrapper mt-3 pt-3 border-top">
+                        <div class="p-2 px-3 mb-2 border rounded bg-light d-flex flex-wrap align-items-center justify-content-between gap-2">
+                            <div>
+                                <span class="fw-bold text-dark fs-12"><i class="mdi mdi-account-multiple me-1 text-primary"></i> Individual Passenger Hotel Rates:</span>
+                                <small class="text-muted d-block" style="font-size:11px;">Enter custom rates per night for each passenger independently below (e.g. Person 1 and Person 2 can have different rates).</small>
+                            </div>
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <div class="input-group input-group-sm" style="width: auto;">
+                                    <span class="input-group-text bg-white fs-11">Rate / Night (<span class="hotel-curr-label">${flightCurr}</span>):</span>
+                                    <input type="number" step="0.01" class="form-control form-control-sm text-end quick-hotel-cost" placeholder="Cost" style="width: 80px;">
+                                    <input type="number" step="0.01" class="form-control form-control-sm text-end quick-hotel-sell" placeholder="Sell" style="width: 80px;">
+                                    <button type="button" class="btn btn-primary btn-sm btn-quick-hotel-apply"><i class="mdi mdi-check me-1"></i> Apply to All Pax</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive border rounded bg-white shadow-sm mb-2">
+                            <table class="table table-sm table-hover align-middle mb-0 hotel-persons-table">
+                                <thead class="table-light fs-12">
+                                    <tr>
+                                        <th style="width: 35px;" class="text-center">#</th>
+                                        <th style="width: 25%;">Passenger Name</th>
+                                        <th style="width: 12%;" class="text-center">Nights</th>
+                                        <th style="width: 25%;" class="text-danger text-end">Cost / Night (<span class="hotel-curr-label">${flightCurr}</span>)</th>
+                                        <th style="width: 25%;" class="text-success text-end">Sell / Night (<span class="hotel-curr-label">${flightCurr}</span>)</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="hotel-persons-tbody">
+                                </tbody>
+                                <tfoot class="table-light fw-bold fs-12 border-top">
+                                    <tr>
+                                        <td colspan="3" class="text-dark">Hotel Passenger Totals:</td>
+                                        <td class="text-end text-danger">
+                                            <span class="hotel-person-tbl-cost-curr">0.00 ${flightCurr}</span>
+                                            <br><small class="text-danger fw-normal hotel-person-tbl-cost-pkr">0.00 PKR</small>
+                                        </td>
+                                        <td class="text-end text-success">
+                                            <span class="hotel-person-tbl-sell-curr">0.00 ${flightCurr}</span>
+                                            <br><small class="text-success fw-normal hotel-person-tbl-sell-pkr">0.00 PKR</small>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+
+            document.getElementById('hotelsList').insertAdjacentHTML('beforeend', html);
+            const lastRow = document.querySelector('#hotelsList .hotel-block:last-child');
+            hotelIdx++;
+            try { syncBookingHotelDates(); } catch(e) { console.error('syncBookingHotelDates error:', e); }
+            if (lastRow) {
+                try { if (typeof initBookingSelect2 === 'function') initBookingSelect2(lastRow); } catch(e) { console.error('initBookingSelect2 error:', e); }
+                try { syncHotelPersons(lastRow); } catch(e) { console.error('syncHotelPersons error:', e); }
+                try { autoDivideHotelRates(lastRow); } catch(e) { console.error('autoDivideHotelRates error:', e); }
+                try { calculateHotelRow(lastRow); } catch(e) { console.error('calculateHotelRow error:', e); }
+            }
+            try { calcTotal(); } catch(e) { console.error('calcTotal error:', e); }
+            try { updateHotelStaySummary(); } catch(e) { console.error('updateHotelStaySummary error:', e); }
+        } catch(err) {
+            console.error('addNewHotel exception:', err);
+        }
+    }
+    window.addNewHotel = addNewHotel;
+
+        // Explicit jQuery button event bindings for Add Hotel
+        $(document).on('click', '#btnAddMakkahHotel, .btn-hotel-makkah', function(e) {
+            e.preventDefault();
+            addNewHotel('makkah');
+        });
+        $(document).on('click', '#btnAddMadinahHotel, .btn-hotel-madinah', function(e) {
+            e.preventDefault();
+            addNewHotel('madinah');
+        });
+        $(document).on('click', '#btnAddOtherHotel, .btn-hotel-other', function(e) {
+            e.preventDefault();
+            addNewHotel('other');
+        });
+        $(document).on('click', '#addHotel, .btn-hotel-select', function(e) {
+            e.preventDefault();
+            addNewHotel('other');
+        });
+
+        document.getElementById('hotelsList')?.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-hotel') || e.target.closest('.remove-hotel')) {
+                e.target.closest('.hotel-block').remove();
+                if (document.querySelectorAll('#hotelsList .hotel-block').length === 0) {
+                    const noHotelAlert = document.getElementById('noHotelAlert');
+                    if (noHotelAlert) noHotelAlert.style.display = '';
+                }
+                syncBookingHotelDates();
+                calcTotal();
+            }
+        });
+
+        document.getElementById('hotelsList')?.addEventListener('change', function(e) {
+            if (e.target.classList.contains('hotel-currency')) {
+                const row = e.target.closest('.hotel-block');
+                const val = e.target.value;
+                const costRoeInput = row.querySelector('.hotel-cost-roe');
+                const saleRoeInput = row.querySelector('.hotel-sale-roe');
+                if (val === 'PKR') {
+                    if (costRoeInput) { costRoeInput.value = '1.0000'; costRoeInput.readOnly = true; }
+                    if (saleRoeInput) { saleRoeInput.value = '1.0000'; saleRoeInput.readOnly = true; }
+                } else {
+                    if (costRoeInput) {
+                        costRoeInput.readOnly = false;
+                        if (val === 'SAR') costRoeInput.value = '75.0000';
+                        else if (val === 'MYR') costRoeInput.value = '63.0000';
+                        else if (val === 'USD') costRoeInput.value = '278.0000';
+                        else if (val === 'AED') costRoeInput.value = '76.0000';
+                    }
+                    if (saleRoeInput) {
+                        saleRoeInput.readOnly = false;
+                        if (val === 'SAR') saleRoeInput.value = '75.0000';
+                        else if (val === 'MYR') saleRoeInput.value = '63.0000';
+                        else if (val === 'USD') saleRoeInput.value = '278.0000';
+                        else if (val === 'AED') saleRoeInput.value = '76.0000';
+                    }
+                }
+                calculateHotelRow(row);
+            }
+        });
+
+        function syncHotelPersons(hotelBlock) {
+            if (!hotelBlock) return;
+            const pax = parseInt(document.getElementById('no_of_pax')?.value) || 1;
+            const tbody = hotelBlock.querySelector('.hotel-persons-tbody');
+            if (!tbody) return;
+
+            const hotelIdx = hotelBlock.getAttribute('data-hotel-idx') || 0;
+            const curr = hotelBlock.querySelector('.hotel-currency')?.value || 'SAR';
+            const nights = parseFloat(hotelBlock.querySelector('.hotel-nights')?.value) || 1;
+            const isPkr = (curr === 'PKR');
+            const costRoe = isPkr ? 1 : (parseFloat(hotelBlock.querySelector('.hotel-cost-roe')?.value) || parseFloat(hotelBlock.querySelector('.hotel-roe')?.value) || 75);
+            const saleRoe = isPkr ? 1 : (parseFloat(hotelBlock.querySelector('.hotel-sale-roe')?.value) || costRoe || 75);
+
+            // Preserve any existing DOM input values
+            const existingDomData = {};
+            tbody.querySelectorAll('.hotel-person-row').forEach(row => {
+                const pIdx = row.getAttribute('data-person-idx');
+                if (pIdx !== null) {
+                    existingDomData[pIdx] = {
+                        cost: row.querySelector('.hotel-person-cost')?.value,
+                        sell: row.querySelector('.hotel-person-sell')?.value,
+                    };
+                }
+            });
+
+            // Check if saved rates exist in data-person-rates attribute
+            let savedPersonRates = [];
+            try {
+                const rawSaved = hotelBlock.getAttribute('data-person-rates');
+                if (rawSaved) {
+                    savedPersonRates = typeof rawSaved === 'string' ? JSON.parse(rawSaved) : rawSaved;
+                }
+            } catch(e) {}
+
+            let rowsHtml = '';
+            for (let p = 0; p < pax; p++) {
+                const pExisting = (typeof existingPersons !== 'undefined' && existingPersons && existingPersons[p]) ? existingPersons[p] : null;
+                const personName = document.getElementById(`person_name_${p}`)?.value || (pExisting ? pExisting.full_name : '') || `Passenger ${p + 1}`;
+                const inDom = existingDomData[p];
+                const inSaved = (savedPersonRates && savedPersonRates[p]) ? savedPersonRates[p] : null;
+
+                let pCost = '';
+                let pSell = '';
+
+                if (inDom) {
+                    pCost = inDom.cost !== undefined ? inDom.cost : '';
+                    pSell = inDom.sell !== undefined ? inDom.sell : '';
+                } else if (inSaved) {
+                    pCost = inSaved.cost_per_night !== undefined ? inSaved.cost_per_night : (inSaved.cost || '');
+                    pSell = inSaved.selling_per_night !== undefined ? inSaved.selling_per_night : (inSaved.sell || '');
+                }
+
+                // If still empty and hotel has cost_per_night / selling_per_night from earlier
+                if (pCost === '') {
+                    const hCostRate = parseFloat(hotelBlock.querySelector('.hotel-cost-rate')?.value) || 0;
+                    if (hCostRate > 0) {
+                        pCost = (pax > 1 ? (hCostRate / pax).toFixed(2) : hCostRate.toFixed(2));
+                    }
+                }
+                if (pSell === '') {
+                    const hSellRate = parseFloat(hotelBlock.querySelector('.hotel-sell-rate')?.value) || 0;
+                    if (hSellRate > 0) {
+                        pSell = (pax > 1 ? (hSellRate / pax).toFixed(2) : hSellRate.toFixed(2));
+                    }
+                }
+
+                const costNum = parseFloat(pCost) || 0;
+                const sellNum = parseFloat(pSell) || 0;
+                const totCostForeign = costNum * nights;
+                const totCostPkr = totCostForeign * costRoe;
+                const totSellForeign = sellNum * nights;
+                const totSellPkr = totSellForeign * saleRoe;
+
+                const pType = document.getElementById(`person_pax_type_${p}`)?.value || 'adult';
+                const hBadgeClass = pType === 'child' ? 'bg-info text-dark' : (pType === 'infant' ? 'bg-warning text-dark' : 'bg-primary');
+                const pTypeLabel = pType.toUpperCase();
+
+                rowsHtml += `
+                <tr class="hotel-person-row" data-person-idx="${p}">
+                    <td class="text-center text-muted fw-bold">${p + 1}</td>
+                    <td>
+                        <strong class="text-primary person-hotel-name-disp">${personName}</strong>
+                        <span class="badge ${hBadgeClass} person-hotel-type-badge ms-1" style="font-size:10px;">${pTypeLabel}</span>
+                        <input type="hidden" name="hotels[${hotelIdx}][person_rates][${p}][name]" class="person-hotel-name" value="${personName}">
+                    </td>
+                    <td class="text-center fw-semibold hotel-person-nights-disp">${nights}</td>
+                    <td>
+                        <input type="number" step="0.01" name="hotels[${hotelIdx}][person_rates][${p}][cost_per_night]"
+                            class="form-control form-control-sm text-end hotel-person-cost" value="${pCost}" placeholder="0.00"
+                            oninput="calculateHotelRow(this.closest('.hotel-block'), 'personRate')"
+                            onchange="calculateHotelRow(this.closest('.hotel-block'), 'personRate')">
+                        <small class="text-danger d-block text-end hotel-person-cost-disp" style="font-size:11px;">
+                            ${totCostForeign.toFixed(2)} ${curr} (${totCostPkr.toFixed(2)} PKR)
+                        </small>
+                        <input type="hidden" name="hotels[${hotelIdx}][person_rates][${p}][total_cost]" class="hotel-person-total-cost" value="${totCostPkr.toFixed(2)}">
+                    </td>
+                    <td>
+                        <input type="number" step="0.01" name="hotels[${hotelIdx}][person_rates][${p}][selling_per_night]"
+                            class="form-control form-control-sm text-end hotel-person-sell" value="${pSell}" placeholder="0.00"
+                            oninput="calculateHotelRow(this.closest('.hotel-block'), 'personRate')"
+                            onchange="calculateHotelRow(this.closest('.hotel-block'), 'personRate')">
+                        <small class="text-success d-block text-end hotel-person-sell-disp" style="font-size:11px;">
+                            ${totSellForeign.toFixed(2)} ${curr} (${totSellPkr.toFixed(2)} PKR)
+                        </small>
+                        <input type="hidden" name="hotels[${hotelIdx}][person_rates][${p}][total_selling]" class="hotel-person-total-sell" value="${totSellPkr.toFixed(2)}">
+                    </td>
+                </tr>`;
+            }
+
+            tbody.innerHTML = rowsHtml;
+        }
+
+        function syncAllHotelPersons() {
+            document.querySelectorAll('.hotel-block').forEach((block, idx) => {
+                block.setAttribute('data-hotel-idx', idx);
+                syncHotelPersons(block);
+                calculateHotelRow(block);
+            });
+        }
+
+        function calculateHotelRow(row, source) {
+            if (!row) return;
+            const nights = parseFloat(row.querySelector('.hotel-nights')?.value) || 0;
+            const rooms  = parseFloat(row.querySelector('.hotel-rooms')?.value) || 1;
+            const curr   = row.querySelector('.hotel-currency')?.value || 'SAR';
+            const isPkr  = (curr === 'PKR');
+
+            const costRoeInput = row.querySelector('.hotel-cost-roe');
+            const saleRoeInput = row.querySelector('.hotel-sale-roe');
+
+            if (isPkr) {
+                if (costRoeInput) { costRoeInput.value = '1.0000'; costRoeInput.readOnly = true; }
+                if (saleRoeInput) { saleRoeInput.value = '1.0000'; saleRoeInput.readOnly = true; }
+            } else {
+                if (costRoeInput) costRoeInput.readOnly = false;
+                if (saleRoeInput) saleRoeInput.readOnly = false;
+            }
+
+            const costRoe = isPkr ? 1 : (parseFloat(costRoeInput?.value) || parseFloat(row.querySelector('.hotel-roe')?.value) || 1);
+            const saleRoe = isPkr ? 1 : (parseFloat(saleRoeInput?.value) || costRoe || 1);
+
+            const legacyRoe = row.querySelector('.hotel-roe');
+            if (legacyRoe) legacyRoe.value = costRoe;
+
+            row.querySelectorAll('.hotel-curr-label').forEach(el => el.textContent = curr);
+            row.querySelectorAll('.hotel-curr-prefix').forEach(el => el.textContent = `1 ${curr} =`);
+            row.querySelectorAll('.hotel-curr-name').forEach(el => el.textContent = `${curr}:`);
+            row.querySelectorAll('.hotel-person-nights-disp').forEach(el => el.textContent = nights);
+
+            const personRows = row.querySelectorAll('.hotel-person-row');
+            let costCurr = 0;
+            let sellCurr = 0;
+
+            if (source === 'personRate') {
+                // User manually typed directly in passenger rows
+                let sumPersonCostForeign = 0;
+                let sumPersonSellForeign = 0;
+                personRows.forEach(pRow => {
+                    const cInput = pRow.querySelector('.hotel-person-cost');
+                    const sInput = pRow.querySelector('.hotel-person-sell');
+                    const cRate  = parseFloat(cInput?.value) || 0;
+                    const sRate  = parseFloat(sInput?.value) || 0;
+
+                    const pTotCostCurr = cRate * nights;
+                    const pTotCostPkr  = pTotCostCurr * costRoe;
+                    const pTotSellCurr = sRate * nights;
+                    const pTotSellPkr  = pTotSellCurr * saleRoe;
+
+                    sumPersonCostForeign += pTotCostCurr;
+                    sumPersonSellForeign += pTotSellCurr;
+
+                    const cDisp = pRow.querySelector('.hotel-person-cost-disp');
+                    const sDisp = pRow.querySelector('.hotel-person-sell-disp');
+                    if (cDisp) cDisp.textContent = `${pTotCostCurr.toFixed(2)} ${curr} (${pTotCostPkr.toFixed(2)} PKR)`;
+                    if (sDisp) sDisp.textContent = `${pTotSellCurr.toFixed(2)} ${curr} (${pTotSellPkr.toFixed(2)} PKR)`;
+
+                    const hidCost = pRow.querySelector('.hotel-person-total-cost');
+                    const hidSell = pRow.querySelector('.hotel-person-total-sell');
+                    if (hidCost) hidCost.value = pTotCostPkr.toFixed(2);
+                    if (hidSell) hidSell.value = pTotSellPkr.toFixed(2);
+                });
+
+                costCurr = Math.round(sumPersonCostForeign * 100) / 100;
+                sellCurr = Math.round(sumPersonSellForeign * 100) / 100;
+
+                const crInput = row.querySelector('.hotel-cost-rate');
+                const srInput = row.querySelector('.hotel-sell-rate');
+                if (crInput && nights > 0 && rooms > 0) {
+                    crInput.value = (Math.round((costCurr / (nights * rooms)) * 100) / 100).toFixed(2);
+                }
+                if (srInput && nights > 0 && rooms > 0) {
+                    srInput.value = (Math.round((sellCurr / (nights * rooms)) * 100) / 100).toFixed(2);
+                }
+            } else {
+                // User changed rooms, nights, cost-rate, sell-rate, or on initial load
+                const costRate = parseFloat(row.querySelector('.hotel-cost-rate')?.value) || 0;
+                const sellRate = parseFloat(row.querySelector('.hotel-sell-rate')?.value) || 0;
+                costCurr = nights * rooms * costRate;
+                sellCurr = nights * rooms * sellRate;
+
+                if (personRows.length > 0) {
+                    autoDivideHotelRates(row);
+                    personRows.forEach(pRow => {
+                        const cInput = pRow.querySelector('.hotel-person-cost');
+                        const sInput = pRow.querySelector('.hotel-person-sell');
+                        const cRate  = parseFloat(cInput?.value) || 0;
+                        const sRate  = parseFloat(sInput?.value) || 0;
+
+                        const pTotCostCurr = cRate * nights;
+                        const pTotCostPkr  = pTotCostCurr * costRoe;
+                        const pTotSellCurr = sRate * nights;
+                        const pTotSellPkr  = pTotSellCurr * saleRoe;
+
+                        const cDisp = pRow.querySelector('.hotel-person-cost-disp');
+                        const sDisp = pRow.querySelector('.hotel-person-sell-disp');
+                        if (cDisp) cDisp.textContent = `${pTotCostCurr.toFixed(2)} ${curr} (${pTotCostPkr.toFixed(2)} PKR)`;
+                        if (sDisp) sDisp.textContent = `${pTotSellCurr.toFixed(2)} ${curr} (${pTotSellPkr.toFixed(2)} PKR)`;
+
+                        const hidCost = pRow.querySelector('.hotel-person-total-cost');
+                        const hidSell = pRow.querySelector('.hotel-person-total-sell');
+                        if (hidCost) hidCost.value = pTotCostPkr.toFixed(2);
+                        if (hidSell) hidSell.value = pTotSellPkr.toFixed(2);
+                    });
+                }
+            }
+
+            const costPkr = costCurr * costRoe;
+            const sellPkr = sellCurr * saleRoe;
+
+            const costSarDisp    = row.querySelector('.hotel-cost-sar-disp');
+            const costPkrDisp    = row.querySelector('.hotel-cost-pkr-disp');
+            const costTotalInput = row.querySelector('.hotel-cost-total');
+
+            const sellSarDisp    = row.querySelector('.hotel-sell-sar-disp');
+            const sellPkrDisp    = row.querySelector('.hotel-sell-pkr-disp');
+            const sellTotalInput = row.querySelector('.hotel-sell-total');
+
+            if (costSarDisp) costSarDisp.textContent = costCurr.toFixed(2) + ' ' + curr;
+            if (costPkrDisp) costPkrDisp.textContent = costPkr.toFixed(2) + ' PKR';
+            if (costTotalInput) costTotalInput.value = costPkr.toFixed(2);
+
+            if (sellSarDisp) sellSarDisp.textContent = sellCurr.toFixed(2) + ' ' + curr;
+            if (sellPkrDisp) sellPkrDisp.textContent = sellPkr.toFixed(2) + ' PKR';
+            if (sellTotalInput) sellTotalInput.value = sellPkr.toFixed(2);
+
+            const tblCostCurr = row.querySelector('.hotel-person-tbl-cost-curr');
+            const tblCostPkr  = row.querySelector('.hotel-person-tbl-cost-pkr');
+            const tblSellCurr = row.querySelector('.hotel-person-tbl-sell-curr');
+            const tblSellPkr  = row.querySelector('.hotel-person-tbl-sell-pkr');
+
+            if (tblCostCurr) tblCostCurr.textContent = costCurr.toFixed(2) + ' ' + curr;
+            if (tblCostPkr) tblCostPkr.textContent = costPkr.toFixed(2) + ' PKR';
+            if (tblSellCurr) tblSellCurr.textContent = sellCurr.toFixed(2) + ' ' + curr;
+            if (tblSellPkr) tblSellPkr.textContent = sellPkr.toFixed(2) + ' PKR';
+
+            let totalHotelSelling = 0;
+            document.querySelectorAll('.hotel-sell-total').forEach(el => {
+                totalHotelSelling += parseFloat(el.value) || 0;
+            });
+            if (document.getElementById('hotel_charges')) {
+                document.getElementById('hotel_charges').value = totalHotelSelling.toFixed(2);
+            }
+            calcTotal();
+            updateHotelStaySummary();
+        }
+
+        function calculateHotelCost(row) {
+            calculateHotelRow(row);
+        }
+
+        function calculateHotelNights(idx) {
+            const block = document.querySelector(`.hotel-block[data-hotel-idx="${idx}"]`);
+            if (!block) return;
+            const cin = block.querySelector('.hotel-checkin')?.value;
+            const cout = block.querySelector('.hotel-checkout')?.value;
+            if (cin && cout) {
+                const d1 = new Date(cin + 'T00:00:00');
+                const d2 = new Date(cout + 'T00:00:00');
+                const diffTime = d2.getTime() - d1.getTime();
+                const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+                const nightsInput = block.querySelector('.hotel-nights');
+                if (nightsInput) {
+                    nightsInput.value = diffDays > 0 ? diffDays : 1;
+                }
+            }
+            calculateHotelRow(block, 'nights');
+            calcTotal();
+            updateHotelStaySummary();
+        }
+
+        function updateHotelStaySummary() {
+            let minIn = null;
+            let maxOut = null;
+            let totalNights = 0;
+            let totalRooms = 0;
+            let totalCostForeign = 0;
+            let totalCostPkr = 0;
+            let totalSellForeign = 0;
+            let totalSellPkr = 0;
+            let hotelCurrs = new Set();
+            let summaryTableHtml = '';
+
+            const blocks = document.querySelectorAll('.hotel-block');
+            blocks.forEach(b => {
+                const cin = b.querySelector('.hotel-checkin')?.value;
+                const cout = b.querySelector('.hotel-checkout')?.value;
+                const nights = parseInt(b.querySelector('.hotel-nights')?.value) || 0;
+                const rooms = parseInt(b.querySelector('.hotel-rooms')?.value) || 0;
+                totalNights += nights;
+                totalRooms += rooms;
+                if (cin && (!minIn || cin < minIn)) minIn = cin;
+                if (cout && (!maxOut || cout > maxOut)) maxOut = cout;
+
+                // Hotel Name
+                let hName = '—';
+                const nameSelect = b.querySelector('.hotel-name-select');
+                const nameInput = b.querySelector('.hotel-name-input');
+                if (nameSelect && nameSelect.value) {
+                    hName = nameSelect.options[nameSelect.selectedIndex]?.text || nameSelect.value;
+                } else if (nameInput && nameInput.value) {
+                    hName = nameInput.value;
+                }
+
+                // City (from data-location or data-city)
+                const locAttr = b.getAttribute('data-location') || b.getAttribute('data-city') || 'makkah';
+                const city = locAttr.toUpperCase();
+
+                // Room Type, Rooms, Meal Plan
+                const roomType = (b.querySelector('.hotel-room-type, select[name*="[room_type]"]')?.value || 'DOUBLE').toUpperCase();
+                const mealPlan = (b.querySelector('.hotel-meal-plan, select[name*="[meal_plan]"]')?.value || 'BB').toUpperCase();
+
+                const curr = b.querySelector('.hotel-currency')?.value || 'SAR';
+                const isPkr = (curr === 'PKR');
+                const costRoe = isPkr ? 1 : (parseFloat(b.querySelector('.hotel-cost-roe')?.value) || parseFloat(b.querySelector('.hotel-roe')?.value) || 75);
+                const saleRoe = isPkr ? 1 : (parseFloat(b.querySelector('.hotel-sale-roe')?.value) || costRoe || 75);
+
+                const costRate = parseFloat(b.querySelector('.hotel-cost-rate, input[name*="[cost_per_night]"]')?.value) || 0;
+                const sellRate = parseFloat(b.querySelector('.hotel-sell-rate, input[name*="[selling_per_night]"]')?.value) || 0;
+
+                const cForeign = nights * rooms * costRate;
+                const sForeign = nights * rooms * sellRate;
+                const cPkr = cForeign * costRoe;
+                const sPkr = sForeign * saleRoe;
+
+                totalCostForeign += cForeign;
+                totalCostPkr += cPkr;
+                totalSellForeign += sForeign;
+                totalSellPkr += sPkr;
+                hotelCurrs.add(curr);
+
+                summaryTableHtml += `<tr>
+                    <td class="text-start fw-bold text-dark">${hName}</td>
+                    <td class="fw-semibold">${city}</td>
+                    <td>${cin || '—'}</td>
+                    <td>${cout || '—'}</td>
+                    <td class="fw-bold text-dark">${nights}</td>
+                    <td>${roomType}</td>
+                    <td>${rooms || 1}</td>
+                    <td>${mealPlan}</td>
+                    <td class="text-end text-danger fw-semibold">
+                        <span>${cForeign.toFixed(2)} ${curr}</span><br>
+                        <small class="text-muted fw-normal">${cPkr.toFixed(2)} PKR</small>
+                    </td>
+                    <td class="text-end text-success fw-semibold">
+                        <span>${sForeign.toFixed(2)} ${curr}</span><br>
+                        <small class="text-muted fw-normal">${sPkr.toFixed(2)} PKR</small>
+                    </td>
+                </tr>`;
+            });
+
+            const hotelCurrLabel = hotelCurrs.size === 1 ? Array.from(hotelCurrs)[0] : (hotelCurrs.size > 1 ? 'Mix' : 'SAR');
+
+            const summaryTableBody = document.getElementById('hotelAccommodationSummaryRows');
+            const summaryNightsTotal = document.getElementById('hotel_summary_total_nights');
+
+            if (summaryTableBody) {
+                if (blocks.length === 0) {
+                    summaryTableBody.innerHTML = '<tr><td colspan="10" class="text-muted py-2">No hotels added yet.</td></tr>';
+                } else {
+                    summaryTableBody.innerHTML = summaryTableHtml;
+                }
+            }
+
+            const summaryCostTotal = document.getElementById('hotel_summary_total_cost');
+            const summarySellTotal = document.getElementById('hotel_summary_total_sell');
+            if (summaryCostTotal) summaryCostTotal.innerHTML = `<span>${totalCostForeign.toFixed(2)} ${hotelCurrLabel}</span><br><small class="text-muted fw-normal">${totalCostPkr.toFixed(2)} PKR</small>`;
+            if (summarySellTotal) summarySellTotal.innerHTML = `<span>${totalSellForeign.toFixed(2)} ${hotelCurrLabel}</span><br><small class="text-muted fw-normal">${totalSellPkr.toFixed(2)} PKR</small>`;
+            if (summaryNightsTotal) {
+                summaryNightsTotal.textContent = totalNights;
+            }
+
+            // Also update the 4 stat cards
+            if (document.getElementById('hotel_cost_sar_total')) document.getElementById('hotel_cost_sar_total').textContent = `${totalCostForeign.toFixed(2)} ${hotelCurrLabel}`;
+            if (document.getElementById('hotel_cost_pkr_total')) document.getElementById('hotel_cost_pkr_total').textContent = `${totalCostPkr.toFixed(2)} PKR`;
+            if (document.getElementById('hotel_sell_sar_total')) document.getElementById('hotel_sell_sar_total').textContent = `${totalSellForeign.toFixed(2)} ${hotelCurrLabel}`;
+            if (document.getElementById('hotel_sell_pkr_total')) document.getElementById('hotel_sell_pkr_total').textContent = `${totalSellPkr.toFixed(2)} PKR`;
+
+            const sumDisp = document.getElementById('hotel_stay_summary_dates');
+            const nightsDisp = document.getElementById('hotel_stay_total_nights');
+            const roomsDisp = document.getElementById('hotel_stay_total_rooms');
+            if (sumDisp) {
+                if (minIn && maxOut) {
+                    sumDisp.textContent = `${minIn} to ${maxOut}`;
+                    sumDisp.className = 'badge bg-success text-white fs-12 ms-1';
+                } else if (minIn) {
+                    sumDisp.textContent = `Check-in: ${minIn}`;
+                    sumDisp.className = 'badge bg-soft-primary text-primary fs-12 ms-1';
+                } else {
+                    sumDisp.textContent = 'No check-in dates set';
+                    sumDisp.className = 'badge bg-light text-muted fs-12 ms-1';
+                }
+            }
+            if (nightsDisp) nightsDisp.textContent = totalNights;
+            if (roomsDisp) roomsDisp.textContent = totalRooms;
+        }
+
+        // Transport Routes Summary View
+        function updateTransportSummary() {
+            const blocks = document.querySelectorAll('.route-block');
+            let summaryHtml = '';
+            let totalQty = 0;
+            let totalCostForeign = 0;
+            let totalCostPkr = 0;
+            let totalSellForeign = 0;
+            let totalSellPkr = 0;
+            let transportCurrs = new Set();
+
+            blocks.forEach((b, idx) => {
+                const routeSelect = b.querySelector('.transport-route-select');
+                let routeName = '—';
+                if (routeSelect && routeSelect.value) {
+                    routeName = routeSelect.options[routeSelect.selectedIndex]?.text?.trim() || routeSelect.value;
+                }
+
+                const vehSelect = b.querySelector('.transport-vehicle-select');
+                let vehicle = '—';
+                if (vehSelect && vehSelect.value) {
+                    vehicle = vehSelect.options[vehSelect.selectedIndex]?.text?.trim() || vehSelect.value;
+                }
+
+                const qty = parseFloat(b.querySelector('input[name*="[quantity]"], .transport-qty')?.value) || 1;
+                totalQty += qty;
+
+                const date = b.querySelector('input[name*="[travel_date]"], input[name*="[date]"]')?.value || '—';
+                const time = b.querySelector('input[name*="[travel_time]"], input[name*="[time]"]')?.value || '';
+                const dateTime = time ? `${date} ${time}` : date;
+
+                const pax = b.querySelector('input[name*="[pax]"]')?.value || '—';
+
+                const supSelect = b.querySelector('select[name*="[supplier_id]"]');
+                let supName = '—';
+                if (supSelect && supSelect.value) {
+                    supName = supSelect.options[supSelect.selectedIndex]?.text?.trim() || 'Vendor';
+                }
+
+                const status = b.querySelector('select[name*="[status]"]')?.value || 'CONFIRMED';
+
+                const curr = b.querySelector('.transport-currency')?.value || 'SAR';
+                const isPkr = (curr === 'PKR');
+                const costRoe = isPkr ? 1 : (parseFloat(b.querySelector('.transport-cost-roe')?.value) || (curr === 'PKR' ? 1 : 75));
+                const saleRoe = isPkr ? 1 : (parseFloat(b.querySelector('.transport-sale-roe')?.value) || costRoe);
+
+                const costRate = parseFloat(b.querySelector('.transport-cost-rate, input[name*="[cost_rate]"]')?.value) || 0;
+                const sellRate = parseFloat(b.querySelector('.transport-sell-rate, input[name*="[selling_rate]"]')?.value) || 0;
+
+                const costCurr = costRate * qty;
+                const costPkr = costCurr * costRoe;
+                const sellCurr = sellRate * qty;
+                const sellPkr = sellCurr * saleRoe;
+
+                totalCostForeign += costCurr;
+                totalCostPkr += costPkr;
+                totalSellForeign += sellCurr;
+                totalSellPkr += sellPkr;
+                transportCurrs.add(curr);
+
+                summaryHtml += `<tr>
+                    <td class="text-start fw-bold text-dark">${routeName}</td>
+                    <td class="fw-semibold">${vehicle}</td>
+                    <td class="fw-bold text-primary">${qty}</td>
+                    <td>${dateTime}</td>
+                    <td>${pax}</td>
+                    <td>${supName}</td>
+                    <td><span class="badge bg-${status === 'CONFIRMED' ? 'success' : (status === 'CANCELLED' ? 'danger' : 'warning')}">${status}</span></td>
+                    <td class="text-end text-danger fw-semibold">
+                        <span>${costCurr.toFixed(2)} ${curr}</span><br>
+                        <small class="text-muted fw-normal">${costPkr.toFixed(2)} PKR</small>
+                    </td>
+                    <td class="text-end text-success fw-semibold">
+                        <span>${sellCurr.toFixed(2)} ${curr}</span><br>
+                        <small class="text-muted fw-normal">${sellPkr.toFixed(2)} PKR</small>
+                    </td>
+                </tr>`;
+            });
+
+            const transportCurrLabel = transportCurrs.size === 1 ? Array.from(transportCurrs)[0] : (transportCurrs.size > 1 ? 'Mix' : 'SAR');
+
+            const tbody = document.getElementById('transportRoutesSummaryRows');
+            if (tbody) {
+                if (blocks.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="9" class="text-muted py-2">No routes added yet.</td></tr>';
+                } else {
+                    tbody.innerHTML = summaryHtml;
+                }
+            }
+
+            const qtyDisp = document.getElementById('transport_summary_total_qty');
+            if (qtyDisp) qtyDisp.textContent = totalQty;
+
+            const sumCostTotal = document.getElementById('transport_summary_total_cost');
+            const sumSellTotal = document.getElementById('transport_summary_total_sell');
+            if (sumCostTotal) sumCostTotal.innerHTML = `<span>${totalCostForeign.toFixed(2)} ${transportCurrLabel}</span><br><small class="text-muted fw-normal">${totalCostPkr.toFixed(2)} PKR</small>`;
+            if (sumSellTotal) sumSellTotal.innerHTML = `<span>${totalSellForeign.toFixed(2)} ${transportCurrLabel}</span><br><small class="text-muted fw-normal">${totalSellPkr.toFixed(2)} PKR</small>`;
+
+            // Also update the 4 stat cards
+            if (document.getElementById('transport_cost_sar_total')) document.getElementById('transport_cost_sar_total').textContent = `${totalCostForeign.toFixed(2)} ${transportCurrLabel}`;
+            if (document.getElementById('transport_cost_pkr_total')) document.getElementById('transport_cost_pkr_total').textContent = `${totalCostPkr.toFixed(2)} PKR`;
+            if (document.getElementById('transport_sell_sar_total')) document.getElementById('transport_sell_sar_total').textContent = `${totalSellForeign.toFixed(2)} ${transportCurrLabel}`;
+            if (document.getElementById('transport_sell_pkr_total')) document.getElementById('transport_sell_pkr_total').textContent = `${totalSellPkr.toFixed(2)} PKR`;
+        }
+
+        // Integer-cent allocation helper so sum ALWAYS matches total exactly (no 99.99 or 200.01)
+        function allocateExactAmount(totalAmount, count) {
+            if (count <= 0) return [];
+            const totalCents = Math.round(totalAmount * 100);
+            const baseCents = Math.floor(totalCents / count);
+            let remainder = totalCents - (baseCents * count);
+
+            const amounts = [];
+            for (let i = 0; i < count; i++) {
+                const paxCents = baseCents + (i < remainder ? 1 : 0);
+                amounts.push((paxCents / 100).toFixed(2));
+            }
+            return amounts;
+        }
+
+        // Point 8: Automatic & Manual Main Cost Division Across Passengers
+        function autoDivideHotelRates(block, whichField) {
+            if (!block) return;
+            const personRows = block.querySelectorAll('.hotel-person-row');
+            const paxCount = personRows.length > 0 ? personRows.length : (parseInt(document.getElementById('no_of_pax')?.value) || 1);
+            if (paxCount <= 0) return;
+            const rooms = parseFloat(block.querySelector('.hotel-rooms')?.value) || 1;
+
+            if (!whichField || whichField === 'cost') {
+                const costRate = parseFloat(block.querySelector('.hotel-cost-rate')?.value) || 0;
+                const totalCostPerNight = costRate * rooms;
+                if (totalCostPerNight > 0) {
+                    const costAmounts = allocateExactAmount(totalCostPerNight, paxCount);
+                    personRows.forEach((el, idx) => {
+                        const cInput = el.querySelector('.hotel-person-cost');
+                        if (cInput) cInput.value = costAmounts[idx] || '0.00';
+                    });
+                } else {
+                    personRows.forEach(el => {
+                        const cInput = el.querySelector('.hotel-person-cost');
+                        if (cInput) cInput.value = '0.00';
+                    });
+                }
+            }
+
+            if (!whichField || whichField === 'sell') {
+                const sellRate = parseFloat(block.querySelector('.hotel-sell-rate')?.value) || 0;
+                const totalSellPerNight = sellRate * rooms;
+                if (totalSellPerNight > 0) {
+                    const sellAmounts = allocateExactAmount(totalSellPerNight, paxCount);
+                    personRows.forEach((el, idx) => {
+                        const sInput = el.querySelector('.hotel-person-sell');
+                        if (sInput) sInput.value = sellAmounts[idx] || '0.00';
+                    });
+                } else {
+                    personRows.forEach(el => {
+                        const sInput = el.querySelector('.hotel-person-sell');
+                        if (sInput) sInput.value = '0.00';
+                    });
+                }
+            }
+        }
+
+        function divideHotelMainCost(idx) {
+            const block = document.querySelector(`.hotel-block[data-hotel-idx="${idx}"]`);
+            if (!block) return;
+            autoDivideHotelRates(block);
+            calculateHotelRow(block);
+        }
+
+        // Point 9: Add Additional Room to existing hotel
+        let addRoomCounter = 100;
+        function addAdditionalRoomToHotel(hotelIdx) {
+            const container = document.getElementById(`additional_rooms_list_${hotelIdx}`);
+            if (!container) return;
+            const curr = document.querySelector(`.hotel-block[data-hotel-idx="${hotelIdx}"] .hotel-currency`)?.value || 'SAR';
+            const rId = addRoomCounter++;
+
+            const html = `
+            <div class="border rounded p-2 mb-2 bg-light additional-room-item" id="add_room_${hotelIdx}_${rId}">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <strong class="text-primary fs-12"><i class="mdi mdi-door"></i> Additional Room</strong>
+                    <button type="button" class="btn btn-xs btn-outline-danger" onclick="document.getElementById('add_room_${hotelIdx}_${rId}').remove(); calculateHotelRow(document.querySelector('.hotel-block[data-hotel-idx=\\'${hotelIdx}\\']')); updateHotelStaySummary();">×</button>
+                </div>
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <label class="form-label fs-11 mb-0">Room Type</label>
+                        <select name="hotels[${hotelIdx}][extra_rooms][${rId}][room_type]" class="form-select form-select-sm">
+                            <option value="single">Single</option>
+                            <option value="double" selected>Double</option>
+                            <option value="triple">Triple</option>
+                            <option value="quad">Quad</option>
+                            <option value="sharing">Sharing</option>
+                            <option value="suite">Suite</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fs-11 mb-0">Room #</label>
+                        <input type="text" name="hotels[${hotelIdx}][extra_rooms][${rId}][room_number]" class="form-control form-control-sm" placeholder="e.g. 502">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fs-11 mb-0">Cost Rate (${curr})</label>
+                        <input type="number" step="0.01" name="hotels[${hotelIdx}][extra_rooms][${rId}][cost_rate]" class="form-control form-control-sm add-room-cost" value="0">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fs-11 mb-0">Sell Rate (${curr})</label>
+                        <input type="number" step="0.01" name="hotels[${hotelIdx}][extra_rooms][${rId}][sell_rate]" class="form-control form-control-sm add-room-sell" value="0">
+                    </div>
+                </div>
+            </div>`;
+            container.insertAdjacentHTML('beforeend', html);
+            updateHotelStaySummary();
+        }
+
+        // Transports Dynamic Management
+        let routeIdx = 1;
+
+        function addNewRoute() {
+            try {
+                const routesList = document.getElementById('routesList');
+                if (!routesList) {
+                    console.error('routesList element not found!');
+                    return;
+                }
+                const existingRoutes = document.querySelectorAll('#routesList .route-block');
+                routeIdx = Math.max(routeIdx, existingRoutes.length);
+
+                const flightCurr = document.getElementById('flight_currency')?.value || 'SAR';
+                const defaultCostRoe = (flightCurr === 'PKR') ? 1 : (document.getElementById('flight_cost_roe')?.value || 75);
+                const defaultSaleRoe = (flightCurr === 'PKR') ? 1 : (document.getElementById('flight_sale_roe')?.value || defaultCostRoe);
+                const isPkr = (flightCurr === 'PKR');
+                const trnVoucherBase = document.getElementById('transport_voucher_no')?.value || 'TRN-2026-00001';
+                const childVoucher = trnVoucherBase + '-' + (routeIdx + 1);
+
+                routesList.insertAdjacentHTML('beforeend', `
+                <div class="route-block border rounded p-3 mb-2 bg-white shadow-sm">
+                    <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+                        <div class="d-flex align-items-center gap-2">
+                            <h6 class="text-dark mb-0 fw-bold"><i class="mdi mdi-bus me-1 text-warning"></i> Route #${routeIdx + 1}</h6>
+                            <span class="badge bg-soft-warning text-dark border border-warning fs-12 px-2 py-1 font-monospace">
+                                <i class="mdi mdi-ticket-confirmation me-1"></i>Voucher #: ${childVoucher}
+                            </span>
+                            <input type="hidden" name="transports[${routeIdx}][voucher_no]" value="${childVoucher}">
+                        </div>
+                        <button type="button" class="btn btn-outline-danger btn-sm remove-route">×</button>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-3"><label class="form-label">Route</label>
+                            <select name="transports[${routeIdx}][route]" class="form-select transport-route-select">
+                                ${routesOptions}
+                            </select></div>
+                        <div class="col-md-2"><label class="form-label">Vehicle</label>
+                            <select name="transports[${routeIdx}][vehicle]" class="form-select transport-vehicle-select">
+                                ${vehiclesOptions}
+                            </select></div>
+                        <div class="col-md-1"><label class="form-label">Qty</label>
+                            <input type="number" name="transports[${routeIdx}][quantity]" class="form-control transport-qty" value="1" min="1"
+                                oninput="calculateTransportRow(this.closest('.route-block'))" onchange="calculateTransportRow(this.closest('.route-block'))"></div>
+                        <div class="col-md-2"><label class="form-label">Type / Status</label>
+                            <select name="transports[${routeIdx}][status]" class="form-select">
+                                <option value="CONFIRMED" selected>CONFIRMED</option>
+                                <option value="PENDING">PENDING</option>
+                                <option value="CANCELLED">CANCELLED</option>
+                            </select></div>
+                        <div class="col-md-1"><label class="form-label">Pax</label>
+                            <input type="number" name="transports[${routeIdx}][pax]" class="form-control" value="1" min="1"></div>
+                        <div class="col-md-3"><label class="form-label">Transport Supplier / Vendor</label>
+                            <select name="transports[${routeIdx}][supplier_id]" class="form-select transport-supplier-select select2">
+                                ${suppliersOptions}
+                            </select></div>
+                        <div class="col-md-2">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label mb-0"><i class="mdi mdi-calendar-range me-1 text-primary"></i> Date</label>
+                                <div class="btn-group btn-group-sm">
+                                    <button type="button" class="btn btn-xs btn-outline-primary py-0 px-1 btn-set-transport-dep" style="font-size:10px;" title="Set Flight Departure Date">Dep</button>
+                                    <button type="button" class="btn btn-xs btn-outline-info py-0 px-1 btn-set-transport-arr" style="font-size:10px;" title="Set Flight Arrival Date">Arr</button>
+                                </div>
+                            </div>
+                            <input type="date" name="transports[${routeIdx}][travel_date]" class="form-control transport-travel-date">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label"><i class="mdi mdi-clock-outline me-1 text-primary"></i> Pickup Time</label>
+                            <input type="text" name="transports[${routeIdx}][travel_time]" class="form-control" placeholder="e.g. 0045 / 1200">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label"><i class="mdi mdi-airplane me-1 text-info"></i> Flight #</label>
+                            <input type="text" name="transports[${routeIdx}][flight_no]" class="form-control" placeholder="e.g. PK831">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label"><i class="mdi mdi-map-marker-outline me-1 text-success"></i> Pickup From</label>
+                            <input type="text" name="transports[${routeIdx}][pickup_from]" class="form-control transport-pickup-from" placeholder="e.g. JED APT">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label"><i class="mdi mdi-map-marker-check me-1 text-danger"></i> Destination</label>
+                            <input type="text" name="transports[${routeIdx}][destination]" class="form-control transport-destination" placeholder="e.g. MAK HTL">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-bold text-dark"><i class="mdi mdi-barcode me-1 text-secondary"></i> BRN #</label>
+                            <input type="text" name="transports[${routeIdx}][brn]" class="form-control" placeholder="BRN Number">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label"><i class="mdi mdi-airplane-takeoff me-1 text-info"></i> Airline</label>
+                            <select name="transports[${routeIdx}][airline]" class="form-select transport-airline-select">
+                                ${airlinesOptions}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <label class="form-label text-dark fw-bold">Currency</label>
+                            <select name="transports[${routeIdx}][currency]" class="form-select transport-currency fw-bold"
+                                onchange="calculateTransportRow(this.closest('.route-block'))">
+                                <option value="SAR" ${flightCurr === 'SAR' ? 'selected' : ''}>SAR (Riyal)</option>
+                                <option value="PKR" ${flightCurr === 'PKR' ? 'selected' : ''}>PKR (Rupee)</option>
+                                <option value="USD" ${flightCurr === 'USD' ? 'selected' : ''}>USD (Dollar)</option>
+                                <option value="MYR" ${flightCurr === 'MYR' ? 'selected' : ''}>MYR (Ringgit)</option>
+                                <option value="AED" ${flightCurr === 'AED' ? 'selected' : ''}>AED (Dirham)</option>
+                            </select></div>
+                        <div class="col-md-2">
+                            <label class="form-label text-danger fw-bold">Cost ROE</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light transport-curr-prefix">1 ${flightCurr} =</span>
+                                <input type="number" step="0.0001" name="transports[${routeIdx}][cost_roe]" class="form-control transport-cost-roe" placeholder="75.00" value="${defaultCostRoe}" ${isPkr ? 'readonly' : ''}
+                                    oninput="calculateTransportRow(this.closest('.route-block'))" onchange="calculateTransportRow(this.closest('.route-block'))">
+                            </div>
+                            <input type="hidden" name="transports[${routeIdx}][roe]" class="transport-roe" value="${defaultCostRoe}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label text-success fw-bold">Sale ROE</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light transport-curr-prefix">1 ${flightCurr} =</span>
+                                <input type="number" step="0.0001" name="transports[${routeIdx}][sale_roe]" class="form-control transport-sale-roe" placeholder="75.00" value="${defaultSaleRoe}" ${isPkr ? 'readonly' : ''}
+                                    oninput="calculateTransportRow(this.closest('.route-block'))" onchange="calculateTransportRow(this.closest('.route-block'))">
+                            </div>
+                        </div>
+                        <div class="col-md-2"><label class="form-label text-danger fw-semibold">Cost Rate (<span class="transport-curr-label">${flightCurr}</span>)</label>
+                            <input type="number" step="0.01" name="transports[${routeIdx}][cost_rate]" class="form-control transport-cost-rate" placeholder="0.00" value="0"
+                                oninput="calculateTransportRow(this.closest('.route-block'))" onchange="calculateTransportRow(this.closest('.route-block'))"></div>
+                        <div class="col-md-3"><label class="form-label text-danger fw-semibold">Total Cost (<span class="transport-curr-label">${flightCurr}</span> & PKR)</label>
+                            <div class="p-1 px-2 border rounded bg-light">
+                                <div class="d-flex justify-content-between small text-danger"><span class="transport-curr-name">${flightCurr}:</span><strong class="transport-cost-sar-disp">0.00 ${flightCurr}</strong></div>
+                                <div class="d-flex justify-content-between small text-danger"><span>PKR:</span><strong class="transport-cost-pkr-disp">0.00 PKR</strong></div>
+                            </div>
+                            <input type="hidden" name="transports[${routeIdx}][cost_amount]" class="transport-cost-amount" value="0"></div>
+                        <div class="col-md-2"><label class="form-label text-success fw-semibold">Sell Rate (<span class="transport-curr-label">${flightCurr}</span>)</label>
+                            <input type="number" step="0.01" name="transports[${routeIdx}][selling_rate]" class="form-control transport-sell-rate" placeholder="0.00" value="0"
+                                oninput="calculateTransportRow(this.closest('.route-block'))" onchange="calculateTransportRow(this.closest('.route-block'))"></div>
+                        <div class="col-md-3"><label class="form-label text-success fw-semibold">Total Sell (<span class="transport-curr-label">${flightCurr}</span> & PKR)</label>
+                            <div class="p-1 px-2 border rounded bg-light">
+                                <div class="d-flex justify-content-between small text-success"><span class="transport-curr-name">${flightCurr}:</span><strong class="transport-sell-sar-disp">0.00 ${flightCurr}</strong></div>
+                                <div class="d-flex justify-content-between small text-success"><span>PKR:</span><strong class="transport-sell-pkr-disp">0.00 PKR</strong></div>
+                            </div>
+                            <input type="hidden" name="transports[${routeIdx}][selling_amount]" class="transport-sell-amount" value="0"></div>
+                        <div class="col-md-6"><label class="form-label">Notes</label>
+                            <input type="text" name="transports[${routeIdx}][notes]" class="form-control" placeholder="Notes"></div>
+                        <div class="col-md-6"><label class="form-label">Transport Ticket / Receipt</label>
+                            <input type="file" name="transports[${routeIdx}][transport_ticket]" class="form-control" accept="image/*,.pdf"></div>
+                    </div>
+                </div>`);
+            routeIdx++;
+            const newRouteBlock = $('.route-block').last();
+            const arrDate = $('input[name="arrival_date"]').val();
+            const arrTime = $('input[name="arrival_time"]').val();
+            const arrFlight = $('input[name="arrival_flight"]').val();
+            const arrAir = $('select[name="arrival_airline"]').val();
+            if ($('.route-block').length >= 2 && (arrDate || arrTime || arrFlight || arrAir)) {
+                if (arrDate) newRouteBlock.find('input[name*="[travel_date]"]').val(arrDate).attr('data-auto', 'true');
+                if (arrTime) newRouteBlock.find('input[name*="[travel_time]"]').val(arrTime).attr('data-auto', 'true');
+                if (arrFlight) newRouteBlock.find('input[name*="[flight_no]"]').val(arrFlight).attr('data-auto', 'true');
+                if (arrAir) {
+                    setSelectAirline(newRouteBlock.find('select[name*="[airline]"]'), arrAir);
+                    newRouteBlock.find('select[name*="[airline]"]').attr('data-auto', 'true');
+                }
+            }
+            if (typeof initBookingSelect2 === 'function') initBookingSelect2(newRouteBlock);
+            calculateAllTransports();
+            calcTotal();
+            updateTransportSummary();
+        } catch(err) {
+            console.error('addNewRoute error:', err);
+        }
+    }
+    window.addNewRoute = addNewRoute;
+
+    $(document).on('click', '#addRoute', function(e) {
+        e.preventDefault();
+        addNewRoute();
+    });
+
+        document.getElementById('routesList')?.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-route') || e.target.closest('.remove-route')) {
+                e.target.closest('.route-block').remove();
+                calculateAllTransports();
+                updateTransportSummary();
+            }
+        });
+
+        document.getElementById('routesList')?.addEventListener('input', function(e) {
+            updateTransportSummary();
+        });
+
+        document.getElementById('routesList')?.addEventListener('change', function(e) {
+            if (e.target.classList.contains('transport-route-select')) {
+                const row = e.target.closest('.route-block');
+                const selectedText = e.target.options[e.target.selectedIndex]?.text || e.target.value || '';
+                let pickup = '';
+                let dest = '';
+                if (selectedText.includes('→')) {
+                    const parts = selectedText.split('→');
+                    pickup = parts[0]?.trim();
+                    dest = parts[1]?.trim();
+                } else if (selectedText.toUpperCase().includes(' TO ')) {
+                    const parts = selectedText.split(/ to /i);
+                    pickup = parts[0]?.trim();
+                    dest = parts[1]?.trim();
+                } else if (selectedText.includes('-')) {
+                    const parts = selectedText.split('-');
+                    pickup = parts[0]?.trim();
+                    dest = parts[1]?.trim();
+                }
+                const pickupInput = row?.querySelector('.transport-pickup-from');
+                const destInput = row?.querySelector('.transport-destination');
+                if (pickupInput && pickup) pickupInput.value = pickup;
+                if (destInput && dest) destInput.value = dest;
+            }
+
+            if (e.target.classList.contains('transport-currency')) {
+                const row = e.target.closest('.route-block');
+                const val = e.target.value;
+                const costRoeInput = row.querySelector('.transport-cost-roe');
+                const saleRoeInput = row.querySelector('.transport-sale-roe');
+                if (val === 'PKR') {
+                    if (costRoeInput) { costRoeInput.value = '1.0000'; costRoeInput.readOnly = true; }
+                    if (saleRoeInput) { saleRoeInput.value = '1.0000'; saleRoeInput.readOnly = true; }
+                } else {
+                    if (costRoeInput) {
+                        costRoeInput.readOnly = false;
+                        if (val === 'SAR') costRoeInput.value = '75.0000';
+                        else if (val === 'MYR') costRoeInput.value = '63.0000';
+                        else if (val === 'USD') costRoeInput.value = '278.0000';
+                        else if (val === 'AED') costRoeInput.value = '76.0000';
+                    }
+                    if (saleRoeInput) {
+                        saleRoeInput.readOnly = false;
+                        if (val === 'SAR') saleRoeInput.value = '75.0000';
+                        else if (val === 'MYR') saleRoeInput.value = '63.0000';
+                        else if (val === 'USD') saleRoeInput.value = '278.0000';
+                        else if (val === 'AED') saleRoeInput.value = '76.0000';
+                    }
+                }
+                calculateTransportRow(row);
+            }
+            updateTransportSummary();
+        });
+
+        function calculateTransportRow(row) {
+            if (!row) return;
+            const curr = row.querySelector('.transport-currency')?.value || 'SAR';
+            const isPkr = (curr === 'PKR');
+
+            const costRoeInput = row.querySelector('.transport-cost-roe');
+            const saleRoeInput = row.querySelector('.transport-sale-roe');
+
+            if (isPkr) {
+                if (costRoeInput) { costRoeInput.value = '1.0000'; costRoeInput.readOnly = true; }
+                if (saleRoeInput) { saleRoeInput.value = '1.0000'; saleRoeInput.readOnly = true; }
+            } else {
+                if (costRoeInput) costRoeInput.readOnly = false;
+                if (saleRoeInput) saleRoeInput.readOnly = false;
+            }
+
+            const costRoe = isPkr ? 1 : (parseFloat(costRoeInput?.value) || parseFloat(row.querySelector('.transport-roe')?.value) || 1);
+            const saleRoe = isPkr ? 1 : (parseFloat(saleRoeInput?.value) || costRoe || 1);
+
+            const legacyRoe = row.querySelector('.transport-roe');
+            if (legacyRoe) legacyRoe.value = costRoe;
+
+            row.querySelectorAll('.transport-curr-label').forEach(el => el.textContent = curr);
+            row.querySelectorAll('.transport-curr-prefix').forEach(el => el.textContent = `1 ${curr} =`);
+            row.querySelectorAll('.transport-curr-name').forEach(el => el.textContent = `${curr}:`);
+
+            const qty = parseFloat(row.querySelector('input[name*="[quantity]"], .transport-qty')?.value) || 1;
+            const costRate = parseFloat(row.querySelector('.transport-cost-rate')?.value) || 0;
+            const sellRate = parseFloat(row.querySelector('.transport-sell-rate')?.value) || 0;
+
+            const costCurr = costRate * qty;
+            const costPkr = costCurr * costRoe;
+            const sellCurr = sellRate * qty;
+            const sellPkr = sellCurr * saleRoe;
+
+            const costSarDisp = row.querySelector('.transport-cost-sar-disp');
+            const costPkrDisp = row.querySelector('.transport-cost-pkr-disp');
+            const costAmtInput = row.querySelector('.transport-cost-amount');
+
+            const sellSarDisp = row.querySelector('.transport-sell-sar-disp');
+            const sellPkrDisp = row.querySelector('.transport-sell-pkr-disp');
+            const sellAmtInput = row.querySelector('.transport-sell-amount');
+
+            if (costSarDisp) costSarDisp.textContent = costCurr.toFixed(2) + ' ' + curr;
+            if (costPkrDisp) costPkrDisp.textContent = costPkr.toFixed(2) + ' PKR';
+            if (costAmtInput) costAmtInput.value = costPkr.toFixed(2);
+
+            if (sellSarDisp) sellSarDisp.textContent = sellCurr.toFixed(2) + ' ' + curr;
+            if (sellPkrDisp) sellPkrDisp.textContent = sellPkr.toFixed(2) + ' PKR';
+            if (sellAmtInput) sellAmtInput.value = sellPkr.toFixed(2);
+
+            calculateAllTransports();
+        }
+
+        function calculateAllTransports() {
+            let totalTransportSelling = 0;
+            document.querySelectorAll('.transport-sell-amount').forEach(el => {
+                totalTransportSelling += parseFloat(el.value) || 0;
+            });
+            if (document.getElementById('transport_charges')) {
+                document.getElementById('transport_charges').value = totalTransportSelling.toFixed(2);
+            }
+            calcTotal();
+            updateTransportSummary();
+        }
+
+        document.getElementById('visasList')?.addEventListener('change', function(e) {
+            if (e.target.classList.contains('visa-currency')) {
+                const row = e.target.closest('.visa-card');
+                const val = e.target.value;
+                const costRoeInput = row.querySelector('.visa-cost-roe');
+                const saleRoeInput = row.querySelector('.visa-sale-roe');
+                if (val === 'PKR') {
+                    if (costRoeInput) { costRoeInput.value = '1.0000'; costRoeInput.readOnly = true; }
+                    if (saleRoeInput) { saleRoeInput.value = '1.0000'; saleRoeInput.readOnly = true; }
+                } else {
+                    if (costRoeInput) {
+                        costRoeInput.readOnly = false;
+                        if (val === 'SAR') costRoeInput.value = '75.0000';
+                        else if (val === 'MYR') costRoeInput.value = '63.0000';
+                        else if (val === 'USD') costRoeInput.value = '278.0000';
+                        else if (val === 'AED') costRoeInput.value = '76.0000';
+                    }
+                    if (saleRoeInput) {
+                        saleRoeInput.readOnly = false;
+                        if (val === 'SAR') saleRoeInput.value = '75.0000';
+                        else if (val === 'MYR') saleRoeInput.value = '63.0000';
+                        else if (val === 'USD') saleRoeInput.value = '278.0000';
+                        else if (val === 'AED') saleRoeInput.value = '76.0000';
+                    }
+                }
+                calculateVisaRow(row);
+            }
+        });
+
+        function calculateVisaRow(row) {
+            if (!row) return;
+            const curr = row.querySelector('.visa-currency')?.value || 'SAR';
+            const isPkr = (curr === 'PKR');
+
+            const costRoeInput = row.querySelector('.visa-cost-roe');
+            const saleRoeInput = row.querySelector('.visa-sale-roe');
+
+            if (isPkr) {
+                if (costRoeInput) { costRoeInput.value = '1.0000'; costRoeInput.readOnly = true; }
+                if (saleRoeInput) { saleRoeInput.value = '1.0000'; saleRoeInput.readOnly = true; }
+            } else {
+                if (costRoeInput) costRoeInput.readOnly = false;
+                if (saleRoeInput) saleRoeInput.readOnly = false;
+            }
+
+            const costRoe = isPkr ? 1 : (parseFloat(costRoeInput?.value) || parseFloat(row.querySelector('.visa-roe')?.value) || 1);
+            const saleRoe = isPkr ? 1 : (parseFloat(saleRoeInput?.value) || costRoe || 1);
+
+            const legacyRoe = row.querySelector('.visa-roe');
+            if (legacyRoe) legacyRoe.value = costRoe;
+
+            row.querySelectorAll('.visa-curr-label').forEach(el => el.textContent = curr);
+            row.querySelectorAll('.visa-curr-prefix').forEach(el => el.textContent = `1 ${curr} =`);
+            row.querySelectorAll('.visa-curr-name').forEach(el => el.textContent = `${curr}:`);
+
+            const costRate = parseFloat(row.querySelector('.visa-cost-rate')?.value) || 0;
+            const sellRate = parseFloat(row.querySelector('.visa-sell-rate')?.value) || 0;
+
+            const costCurr = costRate;
+            const costPkr = costCurr * costRoe;
+            const sellCurr = sellRate;
+            const sellPkr = sellCurr * saleRoe;
+
+            const costSarDisp = row.querySelector('.visa-cost-sar-disp');
+            const costPkrDisp = row.querySelector('.visa-cost-pkr-disp');
+            const costAmtInput = row.querySelector('.visa-cost-amount');
+
+            const sellSarDisp = row.querySelector('.visa-sell-sar-disp');
+            const sellPkrDisp = row.querySelector('.visa-sell-pkr-disp');
+            const sellAmtInput = row.querySelector('.visa-sell-amount');
+
+            if (costSarDisp) costSarDisp.textContent = costCurr.toFixed(2) + ' ' + curr;
+            if (costPkrDisp) costPkrDisp.textContent = costPkr.toFixed(2) + ' PKR';
+            if (costAmtInput) costAmtInput.value = costPkr.toFixed(2);
+
+            if (sellSarDisp) sellSarDisp.textContent = sellCurr.toFixed(2) + ' ' + curr;
+            if (sellPkrDisp) sellPkrDisp.textContent = sellPkr.toFixed(2) + ' PKR';
+            if (sellAmtInput) sellAmtInput.value = sellPkr.toFixed(2);
+
+            let totalVisaSelling = 0;
+            document.querySelectorAll('.visa-sell-amount').forEach(el => {
+                totalVisaSelling += parseFloat(el.value) || 0;
+            });
+            if (document.getElementById('visa_charges')) {
+                document.getElementById('visa_charges').value = totalVisaSelling.toFixed(2);
+            }
+            calcTotal();
+        }
+
+        function syncBookingHotelDates() {
+            // Non-intrusive: Keep for compatibility without force-clamping user-entered dates
+            return;
+        }
+
+        function handleHotelDateCalc(target) {
+            const row = target.closest('.hotel-block');
+            if (!row) return;
+
+            const checkInEl  = row.querySelector('input[name*="[check_in]"]');
+            const checkOutEl = row.querySelector('input[name*="[check_out]"]');
+            const nightsEl   = row.querySelector('input[name*="[no_of_nights]"]');
+
+            if (!checkInEl || !checkOutEl || !nightsEl) return;
+
+            const inVal  = checkInEl.value;
+            const outVal = checkOutEl.value;
+            const isNights = target === nightsEl;
+
+            if (inVal && outVal && !isNights) {
+                const dIn  = new Date(inVal + 'T00:00:00');
+                const dOut = new Date(outVal + 'T00:00:00');
+                const diff = Math.round((dOut.getTime() - dIn.getTime()) / (1000 * 3600 * 24));
+                if (!isNaN(diff) && diff > 0) {
+                    nightsEl.value = diff;
+                }
+            } else if (isNights && inVal) {
+                const nVal = parseInt(nightsEl.value) || 1;
+                const dIn = new Date(inVal + 'T00:00:00');
+                dIn.setDate(dIn.getDate() + nVal);
+                const year = dIn.getFullYear();
+                const month = String(dIn.getMonth() + 1).padStart(2, '0');
+                const day = String(dIn.getDate()).padStart(2, '0');
+                checkOutEl.value = `${year}-${month}-${day}`;
+            }
+
+            calculateHotelRow(row, 'nights');
+            calcTotal();
+            updateHotelStaySummary();
+        }
+
+        // Main Total and Dual Currency Costing Calculation
+        function calcTotal() {
+            const parseNum = (v) => parseFloat(String(v || 0).replace(/,/g, '')) || 0;
+            const adults   = parseInt(document.getElementById('pax_adults')?.value) || 0;
+            const children = parseInt(document.getElementById('pax_children')?.value) || 0;
+            const infants  = parseInt(document.getElementById('pax_infants')?.value) || 0;
+            const pax      = Math.max(1, adults + children + infants);
+
+            // 1. Flight Foreign & PKR (Cost & Selling)
+            const flightCurr = document.getElementById('flight_currency')?.value || 'SAR';
+            let flightForeign = 0;
+            const flSellDisp = document.getElementById('flight_sell_sar_total')?.textContent || '';
+            flightForeign = parseNum(flSellDisp);
+            const flightSaleRoe = (flightCurr === 'PKR') ? 1 : (parseNum(document.getElementById('flight_sale_roe')?.value) || parseNum(document.getElementById('flight_cost_roe')?.value) || 75);
+            const flightCostRoe = (flightCurr === 'PKR') ? 1 : (parseNum(document.getElementById('flight_cost_roe')?.value) || 75);
+
+            let flightCostForeign = 0;
+            const flCostDisp = document.getElementById('flight_cost_sar_total')?.textContent || '';
+            flightCostForeign = parseNum(flCostDisp);
+            let flightCostPkr = parseNum(document.getElementById('flight_cost')?.value);
+            if (flightCostPkr === 0 && flightCostForeign > 0) {
+                flightCostPkr = (flightCurr === 'PKR') ? flightCostForeign : (flightCostForeign * flightCostRoe);
+            }
+
+            let flightPkr = 0;
+            const flSellPkrDisp = document.getElementById('flight_sell_pkr_total')?.textContent || '';
+            if (flSellPkrDisp) {
+                flightPkr = parseNum(flSellPkrDisp);
+            }
+            if (flightPkr === 0) {
+                flightPkr = parseNum(document.getElementById('flight_charges')?.value);
+            }
+            if (flightPkr === 0 && flightForeign > 0) {
+                flightPkr = (flightCurr === 'PKR') ? flightForeign : (flightForeign * flightSaleRoe);
+            }
+
+            if (flightForeign === 0 && flightPkr > 0 && flightCurr !== 'PKR' && flightSaleRoe > 0) {
+                flightForeign = flightPkr / flightSaleRoe;
+                const elFlDisp = document.getElementById('flight_sell_sar_total');
+                if (elFlDisp) elFlDisp.textContent = flightForeign.toFixed(2) + ' ' + flightCurr;
+            }
+
+            // Always synchronize flight_charges input so it never stays 0
+            const elCharges = document.getElementById('flight_charges');
+            if (elCharges) elCharges.value = flightPkr.toFixed(2);
+            const elChargesDisp = document.getElementById('flight_charges_disp');
+            if (elChargesDisp) elChargesDisp.value = flightPkr.toFixed(2);
+
+            // 2. Hotel Foreign & PKR
+            // 2. Hotel Foreign & PKR
+            let hotelCostForeign = 0;
+            let hotelCostPkr = 0;
+            let hotelSellForeign = 0;
+            let hotelSellPkr = 0;
+            let hotelCurrs = new Set();
+            document.querySelectorAll('.hotel-block').forEach(row => {
+                const nights   = parseFloat(row.querySelector('.hotel-nights, input[name*="[no_of_nights]"]')?.value) || 0;
+                const rooms    = parseFloat(row.querySelector('.hotel-rooms, input[name*="[no_of_rooms]"]')?.value) || 1;
+                const costRate = parseFloat(row.querySelector('.hotel-cost-rate, input[name*="[cost_per_night]"]')?.value) || 0;
+                const sellRate = parseFloat(row.querySelector('.hotel-sell-rate, input[name*="[selling_per_night]"]')?.value) || 0;
+                const curr     = row.querySelector('.hotel-currency')?.value || 'SAR';
+                const isPkr    = (curr === 'PKR');
+                const costRoe  = isPkr ? 1 : (parseFloat(row.querySelector('.hotel-cost-roe')?.value) || parseFloat(row.querySelector('.hotel-roe')?.value) || 75);
+                const saleRoe  = isPkr ? 1 : (parseFloat(row.querySelector('.hotel-sale-roe')?.value) || costRoe || 75);
+
+                const cForeign = nights * rooms * costRate;
+                const sForeign = nights * rooms * sellRate;
+                const cPkr = cForeign * costRoe;
+                const sPkr = sForeign * saleRoe;
+
+                const costTotalInput = row.querySelector('.hotel-cost-total');
+                const sellTotalInput = row.querySelector('.hotel-sell-total');
+                const costSarDisp    = row.querySelector('.hotel-cost-sar-disp');
+                const costPkrDisp    = row.querySelector('.hotel-cost-pkr-disp');
+                const sellSarDisp    = row.querySelector('.hotel-sell-sar-disp');
+                const sellPkrDisp    = row.querySelector('.hotel-sell-pkr-disp');
+
+                if (costSarDisp) costSarDisp.textContent = cForeign.toFixed(2) + ' ' + curr;
+                if (costPkrDisp) costPkrDisp.textContent = cPkr.toFixed(2) + ' PKR';
+                if (costTotalInput) costTotalInput.value = cPkr.toFixed(2);
+
+                if (sellSarDisp) sellSarDisp.textContent = sForeign.toFixed(2) + ' ' + curr;
+                if (sellPkrDisp) sellPkrDisp.textContent = sPkr.toFixed(2) + ' PKR';
+                if (sellTotalInput) sellTotalInput.value = sPkr.toFixed(2);
+
+                hotelCostForeign += cForeign;
+                hotelCostPkr += cPkr;
+                hotelSellForeign += sForeign;
+                hotelSellPkr += sPkr;
+                hotelCurrs.add(curr);
+            });
+            const hotelCurrLabel = hotelCurrs.size === 1 ? Array.from(hotelCurrs)[0] : (hotelCurrs.size > 1 ? 'Mix' : 'SAR');
+            if (document.getElementById('hotel_charges')) document.getElementById('hotel_charges').value = hotelSellPkr.toFixed(2);
+            if (document.getElementById('hotel_cost_sar_total')) document.getElementById('hotel_cost_sar_total').textContent = hotelCostForeign.toFixed(2) + ' ' + hotelCurrLabel;
+            if (document.getElementById('hotel_cost_pkr_total')) document.getElementById('hotel_cost_pkr_total').textContent = hotelCostPkr.toFixed(2) + ' PKR';
+            if (document.getElementById('hotel_sell_sar_total')) document.getElementById('hotel_sell_sar_total').textContent = hotelSellForeign.toFixed(2) + ' ' + hotelCurrLabel;
+            if (document.getElementById('hotel_sell_pkr_total')) document.getElementById('hotel_sell_pkr_total').textContent = hotelSellPkr.toFixed(2) + ' PKR';
+
+            // 3. Transport Foreign & PKR
+            let transportCostForeign = 0;
+            let transportCostPkr = 0;
+            let transportSellForeign = 0;
+            let transportSellPkr = 0;
+            let transportCurrs = new Set();
+            document.querySelectorAll('.route-block').forEach(row => {
+                const qty      = parseFloat(row.querySelector('input[name*="[quantity]"], .transport-qty')?.value) || 1;
+                const costRate = parseFloat(row.querySelector('.transport-cost-rate, input[name*="[cost_rate]"]')?.value) || 0;
+                const sellRate = parseFloat(row.querySelector('.transport-sell-rate, input[name*="[selling_rate]"]')?.value) || 0;
+                const curr     = row.querySelector('.transport-currency')?.value || 'SAR';
+                const isPkr    = (curr === 'PKR');
+                const costRoe  = isPkr ? 1 : (parseFloat(row.querySelector('.transport-cost-roe')?.value) || parseFloat(row.querySelector('.transport-roe')?.value) || 75);
+                const saleRoe  = isPkr ? 1 : (parseFloat(row.querySelector('.transport-sale-roe')?.value) || costRoe || 75);
+
+                const lineCost = costRate * qty;
+                const lineSell = sellRate * qty;
+                const lineCostPkr = lineCost * costRoe;
+                const lineSellPkr = lineSell * saleRoe;
+
+                const costSarDisp  = row.querySelector('.transport-cost-sar-disp');
+                const costPkrDisp  = row.querySelector('.transport-cost-pkr-disp');
+                const costAmtInput = row.querySelector('.transport-cost-amount');
+                const sellSarDisp  = row.querySelector('.transport-sell-sar-disp');
+                const sellPkrDisp  = row.querySelector('.transport-sell-pkr-disp');
+                const sellAmtInput = row.querySelector('.transport-sell-amount');
+
+                if (costSarDisp) costSarDisp.textContent = lineCost.toFixed(2) + ' ' + curr;
+                if (costPkrDisp) costPkrDisp.textContent = lineCostPkr.toFixed(2) + ' PKR';
+                if (costAmtInput) costAmtInput.value = lineCostPkr.toFixed(2);
+
+                if (sellSarDisp) sellSarDisp.textContent = lineSell.toFixed(2) + ' ' + curr;
+                if (sellPkrDisp) sellPkrDisp.textContent = lineSellPkr.toFixed(2) + ' PKR';
+                if (sellAmtInput) sellAmtInput.value = lineSellPkr.toFixed(2);
+
+                transportCostForeign += lineCost;
+                transportCostPkr += lineCostPkr;
+
+                transportSellForeign += lineSell;
+                transportSellPkr += lineSellPkr;
+                transportCurrs.add(curr);
+            });
+            const transportCurrLabel = transportCurrs.size === 1 ? Array.from(transportCurrs)[0] : (transportCurrs.size > 1 ? 'Mix' : 'SAR');
+            if (document.getElementById('transport_charges')) document.getElementById('transport_charges').value = transportSellPkr.toFixed(2);
+            if (document.getElementById('transport_cost_sar_total')) document.getElementById('transport_cost_sar_total').textContent = transportCostForeign.toFixed(2) + ' ' + transportCurrLabel;
+            if (document.getElementById('transport_cost_pkr_total')) document.getElementById('transport_cost_pkr_total').textContent = transportCostPkr.toFixed(2) + ' PKR';
+            if (document.getElementById('transport_sell_sar_total')) document.getElementById('transport_sell_sar_total').textContent = transportSellForeign.toFixed(2) + ' ' + transportCurrLabel;
+            if (document.getElementById('transport_sell_pkr_total')) document.getElementById('transport_sell_pkr_total').textContent = transportSellPkr.toFixed(2) + ' PKR';
+
+            // 4. Visa Foreign & PKR
+            let visaCostForeign = 0;
+            let visaCostPkr = 0;
+            let visaSellForeign = 0;
+            let visaSellPkr = 0;
+            let visaCurrs = new Set();
+            document.querySelectorAll('.visa-card').forEach(row => {
+                const costRate = parseFloat(row.querySelector('.visa-cost-rate')?.value) || 0;
+                const sellRate = parseFloat(row.querySelector('.visa-sell-rate')?.value) || 0;
+                const curr     = row.querySelector('.visa-currency')?.value || 'SAR';
+                const isPkr    = (curr === 'PKR');
+                const costRoe  = isPkr ? 1 : (parseFloat(row.querySelector('.visa-cost-roe')?.value) || parseFloat(row.querySelector('.visa-roe')?.value) || 75);
+                const saleRoe  = isPkr ? 1 : (parseFloat(row.querySelector('.visa-sale-roe')?.value) || costRoe || 75);
+
+                visaCostForeign += costRate;
+                visaCostPkr += costRate * costRoe;
+
+                visaSellForeign += sellRate;
+                visaSellPkr += sellRate * saleRoe;
+                visaCurrs.add(curr);
+            });
+            const visaCurrLabel = visaCurrs.size === 1 ? Array.from(visaCurrs)[0] : (visaCurrs.size > 1 ? 'Mix' : 'SAR');
+            if (document.getElementById('visa_charges')) document.getElementById('visa_charges').value = visaSellPkr.toFixed(2);
+            if (document.getElementById('visa_cost_sar_total')) document.getElementById('visa_cost_sar_total').textContent = visaCostForeign.toFixed(2) + ' ' + visaCurrLabel;
+            if (document.getElementById('visa_cost_pkr_total')) document.getElementById('visa_cost_pkr_total').textContent = visaCostPkr.toFixed(2) + ' PKR';
+            if (document.getElementById('visa_sell_sar_total')) document.getElementById('visa_sell_sar_total').textContent = visaSellForeign.toFixed(2) + ' ' + visaCurrLabel;
+            if (document.getElementById('visa_sell_pkr_total')) document.getElementById('visa_sell_pkr_total').textContent = visaSellPkr.toFixed(2) + ' PKR';
+
+            // Package, Other, Discount
+            const pkgCost     = parseFloat(document.getElementById('package_cost')?.value) || 0;
+            const pkgTotalPkr = pkgCost * pax;
+
+            const other      = parseFloat(document.getElementById('other_charges')?.value) || 0;
+            const discount   = parseFloat(document.getElementById('discount')?.value) || 0;
+            const additional = parseFloat(document.getElementById('additional_services_amount')?.value) || 0;
+            const received   = parseFloat(document.getElementById('total_received')?.value) || 0;
+
+            const totalPkr   = pkgTotalPkr + hotelSellPkr + visaSellPkr + flightPkr + transportSellPkr + other + additional - discount;
+            const balancePkr = totalPkr - received - transactionsPaid;
+
+            let activeCurrs = new Set();
+            if (flightForeign > 0) activeCurrs.add(flightCurr);
+            if (hotelSellForeign > 0) hotelCurrs.forEach(c => activeCurrs.add(c));
+            if (transportSellForeign > 0) transportCurrs.forEach(c => activeCurrs.add(c));
+            if (visaSellForeign > 0) visaCurrs.forEach(c => activeCurrs.add(c));
+            activeCurrs.delete('PKR');
+
+            let totalForeign = 0;
+            let foreignUnit = 'SAR';
+            if (activeCurrs.size === 1) {
+                foreignUnit = Array.from(activeCurrs)[0];
+                totalForeign = (flightCurr === foreignUnit ? flightForeign : 0)
+                             + (hotelCurrLabel === foreignUnit ? hotelSellForeign : 0)
+                             + (transportCurrLabel === foreignUnit ? transportSellForeign : 0)
+                             + (visaCurrLabel === foreignUnit ? visaSellForeign : 0);
+            } else if (activeCurrs.size > 1) {
+                foreignUnit = 'Mix';
+                totalForeign = (flightCurr !== 'PKR' ? flightForeign : 0) + hotelSellForeign + transportSellForeign + visaSellForeign;
+            } else {
+                foreignUnit = (flightCurr !== 'PKR') ? flightCurr : 'SAR';
+                totalForeign = (flightCurr !== 'PKR' ? flightForeign : 0) + hotelSellForeign + transportSellForeign + visaSellForeign;
+            }
+
+            const avgRoe = totalForeign > 0 ? (totalPkr / totalForeign) : (parseFloat(document.getElementById('flight_sale_roe')?.value) || 75);
+            const balanceForeign = avgRoe > 0 ? (balancePkr / avgRoe) : 0;
+
+            if (document.getElementById('total_amount')) document.getElementById('total_amount').value = totalPkr.toFixed(2);
+            if (document.getElementById('balance')) document.getElementById('balance').value = balancePkr.toFixed(2);
+
+            // Summary Bar
+            if (document.getElementById('bar_pax')) document.getElementById('bar_pax').textContent = `${pax} (A:${adults}, C:${children}, I:${infants})`;
+            if (document.getElementById('bar_pax_badge')) document.getElementById('bar_pax_badge').textContent = pax;
+            if (document.getElementById('bar_adult')) document.getElementById('bar_adult').textContent = `PKR ${pkgTotalPkr.toFixed(2)}`;
+            if (document.getElementById('bar_flight')) document.getElementById('bar_flight').textContent = (flightCurr === 'PKR') ? `PKR ${flightPkr.toFixed(2)}` : `${flightCurr} ${flightForeign.toFixed(2)} / PKR ${flightPkr.toFixed(2)}`;
+            if (document.getElementById('bar_hotel')) document.getElementById('bar_hotel').textContent = (hotelCurrLabel === 'PKR') ? `PKR ${hotelSellPkr.toFixed(2)}` : `${hotelCurrLabel} ${hotelSellForeign.toFixed(2)} / PKR ${hotelSellPkr.toFixed(2)}`;
+            if (document.getElementById('bar_transport')) document.getElementById('bar_transport').textContent = (transportCurrLabel === 'PKR') ? `PKR ${transportSellPkr.toFixed(2)}` : `${transportCurrLabel} ${transportSellForeign.toFixed(2)} / PKR ${transportSellPkr.toFixed(2)}`;
+            if (document.getElementById('bar_visa')) document.getElementById('bar_visa').textContent = (visaCurrLabel === 'PKR') ? `PKR ${visaSellPkr.toFixed(2)}` : `${visaCurrLabel} ${visaSellForeign.toFixed(2)} / PKR ${visaSellPkr.toFixed(2)}`;
+            if (document.getElementById('bar_total')) document.getElementById('bar_total').textContent = (activeCurrs.size === 0 && flightCurr === 'PKR') ? `PKR ${totalPkr.toFixed(2)}` : `${foreignUnit} ${totalForeign.toFixed(2)} / PKR ${totalPkr.toFixed(2)}`;
+            if (document.getElementById('bar_balance')) document.getElementById('bar_balance').textContent = (activeCurrs.size === 0 && flightCurr === 'PKR') ? `PKR ${balancePkr.toFixed(2)}` : `${foreignUnit} ${balanceForeign.toFixed(2)} / PKR ${balancePkr.toFixed(2)}`;
+
+            // Total Direct Costs PKR & Gross Profit
+            const addServicesCost = parseFloat(document.getElementById('additional_services_cost')?.value) || 0;
+            const totalDirectCostPkr = hotelCostPkr + flightCostPkr + visaCostPkr + transportCostPkr + addServicesCost;
+            const grossProfitPkr = totalPkr - totalDirectCostPkr;
+
+            // Total Direct Costs Foreign & Gross Profit
+            const totalCostForeign = (flightCurr === foreignUnit ? flightCostForeign : 0)
+                                   + (hotelCurrLabel === foreignUnit ? hotelCostForeign : 0)
+                                   + (transportCurrLabel === foreignUnit ? transportCostForeign : 0)
+                                   + (visaCurrLabel === foreignUnit ? visaCostForeign : 0);
+            const grossProfitForeign = totalForeign - totalCostForeign;
+
+            // Costing Dual Currency Cards - Foreign Currency Card
+            if (document.getElementById('cost_foreign_curr_title')) document.getElementById('cost_foreign_curr_title').textContent = (activeCurrs.size === 1) ? Array.from(activeCurrs)[0] : (activeCurrs.size > 1 ? 'Multi-Curr' : flightCurr);
+            if (document.getElementById('cost_sar_flight_cost')) {
+                document.getElementById('cost_sar_flight_cost').textContent = (flightCurr === 'PKR') 
+                    ? `${flightCostPkr.toFixed(2)} PKR` 
+                    : `${flightCostForeign.toFixed(2)} ${flightCurr}`;
+            }
+            if (document.getElementById('cost_sar_flight')) {
+                document.getElementById('cost_sar_flight').textContent = (flightCurr === 'PKR') 
+                    ? `${flightPkr.toFixed(2)} PKR` 
+                    : `${flightForeign.toFixed(2)} ${flightCurr}`;
+            }
+            if (document.getElementById('cost_sar_hotel_cost')) document.getElementById('cost_sar_hotel_cost').textContent = `${hotelCostForeign.toFixed(2)} ${hotelCurrLabel}`;
+            if (document.getElementById('cost_sar_hotel')) document.getElementById('cost_sar_hotel').textContent = `${hotelSellForeign.toFixed(2)} ${hotelCurrLabel}`;
+            if (document.getElementById('cost_sar_transport_cost')) document.getElementById('cost_sar_transport_cost').textContent = `${transportCostForeign.toFixed(2)} ${transportCurrLabel}`;
+            if (document.getElementById('cost_sar_transport')) document.getElementById('cost_sar_transport').textContent = `${transportSellForeign.toFixed(2)} ${transportCurrLabel}`;
+            if (document.getElementById('cost_sar_visa_cost')) document.getElementById('cost_sar_visa_cost').textContent = `${visaCostForeign.toFixed(2)} ${visaCurrLabel}`;
+            if (document.getElementById('cost_sar_visa')) document.getElementById('cost_sar_visa').textContent = `${visaSellForeign.toFixed(2)} ${visaCurrLabel}`;
+            if (document.getElementById('cost_sar_total_cost')) document.getElementById('cost_sar_total_cost').textContent = `${totalCostForeign.toFixed(2)} ${foreignUnit}`;
+            if (document.getElementById('cost_sar_total')) document.getElementById('cost_sar_total').textContent = `${totalForeign.toFixed(2)} ${foreignUnit}`;
+            if (document.getElementById('cost_sar_balance')) document.getElementById('cost_sar_balance').textContent = `${balanceForeign.toFixed(2)} ${foreignUnit}`;
+
+            // Costing Dual Currency Cards - PKR Card
+            if (document.getElementById('cost_pkr_flight_cost')) document.getElementById('cost_pkr_flight_cost').textContent = `${flightCostPkr.toFixed(2)} PKR`;
+            if (document.getElementById('cost_pkr_flight')) document.getElementById('cost_pkr_flight').textContent = `${flightPkr.toFixed(2)} PKR`;
+            if (document.getElementById('cost_pkr_hotel_cost')) document.getElementById('cost_pkr_hotel_cost').textContent = `${hotelCostPkr.toFixed(2)} PKR`;
+            if (document.getElementById('cost_pkr_hotel')) document.getElementById('cost_pkr_hotel').textContent = `${hotelSellPkr.toFixed(2)} PKR`;
+            if (document.getElementById('cost_pkr_transport_cost')) document.getElementById('cost_pkr_transport_cost').textContent = `${transportCostPkr.toFixed(2)} PKR`;
+            if (document.getElementById('cost_pkr_transport')) document.getElementById('cost_pkr_transport').textContent = `${transportSellPkr.toFixed(2)} PKR`;
+            if (document.getElementById('cost_pkr_visa_cost')) document.getElementById('cost_pkr_visa_cost').textContent = `${visaCostPkr.toFixed(2)} PKR`;
+            if (document.getElementById('cost_pkr_visa')) document.getElementById('cost_pkr_visa').textContent = `${visaSellPkr.toFixed(2)} PKR`;
+            if (document.getElementById('cost_pkr_total_cost')) document.getElementById('cost_pkr_total_cost').textContent = `${totalDirectCostPkr.toFixed(2)} PKR`;
+            if (document.getElementById('cost_pkr_total')) document.getElementById('cost_pkr_total').textContent = `${totalPkr.toFixed(2)} PKR`;
+            if (document.getElementById('cost_pkr_balance')) document.getElementById('cost_pkr_balance').textContent = `${balancePkr.toFixed(2)} PKR`;
+
+            // Costing Table Breakdown - Cost Row
+            if (document.getElementById('cost_sum_hotel')) document.getElementById('cost_sum_hotel').textContent = hotelCostPkr.toFixed(2);
+            if (document.getElementById('cost_sum_visa')) document.getElementById('cost_sum_visa').textContent = visaCostPkr.toFixed(2);
+            if (document.getElementById('cost_sum_flight')) document.getElementById('cost_sum_flight').textContent = flightCostPkr.toFixed(2);
+            if (document.getElementById('cost_sum_transport')) document.getElementById('cost_sum_transport').textContent = transportCostPkr.toFixed(2);
+            if (document.getElementById('cost_sum_other')) document.getElementById('cost_sum_other').textContent = addServicesCost.toFixed(2);
+            if (document.getElementById('cost_sum_total')) document.getElementById('cost_sum_total').textContent = totalDirectCostPkr.toFixed(2);
+
+            // Costing Table Breakdown - Selling Row
+            if (document.getElementById('sum_pax')) document.getElementById('sum_pax').textContent = pax;
+            if (document.getElementById('sum_pkg')) document.getElementById('sum_pkg').textContent = pkgTotalPkr.toFixed(2);
+            if (document.getElementById('sum_hotel')) document.getElementById('sum_hotel').textContent = hotelSellPkr.toFixed(2);
+            if (document.getElementById('sum_visa')) document.getElementById('sum_visa').textContent = visaSellPkr.toFixed(2);
+            if (document.getElementById('sum_flight')) document.getElementById('sum_flight').textContent = flightPkr.toFixed(2);
+            if (document.getElementById('sum_transport')) document.getElementById('sum_transport').textContent = transportSellPkr.toFixed(2);
+            if (document.getElementById('sum_other')) document.getElementById('sum_other').textContent = (other + additional).toFixed(2);
+            if (document.getElementById('sum_discount')) document.getElementById('sum_discount').textContent = discount.toFixed(2);
+            if (document.getElementById('sum_total')) document.getElementById('sum_total').textContent = totalPkr.toFixed(2);
+        }
+
+        // Global Event Delegation for live calculations
+        document.addEventListener('input', function(e) {
+            if (e.target.matches('.hotel-cost-rate')) {
+                const row = e.target.closest('.hotel-block');
+                autoDivideHotelRates(row, 'cost');
+                calculateHotelRow(row, 'costRate');
+            } else if (e.target.matches('.hotel-sell-rate')) {
+                const row = e.target.closest('.hotel-block');
+                autoDivideHotelRates(row, 'sell');
+                calculateHotelRow(row, 'sellRate');
+            } else if (e.target.matches('.hotel-rooms, input[name*="[no_of_rooms]"]')) {
+                const row = e.target.closest('.hotel-block');
+                if (row) {
+                    calculateHotelRow(row, 'rooms');
+                    calcTotal();
+                    updateHotelStaySummary();
+                }
+            } else if (e.target.matches('.hotel-nights, input[name*="[no_of_nights]"], .hotel-roe, .hotel-cost-roe, .hotel-sale-roe')) {
+                const row = e.target.closest('.hotel-block');
+                if (row) {
+                    calculateHotelRow(row, 'nights');
+                    calcTotal();
+                    updateHotelStaySummary();
+                }
+            } else if (e.target.matches('.hotel-person-cost, .hotel-person-sell')) {
+                const row = e.target.closest('.hotel-block');
+                if (row) {
+                    calculateHotelRow(row, 'personRate');
+                    calcTotal();
+                    updateHotelStaySummary();
+                }
+            }
+            if (e.target.matches('.visa-roe, .visa-cost-roe, .visa-sale-roe, .visa-cost-rate, .visa-sell-rate')) {
+                const row = e.target.closest('.visa-card');
+                if (row) calculateVisaRow(row);
+            }
+            if (e.target.matches('.transport-roe, .transport-cost-roe, .transport-sale-roe, .transport-cost-rate, .transport-sell-rate, .transport-qty, input[name*="[quantity]"]')) {
+                const row = e.target.closest('.route-block');
+                if (row) {
+                    calculateTransportRow(row);
+                    calculateAllTransports();
+                    calcTotal();
+                    updateTransportSummary();
+                }
+            }
+            if (e.target.matches('.flight-rate-calc, .flight-tier-calc, #flight_roe, #flight_cost_roe, #flight_sale_roe, .person-flight-pax-type')) {
+                calculateFlight();
+            }
+            if (e.target.matches('.calc, #package_cost, #other_charges, #discount, #additional_services_amount, #total_received')) {
+                calcTotal();
+            }
+            if (e.target.matches('input[name*="[check_in]"], input[name*="[check_out]"], input[name*="[no_of_nights]"]')) {
+                handleHotelDateCalc(e.target);
+            }
+        });
+
+        document.addEventListener('change', function(e) {
+            if (e.target.matches('.hotel-cost-rate')) {
+                const row = e.target.closest('.hotel-block');
+                autoDivideHotelRates(row, 'cost');
+                calculateHotelRow(row, 'costRate');
+            } else if (e.target.matches('.hotel-sell-rate')) {
+                const row = e.target.closest('.hotel-block');
+                autoDivideHotelRates(row, 'sell');
+                calculateHotelRow(row, 'sellRate');
+            } else if (e.target.matches('.hotel-rooms, input[name*="[no_of_rooms]"]')) {
+                const row = e.target.closest('.hotel-block');
+                if (row) {
+                    calculateHotelRow(row, 'rooms');
+                    calcTotal();
+                    updateHotelStaySummary();
+                }
+            } else if (e.target.matches('.hotel-nights, input[name*="[no_of_nights]"], .hotel-roe, .hotel-cost-roe, .hotel-sale-roe')) {
+                const row = e.target.closest('.hotel-block');
+                if (row) {
+                    calculateHotelRow(row, 'nights');
+                    calcTotal();
+                    updateHotelStaySummary();
+                }
+            } else if (e.target.matches('.hotel-person-cost, .hotel-person-sell')) {
+                const row = e.target.closest('.hotel-block');
+                if (row) {
+                    calculateHotelRow(row, 'personRate');
+                    calcTotal();
+                    updateHotelStaySummary();
+                }
+            }
+            if (e.target.matches('.visa-roe, .visa-cost-roe, .visa-sale-roe, .visa-cost-rate, .visa-sell-rate')) {
+                const row = e.target.closest('.visa-card');
+                if (row) calculateVisaRow(row);
+            }
+            if (e.target.matches('.transport-roe, .transport-cost-roe, .transport-sale-roe, .transport-cost-rate, .transport-sell-rate, .transport-qty, input[name*="[quantity]"]')) {
+                const row = e.target.closest('.route-block');
+                if (row) {
+                    calculateTransportRow(row);
+                    calculateAllTransports();
+                    calcTotal();
+                    updateTransportSummary();
+                }
+            }
+            if (e.target.matches('.flight-rate-calc, .flight-tier-calc, #flight_roe, #flight_cost_roe, #flight_sale_roe, .person-flight-pax-type')) {
+                calculateFlight();
+            }
+            if (e.target.matches('.calc, #package_cost, #other_charges, #discount, #additional_services_amount, #total_received')) {
+                calcTotal();
+            }
+            if (e.target.matches('input[name*="[check_in]"], input[name*="[check_out]"], input[name*="[no_of_nights]"]')) {
+                handleHotelDateCalc(e.target);
+            }
+        });
+
+        // Quick Apply Adult Rate Handler
+        document.addEventListener('click', function(e) {
+            if (e.target && (e.target.id === 'btnQuickApplyAdults' || e.target.closest('#btnQuickApplyAdults'))) {
+                e.preventDefault();
+                const costVal = parseFloat(document.getElementById('quick_adult_cost')?.value) || 0;
+                const sellVal = parseFloat(document.getElementById('quick_adult_sell')?.value) || 0;
+
+                document.querySelectorAll('.flight-person-row').forEach(row => {
+                    const type = row.querySelector('.person-flight-pax-type')?.value;
+                    if (type === 'adult' || !type) {
+                        const cInput = row.querySelector('.person-flight-cost');
+                        if (cInput && costVal > 0) cInput.value = costVal.toFixed(2);
+                        const sInput = row.querySelector('.person-flight-sell');
+                        if (sInput && sellVal > 0) sInput.value = sellVal.toFixed(2);
+                    }
+                });
+                calculateFlight();
+            }
+        });
+
+        // Quick Apply Hotel Pax Handler
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.btn-quick-hotel-apply');
+            if (btn) {
+                e.preventDefault();
+                const hotelBlock = btn.closest('.hotel-block');
+                if (!hotelBlock) return;
+                const costVal = hotelBlock.querySelector('.quick-hotel-cost')?.value;
+                const sellVal = hotelBlock.querySelector('.quick-hotel-sell')?.value;
+
+                hotelBlock.querySelectorAll('.hotel-person-cost').forEach(cInput => {
+                    if (costVal !== '' && !isNaN(parseFloat(costVal))) cInput.value = parseFloat(costVal).toFixed(2);
+                });
+                hotelBlock.querySelectorAll('.hotel-person-sell').forEach(sInput => {
+                    if (sellVal !== '' && !isNaN(parseFloat(sellVal))) sInput.value = parseFloat(sellVal).toFixed(2);
+                });
+                calculateHotelRow(hotelBlock);
+            }
+        });
+
+        // Initialize on page load
+        updatePaxCountsFromPersons();
+        syncFlightPersons();
+        syncAllHotelPersons();
+        document.querySelectorAll('.hotel-block').forEach(r => calculateHotelRow(r));
+        document.querySelectorAll('.route-block').forEach(r => calculateTransportRow(r));
+        document.querySelectorAll('.visa-card').forEach(r => calculateVisaRow(r));
+        syncBookingHotelDates();
+        updateHotelStaySummary();
+        updateTransportSummary();
+        syncFlightDatesToTransport();
+        calculateFlight();
+        calcTotal();
+
+        // Ensure summary tables & calculations refresh whenever tabs are activated
+        $('a[data-bs-toggle="tab"][href="#tab-hotel"]').on('shown.bs.tab', function() {
+            if (typeof syncAllHotelPersons === 'function') syncAllHotelPersons();
+            if (typeof updateHotelStaySummary === 'function') updateHotelStaySummary();
+            if (typeof calcTotal === 'function') calcTotal();
+        });
+        $('a[data-bs-toggle="tab"][href="#tab-transport"]').on('shown.bs.tab', function() {
+            syncFlightDatesToTransport();
+            if (typeof updateTransportSummary === 'function') updateTransportSummary();
+            if (typeof calcTotal === 'function') calcTotal();
+        });
+        $('a[data-bs-toggle="tab"][href="#tab-visa"]').on('shown.bs.tab', function() {
+            if (typeof calcTotal === 'function') calcTotal();
+        });
+        $('a[data-bs-toggle="tab"][href="#tab-costing"]').on('shown.bs.tab', function() {
+            if (typeof calcTotal === 'function') calcTotal();
+        });
+
+        // Independent Tab Booking Dates (Allowing custom dates per service without overwriting each other)
+        const depDateInput = document.querySelector('input[name="departure_date"]');
+        const mainBkInput = document.getElementById('booking_date');
+        if (mainBkInput) {
+            mainBkInput.addEventListener('change', function() {
+                // Only populate flight departure date if it is currently empty
+                if (depDateInput && !depDateInput.value) {
+                    depDateInput.value = this.value;
+                }
+            });
+        }
+
+        // Tab-specific date propagation to rows
+        document.getElementById('booking_date_hotel_tab')?.addEventListener('change', function() {
+            document.querySelectorAll('.hotel-booking-date').forEach(el => el.value = this.value);
+        });
+        document.getElementById('booking_date_transport_tab')?.addEventListener('change', function() {
+            document.querySelectorAll('input[name*="[booking_date]"].transport-booking-date, .transport-booking-date').forEach(el => el.value = this.value);
+        });
+        document.getElementById('booking_date_visa_tab')?.addEventListener('change', function() {
+            document.querySelectorAll('.visa-booking-date').forEach(el => el.value = this.value);
+        });
+
+        $(document).ready(function() {
+            if (typeof jQuery !== 'undefined' && typeof jQuery.fn !== 'undefined' && jQuery.fn.summernote) {
+                $('a[href="#tab-additional-services"]').on('shown.bs.tab', function() {
+                    if (!$('#additional_services_detail').next().hasClass('note-editor')) {
+                        $('#additional_services_detail').summernote({
+                            height: 200,
+                            placeholder: 'Enter additional service details here...',
+                            toolbar: [
+                                ['style', ['style']],
+                                ['font', ['bold', 'italic', 'underline', 'clear']],
+                                ['fontname', ['fontname']],
+                                ['color', ['color']],
+                                ['para', ['ul', 'ol', 'paragraph']],
+                                ['height', ['height']],
+                                ['insert', ['link', 'picture', 'hr']],
+                                ['view', ['fullscreen', 'codeview']],
+                                ['help', ['help']]
+                            ]
+                        });
+                    }
+                });
+                
+                if ($('#tab-additional-services').hasClass('active')) {
+                    $('#additional_services_detail').summernote({
+                        height: 200,
+                        placeholder: 'Enter additional service details here...',
+                        toolbar: [
+                            ['style', ['style']],
+                            ['font', ['bold', 'italic', 'underline', 'clear']],
+                            ['para', ['ul', 'ol', 'paragraph']],
+                        ]
+                    });
+                }
+            }
+        });
+
+        // Live Room Capacity Real-Time Checker
+        function checkHotelRoomCapacity(input) {
+            const row = input.closest('.hotel-row') || input.closest('.row') || input.closest('.hotel-block');
+            if (!row) return;
+
+            const roomNumber = input.value.trim();
+            let fb = row.querySelector('.room-capacity-feedback');
+
+            if (!roomNumber) {
+                input.style.borderColor = '';
+                if (fb) fb.innerHTML = '';
+                return;
+            }
+
+            const hotelSelect = row.querySelector('select[name*="[hotel_name]"]') || row.querySelector('input[name*="[hotel_name]"]');
+            const hotelName = hotelSelect ? (hotelSelect.options ? (hotelSelect.options[hotelSelect.selectedIndex]?.text || hotelSelect.value) : hotelSelect.value) : '';
+            const locSelect = row.querySelector('select[name*="[location]"]') || row.querySelector('input[name*="[location]"]');
+            const location = locSelect ? locSelect.value : '';
+            const typeSelect = row.querySelector('select[name*="[room_type]"]');
+            const roomType = typeSelect ? typeSelect.value : '';
+            const checkInInput = row.querySelector('input[name*="[check_in]"]');
+            const checkOutInput = row.querySelector('input[name*="[check_out]"]');
+            const checkIn = checkInInput ? checkInInput.value : '';
+            const checkOut = checkOutInput ? checkOutInput.value : '';
+
+            if (!fb) {
+                fb = document.createElement('div');
+                fb.className = 'room-capacity-feedback mt-1';
+                input.parentNode.appendChild(fb);
+            }
+
+            fb.innerHTML = '<span class="text-muted" style="font-size:10px;"><i class="mdi mdi-loading mdi-spin me-1"></i>Checking room...</span>';
+
+            const params = new URLSearchParams({
+                hotel_name: hotelName,
+                room_number: roomNumber,
+                location: location,
+                room_type: roomType,
+                check_in: checkIn,
+                check_out: checkOut,
+                booking_id: '1'
+            });
+
+            fetch(`http://localhost/admin/api/hotel-room/check-capacity?${params.toString()}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.success) {
+                        fb.innerHTML = '';
+                        input.style.borderColor = '';
+                        return;
+                    }
+                    if (data.is_overbooked || data.is_full) {
+                        input.style.borderColor = '#dc3545';
+                        fb.innerHTML = `<span class="badge bg-danger text-white d-block text-start p-1" style="font-size:10px; white-space:normal;"><i class="mdi mdi-alert-circle me-1"></i>${data.message}</span>`;
+                    } else if (data.occupied > 0) {
+                        input.style.borderColor = '#ffc107';
+                        fb.innerHTML = `<span class="badge bg-warning text-dark d-block text-start p-1" style="font-size:10px; white-space:normal;"><i class="mdi mdi-information me-1"></i>${data.message}</span>`;
+                    } else {
+                        input.style.borderColor = '#198754';
+                        fb.innerHTML = `<span class="badge bg-success text-white d-block text-start p-1" style="font-size:10px;"><i class="mdi mdi-check me-1"></i>Room ${data.room_number}: Free (${data.capacity} Beds)</span>`;
+                    }
+                })
+                .catch(err => {
+                    console.log('Room check error:', err);
+                    if (fb) fb.innerHTML = '';
+                });
+        }
+
+        document.addEventListener('input', function(e) {
+            if (e.target && e.target.classList.contains('hotel-room-number-input')) {
+                clearTimeout(e.target._roomCheckTimer);
+                e.target._roomCheckTimer = setTimeout(() => checkHotelRoomCapacity(e.target), 400);
+            }
+        });
+        document.addEventListener('change', function(e) {
+            if (e.target && e.target.classList.contains('hotel-room-number-input')) {
+                checkHotelRoomCapacity(e.target);
+            }
+        });
+
+        document.getElementById('bookingForm')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const submitter = e.submitter;
+            const action = submitter?.classList.contains('btn-save-close') ? 'save_close' : 'save_stay';
+            submitBookingForm(submitter, action);
+        });
+
+        // Initialize active tab from URL query param ?tab=... or hash
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetTab = urlParams.get('tab') || window.location.hash;
+            if (targetTab) {
+                setTimeout(() => activateTabByHref(targetTab), 50);
+            }
+        });
+
+        // --- TIME FORMAT & FLATPICKR HANDLING ---
+        function initFlightTimePickers(format = '12') {
+            if (typeof flatpickr !== 'function') return;
+            const is24 = (format === '24');
+            document.querySelectorAll('.flight-time-picker').forEach(el => {
+                if (el._flatpickr) {
+                    el._flatpickr.destroy();
+                }
+                flatpickr(el, {
+                    enableTime: true,
+                    noCalendar: true,
+                    dateFormat: is24 ? "H:i" : "h:i K",
+                    time_24hr: is24,
+                    allowInput: true,
+                    onChange: function(selectedDates, dateStr, instance) {
+                        $(instance.element).trigger('input').trigger('change');
+                        if (typeof syncFlightDatesToTransport === 'function') {
+                            syncFlightDatesToTransport();
+                        }
+                    }
+                });
+            });
+        }
+
+        const initialTimeFmt = document.querySelector('input[name="flight_time_format"]:checked')?.value || '12';
+        initFlightTimePickers(initialTimeFmt);
+
+        document.querySelectorAll('.flight-time-format-radio').forEach(r => {
+            r.addEventListener('change', function() {
+                initFlightTimePickers(this.value);
+            });
+        });
+
+        // --- INDIVIDUAL FLIGHT DETAILS & MASTER CASCADE TO PASSENGERS ---
+        function onPersonFlightSupplierChange(selectEl, idx) {
+            const val = selectEl.value;
+            const badge = document.getElementById('person_sup_badge_' + idx);
+            if (val) {
+                selectEl.setAttribute('data-customized', 'true');
+                if (badge) {
+                    badge.className = 'badge bg-soft-info text-primary border border-info border-opacity-25 fs-10 mt-1 d-inline-block person-supplier-badge';
+                    badge.innerHTML = '<i class="mdi mdi-account-cog me-1"></i>Individual Supplier';
+                }
+            } else {
+                selectEl.removeAttribute('data-customized');
+                if (badge) {
+                    badge.className = 'badge bg-light text-muted border fs-10 mt-1 d-inline-block person-supplier-badge';
+                    badge.innerHTML = '<i class="mdi mdi-link-variant me-1"></i>Linked to Main Supplier';
+                }
+            }
+        }
+
+        function onPersonFlightTravelInput(inputEl) {
+            inputEl.setAttribute('data-customized', 'true');
+            inputEl.classList.add('border-info');
+        }
+
+        function syncMainFlightDetailsToPassengers() {
+            const mainDate = document.getElementById('flight_booking_date')?.value || document.querySelector('input[name="departure_date"]')?.value || '';
+            const mainSupSelect = document.getElementById('flight_supplier_id') || document.querySelector('select[name="flight_supplier_id"]');
+            const mainSupId = mainSupSelect?.value || '';
+            const mainSupName = (mainSupSelect && mainSupSelect.selectedIndex >= 0 && mainSupSelect.value) ? (mainSupSelect.options[mainSupSelect.selectedIndex]?.text?.replace(/^--.*--$/, '')?.trim() || '') : '';
+            const mainPnr = document.querySelector('input[name="departure_pnr"]')?.value || '';
+            const mainTime = document.querySelector('input[name="departure_time"]')?.value || '';
+            const mainTrip = document.querySelector('input[name="flight_trip_type"]:checked')?.value === 'oneway' ? 'departure_only' : 'round_trip';
+
+            document.querySelectorAll('.flight-person-row').forEach(row => {
+                const idx = row.getAttribute('data-idx');
+                const sSelect = row.querySelector('.person-flight-supplier');
+                const pInput  = row.querySelector('.person-flight-pnr');
+                const dInput  = row.querySelector('.person-flight-date');
+                const tInput  = row.querySelector('.person-flight-time');
+                const trSelect = row.querySelector('.person-flight-trip-type');
+
+                // Supplier Sync
+                if (sSelect) {
+                    if (sSelect.options.length > 0) {
+                        sSelect.options[0].text = `-- Same as Main ${mainSupName ? '(' + mainSupName + ')' : 'Supplier'} --`;
+                    }
+                    if (sSelect.getAttribute('data-customized') !== 'true') {
+                        sSelect.value = '';
+                        const badge = document.getElementById('person_sup_badge_' + idx);
+                        if (badge) {
+                            badge.className = 'badge bg-light text-muted border fs-10 mt-1 d-inline-block person-supplier-badge';
+                            badge.innerHTML = '<i class="mdi mdi-link-variant me-1"></i>Linked to Main Supplier';
+                        }
+                    }
+                }
+
+                // PNR Sync
+                if (pInput && pInput.getAttribute('data-customized') !== 'true') {
+                    pInput.value = mainPnr;
+                }
+
+                // Date Sync
+                if (dInput && dInput.getAttribute('data-customized') !== 'true') {
+                    dInput.value = mainDate;
+                }
+
+                // Time Sync
+                if (tInput && tInput.getAttribute('data-customized') !== 'true') {
+                    tInput.value = mainTime;
+                }
+
+                // Trip Type Sync
+                if (trSelect && trSelect.getAttribute('data-customized') !== 'true') {
+                    if (trSelect.value !== mainTrip) {
+                        trSelect.value = mainTrip;
+                        if (typeof onTripTypeChange === 'function' && idx !== null) {
+                            onTripTypeChange(idx, mainTrip);
+                        }
+                    }
+                }
+            });
+        }
+
+        $(document).on('change select2:select', '#flight_supplier_id, select[name="flight_supplier_id"]', syncMainFlightDetailsToPassengers);
+        $(document).on('input change', '#flight_booking_date, input[name="departure_date"], input[name="departure_pnr"], input[name="departure_time"], input[name="flight_trip_type"]', syncMainFlightDetailsToPassengers);
+
+        // --- SELECT2 INITIALIZATION HELPER ---
+        function initBookingSelect2(context) {
+            if (typeof jQuery === "undefined" || !jQuery.fn || typeof jQuery.fn.select2 !== 'function') return;
+            const $ctx = context ? $(context) : $(document);
+            $ctx.find('select.select2').each(function() {
+                if (!$(this).hasClass('select2-hidden-accessible')) {
+                    $(this).select2({
+                        theme: 'bootstrap-5',
+                        width: '100%',
+                        placeholder: $(this).attr('placeholder') || 'Search & Select...'
+                    });
+                }
+            });
+        }
+
+        // --- BOOKING CATEGORY SYNC & HOTEL BUTTON / DROPDOWN FILTERING ---
+        function applyCategoryToHotels(cat) {
+            const btnMakkah = document.getElementById('btnAddMakkahHotel');
+            const btnMadinah = document.getElementById('btnAddMadinahHotel');
+            const btnOther = document.getElementById('btnAddOtherHotel');
+            const lblOther = document.getElementById('lblAddOtherHotel');
+            const btnSelect = document.getElementById('addHotel');
+            const alertMsg = document.querySelector('#noHotelAlert p');
+
+            if (cat === 'domestic') {
+                if (btnMakkah) btnMakkah.style.setProperty('display', 'none', 'important');
+                if (btnMadinah) btnMadinah.style.setProperty('display', 'none', 'important');
+                if (btnOther) btnOther.style.removeProperty('display');
+                if (lblOther) lblOther.textContent = '+ Add Domestic Hotel';
+                if (btnSelect) btnSelect.style.setProperty('display', 'none', 'important');
+                if (alertMsg) alertMsg.textContent = 'Click the button below to add a domestic hotel.';
+            } else if (cat === 'international') {
+                if (btnMakkah) btnMakkah.style.setProperty('display', 'none', 'important');
+                if (btnMadinah) btnMadinah.style.setProperty('display', 'none', 'important');
+                if (btnOther) btnOther.style.removeProperty('display');
+                if (lblOther) lblOther.textContent = '+ Add International Hotel';
+                if (btnSelect) btnSelect.style.setProperty('display', 'none', 'important');
+                if (alertMsg) alertMsg.textContent = 'Click the button below to add an international hotel.';
+            } else {
+                if (btnMakkah) btnMakkah.style.removeProperty('display');
+                if (btnMadinah) btnMadinah.style.removeProperty('display');
+                if (btnOther) btnOther.style.removeProperty('display');
+                if (lblOther) lblOther.textContent = '+ Add Other Hotel';
+                if (btnSelect) btnSelect.style.removeProperty('display');
+                if (alertMsg) alertMsg.textContent = 'Click one of the buttons below to add a hotel for Makkah, Madinah or Other city.';
+            }
+
+            // Refresh options in existing hotel dropdowns
+            document.querySelectorAll('.hotel-block').forEach(block => {
+                const select = block.querySelector('select.hotel-name-select, select[name*="[hotel_name]"]');
+                if (select) {
+                    const currentVal = select.value;
+                    const blockLoc = block.getAttribute('data-location') || 'other';
+                    let filterLoc = null;
+                    if (cat === 'umrah' || cat === 'hajj') {
+                        if (blockLoc === 'makkah') filterLoc = 'makkah';
+                        else if (blockLoc === 'madinah') filterLoc = 'madinah';
+                    }
+                    select.innerHTML = buildHotelsOptions(filterLoc);
+                    if (currentVal) {
+                        try {
+                            if (!select.querySelector(`option[value="${CSS.escape(currentVal)}"]`)) {
+                                const opt = document.createElement('option');
+                                opt.value = currentVal;
+                                opt.textContent = currentVal;
+                                select.appendChild(opt);
+                            }
+                        } catch(e) {}
+                        select.value = currentVal;
+                    }
+                    if (typeof jQuery !== 'undefined') {
+                        if ($(select).hasClass('select2-hidden-accessible')) {
+                            $(select).select2('destroy');
+                        }
+                        $(select).select2({
+                            theme: 'bootstrap-5',
+                            width: '100%',
+                            placeholder: 'Select Hotel'
+                        });
+                    }
+                }
+            });
+        }
+
+        $(document).on('change', '.booking-category-radio', function() {
+            const cat = this.value;
+            const currSelect = document.getElementById('flight_currency');
+            const costRoe = document.getElementById('flight_cost_roe');
+            const saleRoe = document.getElementById('flight_sale_roe');
+            const vInput = document.getElementById('booking_voucher_input');
+            const vDisp = document.getElementById('booking_voucher_disp');
+            const fltVoucher = document.getElementById('flight_voucher_no')?.value;
+
+            if (cat === 'domestic') {
+                if (currSelect) $(currSelect).val('PKR').trigger('change');
+                if (costRoe) costRoe.value = '1';
+                if (saleRoe) saleRoe.value = '1';
+                if (fltVoucher && vInput) {
+                    vInput.value = fltVoucher;
+                    if (vDisp) vDisp.textContent = fltVoucher;
+                }
+            } else {
+                if (currSelect && currSelect.value === 'PKR') $(currSelect).val('SAR').trigger('change');
+                if (costRoe && costRoe.value === '1') costRoe.value = '75';
+                if (saleRoe && saleRoe.value === '1') saleRoe.value = '75';
+            }
+
+            applyCategoryToHotels(cat);
+        });
+
+        // Initialize category hotels view on edit load
+        const initCategory = document.querySelector('input[name="booking_category"]:checked')?.value || 'umrah';
+        applyCategoryToHotels(initCategory);
+
+        // Initialize Select2 on all supplier and hotel dropdowns
+        initBookingSelect2();
+        $(document).on('shown.bs.tab', function() {
+            initBookingSelect2();
+        });
+
+        // Trigger initial updateHotelStaySummary, updateTransportSummary, and calcTotal on edit page load
+        setTimeout(function() {
+            if (typeof calculateFlight === 'function') calculateFlight();
+            document.querySelectorAll('.hotel-block').forEach(r => { if (typeof calculateHotelRow === 'function') calculateHotelRow(r); });
+            if (typeof calculateAllTransports === 'function') calculateAllTransports();
+            if (typeof updateHotelStaySummary === 'function') updateHotelStaySummary();
+            if (typeof updateTransportSummary === 'function') updateTransportSummary();
+            if (typeof calcTotal === 'function') calcTotal();
+        }, 100);
+    

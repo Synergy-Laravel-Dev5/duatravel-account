@@ -524,6 +524,12 @@
                                     <span>Transactions</span>
                                 </a>
                             </li>
+                            <li>
+                                <a class="tp-link {{ request()->routeIs('refunds.*') ? 'active' : '' }}" href="{{ route('refunds.index') }}">
+                                    <i data-feather="corner-up-left"></i>
+                                    <span>Refunds (Client & Supplier)</span>
+                                </a>
+                            </li>
 
 
                             <li>
@@ -635,6 +641,12 @@
                                 <a class="tp-link" href="{{ route('transaction.company-ledger.filter') }}">
                                     <i data-feather="book-open"></i>
                                     <span>Company Ledger</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="tp-link" href="{{ route('expense.ledger.filter') }}">
+                                    <i data-feather="file-minus"></i>
+                                    <span>Expense Ledger</span>
                                 </a>
                             </li>
                         </ul>

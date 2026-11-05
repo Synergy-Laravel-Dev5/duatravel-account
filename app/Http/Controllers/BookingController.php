@@ -266,8 +266,10 @@ class BookingController extends Controller
                 'flight_charges'      => $flightCharges,
                 'other_charges'       => $request->other_charges ?? 0,
                 'discount'            => $request->discount ?? 0,
+                'additional_services_cost'   => $request->additional_services_cost ?? 0,
                 'additional_services_amount' => $request->additional_services_amount ?? 0,
-                'additional_services_detail' => $additionalServicesDetail,           
+                'additional_services_detail' => $additionalServicesDetail,
+                'return_flight_supplier_id'  => $request->return_flight_supplier_id ?: null,           
                 'total_received'      => $request->total_received ?? 0,
                 'total_amount'        => $total,
                 'balance'             => $total - ($request->total_received ?? 0),
@@ -376,7 +378,8 @@ class BookingController extends Controller
                     $flSell = $flDepSell + $flRetSell;
                 }
 
-                $flSupId  = $flPerson['flight_supplier_id'] ?? ($person['flight_supplier_id'] ?? ($request->flight_supplier_id ?: null));
+                $flSupId    = $flPerson['flight_supplier_id'] ?? ($person['flight_supplier_id'] ?? ($request->flight_supplier_id ?: null));
+                $flRetSupId = $flPerson['return_flight_supplier_id'] ?? ($person['return_flight_supplier_id'] ?? ($request->return_flight_supplier_id ?: null));
                 $flPnr    = $flPerson['flight_pnr'] ?? ($person['flight_pnr'] ?? ($request->departure_pnr ?: null));
                 $flDate   = $flPerson['flight_date'] ?? ($person['flight_date'] ?? ($request->departure_date ?: null));
                 $flTime   = $flPerson['flight_time'] ?? ($person['flight_time'] ?? ($request->departure_time ?: null));
@@ -403,7 +406,8 @@ class BookingController extends Controller
                     'ticket_status'      => $flTicketStatus,
                     'flight_cost'        => $flCost,
                     'flight_sell'        => $flSell,
-                    'flight_supplier_id' => $flSupId ?: null,
+                    'flight_supplier_id'        => $flSupId ?: null,
+                    'return_flight_supplier_id' => $flRetSupId ?: null,
                     'flight_pnr'         => $flPnr ?: null,
                     'flight_date'        => !empty($flDate) ? date('Y-m-d', strtotime($flDate)) : null,
                     'flight_time'        => $flTime ?: null,
@@ -482,15 +486,26 @@ class BookingController extends Controller
                     $hCostRoe = ($hCurr === 'PKR') ? 1.0 : (float)($hotelData['cost_roe'] ?? ($hotelData['roe'] ?? 1));
                     $hSaleRoe = ($hCurr === 'PKR') ? 1.0 : (float)($hotelData['sale_roe'] ?? $hCostRoe);
 
-                    $hotelData['cost_amount'] = $hNights * $hRooms * $hCostRate * $hCostRoe;
-                    $hotelData['selling_amount'] = $hNights * $hRooms * $hSellRate * $hSaleRoe;
-
                     // Point 9: Additional rooms
+                    $extraRooms = [];
                     if (isset($hotel['extra_rooms'])) {
-                        $hotelData['additional_rooms'] = is_array($hotel['extra_rooms']) ? $hotel['extra_rooms'] : json_decode($hotel['extra_rooms'], true);
+                        $extraRooms = is_array($hotel['extra_rooms']) ? $hotel['extra_rooms'] : json_decode($hotel['extra_rooms'], true);
                     } elseif (isset($hotel['additional_rooms'])) {
-                        $hotelData['additional_rooms'] = is_array($hotel['additional_rooms']) ? $hotel['additional_rooms'] : json_decode($hotel['additional_rooms'], true);
+                        $extraRooms = is_array($hotel['additional_rooms']) ? $hotel['additional_rooms'] : json_decode($hotel['additional_rooms'], true);
                     }
+                    $hotelData['additional_rooms'] = $extraRooms;
+
+                    $extraCostPerNight = 0;
+                    $extraSellPerNight = 0;
+                    if (!empty($extraRooms)) {
+                        foreach ($extraRooms as $xr) {
+                            $extraCostPerNight += (float)($xr['cost_rate'] ?? 0);
+                            $extraSellPerNight += (float)($xr['sell_rate'] ?? 0);
+                        }
+                    }
+
+                    $hotelData['cost_amount'] = $hNights * (($hRooms * $hCostRate) + $extraCostPerNight) * $hCostRoe;
+                    $hotelData['selling_amount'] = $hNights * (($hRooms * $hSellRate) + $extraSellPerNight) * $hSaleRoe;
                     // Point 23: Child voucher number
                     $hotelData['voucher_no'] = $hotel['voucher_no'] ?? ($hotelVoucher ? ($hotelVoucher . '-' . ($idx + 1)) : null);
 
@@ -584,6 +599,9 @@ class BookingController extends Controller
                         ? date('Y-m-d', strtotime($request->booking_date_visa_tab)) 
                         : (!empty($visaData['booking_date']) ? date('Y-m-d', strtotime($visaData['booking_date'])) : $finalBookingDate);
                     $visaData['booking_date'] = $vBkDate;
+                    if (isset($visaData['supplier_id']) && empty($visaData['supplier_id'])) {
+                        $visaData['supplier_id'] = null;
+                    }
                     // Point 23: Child voucher number
                     $visaData['voucher_no'] = $visa['voucher_no'] ?? ($visaVoucher ? ($visaVoucher . '-' . ($idx + 1)) : null);
 
@@ -804,8 +822,10 @@ class BookingController extends Controller
                     'flight_charges'      => $flightCharges,
                     'other_charges'       => $request->other_charges ?? 0,
                     'discount'            => $request->discount ?? 0,
+                    'additional_services_cost'   => $request->additional_services_cost ?? 0,
                     'additional_services_amount' => $request->additional_services_amount ?? 0,
                     'additional_services_detail' => $additionalServicesDetail,
+                    'return_flight_supplier_id'  => $request->return_flight_supplier_id ?: null,
                     'total_received'      => $request->total_received ?? 0,
                     'total_amount'        => $total,
                     'balance'             => $total - ($request->total_received ?? 0),
@@ -876,7 +896,9 @@ class BookingController extends Controller
             $booking->persons()->delete();
             if ($request->has('persons')) {
                 $personCols = \Illuminate\Support\Facades\Schema::getColumnListing('booking_persons');
-                foreach ($request->persons as $idx => $person) {
+                $targetPaxCount = (int)($request->no_of_pax ?: ($booking->no_of_pax ?: count($request->persons)));
+                $submittedPersons = array_slice($request->persons, 0, $targetPaxCount);
+                foreach ($submittedPersons as $idx => $person) {
                     $surname   = $person['surname'] ?? null;
                     $givenName = $person['given_name'] ?? null;
                     $paxName   = $person['full_name'] ?? null;
@@ -914,7 +936,8 @@ class BookingController extends Controller
                         $flSell = $flDepSell + $flRetSell;
                     }
 
-                    $flSupId  = $flPerson['flight_supplier_id'] ?? ($person['flight_supplier_id'] ?? ($request->flight_supplier_id ?: null));
+                    $flSupId    = $flPerson['flight_supplier_id'] ?? ($person['flight_supplier_id'] ?? ($request->flight_supplier_id ?: null));
+                $flRetSupId = $flPerson['return_flight_supplier_id'] ?? ($person['return_flight_supplier_id'] ?? ($request->return_flight_supplier_id ?: null));
                     $flPnr    = $flPerson['flight_pnr'] ?? ($person['flight_pnr'] ?? ($request->departure_pnr ?: null));
                     $flDate   = $flPerson['flight_date'] ?? ($person['flight_date'] ?? ($request->departure_date ?: null));
                     $flTime   = $flPerson['flight_time'] ?? ($person['flight_time'] ?? ($request->departure_time ?: null));
@@ -941,7 +964,8 @@ class BookingController extends Controller
                         'ticket_status'      => $flTicketStatus,
                         'flight_cost'        => $flCost,
                         'flight_sell'        => $flSell,
-                        'flight_supplier_id' => $flSupId ?: null,
+                        'flight_supplier_id'        => $flSupId ?: null,
+                    'return_flight_supplier_id' => $flRetSupId ?: null,
                         'flight_pnr'         => $flPnr ?: null,
                         'flight_date'        => !empty($flDate) ? date('Y-m-d', strtotime($flDate)) : null,
                         'flight_time'        => $flTime ?: null,
@@ -1024,15 +1048,26 @@ class BookingController extends Controller
                         $hCostRoe = ($hCurr === 'PKR') ? 1.0 : (float)($hotelData['cost_roe'] ?? ($hotelData['roe'] ?? 1));
                         $hSaleRoe = ($hCurr === 'PKR') ? 1.0 : (float)($hotelData['sale_roe'] ?? $hCostRoe);
 
-                        $hotelData['cost_amount'] = $hNights * $hRooms * $hCostRate * $hCostRoe;
-                        $hotelData['selling_amount'] = $hNights * $hRooms * $hSellRate * $hSaleRoe;
-
                         // Point 9: Additional rooms
+                        $extraRooms = [];
                         if (isset($hotel['extra_rooms'])) {
-                            $hotelData['additional_rooms'] = is_array($hotel['extra_rooms']) ? $hotel['extra_rooms'] : json_decode($hotel['extra_rooms'], true);
+                            $extraRooms = is_array($hotel['extra_rooms']) ? $hotel['extra_rooms'] : json_decode($hotel['extra_rooms'], true);
                         } elseif (isset($hotel['additional_rooms'])) {
-                            $hotelData['additional_rooms'] = is_array($hotel['additional_rooms']) ? $hotel['additional_rooms'] : json_decode($hotel['additional_rooms'], true);
+                            $extraRooms = is_array($hotel['additional_rooms']) ? $hotel['additional_rooms'] : json_decode($hotel['additional_rooms'], true);
                         }
+                        $hotelData['additional_rooms'] = $extraRooms;
+
+                        $extraCostPerNight = 0;
+                        $extraSellPerNight = 0;
+                        if (!empty($extraRooms)) {
+                            foreach ($extraRooms as $xr) {
+                                $extraCostPerNight += (float)($xr['cost_rate'] ?? 0);
+                                $extraSellPerNight += (float)($xr['sell_rate'] ?? 0);
+                            }
+                        }
+
+                        $hotelData['cost_amount'] = $hNights * (($hRooms * $hCostRate) + $extraCostPerNight) * $hCostRoe;
+                        $hotelData['selling_amount'] = $hNights * (($hRooms * $hSellRate) + $extraSellPerNight) * $hSaleRoe;
                         // Point 23: Child voucher number
                         $hotelData['voucher_no'] = $hotel['voucher_no'] ?? ($hotelVoucher ? ($hotelVoucher . '-' . ($idx + 1)) : null);
 
@@ -1117,7 +1152,9 @@ class BookingController extends Controller
             $booking->visas()->delete();
             if ($request->has('visas')) {
                 $visaCols = \Illuminate\Support\Facades\Schema::getColumnListing('booking_visas');
-                foreach ($request->visas as $idx => $visa) {
+                $targetPaxCount = (int)($request->no_of_pax ?: ($booking->no_of_pax ?: count($request->visas)));
+                $submittedVisas = array_slice($request->visas, 0, $targetPaxCount);
+                foreach ($submittedVisas as $idx => $visa) {
                     if (!empty($visa['passport_number']) || !empty($visa['given_name']) || (float)($visa['cost_rate'] ?? 0) > 0 || (float)($visa['selling_rate'] ?? 0) > 0) {
                         $visaData = $visa;
                         if ($request->hasFile("visas.$idx.visa_attachment")) {

@@ -209,13 +209,15 @@ class SupplierController extends Controller
         }
         $hotelBookings = $hotelQuery->latest('check_in')->get();
 
-        // 2. Flight Bookings (Supports both individual passenger flight suppliers and booking-level flight supplier)
+        // 2. Flight Bookings (Supports both individual passenger flight suppliers and booking-level flight supplier, departure & return)
         $flightQuery = Booking::with(['client', 'company', 'persons'])
             ->where(function ($q) use ($supplier) {
                 $q->whereHas('persons', function ($pq) use ($supplier) {
-                    $pq->where('flight_supplier_id', $supplier->id);
+                    $pq->where('flight_supplier_id', $supplier->id)
+                       ->orWhere('return_flight_supplier_id', $supplier->id);
                 })->orWhere(function ($mq) use ($supplier) {
                     $mq->where('flight_supplier_id', $supplier->id)
+                       ->orWhere('return_flight_supplier_id', $supplier->id)
                        ->where(function ($sub) {
                            $sub->doesntHave('persons')
                                ->orWhereHas('persons', function ($pq) {
@@ -289,24 +291,41 @@ class SupplierController extends Controller
             $fCur = strtoupper($fb->flight_currency ?: ($fb->currency ?: 'PKR'));
             $fRoe = (float) ($fb->flight_cost_roe > 0 ? $fb->flight_cost_roe : ($fb->flight_roe > 0 ? $fb->flight_roe : 75));
 
-            // Filter persons belonging to this supplier in this booking
+            // Filter persons belonging to this supplier in this booking (either departure or return)
             $supplierPersons = $fb->persons ? $fb->persons->filter(function ($p) use ($supplier, $fb) {
-                if (!empty($p->flight_supplier_id)) {
-                    return (int) $p->flight_supplier_id === (int) $supplier->id;
-                }
-                return (int) $fb->flight_supplier_id === (int) $supplier->id;
+                $isDep = !empty($p->flight_supplier_id) ? ((int) $p->flight_supplier_id === (int) $supplier->id) : ((int) $fb->flight_supplier_id === (int) $supplier->id);
+                $isRet = !empty($p->return_flight_supplier_id) ? ((int) $p->return_flight_supplier_id === (int) $supplier->id) : ((int) $fb->return_flight_supplier_id === (int) $supplier->id);
+                return $isDep || $isRet;
             }) : collect();
 
             $totalPaxCount = (int) ($fb->no_of_pax ?: ($fb->persons ? $fb->persons->count() : 1));
             if ($totalPaxCount < 1) $totalPaxCount = 1;
 
             $supplierPaxCount = $supplierPersons->count();
-            if ($supplierPaxCount === 0 && (int) $fb->flight_supplier_id === (int) $supplier->id) {
+            if ($supplierPaxCount === 0 && ((int) $fb->flight_supplier_id === (int) $supplier->id || (int) $fb->return_flight_supplier_id === (int) $supplier->id)) {
                 $supplierPaxCount = $totalPaxCount;
             }
 
-            $personCostSum = $supplierPersons->sum(function ($p) {
-                return (float) $p->flight_cost;
+            $personCostSum = $supplierPersons->sum(function ($p) use ($supplier, $fb) {
+                $isDep = !empty($p->flight_supplier_id) ? ((int) $p->flight_supplier_id === (int) $supplier->id) : ((int) $fb->flight_supplier_id === (int) $supplier->id);
+                $isRet = !empty($p->return_flight_supplier_id) ? ((int) $p->return_flight_supplier_id === (int) $supplier->id) : ((int) $fb->return_flight_supplier_id === (int) $supplier->id);
+
+                if ($isDep && $isRet) {
+                    return (float) ($p->flight_cost > 0 ? $p->flight_cost : (($p->departure_cost ?? 0) + ($p->return_cost ?? 0)));
+                } elseif ($isDep) {
+                    if ((float)($p->departure_cost ?? 0) > 0) return (float)$p->departure_cost;
+                    if ((float)($p->return_cost ?? 0) > 0 && (float)$p->flight_cost > (float)$p->return_cost) {
+                        return (float)$p->flight_cost - (float)$p->return_cost;
+                    }
+                    return (float) $p->flight_cost;
+                } elseif ($isRet) {
+                    if ((float)($p->return_cost ?? 0) > 0) return (float)$p->return_cost;
+                    if ((float)($p->departure_cost ?? 0) > 0 && (float)$p->flight_cost > (float)$p->departure_cost) {
+                        return (float)$p->flight_cost - (float)$p->departure_cost;
+                    }
+                    return 0.0;
+                }
+                return 0.0;
             });
 
             if ($personCostSum > 0) {

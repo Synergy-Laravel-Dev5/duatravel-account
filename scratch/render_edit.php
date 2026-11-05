@@ -3,20 +3,38 @@ require __DIR__ . '/../vendor/autoload.php';
 $app = require_once __DIR__ . '/../bootstrap/app.php';
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
+$user = App\Models\User::first();
+if ($user) Auth::login($user);
 
-\Illuminate\Support\Facades\View::share('errors', new \Illuminate\Support\ViewErrorBag());
-
-$user = \App\Models\User::first();
-if ($user) {
-    \Illuminate\Support\Facades\Auth::login($user);
+$booking = App\Models\Booking::with(['package', 'persons', 'hotels.supplier', 'transports', 'visas.supplier', 'flightSupplier', 'client', 'company'])->first();
+if (!$booking) {
+    echo "No booking found\n";
+    exit;
 }
+$clients = App\Models\Client::all();
+$companies = App\Models\Company::all();
+$packages = App\Models\Package::all();
+$hotels = App\Models\Hotel::all();
+$suppliers = App\Models\Supplier::all();
+$airlines = App\Models\Airline::all();
+$routes = App\Models\Route::all();
+$vehicles = App\Models\Vehicle::all();
+$mealPlans = App\Models\MealPlan::all();
+$years = [date('Y'), date('Y')+1];
+$transactionsPaid = 0;
+$defaultVouchers = [
+    'booking' => 'BK-2026-00001',
+    'flight' => 'FLT-2026-00001',
+    'hotel' => 'HTL-2026-00001',
+    'transport' => 'TRN-2026-00001',
+    'visa' => 'VIS-2026-00001',
+];
 
-try {
-    $controller = new \App\Http\Controllers\BookingController();
-    $response = $controller->edit(7);
-    $html = $response->render();
-    echo "SUCCESS, rendered length: " . strlen($html) . " bytes\n";
-    file_put_contents(__DIR__ . '/rendered_edit_7.html', $html);
-} catch (\Throwable $e) {
-    echo "ERROR: " . $e->getMessage() . "\n" . $e->getTraceAsString() . "\n";
-}
+$view = view('booking.edit', compact(
+    'booking', 'clients', 'companies', 'packages', 'hotels', 'suppliers',
+    'years', 'transactionsPaid', 'airlines', 'routes', 'vehicles', 'mealPlans', 'defaultVouchers'
+))->with('errors', new \Illuminate\Support\ViewErrorBag())->render();
+
+$view = str_replace('http://localhost/assets/', 'file:///d:/xampp/htdocs/project/Duatravel-account/public/assets/', $view);
+file_put_contents(__DIR__ . '/edit_rendered.html', $view);
+echo "Rendered successfully: " . strlen($view) . " bytes\n";

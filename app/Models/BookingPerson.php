@@ -42,6 +42,7 @@ class BookingPerson extends Model
         'flight_cost',
         'flight_sell',
         'flight_supplier_id',
+        'return_flight_supplier_id',
         'flight_pnr',
         'flight_date',
         'flight_time',
@@ -63,6 +64,11 @@ class BookingPerson extends Model
     public function flightSupplier()
     {
         return $this->belongsTo(Supplier::class, 'flight_supplier_id');
+    }
+
+    public function returnFlightSupplier()
+    {
+        return $this->belongsTo(Supplier::class, 'return_flight_supplier_id');
     }
 
     public function travelGroups()

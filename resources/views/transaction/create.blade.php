@@ -61,11 +61,13 @@
                                         <option value="">-- Select Client --</option>
                                         @foreach ($clients as $client)
                                             <option value="{{ $client->id }}"
+                                                data-balance="{{ $client->balance ?? 0 }}"
                                                 {{ old('client_id') == $client->id ? 'selected' : '' }}>
-                                                {{ $client->name }}
+                                                {{ $client->name }}{{ isset($client->balance) ? ' (Net Due: PKR ' . number_format($client->balance, 2) . ')' : '' }}
                                             </option>
                                         @endforeach
                                     </select>
+                                    <div id="client_balance_hint" class="mt-1 fs-12 fw-semibold text-primary"></div>
                                     @error('client_id')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -328,6 +330,17 @@
             bookingForSelect.addEventListener('change', toggleFields);
             clientSelect.addEventListener('change', function() {
                 filterBookings('client', this.value);
+                const opt = this.options[this.selectedIndex];
+                const bal = opt ? opt.getAttribute('data-balance') : null;
+                const hintEl = document.getElementById('client_balance_hint');
+                if (hintEl) {
+                    if (bal !== null && this.value) {
+                        const balNum = parseFloat(bal) || 0;
+                        hintEl.innerHTML = `<i class="mdi mdi-information-outline me-1"></i> Client Outstanding Balance: <span class="${balNum > 0 ? 'text-danger' : 'text-success'}">PKR ${Number(balNum).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>`;
+                    } else {
+                        hintEl.innerHTML = '';
+                    }
+                }
             });
             companySelect.addEventListener('change', function() {
                 filterBookings('company', this.value);

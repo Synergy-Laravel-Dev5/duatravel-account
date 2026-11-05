@@ -3,6 +3,8 @@
 
 @section('content')
     <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <div class="content-page">
         <div class="content">
             <div class="container-fluid">
@@ -564,8 +566,14 @@
                                                             </select>
                                                         </td>
                                                         <td>
-                                                            <select name="flight_persons[0][flight_supplier_id]" class="form-select form-select-sm person-flight-supplier">
-                                                                <option value="">-- Main Supplier --</option>
+                                                            <select name="flight_persons[0][flight_supplier_id]" class="form-select form-select-sm person-flight-supplier" title="Departure Supplier">
+                                                                <option value="">-- Dep: Main --</option>
+                                                                @foreach($suppliers as $s)
+                                                                    <option value="{{ $s->id }}">{{ $s->name }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                            <select name="flight_persons[0][return_flight_supplier_id]" class="form-select form-select-sm person-flight-ret-supplier mt-1" title="Return Supplier">
+                                                                <option value="">-- Ret: Same as Dep --</option>
                                                                 @foreach($suppliers as $s)
                                                                     <option value="{{ $s->id }}">{{ $s->name }}</option>
                                                                 @endforeach
@@ -629,7 +637,7 @@
                                     <div class="row g-2 p-2 rounded bg-light border">
                                         <div class="col-md-3">
                                             <div class="border rounded p-2 bg-white text-center shadow-sm">
-                                                <small class="text-muted d-block">Flight Cost (<span class="flight-curr-label">SAR</span>)</small>
+                                                <small class="text-muted d-block">Flight Cost (<span class="flight-foreign-label">SAR</span>)</small>
                                                 <strong class="text-danger fs-14" id="flight_cost_sar_total">0.00 SAR</strong>
                                             </div>
                                         </div>
@@ -641,7 +649,7 @@
                                         </div>
                                         <div class="col-md-3">
                                             <div class="border rounded p-2 bg-white text-center shadow-sm">
-                                                <small class="text-muted d-block">Flight Sell (<span class="flight-curr-label">SAR</span>)</small>
+                                                <small class="text-muted d-block">Flight Sell (<span class="flight-foreign-label">SAR</span>)</small>
                                                 <strong class="text-success fs-14" id="flight_sell_sar_total">0.00 SAR</strong>
                                             </div>
                                         </div>
@@ -734,20 +742,20 @@
                                         <i class="mdi mdi-repeat me-1"></i> Return Journey
                                     </span>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <label class="form-label">Date of Return</label>
                                     <input type="date" name="arrival_date" class="form-control">
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <label class="form-label">Return Flight #</label>
                                     <input type="text" name="arrival_flight" class="form-control"
                                         placeholder="PK-302">
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <label class="form-label">Time of Return</label>
                                     <input type="time" name="arrival_time" class="form-control">
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-6">
                                     <label class="form-label">Return Airline</label>
                                     <select name="arrival_airline" class="form-select">
                                         <option value="">-- Select Airline --</option>
@@ -758,6 +766,17 @@
                                                 </option>
                                             @endforeach
                                         @endif
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label d-flex justify-content-between align-items-center mb-1">
+                                        <span class="fw-semibold text-primary"><i class="mdi mdi-office-building me-1"></i> Return Flight Supplier (If Different)</span>
+                                    </label>
+                                    <select name="return_flight_supplier_id" id="return_flight_supplier_id" class="form-select select2">
+                                        <option value="">-- Same as Departure Flight Supplier --</option>
+                                        @foreach ($suppliers as $sup)
+                                            <option value="{{ $sup->id }}">{{ $sup->name }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                                 <div class="col-md-6">
@@ -1221,7 +1240,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="addRoute">+ Add
+                            <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="addRoute" onclick="addNewRoute()">+ Add
                                 Route</button>
 
                             <div class="d-flex justify-content-between align-items-center mt-4">
@@ -1628,9 +1647,13 @@
                                     <label class="form-label">Service Details</label>
                                     <textarea name="additional_services_detail" id="additional_services_detail" class="form-control summernote"></textarea>
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Service Amount</label>
-                                    <input type="number" name="additional_services_amount" id="additional_services_amount" class="form-control calc" placeholder="Enter amount" step="0.01" value="0">
+                                <div class="col-md-6">
+                                    <label class="form-label text-danger fw-semibold"><i class="mdi mdi-tag-outline me-1"></i> Additional Service Cost (PKR)</label>
+                                    <input type="number" name="additional_services_cost" id="additional_services_cost" class="form-control calc" placeholder="Cost Amount" step="0.01" value="{{ old('additional_services_cost', 0) }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-success fw-semibold"><i class="mdi mdi-cash-multiple me-1"></i> Additional Service Sale (PKR)</label>
+                                    <input type="number" name="additional_services_amount" id="additional_services_amount" class="form-control calc" placeholder="Sale Amount" step="0.01" value="{{ old('additional_services_amount', 0) }}">
                                 </div>
                             </div>
                             <div class="d-flex justify-content-between mt-4">
@@ -1723,27 +1746,55 @@
             const activeCategory = document.querySelector('input[name="booking_category"]:checked')?.value || '{{ $bCat }}';
 
             const domesticPlaces = ['karachi', 'lahore', 'islamabad', 'rawalpindi', 'peshawar', 'multan', 'faisalabad', 'quetta', 'sialkot', 'pakistan'];
-            const pilgrimagePlaces = ['makkah', 'madinah', 'azizia', 'mina', 'arafat', 'jeddah', 'saudi'];
+            const pilgrimagePlaces = ['makkah', 'madinah', 'medina', 'madina', 'azizia', 'mina', 'arafat', 'jeddah', 'saudi'];
 
             if (activeCategory === 'domestic') {
                 list = list.filter(h => {
-                    const p = (((typeof h.place === 'object' && h.place !== null) ? h.place?.value : h.place) || h.address || '').toLowerCase();
-                    return domesticPlaces.some(dp => p.includes(dp));
+                    const p = (((typeof h.place === 'object' && h.place !== null) ? h.place?.value : h.place) || '').toLowerCase();
+                    const a = (h.address || '').toLowerCase();
+                    const n = (h.name || '').toLowerCase();
+                    return domesticPlaces.some(dp => p.includes(dp) || a.includes(dp) || n.includes(dp));
                 });
             } else if (activeCategory === 'international') {
                 list = list.filter(h => {
-                    const p = (((typeof h.place === 'object' && h.place !== null) ? h.place?.value : h.place) || h.address || '').toLowerCase();
-                    const isPilgrim = pilgrimagePlaces.some(pp => p.includes(pp));
-                    const isDom = domesticPlaces.some(dp => p.includes(dp));
+                    const p = (((typeof h.place === 'object' && h.place !== null) ? h.place?.value : h.place) || '').toLowerCase();
+                    const a = (h.address || '').toLowerCase();
+                    const n = (h.name || '').toLowerCase();
+                    const isPilgrim = pilgrimagePlaces.some(pp => p.includes(pp) || a.includes(pp) || n.includes(pp));
+                    const isDom = domesticPlaces.some(dp => p.includes(dp) || a.includes(dp) || n.includes(dp));
                     return !isPilgrim && !isDom;
                 });
             } else {
-                if (filterCity && filterCity !== 'other') {
+                if (filterCity) {
                     const fc = filterCity.toLowerCase();
-                    list = list.filter(h => {
-                        const p = (((typeof h.place === 'object' && h.place !== null) ? h.place?.value : h.place) || h.address || '').toLowerCase();
-                        return p.includes(fc);
-                    });
+                    if (fc === 'makkah') {
+                        list = list.filter(h => {
+                            const p = (((typeof h.place === 'object' && h.place !== null) ? h.place?.value : h.place) || '').toLowerCase();
+                            const n = (h.name || '').toLowerCase();
+                            const a = (h.address || '').toLowerCase();
+                            return p.includes('makkah') || p.includes('mecca') || p.includes('azizia') ||
+                                   n.includes('makkah') || n.includes('mecca') || n.includes('azizia') ||
+                                   a.includes('makkah') || a.includes('mecca') || a.includes('azizia');
+                        });
+                    } else if (fc === 'madinah') {
+                        list = list.filter(h => {
+                            const p = (((typeof h.place === 'object' && h.place !== null) ? h.place?.value : h.place) || '').toLowerCase();
+                            const n = (h.name || '').toLowerCase();
+                            const a = (h.address || '').toLowerCase();
+                            return p.includes('madinah') || p.includes('medina') || p.includes('madina') ||
+                                   n.includes('madinah') || n.includes('medina') || n.includes('madina') ||
+                                   a.includes('madinah') || a.includes('medina') || a.includes('madina');
+                        });
+                    } else if (fc === 'other') {
+                        list = list.filter(h => {
+                            const p = (((typeof h.place === 'object' && h.place !== null) ? h.place?.value : h.place) || '').toLowerCase();
+                            const n = (h.name || '').toLowerCase();
+                            const a = (h.address || '').toLowerCase();
+                            const isMakkah = p.includes('makkah') || p.includes('mecca') || p.includes('azizia') || n.includes('makkah') || n.includes('mecca');
+                            const isMadinah = p.includes('madinah') || p.includes('medina') || p.includes('madina') || n.includes('madinah') || n.includes('medina') || n.includes('madina');
+                            return !isMakkah && !isMadinah;
+                        });
+                    }
                 }
             }
 
@@ -1965,7 +2016,12 @@
             document.querySelectorAll('#visasList .visa-card').forEach(card => {
                 if (defSup) {
                     const supSel = card.querySelector('select[name*="[supplier_id]"]');
-                    if (supSel) supSel.value = defSup;
+                    if (supSel) {
+                        supSel.value = defSup;
+                        if (typeof $ !== 'undefined') {
+                            $(supSel).val(defSup).trigger('change');
+                        }
+                    }
                 }
 
                 const currSel = card.querySelector('.visa-currency') || card.querySelector('select[name*="[currency]"]');
@@ -2015,6 +2071,18 @@
             }
             showAutoRefreshToast('Default visa supplier, currency, ROE, and rates applied to all passengers!');
         }
+
+        document.getElementById('default_visa_supplier_id')?.addEventListener('change', function() {
+            const defSup = this.value;
+            if (defSup) {
+                document.querySelectorAll('#visasList .visa-card select[name*="[supplier_id]"]').forEach(supSel => {
+                    supSel.value = defSup;
+                    if (typeof $ !== 'undefined') {
+                        $(supSel).val(defSup).trigger('change');
+                    }
+                });
+            }
+        });
 
         // Point 4: Live Unique Ticket Check
         function checkUniqueTicketNumbers() {
@@ -2594,10 +2662,16 @@
             list.querySelectorAll('.flight-person-row').forEach(row => {
                 const idx = row.getAttribute('data-idx');
                 if (idx !== null) {
+                    const supEl = row.querySelector('.person-flight-supplier');
+                    const pnrEl = row.querySelector('.person-flight-pnr');
+                    const dateEl = row.querySelector('.person-flight-date');
+                    const timeEl = row.querySelector('.person-flight-time');
+                    const tripEl = row.querySelector('.person-flight-trip-type');
+
                     existingRowData[idx] = {
                         passport:           row.querySelector('.person-flight-passport')?.value,
                         pax_type:           row.querySelector('.person-flight-pax-type')?.value,
-                        trip_type:          row.querySelector('.person-flight-trip-type')?.value,
+                        trip_type:          tripEl?.value,
                         dep_ticket:         row.querySelector('.person-flight-dep-ticket')?.value,
                         dep_cost:           row.querySelector('.person-flight-dep-cost')?.value,
                         dep_sell:           row.querySelector('.person-flight-dep-sell')?.value,
@@ -2608,15 +2682,24 @@
                         ticket_status:      row.querySelector('.person-flight-status')?.value,
                         cost:               row.querySelector('.person-flight-cost')?.value,
                         sell:               row.querySelector('.person-flight-sell')?.value,
-                        flight_supplier_id: row.querySelector('.person-flight-supplier')?.value,
-                        flight_pnr:         row.querySelector('.person-flight-pnr')?.value,
-                        flight_date:        row.querySelector('.person-flight-date')?.value,
-                        flight_time:        row.querySelector('.person-flight-time')?.value,
+                        flight_supplier_id: supEl?.value || '',
+                        flight_pnr:         pnrEl?.value,
+                        flight_date:        dateEl?.value,
+                        flight_time:        timeEl?.value,
+                        custom_supplier:    supEl?.getAttribute('data-customized') === 'true' || (supEl && supEl.value !== ''),
+                        custom_pnr:         pnrEl?.getAttribute('data-customized') === 'true',
+                        custom_date:        dateEl?.getAttribute('data-customized') === 'true',
+                        custom_time:        timeEl?.getAttribute('data-customized') === 'true',
+                        custom_trip:        tripEl?.getAttribute('data-customized') === 'true',
                     };
                 }
             });
 
             const clientPassVal = document.getElementById('fill_passport')?.value || document.getElementById('person_passport_0')?.value || (typeof clientsData !== 'undefined' && Array.isArray(clientsData) ? (clientsData.find(c => c.id == document.getElementById('clientSelect')?.value)?.passport_number || '') : '');
+            const mainSupSelect = document.getElementById('flight_supplier_id') || document.querySelector('select[name="flight_supplier_id"]');
+            const mainSupName = (mainSupSelect && mainSupSelect.selectedIndex >= 0 && mainSupSelect.value) ? (mainSupSelect.options[mainSupSelect.selectedIndex]?.text?.replace(/^--.*--$/, '')?.trim() || '') : '';
+            const mainTripVal = document.querySelector('input[name="flight_trip_type"]:checked')?.value;
+            const defaultTripType = (mainTripVal === 'oneway' ? 'departure_only' : 'round_trip');
 
             let rowsHtml = '';
             for (let i = 0; i < pax; i++) {
@@ -2633,8 +2716,14 @@
                     if (fillEl && !fillEl.value) fillEl.value = personPass;
                 }
 
+                let isCustomSup  = inDom ? inDom.custom_supplier : false;
+                let isCustomPnr  = inDom ? inDom.custom_pnr : false;
+                let isCustomDate = inDom ? inDom.custom_date : false;
+                let isCustomTime = inDom ? inDom.custom_time : false;
+                let isCustomTrip = inDom ? inDom.custom_trip : false;
+
                 let pType      = document.getElementById(`person_pax_type_${i}`)?.value || (inDom ? inDom.pax_type : 'adult');
-                let pTripType  = inDom ? inDom.trip_type : 'round_trip';
+                let pTripType  = isCustomTrip ? (inDom.trip_type || defaultTripType) : defaultTripType;
                 let pDepTicket = inDom ? inDom.dep_ticket : '';
                 let pDepCost   = inDom && inDom.dep_cost !== undefined ? inDom.dep_cost : '';
                 let pDepSell   = inDom && inDom.dep_sell !== undefined ? inDom.dep_sell : '';
@@ -2642,41 +2731,21 @@
                 let pRetCost   = inDom && inDom.ret_cost !== undefined ? inDom.ret_cost : '';
                 let pRetSell   = inDom && inDom.ret_sell !== undefined ? inDom.ret_sell : '';
                 let pTicket    = inDom ? inDom.ticket : '';
-                let pStatus    = 'confirmed';
-                let pCost      = '';
-                let pSell      = '';
-                let pSup       = '';
-                let pPnr       = depPnr;
-                let pDate      = depDate;
-                let pTime      = depTime;
-
-                if (inDom) {
-                    pType   = document.getElementById(`person_pax_type_${i}`)?.value || inDom.pax_type || 'adult';
-                    pTripType = inDom.trip_type || 'round_trip';
-                    pDepTicket = inDom.dep_ticket || '';
-                    pDepCost   = inDom.dep_cost !== undefined ? inDom.dep_cost : '';
-                    pDepSell   = inDom.dep_sell !== undefined ? inDom.dep_sell : '';
-                    pRetTicket = inDom.ret_ticket || '';
-                    pRetCost   = inDom.ret_cost !== undefined ? inDom.ret_cost : '';
-                    pRetSell   = inDom.ret_sell !== undefined ? inDom.ret_sell : '';
-                    pTicket = inDom.ticket || pDepTicket || '';
-                    pStatus = inDom.ticket_status || 'confirmed';
-                    pCost   = inDom.cost !== undefined ? inDom.cost : '';
-                    pSell   = inDom.sell !== undefined ? inDom.sell : '';
-                    pSup    = inDom.flight_supplier_id || '';
-                    pPnr    = inDom.flight_pnr !== undefined ? inDom.flight_pnr : depPnr;
-                    pDate   = inDom.flight_date !== undefined ? inDom.flight_date : depDate;
-                    pTime   = inDom.flight_time !== undefined ? inDom.flight_time : depTime;
-                }
+                let pStatus    = inDom ? (inDom.ticket_status || 'confirmed') : 'confirmed';
+                let pCost      = inDom && inDom.cost !== undefined ? inDom.cost : '';
+                let pSell      = inDom && inDom.sell !== undefined ? inDom.sell : '';
+                let pSup       = isCustomSup ? (inDom.flight_supplier_id || '') : '';
+                let pPnr       = isCustomPnr ? (inDom.flight_pnr !== undefined ? inDom.flight_pnr : depPnr) : depPnr;
+                let pDate      = isCustomDate ? (inDom.flight_date !== undefined ? inDom.flight_date : depDate) : depDate;
+                let pTime      = isCustomTime ? (inDom.flight_time !== undefined ? inDom.flight_time : depTime) : depTime;
 
                 const costVal = parseFloat(pCost) || ((parseFloat(pDepCost) || 0) + (parseFloat(pRetCost) || 0)) || 0;
                 const sellVal = parseFloat(pSell) || ((parseFloat(pDepSell) || 0) + (parseFloat(pRetSell) || 0)) || 0;
 
-                // Build supplier dropdown options (Point 3)
-                const effectiveSup = pSup || mainSupId;
-                let supOptionsHtml = '<option value="">-- Main Supplier --</option>';
+                // Build supplier dropdown options
+                let supOptionsHtml = `<option value="">-- Same as Main ${mainSupName ? '(' + mainSupName + ')' : 'Supplier'} --</option>`;
                 if (typeof suppliersData !== 'undefined' && Array.isArray(suppliersData)) {
-                    supOptionsHtml += suppliersData.map(s => `<option value="${s.id}" ${s.id == effectiveSup ? 'selected' : ''}>${s.name}</option>`).join('');
+                    supOptionsHtml += suppliersData.map(s => `<option value="${s.id}" ${s.id == pSup ? 'selected' : ''}>${s.name}</option>`).join('');
                 }
 
                 const isCancelled = (pStatus === 'cancelled');
@@ -2698,17 +2767,20 @@
                             <option value="child" ${pType === 'child' ? 'selected' : ''}>Child</option>
                             <option value="infant" ${pType === 'infant' ? 'selected' : ''}>Infant</option>
                         </select>
-                        <select name="flight_persons[${i}][trip_type]" class="form-select form-select-sm person-flight-trip-type mt-1 border-primary" onchange="onTripTypeChange(${i}, this.value)" title="Choose Trip Type">
+                        <select name="flight_persons[${i}][trip_type]" class="form-select form-select-sm person-flight-trip-type mt-1 border-primary" onchange="onTripTypeChange(${i}, this.value); onPersonFlightTravelInput(this);" data-customized="${isCustomTrip ? 'true' : 'false'}" title="Choose Trip Type">
                             <option value="round_trip" ${pTripType === 'round_trip' ? 'selected' : ''}>Round Trip</option>
                             <option value="departure_only" ${pTripType === 'departure_only' ? 'selected' : ''}>Departure Only (One Way)</option>
                             <option value="return_only" ${pTripType === 'return_only' ? 'selected' : ''}>Return Only (Inbound)</option>
                         </select>
                     </td>
                     <td>
-                        <select name="flight_persons[${i}][flight_supplier_id]" class="form-select form-select-sm person-flight-supplier">
+                        <select name="flight_persons[${i}][flight_supplier_id]" class="form-select form-select-sm person-flight-supplier" data-customized="${isCustomSup && pSup ? 'true' : 'false'}" onchange="onPersonFlightSupplierChange(this, ${i})">
                             ${supOptionsHtml}
                         </select>
-                        <input type="text" name="flight_persons[${i}][flight_pnr]" class="form-control form-control-sm person-flight-pnr mt-1" value="${pPnr}" placeholder="PNR #">
+                        <span class="badge ${isCustomSup && pSup ? 'bg-soft-info text-primary border border-info border-opacity-25' : 'bg-light text-muted border'} fs-10 mt-1 d-inline-block person-supplier-badge" id="person_sup_badge_${i}">
+                            <i class="mdi ${isCustomSup && pSup ? 'mdi-account-cog' : 'mdi-link-variant'} me-1"></i>${isCustomSup && pSup ? 'Individual Supplier' : 'Linked to Main Supplier'}
+                        </span>
+                        <input type="text" name="flight_persons[${i}][flight_pnr]" class="form-control form-control-sm person-flight-pnr mt-1 ${isCustomPnr ? 'border-info' : ''}" value="${pPnr}" placeholder="PNR #" data-customized="${isCustomPnr ? 'true' : 'false'}" oninput="onPersonFlightTravelInput(this)">
                     </td>
                     {{-- Departure Ticket --}}
                     <td class="box-dep-ticket ${pTripType === 'return_only' ? 'opacity-25' : ''}">
@@ -2744,8 +2816,8 @@
                             <option value="cancelled" ${pStatus === 'cancelled' ? 'selected' : ''}>Cancelled</option>
                             <option value="refunded" ${pStatus === 'refunded' ? 'selected' : ''}>Refunded</option>
                         </select>
-                        <input type="date" name="flight_persons[${i}][flight_date]" class="form-control form-control-sm person-flight-date" value="${pDate}" title="Flight date">
-                        <input type="text" name="flight_persons[${i}][flight_time]" class="form-control form-control-sm person-flight-time flight-time-picker mt-1" value="${pTime}" placeholder="hh:mm" title="Flight time">
+                        <input type="date" name="flight_persons[${i}][flight_date]" class="form-control form-control-sm person-flight-date ${isCustomDate ? 'border-info' : ''}" value="${pDate}" title="Flight date" data-customized="${isCustomDate ? 'true' : 'false'}" onchange="onPersonFlightTravelInput(this)">
+                        <input type="text" name="flight_persons[${i}][flight_time]" class="form-control form-control-sm person-flight-time flight-time-picker mt-1 ${isCustomTime ? 'border-info' : ''}" value="${pTime}" placeholder="hh:mm" title="Flight time" data-customized="${isCustomTime ? 'true' : 'false'}" onchange="onPersonFlightTravelInput(this)">
                     </td>
                 </tr>`;
             }
@@ -2978,6 +3050,9 @@
                     </div>
                 </div>`);
             }
+            if (typeof initBookingSelect2 === 'function') {
+                initBookingSelect2(list);
+            }
         }
 
         function calculateFlight() {
@@ -3007,6 +3082,7 @@
             if (legacyRoe) legacyRoe.value = costRoe;
 
             document.querySelectorAll('.flight-curr-label').forEach(el => el.textContent = curr);
+            document.querySelectorAll('.flight-foreign-label').forEach(el => el.textContent = (isPkr ? 'Foreign' : curr));
             document.querySelectorAll('.flight-curr-prefix').forEach(el => el.textContent = `1 ${curr} =`);
             const flightBadge = document.getElementById('flight_currency_badge');
             if (flightBadge) flightBadge.textContent = isPkr ? 'PKR Direct (ROE = 1)' : `Dual Currency (${curr} & PKR)`;
@@ -3104,11 +3180,11 @@
             if (elAdultSellDisp) elAdultSellDisp.textContent = totalSellCurr.toFixed(2);
 
             const elCostCurrTot = document.getElementById('flight_cost_sar_total');
-            if (elCostCurrTot) elCostCurrTot.textContent = totalCostCurr.toFixed(2) + ' ' + curr;
+            if (elCostCurrTot) elCostCurrTot.textContent = (curr === 'PKR') ? '—' : (totalCostCurr.toFixed(2) + ' ' + curr);
             const elCostPkrTot = document.getElementById('flight_cost_pkr_total');
             if (elCostPkrTot) elCostPkrTot.textContent = totalCostPkr.toFixed(2) + ' PKR';
             const elSellCurrTot = document.getElementById('flight_sell_sar_total');
-            if (elSellCurrTot) elSellCurrTot.textContent = totalSellCurr.toFixed(2) + ' ' + curr;
+            if (elSellCurrTot) elSellCurrTot.textContent = (curr === 'PKR') ? '—' : (totalSellCurr.toFixed(2) + ' ' + curr);
             const elSellPkrTot = document.getElementById('flight_sell_pkr_total');
             if (elSellPkrTot) elSellPkrTot.textContent = totalSellPkr.toFixed(2) + ' PKR';
 
@@ -3257,11 +3333,6 @@
             }
 
             if (arrDate || arrTime || arrFlight || arrAir) {
-                if ($('.route-block').length === 1 && (force || $('#tab-transport').hasClass('active') || $('#tab-transport').hasClass('show'))) {
-                    const addBtn = document.getElementById('addRoute');
-                    if (addBtn) addBtn.click();
-                }
-
                 const routeBlocks = $('.route-block');
                 if (routeBlocks.length >= 2) {
                     const routeReturn = routeBlocks.eq(1);
@@ -3465,21 +3536,35 @@
                         if (sellInp && infantSell > 0) sellInp.value = infantSell.toFixed(2);
                     }
 
-                    if (mainSup) {
-                        const supSel = row.querySelector('.person-flight-supplier');
-                        if (supSel && !supSel.value) supSel.value = mainSup;
+                    const supSel  = row.querySelector('.person-flight-supplier');
+                    const dateInp = row.querySelector('.person-flight-date');
+                    const timeInp = row.querySelector('.person-flight-time');
+                    const pnrInp  = row.querySelector('.person-flight-pnr');
+                    const idx     = row.getAttribute('data-idx');
+
+                    if (supSel) {
+                        supSel.removeAttribute('data-customized');
+                        supSel.value = '';
+                        const badge = document.getElementById('person_sup_badge_' + idx);
+                        if (badge) {
+                            badge.className = 'badge bg-light text-muted border fs-10 mt-1 d-inline-block person-supplier-badge';
+                            badge.innerHTML = '<i class="mdi mdi-link-variant me-1"></i>Linked to Main Supplier';
+                        }
                     }
-                    if (depDate) {
-                        const dateInp = row.querySelector('.person-flight-date');
-                        if (dateInp && !dateInp.value) dateInp.value = depDate;
+                    if (dateInp) {
+                        dateInp.removeAttribute('data-customized');
+                        dateInp.classList.remove('border-info');
+                        if (depDate) dateInp.value = depDate;
                     }
-                    if (depTime) {
-                        const timeInp = row.querySelector('.person-flight-time');
-                        if (timeInp && !timeInp.value) timeInp.value = depTime;
+                    if (timeInp) {
+                        timeInp.removeAttribute('data-customized');
+                        timeInp.classList.remove('border-info');
+                        if (depTime) timeInp.value = depTime;
                     }
-                    if (depPnr) {
-                        const pnrInp = row.querySelector('.person-flight-pnr');
-                        if (pnrInp && !pnrInp.value) pnrInp.value = depPnr;
+                    if (pnrInp) {
+                        pnrInp.removeAttribute('data-customized');
+                        pnrInp.classList.remove('border-info');
+                        if (depPnr) pnrInp.value = depPnr;
                     }
                     updatedCount++;
                 });
@@ -3509,8 +3594,12 @@
 
         // Hotels Dynamic Management
         let hotelIdx = 0;
+        var isAddingHotel = false;
 
         function addNewHotel(loc = 'makkah') {
+            if (isAddingHotel) return;
+            isAddingHotel = true;
+            setTimeout(() => { isAddingHotel = false; }, 350);
             const noHotelAlert = document.getElementById('noHotelAlert');
             if (noHotelAlert) noHotelAlert.style.display = 'none';
 
@@ -3542,7 +3631,7 @@
             // Filter hotels by location & category
             const relevantHotelsOptions = (activeCategory === 'domestic' || activeCategory === 'international')
                 ? buildHotelsOptions()
-                : buildHotelsOptions(loc === 'makkah' ? 'makkah' : (loc === 'madinah' ? 'madinah' : null));
+                : buildHotelsOptions(loc === 'makkah' ? 'makkah' : (loc === 'madinah' ? 'madinah' : 'other'));
 
             const html = `
             <div class="hotel-block border rounded p-3 mb-3 bg-white shadow-sm" data-hotel-idx="${hotelIdx}" data-location="${locVal}" data-city="${locVal.toUpperCase()}">
@@ -3747,19 +3836,16 @@
             document.getElementById('hotelsList').insertAdjacentHTML('beforeend', html);
             const lastRow = document.querySelector('#hotelsList .hotel-block:last-child');
             hotelIdx++;
-            syncBookingHotelDates();
+            try { syncBookingHotelDates(); } catch(e) { console.error('syncBookingHotelDates error:', e); }
             if (lastRow) {
-                if (typeof initBookingSelect2 === 'function') initBookingSelect2(lastRow);
-                syncHotelPersons(lastRow);
-                autoDivideHotelRates(lastRow);
-                calculateHotelRow(lastRow);
+                try { if (typeof initBookingSelect2 === 'function') initBookingSelect2(lastRow); } catch(e) { console.error('initBookingSelect2 error:', e); }
+                try { syncHotelPersons(lastRow); } catch(e) { console.error('syncHotelPersons error:', e); }
+                try { autoDivideHotelRates(lastRow); } catch(e) { console.error('autoDivideHotelRates error:', e); }
+                try { calculateHotelRow(lastRow); } catch(e) { console.error('calculateHotelRow error:', e); }
             }
-            calcTotal();
+            try { calcTotal(); } catch(e) { console.error('calcTotal error:', e); }
         }
-
-        document.getElementById('addHotel')?.addEventListener('click', function() {
-            addNewHotel('other');
-        });
+        window.addNewHotel = addNewHotel;
 
         document.getElementById('hotelsList')?.addEventListener('click', function(e) {
             if (e.target.classList.contains('remove-hotel') || e.target.closest('.remove-hotel')) {
@@ -3946,6 +4032,14 @@
             row.querySelectorAll('.hotel-curr-name').forEach(el => el.textContent = `${curr}:`);
             row.querySelectorAll('.hotel-person-nights-disp').forEach(el => el.textContent = nights);
 
+            // Sum additional rooms cost and sell rates per night
+            let extraCostPerNight = 0;
+            let extraSellPerNight = 0;
+            row.querySelectorAll('.additional-room-item').forEach(extraRoom => {
+                extraCostPerNight += parseFloat(extraRoom.querySelector('.add-room-cost')?.value) || 0;
+                extraSellPerNight += parseFloat(extraRoom.querySelector('.add-room-sell')?.value) || 0;
+            });
+
             const personRows = row.querySelectorAll('.hotel-person-row');
             let costCurr = 0;
             let sellCurr = 0;
@@ -3984,16 +4078,16 @@
                 const crInput = row.querySelector('.hotel-cost-rate');
                 const srInput = row.querySelector('.hotel-sell-rate');
                 if (crInput && nights > 0 && rooms > 0) {
-                    crInput.value = (Math.round((costCurr / (nights * rooms)) * 100) / 100).toFixed(2);
+                    crInput.value = (Math.max(0, (costCurr / nights) - extraCostPerNight) / rooms).toFixed(2);
                 }
                 if (srInput && nights > 0 && rooms > 0) {
-                    srInput.value = (Math.round((sellCurr / (nights * rooms)) * 100) / 100).toFixed(2);
+                    srInput.value = (Math.max(0, (sellCurr / nights) - extraSellPerNight) / rooms).toFixed(2);
                 }
             } else {
                 const costRate = parseFloat(row.querySelector('.hotel-cost-rate')?.value) || 0;
                 const sellRate = parseFloat(row.querySelector('.hotel-sell-rate')?.value) || 0;
-                costCurr = nights * rooms * costRate;
-                sellCurr = nights * rooms * sellRate;
+                costCurr = nights * ((rooms * costRate) + extraCostPerNight);
+                sellCurr = nights * ((rooms * sellRate) + extraSellPerNight);
 
                 if (personRows.length > 0) {
                     autoDivideHotelRates(row);
@@ -4101,8 +4195,18 @@
                 const cout = b.querySelector('.hotel-checkout')?.value;
                 const nights = parseInt(b.querySelector('.hotel-nights')?.value) || 0;
                 const rooms = parseInt(b.querySelector('.hotel-rooms')?.value) || 0;
+
+                let extraCostPerNight = 0;
+                let extraSellPerNight = 0;
+                let extraRoomsCount = 0;
+                b.querySelectorAll('.additional-room-item').forEach(extraRoom => {
+                    extraCostPerNight += parseFloat(extraRoom.querySelector('.add-room-cost')?.value) || 0;
+                    extraSellPerNight += parseFloat(extraRoom.querySelector('.add-room-sell')?.value) || 0;
+                    extraRoomsCount++;
+                });
+
                 totalNights += nights;
-                totalRooms += rooms;
+                totalRooms += (rooms + extraRoomsCount);
                 if (cin && (!minIn || cin < minIn)) minIn = cin;
                 if (cout && (!maxOut || cout > maxOut)) maxOut = cout;
 
@@ -4132,8 +4236,8 @@
                 const costRate = parseFloat(b.querySelector('.hotel-cost-rate, input[name*="[cost_per_night]"]')?.value) || 0;
                 const sellRate = parseFloat(b.querySelector('.hotel-sell-rate, input[name*="[selling_per_night]"]')?.value) || 0;
 
-                const cForeign = nights * rooms * costRate;
-                const sForeign = nights * rooms * sellRate;
+                const cForeign = nights * ((rooms * costRate) + extraCostPerNight);
+                const sForeign = nights * ((rooms * sellRate) + extraSellPerNight);
                 const cPkr = cForeign * costRoe;
                 const sPkr = sForeign * saleRoe;
 
@@ -4143,6 +4247,7 @@
                 totalSellPkr += sPkr;
                 hotelCurrs.add(curr);
 
+                const dispRooms = rooms + extraRoomsCount;
                 summaryTableHtml += `<tr>
                     <td class="text-start fw-bold text-dark">${hName}</td>
                     <td class="fw-semibold">${city}</td>
@@ -4150,7 +4255,7 @@
                     <td>${cout || '—'}</td>
                     <td class="fw-bold text-dark">${nights}</td>
                     <td>${roomType}</td>
-                    <td>${rooms || 1}</td>
+                    <td>${dispRooms || 1}</td>
                     <td>${mealPlan}</td>
                     <td class="text-end text-danger fw-semibold">
                         <span>${cForeign.toFixed(2)} ${curr}</span><br>
@@ -4337,9 +4442,16 @@
             if (paxCount <= 0) return;
             const rooms = parseFloat(block.querySelector('.hotel-rooms')?.value) || 1;
 
+            let extraCostPerNight = 0;
+            let extraSellPerNight = 0;
+            block.querySelectorAll('.additional-room-item').forEach(extraRoom => {
+                extraCostPerNight += parseFloat(extraRoom.querySelector('.add-room-cost')?.value) || 0;
+                extraSellPerNight += parseFloat(extraRoom.querySelector('.add-room-sell')?.value) || 0;
+            });
+
             if (!whichField || whichField === 'cost') {
                 const costRate = parseFloat(block.querySelector('.hotel-cost-rate')?.value) || 0;
-                const totalCostPerNight = costRate * rooms;
+                const totalCostPerNight = (costRate * rooms) + extraCostPerNight;
                 if (totalCostPerNight > 0) {
                     const costAmounts = allocateExactAmount(totalCostPerNight, paxCount);
                     personRows.forEach((el, idx) => {
@@ -4356,7 +4468,7 @@
 
             if (!whichField || whichField === 'sell') {
                 const sellRate = parseFloat(block.querySelector('.hotel-sell-rate')?.value) || 0;
-                const totalSellPerNight = sellRate * rooms;
+                const totalSellPerNight = (sellRate * rooms) + extraSellPerNight;
                 if (totalSellPerNight > 0) {
                     const sellAmounts = allocateExactAmount(totalSellPerNight, paxCount);
                     personRows.forEach((el, idx) => {
@@ -4381,7 +4493,11 @@
 
         // Point 9: Add Additional Room to existing hotel
         let addRoomCounter = 1;
+        var isAddingAdditionalRoom = false;
         function addAdditionalRoomToHotel(hotelIdx) {
+            if (isAddingAdditionalRoom) return;
+            isAddingAdditionalRoom = true;
+            setTimeout(() => { isAddingAdditionalRoom = false; }, 350);
             const container = document.getElementById(`additional_rooms_list_${hotelIdx}`);
             if (!container) return;
             const curr = document.querySelector(`.hotel-block[data-hotel-idx="${hotelIdx}"] .hotel-currency`)?.value || 'SAR';
@@ -4391,7 +4507,7 @@
             <div class="border rounded p-2 mb-2 bg-light additional-room-item" id="add_room_${rId}">
                 <div class="d-flex justify-content-between align-items-center mb-1">
                     <strong class="text-primary fs-12"><i class="mdi mdi-door"></i> Additional Room</strong>
-                    <button type="button" class="btn btn-xs btn-outline-danger" onclick="document.getElementById('add_room_${rId}').remove(); calculateHotelCost(document.querySelector('.hotel-block[data-hotel-idx=\\'${hotelIdx}\\']')); updateHotelStaySummary();">×</button>
+                    <button type="button" class="btn btn-xs btn-outline-danger" onclick="document.getElementById('add_room_${rId}').remove(); const blk = document.querySelector('.hotel-block[data-hotel-idx=\\'${hotelIdx}\\']'); if (blk) { autoDivideHotelRates(blk); calculateHotelRow(blk); } updateHotelStaySummary();">×</button>
                 </div>
                 <div class="row g-2">
                     <div class="col-md-3">
@@ -4410,31 +4526,52 @@
                         <input type="text" name="hotels[${hotelIdx}][extra_rooms][${rId}][room_number]" class="form-control form-control-sm" placeholder="e.g. 502">
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label fs-11 mb-0">Cost Rate (${curr})</label>
-                        <input type="number" step="0.01" name="hotels[${hotelIdx}][extra_rooms][${rId}][cost_rate]" class="form-control form-control-sm add-room-cost" value="0">
+                        <label class="form-label fs-11 mb-0">Cost Rate / Night (${curr})</label>
+                        <input type="number" step="0.01" name="hotels[${hotelIdx}][extra_rooms][${rId}][cost_rate]" class="form-control form-control-sm add-room-cost" value="0"
+                            oninput="calculateHotelRow(this.closest('.hotel-block'))" onchange="calculateHotelRow(this.closest('.hotel-block'))">
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label fs-11 mb-0">Sell Rate (${curr})</label>
-                        <input type="number" step="0.01" name="hotels[${hotelIdx}][extra_rooms][${rId}][sell_rate]" class="form-control form-control-sm add-room-sell" value="0">
+                        <label class="form-label fs-11 mb-0">Sell Rate / Night (${curr})</label>
+                        <input type="number" step="0.01" name="hotels[${hotelIdx}][extra_rooms][${rId}][sell_rate]" class="form-control form-control-sm add-room-sell" value="0"
+                            oninput="calculateHotelRow(this.closest('.hotel-block'))" onchange="calculateHotelRow(this.closest('.hotel-block'))">
                     </div>
                 </div>
             </div>`;
             container.insertAdjacentHTML('beforeend', html);
+            const block = document.querySelector(`.hotel-block[data-hotel-idx="${hotelIdx}"]`);
+            if (block) {
+                autoDivideHotelRates(block);
+                calculateHotelRow(block);
+            }
             updateHotelStaySummary();
         }
+        window.addAdditionalRoomToHotel = addAdditionalRoomToHotel;
 
         // Transports Dynamic Management
         let routeIdx = 1;
+        var isAddingRoute = false;
 
-        document.getElementById('addRoute')?.addEventListener('click', function() {
-            const flightCurr = document.getElementById('flight_currency')?.value || 'SAR';
-            const defaultCostRoe = (flightCurr === 'PKR') ? 1 : (document.getElementById('flight_cost_roe')?.value || 75);
-            const defaultSaleRoe = (flightCurr === 'PKR') ? 1 : (document.getElementById('flight_sale_roe')?.value || defaultCostRoe);
-            const isPkr = (flightCurr === 'PKR');
-            const trnVoucherBase = document.getElementById('transport_voucher_no')?.value || '{{ $defaultVouchers["transport"] ?? ("TRN-" . date("Y") . "-00001") }}';
-            const childVoucher = trnVoucherBase + '-' + (routeIdx + 1);
+        function addNewRoute() {
+            if (isAddingRoute) return;
+            isAddingRoute = true;
+            setTimeout(() => { isAddingRoute = false; }, 350);
+            try {
+                const routesList = document.getElementById('routesList');
+                if (!routesList) {
+                    console.error('routesList element not found!');
+                    return;
+                }
+                const existingRoutes = document.querySelectorAll('#routesList .route-block');
+                routeIdx = Math.max(routeIdx, existingRoutes.length);
 
-            document.getElementById('routesList').insertAdjacentHTML('beforeend', `
+                const flightCurr = document.getElementById('flight_currency')?.value || 'SAR';
+                const defaultCostRoe = (flightCurr === 'PKR') ? 1 : (document.getElementById('flight_cost_roe')?.value || 75);
+                const defaultSaleRoe = (flightCurr === 'PKR') ? 1 : (document.getElementById('flight_sale_roe')?.value || defaultCostRoe);
+                const isPkr = (flightCurr === 'PKR');
+                const trnVoucherBase = document.getElementById('transport_voucher_no')?.value || '{{ $defaultVouchers["transport"] ?? ("TRN-" . date("Y") . "-00001") }}';
+                const childVoucher = trnVoucherBase + '-' + (routeIdx + 1);
+
+                routesList.insertAdjacentHTML('beforeend', `
                 <div class="route-block border rounded p-3 mb-2 bg-white shadow-sm">
                     <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
                         <div class="d-flex align-items-center gap-2">
@@ -4571,7 +4708,14 @@
                 }
             }
             if (typeof initBookingSelect2 === 'function') initBookingSelect2(newRouteBlock);
-        });
+            calculateAllTransports();
+            calcTotal();
+            updateTransportSummary();
+        } catch(err) {
+            console.error('addNewRoute error:', err);
+        }
+    }
+    window.addNewRoute = addNewRoute;
 
         document.getElementById('routesList')?.addEventListener('click', function(e) {
             if (e.target.classList.contains('remove-route') || e.target.closest('.remove-route')) {
@@ -4894,8 +5038,15 @@
                 const costRoe  = isPkr ? 1 : (parseFloat(row.querySelector('.hotel-cost-roe')?.value) || parseFloat(row.querySelector('.hotel-roe')?.value) || 75);
                 const saleRoe  = isPkr ? 1 : (parseFloat(row.querySelector('.hotel-sale-roe')?.value) || costRoe || 75);
 
-                const cForeign = nights * rooms * costRate;
-                const sForeign = nights * rooms * sellRate;
+                let extraCostPerNight = 0;
+                let extraSellPerNight = 0;
+                row.querySelectorAll('.additional-room-item').forEach(extraRoom => {
+                    extraCostPerNight += parseFloat(extraRoom.querySelector('.add-room-cost')?.value) || 0;
+                    extraSellPerNight += parseFloat(extraRoom.querySelector('.add-room-sell')?.value) || 0;
+                });
+
+                const cForeign = nights * ((rooms * costRate) + extraCostPerNight);
+                const sForeign = nights * ((rooms * sellRate) + extraSellPerNight);
                 const cPkr = cForeign * costRoe;
                 const sPkr = sForeign * saleRoe;
 
@@ -5069,8 +5220,16 @@
 
             // Costing Dual Currency Cards - Foreign Currency Card
             if (document.getElementById('cost_foreign_curr_title')) document.getElementById('cost_foreign_curr_title').textContent = (activeCurrs.size === 1) ? Array.from(activeCurrs)[0] : (activeCurrs.size > 1 ? 'Multi-Curr' : flightCurr);
-            if (document.getElementById('cost_sar_flight_cost')) document.getElementById('cost_sar_flight_cost').textContent = `${flightCostForeign.toFixed(2)} ${flightCurr}`;
-            if (document.getElementById('cost_sar_flight')) document.getElementById('cost_sar_flight').textContent = `${flightForeign.toFixed(2)} ${flightCurr}`;
+            if (document.getElementById('cost_sar_flight_cost')) {
+                document.getElementById('cost_sar_flight_cost').textContent = (flightCurr === 'PKR') 
+                    ? `—` 
+                    : `${flightCostForeign.toFixed(2)} ${flightCurr}`;
+            }
+            if (document.getElementById('cost_sar_flight')) {
+                document.getElementById('cost_sar_flight').textContent = (flightCurr === 'PKR') 
+                    ? `—` 
+                    : `${flightForeign.toFixed(2)} ${flightCurr}`;
+            }
             if (document.getElementById('cost_sar_hotel_cost')) document.getElementById('cost_sar_hotel_cost').textContent = `${hotelCostForeign.toFixed(2)} ${hotelCurrLabel}`;
             if (document.getElementById('cost_sar_hotel')) document.getElementById('cost_sar_hotel').textContent = `${hotelSellForeign.toFixed(2)} ${hotelCurrLabel}`;
             if (document.getElementById('cost_sar_transport_cost')) document.getElementById('cost_sar_transport_cost').textContent = `${transportCostForeign.toFixed(2)} ${transportCurrLabel}`;
@@ -5616,6 +5775,7 @@
         });
         // --- TIME FORMAT & FLATPICKR HANDLING ---
         function initFlightTimePickers(format = '12') {
+            if (typeof flatpickr !== 'function') return;
             const is24 = (format === '24');
             document.querySelectorAll('.flight-time-picker').forEach(el => {
                 if (el._flatpickr) {
@@ -5646,35 +5806,95 @@
             });
         });
 
-        // --- CASCADE MAIN FLIGHT DETAILS TO PASSENGERS ---
+        // --- INDIVIDUAL FLIGHT DETAILS & MASTER CASCADE TO PASSENGERS ---
+        function onPersonFlightSupplierChange(selectEl, idx) {
+            const val = selectEl.value;
+            const badge = document.getElementById('person_sup_badge_' + idx);
+            if (val) {
+                selectEl.setAttribute('data-customized', 'true');
+                if (badge) {
+                    badge.className = 'badge bg-soft-info text-primary border border-info border-opacity-25 fs-10 mt-1 d-inline-block person-supplier-badge';
+                    badge.innerHTML = '<i class="mdi mdi-account-cog me-1"></i>Individual Supplier';
+                }
+            } else {
+                selectEl.removeAttribute('data-customized');
+                if (badge) {
+                    badge.className = 'badge bg-light text-muted border fs-10 mt-1 d-inline-block person-supplier-badge';
+                    badge.innerHTML = '<i class="mdi mdi-link-variant me-1"></i>Linked to Main Supplier';
+                }
+            }
+        }
+
+        function onPersonFlightTravelInput(inputEl) {
+            inputEl.setAttribute('data-customized', 'true');
+            inputEl.classList.add('border-info');
+        }
+
         function syncMainFlightDetailsToPassengers() {
             const mainDate = document.getElementById('flight_booking_date')?.value || document.querySelector('input[name="departure_date"]')?.value || '';
-            const mainSup  = document.querySelector('select[name="flight_supplier_id"]')?.value || '';
-            const mainPnr  = document.querySelector('input[name="departure_pnr"]')?.value || '';
+            const mainSupSelect = document.getElementById('flight_supplier_id') || document.querySelector('select[name="flight_supplier_id"]');
+            const mainSupId = mainSupSelect?.value || '';
+            const mainSupName = (mainSupSelect && mainSupSelect.selectedIndex >= 0 && mainSupSelect.value) ? (mainSupSelect.options[mainSupSelect.selectedIndex]?.text?.replace(/^--.*--$/, '')?.trim() || '') : '';
+            const mainPnr = document.querySelector('input[name="departure_pnr"]')?.value || '';
             const mainTime = document.querySelector('input[name="departure_time"]')?.value || '';
+            const mainTrip = document.querySelector('input[name="flight_trip_type"]:checked')?.value === 'oneway' ? 'departure_only' : 'round_trip';
 
             document.querySelectorAll('.flight-person-row').forEach(row => {
-                const dInput = row.querySelector('.person-flight-date');
+                const idx = row.getAttribute('data-idx');
                 const sSelect = row.querySelector('.person-flight-supplier');
-                const pInput = row.querySelector('.person-flight-pnr');
-                const tInput = row.querySelector('.person-flight-time');
+                const pInput  = row.querySelector('.person-flight-pnr');
+                const dInput  = row.querySelector('.person-flight-date');
+                const tInput  = row.querySelector('.person-flight-time');
+                const trSelect = row.querySelector('.person-flight-trip-type');
 
-                if (dInput && !dInput.getAttribute('data-customized')) dInput.value = mainDate;
-                if (sSelect && !sSelect.getAttribute('data-customized') && mainSup) $(sSelect).val(mainSup).trigger('change');
-                if (pInput && !pInput.getAttribute('data-customized')) pInput.value = mainPnr;
-                if (tInput && !tInput.getAttribute('data-customized')) tInput.value = mainTime;
+                // Supplier Sync
+                if (sSelect) {
+                    if (sSelect.options.length > 0) {
+                        sSelect.options[0].text = `-- Same as Main ${mainSupName ? '(' + mainSupName + ')' : 'Supplier'} --`;
+                    }
+                    if (sSelect.getAttribute('data-customized') !== 'true') {
+                        sSelect.value = '';
+                        const badge = document.getElementById('person_sup_badge_' + idx);
+                        if (badge) {
+                            badge.className = 'badge bg-light text-muted border fs-10 mt-1 d-inline-block person-supplier-badge';
+                            badge.innerHTML = '<i class="mdi mdi-link-variant me-1"></i>Linked to Main Supplier';
+                        }
+                    }
+                }
+
+                // PNR Sync
+                if (pInput && pInput.getAttribute('data-customized') !== 'true') {
+                    pInput.value = mainPnr;
+                }
+
+                // Date Sync
+                if (dInput && dInput.getAttribute('data-customized') !== 'true') {
+                    dInput.value = mainDate;
+                }
+
+                // Time Sync
+                if (tInput && tInput.getAttribute('data-customized') !== 'true') {
+                    tInput.value = mainTime;
+                }
+
+                // Trip Type Sync
+                if (trSelect && trSelect.getAttribute('data-customized') !== 'true') {
+                    if (trSelect.value !== mainTrip) {
+                        trSelect.value = mainTrip;
+                        if (typeof onTripTypeChange === 'function' && idx !== null) {
+                            onTripTypeChange(idx, mainTrip);
+                        }
+                    }
+                }
             });
         }
 
-        $('#flight_booking_date, input[name="departure_date"], select[name="flight_supplier_id"], input[name="departure_pnr"], input[name="departure_time"]').on('change input', syncMainFlightDetailsToPassengers);
-
-        $(document).on('change input', '.person-flight-date, .person-flight-supplier, .person-flight-pnr, .person-flight-time', function() {
-            this.setAttribute('data-customized', 'true');
-        });
+        $(document).on('change select2:select', '#flight_supplier_id, select[name="flight_supplier_id"]', syncMainFlightDetailsToPassengers);
+        $(document).on('input change', '#flight_booking_date, input[name="departure_date"], input[name="departure_pnr"], input[name="departure_time"], input[name="flight_trip_type"]', syncMainFlightDetailsToPassengers);
 
         // --- SELECT2 INITIALIZATION HELPER ---
         function initBookingSelect2(context) {
-            if (typeof jQuery === "undefined" || !jQuery.fn.select2) return;
+            if (typeof jQuery === "undefined" || !jQuery.fn || typeof jQuery.fn.select2 !== 'function') return;
             const $ctx = context ? $(context) : $(document);
             $ctx.find('select.select2').each(function() {
                 if (!$(this).hasClass('select2-hidden-accessible')) {
@@ -5685,6 +5905,7 @@
                     });
                 }
             });
+            $ctx.find('.select2-container').css('width', '100%');
         }
 
         // --- BOOKING CATEGORY SYNC & HOTEL BUTTON / DROPDOWN FILTERING ---

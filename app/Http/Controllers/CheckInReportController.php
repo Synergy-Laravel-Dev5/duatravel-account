@@ -176,6 +176,21 @@ class CheckInReportController extends Controller
             $supplierPaidMapSAR[$sId] = ($supplierPaidMapSAR[$sId] ?? 0) + $sarAmt;
         }
 
+        // Direct Booking + Service Payments to Supplier
+        $directServicePaid = ExpenseTransaction::where('transaction_type', 'debit')
+            ->whereNotNull('booking_id')
+            ->selectRaw('booking_id, supplier_id, service_type, SUM(CASE WHEN currency = "SAR" THEN amount * exchange_rate ELSE amount END) as tot')
+            ->groupBy('booking_id', 'supplier_id', 'service_type')
+            ->get();
+
+        $directHotelMap = [];
+        foreach ($directServicePaid as $dsp) {
+            if (in_array($dsp->service_type, ['hotel', 'all', null, ''])) {
+                $k = $dsp->booking_id . '_' . $dsp->supplier_id;
+                $directHotelMap[$k] = ($directHotelMap[$k] ?? 0) + (float)$dsp->tot;
+            }
+        }
+
         // Pools for FIFO allocation per service
         $hotelPoolPKR     = $supplierPaidMapPKR;
         $flightPoolPKR    = $supplierPaidMapPKR;
@@ -222,9 +237,15 @@ class CheckInReportController extends Controller
 
                     $hSupplierId = (int) ($bh->supplier_id ?: 0);
                     $hPaidPKR = 0;
-                    if ($hSupplierId > 0 && isset($hotelPoolPKR[$hSupplierId])) {
-                        $hPaidPKR = min($hCostPKR, max(0, $hotelPoolPKR[$hSupplierId]));
-                        $hotelPoolPKR[$hSupplierId] -= $hPaidPKR;
+                    $hKey = $b->id . '_' . $hSupplierId;
+                    if ($hSupplierId > 0 && isset($directHotelMap[$hKey])) {
+                        $hPaidPKR = min($hCostPKR, $directHotelMap[$hKey]);
+                        $directHotelMap[$hKey] -= $hPaidPKR;
+                    }
+                    if ($hPaidPKR < $hCostPKR && $hSupplierId > 0 && isset($hotelPoolPKR[$hSupplierId])) {
+                        $fifoAlloc = min($hCostPKR - $hPaidPKR, max(0, $hotelPoolPKR[$hSupplierId]));
+                        $hPaidPKR += $fifoAlloc;
+                        $hotelPoolPKR[$hSupplierId] -= $fifoAlloc;
                     }
                     $hBalPKR  = max(0, $hCostPKR - $hPaidPKR);
                     $hPaidSAR = $hRoe > 0 ? round($hPaidPKR / $hRoe, 2) : 0;
@@ -600,6 +621,46 @@ class CheckInReportController extends Controller
                 ]);
             }
         }
+
+        // Sort Hotel Records: Earliest Option Date first (expiring / critical option date on top), nulls last, then Check-in ASC
+        $hotelRecords = $hotelRecords->sort(function ($a, $b) {
+            $aOpt = !empty($a->option_date) ? date('Y-m-d', strtotime($a->option_date)) : null;
+            $bOpt = !empty($b->option_date) ? date('Y-m-d', strtotime($b->option_date)) : null;
+
+            if ($aOpt && $bOpt) {
+                if ($aOpt !== $bOpt) {
+                    return strcmp($aOpt, $bOpt);
+                }
+            } elseif ($aOpt) {
+                return -1;
+            } elseif ($bOpt) {
+                return 1;
+            }
+
+            $aCin = !empty($a->check_in) ? date('Y-m-d', strtotime($a->check_in)) : '9999-99-99';
+            $bCin = !empty($b->check_in) ? date('Y-m-d', strtotime($b->check_in)) : '9999-99-99';
+            return strcmp($aCin, $bCin);
+        })->values();
+
+        // Sort All Records: Earliest Option Date first, nulls last, then Check-in / Departure ASC
+        $records = $records->sort(function ($a, $b) {
+            $aOpt = !empty($a->option_date) ? date('Y-m-d', strtotime($a->option_date)) : null;
+            $bOpt = !empty($b->option_date) ? date('Y-m-d', strtotime($b->option_date)) : null;
+
+            if ($aOpt && $bOpt) {
+                if ($aOpt !== $bOpt) {
+                    return strcmp($aOpt, $bOpt);
+                }
+            } elseif ($aOpt) {
+                return -1;
+            } elseif ($bOpt) {
+                return 1;
+            }
+
+            $aDate = !empty($a->check_in) ? date('Y-m-d', strtotime($a->check_in)) : (!empty($a->departure_date) ? date('Y-m-d', strtotime($a->departure_date)) : '9999-99-99');
+            $bDate = !empty($b->check_in) ? date('Y-m-d', strtotime($b->check_in)) : (!empty($b->departure_date) ? date('Y-m-d', strtotime($b->departure_date)) : '9999-99-99');
+            return strcmp($aDate, $bDate);
+        })->values();
 
         // 3. Financial Totals & KPI Metrics
         $today = date('Y-m-d');

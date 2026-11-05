@@ -8,6 +8,8 @@ use App\Models\Booking;
 use App\Models\BookingHotel;
 use App\Models\BookingTransport;
 use App\Models\BookingVisa;
+use App\Models\BookingPerson;
+use App\Models\Client;
 use App\Models\ExpenseTransaction;
 use App\Models\Supplier;
 use App\Models\Transaction;
@@ -194,30 +196,68 @@ class BalanceSheetReportController extends Controller
             });
         }
 
-        $bookings = $bookingQuery->get();
+        // B. Accounts Receivable (Clients / Pilgrims - Net of all payments received)
         $totalAccountsReceivablePkr = 0.0;
+        $totalUnearnedRevenuePkr    = 0.0;
         $clientReceivables = [];
 
-        foreach ($bookings as $b) {
-            $curr = strtoupper($b->currency ?? 'PKR');
-            $roe  = ($curr === 'PKR') ? 1 : (float) ($b->flight_roe > 0 ? $b->flight_roe : 75);
+        $allClients = Client::where('status', 'active')->get();
 
-            $bPkgSell = (float) $b->total_amount * $roe;
-            $initialRec = (float) $b->total_received * $roe;
+        foreach ($allClients as $client) {
+            $cRoe = (float) ($client->opening_balance_roe ?: $activeRoe);
+            $cObPkr = ($client->opening_balance_pkr_type === 'credit' ? -1 : 1) * ((float)$client->opening_balance_pkr ?: 0);
+            if ((float)$client->opening_balance_sar != 0) {
+                $cObPkr += ($client->opening_balance_sar_type === 'credit' ? -1 : 1) * ((float)$client->opening_balance_sar * $cRoe);
+            }
 
-            $txPaid = (float) Transaction::where('booking_id', $b->id)
+            $bQuery = Booking::where('client_id', $client->id)
+                ->whereDate(DB::raw('COALESCE(booking_date, flight_booking_date, DATE(created_at))'), '<=', $asOfDate);
+
+            if ($packageType === 'hajj') {
+                $bQuery->where(function ($q) {
+                    $q->where('package_type', 'hajj')->orWhereNull('package_type')->orWhere('package_type', '');
+                })->where(function ($q) {
+                    $q->whereNull('package_type')->orWhereRaw('LOWER(TRIM(package_type)) != ?', ['umrah']);
+                });
+            } elseif ($packageType === 'umrah') {
+                $bQuery->whereRaw('LOWER(TRIM(package_type)) = ?', ['umrah']);
+            }
+            if ($year !== 'all' && !empty($year)) {
+                $bQuery->where(function ($q) use ($year) {
+                    $q->where('package_year', $year)
+                      ->orWhereRaw("YEAR(COALESCE(booking_date, flight_booking_date, DATE(created_at))) = ?", [$year]);
+                });
+            }
+
+            $bkgSell = (float) $bQuery->selectRaw('SUM(CASE WHEN currency = "SAR" THEN total_amount * COALESCE(flight_roe, 75) ELSE total_amount END) as total')->value('total');
+            $bkgRec  = (float) $bQuery->selectRaw('SUM(CASE WHEN currency = "SAR" THEN total_received * COALESCE(flight_roe, 75) ELSE total_received END) as total')->value('total');
+
+            // All confirmed client transactions (receipts) up to asOfDate
+            $txPaid = (float) Transaction::where('client_id', $client->id)
                 ->where('status', 'confirmed')
                 ->whereDate('payment_date', '<=', $asOfDate)
                 ->sum('amount');
 
-            $due = max(0, $bPkgSell - $initialRec - $txPaid);
-            if ($due > 0) {
-                $totalAccountsReceivablePkr += $due;
-                $cName = $b->client->name ?? ($b->given_name ? $b->given_name . ' ' . $b->sur_name : 'Booking #' . $b->id);
-                if (!isset($clientReceivables[$cName])) {
-                    $clientReceivables[$cName] = 0;
-                }
-                $clientReceivables[$cName] += $due;
+            // Expense transactions credits (JV or client receipts) and debits (refunds to client)
+            $etCredits = (float) ExpenseTransaction::where('client_id', $client->id)
+                ->where('transaction_type', 'credit')
+                ->whereDate('date', '<=', $asOfDate)
+                ->selectRaw('SUM(CASE WHEN currency = "SAR" THEN amount * exchange_rate ELSE amount END) as total')
+                ->value('total');
+
+            $etDebits = (float) ExpenseTransaction::where('client_id', $client->id)
+                ->where('transaction_type', 'debit')
+                ->whereDate('date', '<=', $asOfDate)
+                ->selectRaw('SUM(CASE WHEN currency = "SAR" THEN amount * exchange_rate ELSE amount END) as total')
+                ->value('total');
+
+            $netClientDue = $cObPkr + $bkgSell - $bkgRec - $txPaid - $etCredits + $etDebits;
+
+            if ($netClientDue > 0.01) {
+                $totalAccountsReceivablePkr += $netClientDue;
+                $clientReceivables[$client->name] = $netClientDue;
+            } elseif ($netClientDue < -0.01) {
+                $totalUnearnedRevenuePkr += abs($netClientDue);
             }
         }
 
@@ -264,16 +304,33 @@ class BalanceSheetReportController extends Controller
             }
 
             $hCost = (float) $hQuery->selectRaw('SUM(COALESCE(cost_amount, cost_per_night * no_of_rooms * no_of_nights * COALESCE(cost_roe, roe, 75))) as total')->value('total');
+            
+            // Outbound flight cost for this supplier
             $fCost = (float) $fQuery->selectRaw('SUM(CASE WHEN flight_currency = "SAR" THEN flight_cost * COALESCE(flight_cost_roe, 75) ELSE flight_cost END) as total')->value('total');
+            // Return flight cost for this supplier
+            $retFCost = (float) Booking::where('return_flight_supplier_id', $s->id)
+                ->whereDate(DB::raw('COALESCE(flight_booking_date, booking_date, departure_date, DATE(created_at))'), '<=', $asOfDate)
+                ->selectRaw('SUM(CASE WHEN flight_currency = "SAR" THEN flight_cost * COALESCE(flight_cost_roe, 75) ELSE flight_cost END) as total')->value('total');
+            // Passenger-level flight costs for this supplier
+            $pFCost = (float) BookingPerson::where(function($q) use ($s) {
+                    $q->where('flight_supplier_id', $s->id)->orWhere('return_flight_supplier_id', $s->id);
+                })
+                ->whereHas('booking', function($bq) use ($s, $asOfDate) {
+                    $bq->where('flight_supplier_id', '!=', $s->id)
+                       ->whereDate(DB::raw('COALESCE(flight_booking_date, booking_date, departure_date, DATE(created_at))'), '<=', $asOfDate);
+                })
+                ->sum('flight_cost');
+
+            $fCost += ($retFCost + $pFCost);
+
             $vCost = (float) $vQuery->selectRaw('SUM(COALESCE(cost_amount, cost_rate * COALESCE(cost_roe, roe, 75))) as total')->value('total');
             $tCost = (float) $tQuery->selectRaw('SUM(COALESCE(cost_amount, cost_rate * COALESCE(cost_roe, roe, 75))) as total')->value('total');
 
             $totalBilled = $hCost + $fCost + $vCost + $tCost + $sObPkr;
 
             $paidToSupplier = (float) ExpenseTransaction::where('supplier_id', $s->id)
-                ->where('transaction_type', 'debit')
                 ->whereDate('date', '<=', $asOfDate)
-                ->selectRaw('SUM(CASE WHEN currency = "SAR" THEN amount * exchange_rate ELSE amount END) as total')
+                ->selectRaw('SUM(CASE WHEN transaction_type = "debit" THEN (CASE WHEN currency = "SAR" THEN amount * exchange_rate ELSE amount END) WHEN transaction_type = "credit" THEN -1 * (CASE WHEN currency = "SAR" THEN amount * exchange_rate ELSE amount END) ELSE 0 END) as total')
                 ->value('total');
 
             $netBal = $totalBilled - $paidToSupplier;
@@ -624,10 +681,7 @@ class BalanceSheetReportController extends Controller
             ];
         }
 
-        $netEquityTarget = max(0, $totalAssets - $totalLiabilities);
-        $capitalStock = ($totalCapitalAccountsPkr + $recordedCapital) > 0 
-            ? ($totalCapitalAccountsPkr + $recordedCapital) 
-            : max(0, $netEquityTarget - $retainedEarnings);
+        $capitalStock = (float) ($totalCapitalAccountsPkr + $recordedCapital);
 
         $totalEquity = $capitalStock + $retainedEarnings;
 

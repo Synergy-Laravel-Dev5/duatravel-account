@@ -16,6 +16,9 @@ class ExpenseTransaction extends Model
         'company_id',
         'staff_id',
         'supplier_id',
+        'booking_id',
+        'service_type',
+        'refund_type',
         'client_id',
         'hajj_umrah',
         'year',
@@ -44,6 +47,11 @@ class ExpenseTransaction extends Model
     public function supplier()
     {
         return $this->belongsTo(Supplier::class);
+    }
+
+    public function booking()
+    {
+        return $this->belongsTo(Booking::class);
     }
 
     public function client()

@@ -97,12 +97,15 @@
                                 <i class="ri-node-tree text-primary me-2"></i> Chart of Accounts (COA)
                             </h4>
                             <span class="text-muted fs-12">
-                                Standard 6-head general ledger chart with live PKR & SAR balances.
+                                Standard General Ledger Account Heads & Directory (Listing without Balances).
                             </span>
                         </div>
                         <div class="d-flex flex-wrap gap-2">
                             <a href="{{ route('account.create') }}" class="btn btn-sm btn-primary px-3">
-                                <i class="ri-add-line me-1"></i> Add Account
+                                <i class="ri-add-line me-1"></i> Add Account Head
+                            </a>
+                            <a href="{{ route('supplier.create') }}" class="btn btn-sm btn-outline-info px-3">
+                                <i class="ri-user-add-line me-1"></i> Add Supplier
                             </a>
                             <button type="button" onclick="exportCoaCsv()" class="btn btn-sm btn-outline-success px-3">
                                 <i class="ri-file-excel-line me-1"></i> Export Excel
@@ -118,17 +121,17 @@
                 </div>
             </div>
 
-            {{-- ════ 6 Metric Head Cards ════ --}}
+            {{-- ════ 6 Metric Head Cards (Accounts Count Only) ════ --}}
             <div class="row g-3 mb-4 no-print">
                 {{-- 1. Assets --}}
                 <div class="col-xl-2 col-md-4 col-sm-6">
                     <div class="coa-card border-start border-4 border-primary">
                         <span class="text-muted fs-11 fw-bold text-uppercase">1000 • Assets</span>
-                        <h4 class="fs-16 fw-bold text-dark my-1">
-                            PKR {{ number_format($totals['assets_pkr'], 2) }}
+                        <h4 class="fs-18 fw-bold text-dark my-1">
+                            {{ $headCounts['assets'] }} Heads
                         </h4>
                         <span class="text-primary fs-11 fw-semibold">
-                            SAR {{ number_format($totals['assets_sar'], 2) }}
+                            Cash, Banks & Fixed Assets
                         </span>
                     </div>
                 </div>
@@ -137,11 +140,11 @@
                 <div class="col-xl-2 col-md-4 col-sm-6">
                     <div class="coa-card border-start border-4 border-warning">
                         <span class="text-muted fs-11 fw-bold text-uppercase">2000 • Liabilities</span>
-                        <h4 class="fs-16 fw-bold text-dark my-1">
-                            PKR {{ number_format($totals['liabilities_pkr'], 2) }}
+                        <h4 class="fs-18 fw-bold text-dark my-1">
+                            {{ $headCounts['liabilities'] }} Heads
                         </h4>
                         <span class="text-warning fs-11 fw-semibold">
-                            SAR {{ number_format($totals['liabilities_sar'], 2) }}
+                            Suppliers & Payables
                         </span>
                     </div>
                 </div>
@@ -150,11 +153,11 @@
                 <div class="col-xl-2 col-md-4 col-sm-6">
                     <div class="coa-card border-start border-4 border-dark">
                         <span class="text-muted fs-11 fw-bold text-uppercase">3000 • Equity</span>
-                        <h4 class="fs-16 fw-bold text-dark my-1">
-                            PKR {{ number_format($totals['equity_pkr'], 2) }}
+                        <h4 class="fs-18 fw-bold text-dark my-1">
+                            {{ $headCounts['equity'] }} Heads
                         </h4>
                         <span class="text-muted fs-11 fw-semibold">
-                            SAR {{ number_format($totals['equity_sar'], 2) }}
+                            Capital & Retained Earnings
                         </span>
                     </div>
                 </div>
@@ -163,11 +166,11 @@
                 <div class="col-xl-2 col-md-4 col-sm-6">
                     <div class="coa-card border-start border-4 border-success">
                         <span class="text-muted fs-11 fw-bold text-uppercase">4000 • Revenue</span>
-                        <h4 class="fs-16 fw-bold text-dark my-1">
-                            PKR {{ number_format($totals['revenue_pkr'], 2) }}
+                        <h4 class="fs-18 fw-bold text-dark my-1">
+                            {{ $headCounts['revenue'] }} Heads
                         </h4>
                         <span class="text-success fs-11 fw-semibold">
-                            SAR {{ number_format($totals['revenue_sar'], 2) }}
+                            Packages & Flight Sales
                         </span>
                     </div>
                 </div>
@@ -176,11 +179,11 @@
                 <div class="col-xl-2 col-md-4 col-sm-6">
                     <div class="coa-card border-start border-4 border-info">
                         <span class="text-muted fs-11 fw-bold text-uppercase">5000 • Cost of Sales</span>
-                        <h4 class="fs-16 fw-bold text-dark my-1">
-                            PKR {{ number_format($totals['cogs_pkr'], 2) }}
+                        <h4 class="fs-18 fw-bold text-dark my-1">
+                            {{ $headCounts['cogs'] }} Heads
                         </h4>
                         <span class="text-info fs-11 fw-semibold">
-                            SAR {{ number_format($totals['cogs_sar'], 2) }}
+                            Direct Services COGS
                         </span>
                     </div>
                 </div>
@@ -189,11 +192,11 @@
                 <div class="col-xl-2 col-md-4 col-sm-6">
                     <div class="coa-card border-start border-4 border-danger">
                         <span class="text-muted fs-11 fw-bold text-uppercase">6000 • Expenses</span>
-                        <h4 class="fs-16 fw-bold text-dark my-1">
-                            PKR {{ number_format($totals['expenses_pkr'], 2) }}
+                        <h4 class="fs-18 fw-bold text-dark my-1">
+                            {{ $headCounts['expenses'] }} Heads
                         </h4>
                         <span class="text-danger fs-11 fw-semibold">
-                            SAR {{ number_format($totals['expenses_sar'], 2) }}
+                            Operating & Admin Overheads
                         </span>
                     </div>
                 </div>
@@ -206,28 +209,28 @@
                         All Categories ({{ $totalAccountsCount }})
                     </button>
                     <button type="button" class="coa-pill-btn" onclick="filterCategory('assets', this)">
-                        1000 Assets ({{ count($chart['assets']) }})
+                        1000 Assets ({{ $headCounts['assets'] }})
                     </button>
                     <button type="button" class="coa-pill-btn" onclick="filterCategory('liabilities', this)">
-                        2000 Liabilities ({{ count($chart['liabilities']) }})
+                        2000 Liabilities ({{ $headCounts['liabilities'] }})
                     </button>
                     <button type="button" class="coa-pill-btn" onclick="filterCategory('equity', this)">
-                        3000 Equity ({{ count($chart['equity']) }})
+                        3000 Equity ({{ $headCounts['equity'] }})
                     </button>
                     <button type="button" class="coa-pill-btn" onclick="filterCategory('revenue', this)">
-                        4000 Revenue ({{ count($chart['revenue']) }})
+                        4000 Revenue ({{ $headCounts['revenue'] }})
                     </button>
                     <button type="button" class="coa-pill-btn" onclick="filterCategory('cogs', this)">
-                        5000 COGS ({{ count($chart['cogs']) }})
+                        5000 COGS ({{ $headCounts['cogs'] }})
                     </button>
                     <button type="button" class="coa-pill-btn" onclick="filterCategory('expenses', this)">
-                        6000 Expenses ({{ count($chart['expenses']) }})
+                        6000 Expenses ({{ $headCounts['expenses'] }})
                     </button>
                 </div>
                 <div style="min-width: 250px;">
                     <div class="input-group input-group-sm">
                         <span class="input-group-text bg-white border-end-0"><i class="ri-search-line text-muted"></i></span>
-                        <input type="text" id="coaSearchInput" class="form-control form-control-sm border-start-0" placeholder="Search account name, code..." onkeyup="filterCoaSearch()">
+                        <input type="text" id="coaSearchInput" class="form-control form-control-sm border-start-0" placeholder="Search account name, code, supplier..." onkeyup="filterCoaSearch()">
                     </div>
                 </div>
             </div>
@@ -245,8 +248,8 @@
                             CHART OF ACCOUNTS
                         </h3>
                         <p class="text-muted fs-13 mb-0">
-                            As at <strong>{{ \Carbon\Carbon::parse($asOfDate)->format('F d, Y') }}</strong>
-                            <span class="badge bg-light text-dark border ms-2">Dual Currency: PKR & SAR (ROE: {{ number_format($activeRoe, 2) }})</span>
+                            General Ledger Head Listing & Master Directory
+                            <span class="badge bg-light text-dark border ms-2">Total Accounts: {{ $totalAccountsCount }}</span>
                         </p>
                     </div>
 
@@ -255,50 +258,38 @@
                             'assets' => [
                                 'title'       => '1000 • ASSETS',
                                 'color'       => 'primary',
-                                'description' => 'Current assets, bank accounts, cash registers, receivables, advances and fixed assets.',
+                                'description' => 'Current assets, bank accounts, cash registers, trade receivables, advances and fixed assets.',
                                 'items'       => $chart['assets'],
-                                'total_pkr'   => $totals['assets_pkr'],
-                                'total_sar'   => $totals['assets_sar'],
                             ],
                             'liabilities' => [
                                 'title'       => '2000 • LIABILITIES',
                                 'color'       => 'warning',
-                                'description' => 'Current trade payables, supplier balances, staff salaries payable, and loans.',
+                                'description' => 'Trade creditors, registered suppliers/vendors, staff salaries payable, and loans.',
                                 'items'       => $chart['liabilities'],
-                                'total_pkr'   => $totals['liabilities_pkr'],
-                                'total_sar'   => $totals['liabilities_sar'],
                             ],
                             'equity' => [
                                 'title'       => '3000 • EQUITY & CAPITAL',
                                 'color'       => 'dark',
-                                'description' => "Owner's capital, retained earnings, reserves, and accumulated surplus.",
+                                'description' => "Owner's invested capital, share capital, retained earnings, and reserves.",
                                 'items'       => $chart['equity'],
-                                'total_pkr'   => $totals['equity_pkr'],
-                                'total_sar'   => $totals['equity_sar'],
                             ],
                             'revenue' => [
                                 'title'       => '4000 • REVENUE & OPERATING INCOME',
                                 'color'       => 'success',
                                 'description' => 'Gross income from Umrah packages, flight ticketing, hotel booking and visa services.',
                                 'items'       => $chart['revenue'],
-                                'total_pkr'   => $totals['revenue_pkr'],
-                                'total_sar'   => $totals['revenue_sar'],
                             ],
                             'cogs' => [
                                 'title'       => '5000 • COST OF SALES (DIRECT OPERATING COSTS)',
                                 'color'       => 'info',
                                 'description' => 'Direct costs paid to suppliers for tickets, hotels, transport, and visas.',
                                 'items'       => $chart['cogs'],
-                                'total_pkr'   => $totals['cogs_pkr'],
-                                'total_sar'   => $totals['cogs_sar'],
                             ],
                             'expenses' => [
                                 'title'       => '6000 • OPERATING EXPENSES',
                                 'color'       => 'danger',
                                 'description' => 'Salaries, office rent, utilities, marketing, and general administrative overheads.',
                                 'items'       => $chart['expenses'],
-                                'total_pkr'   => $totals['expenses_pkr'],
-                                'total_sar'   => $totals['expenses_sar'],
                             ],
                         ];
                     @endphp
@@ -311,9 +302,9 @@
                                     <span class="text-muted fs-11">{{ $sec['description'] }}</span>
                                 </div>
                                 <div class="text-end">
-                                    <span class="fs-12 text-muted me-2">Subtotal:</span>
-                                    <strong class="fs-14 text-dark">PKR {{ number_format($sec['total_pkr'], 2) }}</strong>
-                                    <span class="text-muted fs-12 ms-1">(SAR {{ number_format($sec['total_sar'], 2) }})</span>
+                                    <span class="badge bg-white text-dark border px-2 py-1 fs-12 fw-semibold">
+                                        <i class="ri-list-check me-1 text-primary"></i> {{ count($sec['items']) }} Accounts
+                                    </span>
                                 </div>
                             </div>
 
@@ -321,12 +312,11 @@
                                 <table class="table table-bordered table-hover coa-table align-middle">
                                     <thead>
                                         <tr>
-                                            <th style="width: 120px;" class="text-center">Code</th>
-                                            <th>Account Name</th>
-                                            <th style="width: 200px;">Classification / Type</th>
-                                            <th style="width: 150px;" class="text-end">Balance (PKR)</th>
-                                            <th style="width: 130px;" class="text-end text-muted">Balance (SAR)</th>
-                                            <th style="width: 90px;" class="text-center">Status</th>
+                                            <th style="width: 140px;" class="text-center">Code</th>
+                                            <th>Account Name / Head</th>
+                                            <th style="width: 220px;">Classification</th>
+                                            <th style="width: 260px;">Sub-Type / Group</th>
+                                            <th style="width: 100px;" class="text-center">Status</th>
                                             <th style="width: 80px;" class="text-center no-print">Action</th>
                                         </tr>
                                     </thead>
@@ -339,23 +329,22 @@
                                                 <td class="fw-semibold text-dark">
                                                     {{ $item['name'] }}
                                                 </td>
+                                                <td>
+                                                    <span class="badge bg-light text-dark border fs-11">
+                                                        {{ $item['classification'] }}
+                                                    </span>
+                                                </td>
                                                 <td class="text-muted fs-12">
                                                     {{ $item['sub_type'] }}
                                                 </td>
-                                                <td class="text-end fw-semibold {{ $item['balance_pkr'] < 0 ? 'text-danger' : 'text-dark' }}">
-                                                    {{ number_format($item['balance_pkr'], 2) }}
-                                                </td>
-                                                <td class="text-end text-muted fs-12">
-                                                    {{ number_format($item['balance_sar'], 2) }}
-                                                </td>
                                                 <td class="text-center">
                                                     <span class="badge bg-success-subtle text-success border border-success px-2 py-1 fs-11">
-                                                        Active
+                                                        {{ $item['status'] }}
                                                     </span>
                                                 </td>
                                                 <td class="text-center no-print">
-                                                    @if(!empty($item['id']))
-                                                        <a href="{{ route('account.edit', $item['id']) }}" class="btn btn-xs btn-outline-primary" title="Edit Account">
+                                                    @if(!empty($item['edit_url']))
+                                                        <a href="{{ $item['edit_url'] }}" class="btn btn-xs btn-outline-primary" title="Edit">
                                                             <i class="ri-edit-line"></i>
                                                         </a>
                                                     @else
@@ -365,7 +354,7 @@
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="7" class="text-center py-2 text-muted">No accounts under this classification.</td>
+                                                <td colspan="6" class="text-center py-2 text-muted">No accounts under this classification.</td>
                                             </tr>
                                         @endforelse
                                     </tbody>
@@ -413,7 +402,7 @@
             rows.forEach(r => {
                 let row = [], cols = r.querySelectorAll('td, th');
                 // ignore the last column (action)
-                let limit = cols.length > 6 ? cols.length - 1 : cols.length;
+                let limit = cols.length > 5 ? cols.length - 1 : cols.length;
                 for (let j = 0; j < limit; j++) {
                     let cellText = cols[j].innerText.replace(/,/g, '').replace(/\n/g, ' ').trim();
                     row.push('"' + cellText + '"');
@@ -423,7 +412,7 @@
         });
         let csvFile = new Blob([csv.join('\n')], { type: 'text/csv' });
         let downloadLink = document.createElement('a');
-        downloadLink.download = 'Chart_of_Accounts_{{ $asOfDate }}.csv';
+        downloadLink.download = 'Chart_of_Accounts_' + (new Date().toISOString().slice(0, 10)) + '.csv';
         downloadLink.href = window.URL.createObjectURL(csvFile);
         downloadLink.style.display = 'none';
         document.body.appendChild(downloadLink);

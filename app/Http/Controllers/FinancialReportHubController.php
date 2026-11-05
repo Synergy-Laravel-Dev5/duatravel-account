@@ -42,7 +42,7 @@ class FinancialReportHubController extends Controller
             ->get();
 
         $activeTab = $request->get('tab', 'bank');
-        if (!in_array($activeTab, ['bank', 'cash', 'client', 'supplier', 'staff'])) {
+        if (!in_array($activeTab, ['bank', 'cash', 'client', 'supplier', 'staff', 'expense'])) {
             $activeTab = 'bank';
         }
 
@@ -52,6 +52,7 @@ class FinancialReportHubController extends Controller
             'clients',
             'suppliers',
             'staffMembers',
+            'expenses',
             'activeTab'
         ));
     }

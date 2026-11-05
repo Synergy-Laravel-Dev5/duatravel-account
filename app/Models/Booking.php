@@ -66,6 +66,8 @@ class Booking extends Model
         'visa_send_to',
         'package_name',
         'flight_supplier_id',
+        'return_flight_supplier_id',
+        'additional_services_cost',
         'flight_booking_date',
         'flight_option_date',
         'flight_currency',
@@ -103,6 +105,11 @@ class Booking extends Model
     public function flightSupplier()
     {
         return $this->belongsTo(Supplier::class, 'flight_supplier_id');
+    }
+
+    public function returnFlightSupplier()
+    {
+        return $this->belongsTo(Supplier::class, 'return_flight_supplier_id');
     }
 
     public function client()

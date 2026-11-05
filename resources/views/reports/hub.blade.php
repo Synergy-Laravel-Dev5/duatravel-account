@@ -198,7 +198,7 @@
                 </div>
 
                 {{-- 5. Staff Ledger --}}
-                <div class="col-xl col-md-6 col-sm-6">
+                <div class="col-xl col-md-4 col-sm-6">
                     <div class="hub-metric-card border-start border-4 {{ $activeTab === 'staff' ? 'active' : '' }}" onclick="switchHubTab('staff')" style="border-left-color: #8b5cf6 !important;">
                         <div class="d-flex align-items-center gap-3">
                             <div class="hub-icon-box" style="background: #f5f3ff; color: #8b5cf6;">
@@ -209,6 +209,24 @@
                                 <div class="fs-16 fw-bold text-dark mt-1">{{ count($staffMembers) }} Staff Member(s)</div>
                                 <div class="fs-11 mt-1 fw-semibold" style="color: #8b5cf6;">
                                     <i class="ri-filter-3-line me-1"></i> Salary & Advance Ledger
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- 6. Expense Ledger --}}
+                <div class="col-xl col-md-4 col-sm-6">
+                    <div class="hub-metric-card border-start border-4 border-danger {{ $activeTab === 'expense' ? 'active' : '' }}" onclick="switchHubTab('expense')">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="hub-icon-box bg-soft-danger text-danger">
+                                <i class="ri-money-dollar-circle-line"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="text-muted fs-11 fw-bold text-uppercase">Expense Ledger</div>
+                                <div class="fs-16 fw-bold text-dark mt-1">{{ count($expenses) }} Expense Head(s)</div>
+                                <div class="fs-11 text-danger mt-1 fw-semibold">
+                                    <i class="ri-filter-3-line me-1"></i> Office & Admin Statement
                                 </div>
                             </div>
                         </div>
@@ -241,6 +259,11 @@
                 <li class="nav-item" role="presentation">
                     <button class="nav-link {{ $activeTab === 'staff' ? 'active' : '' }}" id="tab-btn-staff" data-bs-toggle="pill" data-bs-target="#pane-staff" type="button" role="tab">
                         <i class="ri-user-settings-line me-1" style="color: #8b5cf6;"></i> Staff Ledger Filter
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {{ $activeTab === 'expense' ? 'active' : '' }}" id="tab-btn-expense" data-bs-toggle="pill" data-bs-target="#pane-expense" type="button" role="tab">
+                        <i class="ri-money-dollar-circle-line me-1 text-danger"></i> Expense Ledger Filter (Dr / Cr)
                     </button>
                 </li>
             </ul>
@@ -680,6 +703,114 @@
                                     </a>
                                     <button type="submit" class="btn btn-secondary px-4 shadow-sm text-white fw-bold">
                                         <i class="mdi mdi-book-open-page-variant me-1"></i> View Staff Ledger
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- ======================================================== --}}
+                {{-- TAB 6: EXPENSE LEDGER FILTER (DR / CR) --}}
+                {{-- ======================================================== --}}
+                <div class="tab-pane fade {{ $activeTab === 'expense' ? 'show active' : '' }}" id="pane-expense" role="tabpanel">
+                    <div class="card hub-filter-card">
+                        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="fw-bold text-dark m-0">
+                                    <i class="mdi mdi-book-open-page-variant text-danger me-2"></i> Expense Ledger Filter (Dr / Cr)
+                                </h5>
+                                <p class="text-muted fs-12 mb-0 mt-1">Generate complete double-entry statement of account for office expenses, administrative costs, marketing, utilities, and general disbursements.</p>
+                            </div>
+                            <span class="badge bg-soft-danger text-danger px-3 py-2 fs-12">
+                                <i class="ri-money-dollar-circle-line me-1"></i> Expense Statement
+                            </span>
+                        </div>
+                        <div class="card-body p-4">
+                            <form action="{{ route('expense.ledger.view') }}" method="GET" id="form-expense-ledger">
+                                <div class="row g-3">
+                                    {{-- Expense Head Dropdown --}}
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold fs-13">
+                                            Select Expense Head / Category <span class="text-danger">*</span>
+                                        </label>
+                                        <select name="expense_id" class="form-select form-select-sm" required>
+                                            <option value="all">🌟 All Expenses (Consolidated Ledger Statement)</option>
+                                            @foreach ($expenses as $exp)
+                                                <option value="{{ $exp->id }}" {{ request('expense_id') == $exp->id ? 'selected' : '' }}>
+                                                    {{ $exp->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <small class="text-muted fs-11">Choose a specific expense category or view consolidated agency expenses.</small>
+                                    </div>
+
+                                    {{-- Package Season --}}
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold fs-13">Hajj / Umrah Season</label>
+                                        <select name="package_type" class="form-select form-select-sm">
+                                            <option value="all">Consolidated (Hajj & Umrah)</option>
+                                            <option value="umrah" {{ session('dashboard_package') === 'umrah' ? 'selected' : '' }}>Umrah Only</option>
+                                            <option value="hajj" {{ session('dashboard_package') === 'hajj' ? 'selected' : '' }}>Hajj Only</option>
+                                        </select>
+                                    </div>
+
+                                    {{-- Paid Through Account (Optional) --}}
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold fs-13">Payment Source</label>
+                                        <select name="account_source" class="form-select form-select-sm">
+                                            <option value="">-- All Accounts & Banks --</option>
+                                            <optgroup label="Cash Accounts">
+                                                @foreach ($cashAccounts as $ca)
+                                                    <option value="cash:{{ $ca->id }}">Cash: {{ $ca->account_name }}</option>
+                                                @endforeach
+                                            </optgroup>
+                                            <optgroup label="Bank Accounts">
+                                                @foreach ($banks as $b)
+                                                    <option value="bank:{{ $b->id }}">Bank: {{ $b->name }}</option>
+                                                @endforeach
+                                            </optgroup>
+                                        </select>
+                                    </div>
+
+                                    {{-- From Date --}}
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold fs-13">From Date</label>
+                                        <input type="date" name="from_date" id="expense_from_date" class="form-control form-control-sm" value="{{ request('from_date') }}">
+                                    </div>
+
+                                    {{-- To Date --}}
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold fs-13">To Date</label>
+                                        <input type="date" name="to_date" id="expense_to_date" class="form-control form-control-sm" value="{{ request('to_date') }}">
+                                    </div>
+
+                                    {{-- Quick Date Presets Bar --}}
+                                    <div class="col-12 pt-1">
+                                        <div class="d-flex flex-wrap align-items-center gap-1">
+                                            <span class="fs-11 text-muted fw-bold me-1">Date Presets:</span>
+                                            <button type="button" class="date-preset-btn" onclick="setDatePreset('expense_from_date', 'expense_to_date', 'today')">Today</button>
+                                            <button type="button" class="date-preset-btn" onclick="setDatePreset('expense_from_date', 'expense_to_date', 'this_week')">This Week</button>
+                                            <button type="button" class="date-preset-btn" onclick="setDatePreset('expense_from_date', 'expense_to_date', 'this_month')">This Month</button>
+                                            <button type="button" class="date-preset-btn" onclick="setDatePreset('expense_from_date', 'expense_to_date', 'last_month')">Last Month</button>
+                                            <button type="button" class="date-preset-btn" onclick="setDatePreset('expense_from_date', 'expense_to_date', 'this_year')">This Year</button>
+                                            <button type="button" class="date-preset-btn" onclick="setDatePreset('expense_from_date', 'expense_to_date', 'clear')">All Time</button>
+                                        </div>
+                                    </div>
+
+                                    {{-- Search Keyword --}}
+                                    <div class="col-12">
+                                        <label class="form-label fw-semibold fs-13">Search Keyword (Optional)</label>
+                                        <input type="text" name="search" class="form-control form-control-sm" placeholder="Voucher #, narration, receipt reference...">
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
+                                    <a href="{{ route('expense.ledger.filter') }}" class="btn btn-outline-secondary btn-sm">
+                                        <i class="mdi mdi-filter-variant me-1"></i> Dedicated Expense Filter
+                                    </a>
+                                    <button type="submit" class="btn btn-danger px-4 shadow-sm text-white fw-bold">
+                                        <i class="mdi mdi-book-open-page-variant me-1"></i> View Expense Ledger Statement
                                     </button>
                                 </div>
                             </form>

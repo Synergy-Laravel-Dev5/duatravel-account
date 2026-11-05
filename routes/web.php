@@ -9,6 +9,8 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\ExpenseTransactionController;
+use App\Http\Controllers\RefundController;
+use App\Http\Controllers\ExpenseLedgerController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UserActivityController;
 use App\Http\Controllers\CompanyController;
@@ -154,6 +156,23 @@ Route::middleware(['auth:web,company'])->group(function () {
                 Route::delete('delete/{id}', 'destroy')->name('expense.transaction.delete');
                 Route::get('report/filter', 'reportFilter')->name('expense.transaction.report.filter');
                 Route::post('report', 'report')->name('expense.transaction.report');
+            });
+
+        Route::controller(RefundController::class)
+            ->prefix('refunds')
+            ->group(function () {
+                Route::get('/', 'index')->name('refunds.index');
+                Route::get('create', 'create')->name('refunds.create');
+                Route::post('store', 'store')->name('refunds.store');
+                Route::delete('delete/{id}', 'destroy')->name('refunds.destroy');
+            });
+
+        Route::controller(ExpenseLedgerController::class)
+            ->prefix('expense-ledger')
+            ->group(function () {
+                Route::get('/', 'ledgerFilter');
+                Route::get('filter', 'ledgerFilter')->name('expense.ledger.filter');
+                Route::match(['get', 'post'], 'view', 'ledgerView')->name('expense.ledger.view');
             });
 
         Route::controller(TransactionController::class)

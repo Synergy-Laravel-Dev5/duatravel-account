@@ -75,7 +75,34 @@ class TransactionController extends Controller
 
     public function create()
     {
-        $clients   = Client::where('status', 'active')->get();
+        $clients = Client::where('status', 'active')->orderBy('name')->get();
+
+        $bkgTotals = Booking::selectRaw('client_id, SUM(CASE WHEN currency = "SAR" THEN total_amount * COALESCE(flight_roe, 75) ELSE total_amount END) as debits, SUM(CASE WHEN currency = "SAR" THEN total_received * COALESCE(flight_roe, 75) ELSE total_received END) as credits')
+            ->groupBy('client_id')->get()->keyBy('client_id');
+        $txTotals = Transaction::where('status', 'confirmed')
+            ->selectRaw('client_id, SUM(amount) as credits')
+            ->groupBy('client_id')->get()->keyBy('client_id');
+        $etTotals = \App\Models\ExpenseTransaction::whereNotNull('client_id')
+            ->selectRaw('client_id, 
+                SUM(CASE WHEN transaction_type = "credit" THEN (CASE WHEN currency = "SAR" THEN amount * exchange_rate ELSE amount END) ELSE 0 END) as credits,
+                SUM(CASE WHEN transaction_type = "debit" THEN (CASE WHEN currency = "SAR" THEN amount * exchange_rate ELSE amount END) ELSE 0 END) as debits')
+            ->groupBy('client_id')->get()->keyBy('client_id');
+
+        foreach ($clients as $c) {
+            $opPkr = ($c->opening_balance_pkr_type === 'credit' ? -1 : 1) * ((float)$c->opening_balance_pkr ?: 0);
+            $cRoe = (float)($c->opening_balance_roe > 1 ? $c->opening_balance_roe : 75.0);
+            if ((float)$c->opening_balance_sar != 0) {
+                $opPkr += ($c->opening_balance_sar_type === 'credit' ? -1 : 1) * ((float)$c->opening_balance_sar * $cRoe);
+            }
+            $bDeb  = (float) ($bkgTotals[$c->id]->debits ?? 0);
+            $bCred = (float) ($bkgTotals[$c->id]->credits ?? 0);
+            $tCred = (float) ($txTotals[$c->id]->credits ?? 0);
+            $eCred = (float) ($etTotals[$c->id]->credits ?? 0);
+            $eDeb  = (float) ($etTotals[$c->id]->debits ?? 0);
+
+            $c->balance = round($opPkr + $bDeb - $bCred - $tCred - $eCred + $eDeb, 2);
+        }
+
         $companies = Company::all();
         $bookings  = Booking::with(['client', 'company'])->latest()->get();
         return view('transaction.create', compact('clients', 'companies', 'bookings'));
